@@ -1,6 +1,7 @@
 ---
 id: motivation
 title: Motivation
+slug: /
 ---
 
 Thanks to tools like [Playwright](https://github.com/microsoft/playwright), [Puppeteer](https://github.com/puppeteer/puppeteer) or

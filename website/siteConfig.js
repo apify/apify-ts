@@ -19,26 +19,27 @@
 //         pinned: true,
 //     },
 // ];
-const extlink = require('remarkable-extlink');
+const extlink = require("remarkable-extlink");
 
-const repoUrl = 'https://github.com/apify/apify-js';
+const repoUrl = "https://github.com/apify/apify-js";
 
 const siteConfig = {
-    title: 'Apify SDK', // Title for your website.
+    title: "Apify SDK", // Title for your website.
     // This is also used as page meta description for SEO, so write it carefully.
     // TODO: Take this from package.json
     // eslint-disable-next-line max-len
-    tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js.',
-    url: 'https://sdk.apify.com', // Your website URL
-    cname: 'sdk.apify.com',
-    baseUrl: '/', // Base URL for your project */
+    tagline:
+        "The scalable web crawling, scraping and automation library for JavaScript/Node.js.",
+    url: "https://sdk.apify.com", // Your website URL
+    cname: "sdk.apify.com",
+    baseUrl: "/", // Base URL for your project */
     // For github.io type URLs, you would set the url and baseUrl like:
     //   url: 'https://facebook.github.io',
     //   baseUrl: '/test-site/',
 
     // Used for publishing and more
-    projectName: 'apify-js',
-    organizationName: 'apify',
+    projectName: "apify-js",
+    organizationName: "apify",
     // For top-level user or org sites, the organization is still the same.
     // e.g., for the https://JoelMarcey.github.io site, it would be set like...
     //   organizationName: 'JoelMarcey'
@@ -46,10 +47,10 @@ const siteConfig = {
     // For no header links in the top nav bar -> headerLinks: [],
     headerLinks: [
         { search: true },
-        { doc: 'guides/motivation', label: 'Guide' },
-        { doc: 'examples/crawl-multiple-urls', label: 'Examples' },
-        { doc: 'api/apify', label: 'API Reference' },
-        { href: repoUrl, label: 'GitHub' },
+        { doc: "guides/motivation", label: "Guide" },
+        { doc: "examples/crawl-multiple-urls", label: "Examples" },
+        { doc: "api/apify", label: "API Reference" },
+        { href: repoUrl, label: "GitHub" }
         // { page: 'help', label: 'Help' },
         // { blog: true, label: 'Blog' },
     ],
@@ -58,24 +59,24 @@ const siteConfig = {
     // users,
 
     /* path to images for header/footer */
-    headerIcon: 'img/apify_logo.svg',
-    footerIcon: 'img/apify_logo.svg',
-    favicon: 'img/favicon.ico',
+    headerIcon: "img/apify_logo.svg",
+    footerIcon: "img/apify_logo.svg",
+    favicon: "img/favicon.ico",
 
     /* Colors for website */
     colors: {
-        primaryColor: '#1157D2',
-        secondaryColor: '#FF9012',
+        primaryColor: "#1157D2",
+        secondaryColor: "#FF9012"
     },
 
     algolia: {
         // The key is search-only and safe to publish.
-        apiKey: '64ce2544769e34add0e6402688c86e92',
-        indexName: 'apify_sdk',
+        apiKey: "64ce2544769e34add0e6402688c86e92",
+        indexName: "apify_sdk",
         // Optional, if provided by Algolia
         algoliaOptions: {
-            facetFilters: ['version:VERSION'],
-        },
+            facetFilters: ["version:VERSION"]
+        }
     },
 
     /* Custom fonts for website */
@@ -95,40 +96,45 @@ const siteConfig = {
     // This copyright info is used in /core/Footer.js and blog RSS/Atom feeds.
     copyright: `Copyright © ${new Date().getFullYear()} Apify Technologies s.r.o.`,
 
+    // VLAD: language nigrated, idk about theme
     highlight: {
-    // Highlight.js theme to use for syntax highlighting in code blocks.
-        theme: 'monokai-sublime',
-        defaultLang: 'javascript',
+        // Highlight.js theme to use for syntax highlighting in code blocks.
+        theme: "monokai-sublime",
+        defaultLang: "javascript"
     },
 
     // Using Prism for syntax highlighting
+    // VLAD: used by default
     usePrism: true,
 
+    // VLAD: Migrated
     docsSideNavCollapsible: true,
+    // VLAD: both migrated
     markdownOptions: {
-        html: true,
+        html: true
     },
     markdownPlugins: [
-        (md) => {
+        md => {
             extlink(md, {
-                host: 'sdk.apify.com', // The hrefs that you DON'T want to be external
-                rel: 'noopener', // We want to keep referrer and follow for analytics on apify.com
+                host: "sdk.apify.com", // The hrefs that you DON'T want to be external
+                rel: "noopener" // We want to keep referrer and follow for analytics on apify.com
             });
-        },
+        }
     ],
 
-    gaTrackingId: 'UA-67003981-4',
+    // VLAD: automigrated
+    gaTrackingId: "UA-67003981-4",
     gaGtag: true,
 
     // Add custom scripts here that would be placed in <script> tags.
     scripts: [
-        'https://buttons.github.io/buttons.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js',
-        '/js/code-block-buttons.js',
+        "https://buttons.github.io/buttons.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js",
+        "/js/code-block-buttons.js"
     ],
 
     // On page navigation for the current documentation page.
-    onPageNav: 'separate',
+    onPageNav: "separate",
     // No .html extensions for paths.
     cleanUrl: true,
     deletedDocs: {
@@ -138,18 +144,18 @@ const siteConfig = {
             "typedefs/launch-puppeteer-function",
             "typedefs/launch-puppeteer-options",
             "typedefs/puppeteer-goto",
-            "typedefs/puppeteer-goto-inputs",
+            "typedefs/puppeteer-goto-inputs"
         ]
     },
 
     // Open Graph and Twitter card images.
-    ogImage: 'img/apify_og_SDK.png',
-    twitterImage: 'img/apify_og_SDK.png',
+    ogImage: "img/apify_og_SDK.png",
+    twitterImage: "img/apify_og_SDK.png",
 
     // You may provide arbitrary config keys to be used as needed by your
     // template. For example, if you need your repo's URL...
     //   repoUrl: 'https://github.com/facebook/test-site',
-    repoUrl,
+    repoUrl
 };
 
 module.exports = siteConfig;
