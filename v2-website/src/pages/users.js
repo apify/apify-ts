@@ -5,19 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const React = require("react");
+import Layout from '@theme/Layout';
+
+const React = require('react');
 
 const CompLibrary = {
-    Container: props => <div {...props}></div>,
-    GridBlock: props => <div {...props}></div>,
-    MarkdownBlock: props => <div {...props}></div>
+    Container: (props) => <div {...props}></div>,
+    GridBlock: (props) => <div {...props}></div>,
+    MarkdownBlock: (props) => <div {...props}></div>,
 };
 
-const Container = CompLibrary.Container;
+const { Container } = CompLibrary;
 
-const siteConfig = require("../../docusaurus.config.js");
-
-import Layout from "@theme/Layout";
+const siteConfig = require('../../docusaurus.config.js');
 
 class Users extends React.Component {
     render() {
@@ -26,7 +26,7 @@ class Users extends React.Component {
         }
 
         const editUrl = `${siteConfig.customFields.repoUrl}/edit/master/website/siteConfig.js`;
-        const showcase = siteConfig.customFields.users.map(user => (
+        const showcase = siteConfig.customFields.users.map((user) => (
             <a href={user.infoLink} key={user.infoLink}>
                 <img src={user.image} alt={user.caption} title={user.caption} />
             </a>
@@ -34,7 +34,7 @@ class Users extends React.Component {
 
         return (
             <div className="mainContainer">
-                <Container padding={["bottom", "top"]}>
+                <Container padding={['bottom', 'top']}>
                     <div className="showcaseSection">
                         <div className="prose">
                             <h1>Who is Using This?</h1>
@@ -52,7 +52,7 @@ class Users extends React.Component {
     }
 }
 
-export default props => (
+export default (props) => (
     <Layout>
         <Users {...props} />
     </Layout>

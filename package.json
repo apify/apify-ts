@@ -86,6 +86,7 @@
     },
     "devDependencies": {
         "@apify/eslint-config": "^0.1.4",
+        "@apify/eslint-config-ts": "^0.1.4",
         "@apify/tsconfig": "^0.1.0",
         "@babel/cli": "^7.14.8",
         "@babel/core": "^7.14.8",

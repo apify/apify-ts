@@ -5,44 +5,44 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const React = require("react");
+import Layout from '@theme/Layout';
+
+const React = require('react');
 
 const CompLibrary = {
-    Container: props => <div {...props}></div>,
-    GridBlock: props => <div {...props}></div>,
-    MarkdownBlock: props => <div {...props}></div>
+    Container: (props) => <div {...props}></div>,
+    GridBlock: (props) => <div {...props}></div>,
+    MarkdownBlock: (props) => <div {...props}></div>,
 };
 
-const Container = CompLibrary.Container;
-const GridBlock = CompLibrary.GridBlock;
+const { Container } = CompLibrary;
+const { GridBlock } = CompLibrary;
 
-const siteConfig = require("../../docusaurus.config.js");
-
-import Layout from "@theme/Layout";
+const siteConfig = require('../../docusaurus.config.js');
 
 function docUrl(doc, language) {
-    return `${siteConfig.baseUrl}docs/${language ? `${language}/` : ""}${doc}`;
+    return `${siteConfig.baseUrl}docs/${language ? `${language}/` : ''}${doc}`;
 }
 
 class Help extends React.Component {
     render() {
-        const language = this.props.language || "";
+        const language = this.props.language || '';
         const supportLinks = [
             {
                 content: `Learn more using the [documentation on this site.](${docUrl(
-                    "doc1.html",
+                    'doc1.html',
                     language
                 )})`,
-                title: "Browse Docs"
+                title: 'Browse Docs',
             },
             {
-                content: "Ask questions about the documentation and project",
-                title: "Join the community"
+                content: 'Ask questions about the documentation and project',
+                title: 'Join the community',
             },
             {
                 content: "Find out what's new with this project",
-                title: "Stay up to date"
-            }
+                title: 'Stay up to date',
+            },
         ];
 
         return (
@@ -67,7 +67,7 @@ class Help extends React.Component {
     }
 }
 
-export default props => (
+export default (props) => (
     <Layout>
         <Help {...props} />
     </Layout>

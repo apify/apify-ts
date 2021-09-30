@@ -5,21 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const React = require("react");
+import Layout from '@theme/Layout';
+
+const React = require('react');
 
 const CompLibrary = {
-    Container: props => <div {...props}></div>,
-    GridBlock: props => <div {...props}></div>,
-    MarkdownBlock: props => <div {...props}></div>
+    Container: (props) => <div {...props}></div>,
+    GridBlock: (props) => <div {...props}></div>,
+    MarkdownBlock: (props) => <div {...props}></div>,
 };
 
-const Container = CompLibrary.Container;
+const { Container } = CompLibrary;
 
 const CWD = process.cwd();
 
 const versions = require(`${CWD}/versions.json`);
-
-import Layout from "@theme/Layout";
 
 function Versions(props) {
     const { config: siteConfig } = props;
@@ -49,8 +49,8 @@ function Versions(props) {
                                             siteConfig.docsUrl
                                         }/${
                                             props.language
-                                                ? props.language + "/"
-                                                : ""
+                                                ? `${props.language}/`
+                                                : ''
                                         }api/apify`}
                                     >
                                         Documentation
@@ -83,8 +83,8 @@ function Versions(props) {
                                             siteConfig.docsUrl
                                         }/${
                                             props.language
-                                                ? props.language + "/"
-                                                : ""
+                                                ? `${props.language}/`
+                                                : ''
                                         }next/api/apify`}
                                     >
                                         Documentation
@@ -104,7 +104,7 @@ function Versions(props) {
                     <table className="versions">
                         <tbody>
                             {versions.map(
-                                version =>
+                                (version) =>
                                     version !== latestVersion && (
                                         <tr key={version}>
                                             <th>{version}</th>
@@ -116,9 +116,8 @@ function Versions(props) {
                                                         siteConfig.baseUrl
                                                     }${siteConfig.docsUrl}/${
                                                         props.language
-                                                            ? props.language +
-                                                              "/"
-                                                            : ""
+                                                            ? `${props.language}/`
+                                                            : ''
                                                     }${version}/api/apify`}
                                                 >
                                                     Documentation
@@ -132,12 +131,12 @@ function Versions(props) {
                                                 </a>
                                             </td>
                                         </tr>
-                                    )
+                                    ),
                             )}
                         </tbody>
                     </table>
                     <p>
-                        You can find past versions of this project on{" "}
+                        You can find past versions of this project on{' '}
                         <a href={repoUrl}>GitHub</a>.
                     </p>
                 </div>
@@ -146,7 +145,7 @@ function Versions(props) {
     );
 }
 
-export default props => (
+export default (props) => (
     <Layout>
         <Versions {...props} />
     </Layout>
