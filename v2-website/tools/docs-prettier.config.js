@@ -1,3 +1,6 @@
+/**
+ * @type {import('prettier').Options}
+ */
 module.exports = {
     parser: 'markdown',
     arrowParens: 'avoid',
