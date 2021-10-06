@@ -4,7 +4,7 @@ const jsdoc2md = require('jsdoc-to-markdown'); // eslint-disable-line
 const path = require('path');
 const prettier = require('prettier'); // eslint-disable-line
 const got = require('got');
-const prettierConfig = require('./prettier.config');
+const prettierConfig = require('./docs-prettier.config');
 const sidebars = require('../sidebars.json');
 
 const BASE_URL = '..';

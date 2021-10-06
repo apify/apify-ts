@@ -38,28 +38,3 @@ exports.externalLinkProcessor = () => {
         });
     };
 };
-
-/**
- * @type {import('unified').Plugin}
- */
-exports.externalLinkProcessor = () => {
-    return async (tree) => {
-        (await visit)(tree, 'element', (node) => {
-            if (
-                node.tagName === 'a'
-                && node.properties
-                && typeof node.properties.href === 'string'
-            ) {
-                const href = parse(node.properties.href);
-
-                if (!isInternal(href)) {
-                    node.properties.target = '_blank';
-                    node.properties.rel = 'noopener';
-                } else {
-                    node.properties.target = null;
-                    node.properties.rel = null;
-                }
-            }
-        });
-    };
-};

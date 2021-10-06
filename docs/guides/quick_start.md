@@ -8,6 +8,7 @@ If you want to learn more, proceed to the [Getting Started](../guides/getting-st
 tutorial that will take you step by step through creating your first scraper.
 
 ## Local stand-alone usage
+
 Apify SDK requires [Node.js](https://nodejs.org/en/) 10.17 or later, with the exception of Node.js 11.
 Add Apify SDK to any Node.js project by running:
 
@@ -15,13 +16,17 @@ Add Apify SDK to any Node.js project by running:
 npm install apify playwright
 ```
 
-> Neither `playwright` nor `puppeteer` are bundled with the SDK to reduce install size and allow greater
-> flexibility. That's why we install it with NPM. You can choose one, both, or neither.
+:::caution
+
+Neither `playwright` nor `puppeteer` are bundled with the SDK to reduce install size and allow greater
+flexibility. That's why we install it with NPM. You can choose one, both, or neither.
+
+:::
 
 Run the following example to perform a recursive crawl of a website using Playwright. For more examples showcasing various features of the Apify SDK,
 [see the Examples section of the documentation](../examples/crawl-multiple-urls).
 
-```javascript
+```javascript title="src/main.js"
 const Apify = require('apify');
 
 // Apify.main is a helper function, you don't need to use it.
@@ -50,7 +55,11 @@ Apify.main(async () => {
 });
 ```
 
-> To read more about what pseudo-URL is, check the [getting-started](getting-started#introduction-to-pseudo-urls).
+:::tip
+
+To read more about what pseudo-URL is, check the [getting-started](getting-started#introduction-to-pseudo-urls).
+
+:::
 
 When you run the example, you should see Apify SDK automating a Chrome browser.
 

@@ -17,9 +17,7 @@ const CompLibrary = {
 
 const { Container } = CompLibrary;
 
-const CWD = process.cwd();
-
-const versions = require(`${CWD}/versions.json`);
+const versions = require(`../../versions.json`);
 
 function Versions(props) {
     const { config: siteConfig } = props;

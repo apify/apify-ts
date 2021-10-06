@@ -137,8 +137,7 @@ module.exports = {
                         {
                             label: 'Main/Unreleased',
                             to: 'docs/next/',
-                            activeBaseRegex:
-                                    'docs/next/(?!support|team|resources)',
+                            activeBaseRegex: 'docs/next/(?!support|team|resources)',
                         },
                     ],
                 },
@@ -151,6 +150,8 @@ module.exports = {
         },
         prism: {
             defaultLanguage: 'javascript',
+            theme: require('prism-react-renderer/themes/duotoneLight'),
+            darkTheme: require('prism-react-renderer/themes/vsDark')
         },
         metadatas: [],
         image: 'img/apify_og_SDK.png',
@@ -227,9 +228,6 @@ module.exports = {
             algoliaOptions: {
                 facetFilters: ['version:VERSION'],
             },
-        },
-        googleAnalytics: {
-            trackingID: 'UA-67003981-4',
         },
         gaGtag: {
             trackingID: 'UA-67003981-4',
