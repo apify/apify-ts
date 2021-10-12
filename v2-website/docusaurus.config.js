@@ -45,9 +45,6 @@ module.exports = {
                     sidebarPath: './sidebars.json',
                     rehypePlugins: [externalLinkProcessor],
                 },
-                blog: {
-                    path: 'blog',
-                },
                 theme: {
                     customCss: '../src/css/customTheme.css',
                 },
