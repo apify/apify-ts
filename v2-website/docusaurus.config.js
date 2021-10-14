@@ -51,7 +51,18 @@ module.exports = {
             }),
         ],
     ]),
-    plugins: [],
+    plugins: [
+        [
+            'docusaurus-plugin-typedoc',
+            /** @type {Parameters<import('docusaurus-plugin-typedoc')['default']>[1]} */ ({
+                entryPoints: ['../src/index.js'],
+                tsconfig: '../tsconfig.json',
+                docsRoot: '../docs',
+                out: 'api-apify',
+                readme: null,
+            }),
+        ],
+    ],
     themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */ ({
         docs: {
@@ -148,7 +159,7 @@ module.exports = {
         prism: {
             defaultLanguage: 'javascript',
             theme: require('prism-react-renderer/themes/duotoneLight'),
-            darkTheme: require('prism-react-renderer/themes/vsDark')
+            darkTheme: require('prism-react-renderer/themes/vsDark'),
         },
         metadatas: [],
         image: 'img/apify_og_SDK.png',
