@@ -19,6 +19,7 @@ tmp
 jsconfig.json
 types
 docs/api
+docs/api-apify
 docs/typedefs
 docs/examples
 .history

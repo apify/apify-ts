@@ -10,10 +10,10 @@ import Apify from '../../build';
 import { STATUS_CODES_BLOCKED } from '../../build/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import * as utilsRequest from '../../build/utils_request';
-import Request from '../../build/request';
-import AutoscaledPool from '../../build/autoscaling/autoscaled_pool';
+import { Request } from '../../build/request';
+import { AutoscaledPool } from '../../build/autoscaling/autoscaled_pool';
 import { Session } from '../../build/session_pool/session';
-import EVENTS from '../../build/session_pool/events';
+import { EVENT_SESSION_RETIRED } from '../../build/session_pool/events';
 
 describe('BrowserCrawler', () => {
     let prevEnvHeadless;
@@ -553,7 +553,7 @@ describe('BrowserCrawler', () => {
             },
             maxRequestRetries: 1,
             gotoFunction: async ({ session }) => {
-                expect(session.sessionPool.listeners(EVENTS.SESSION_RETIRED)).toHaveLength(1);
+                expect(session.sessionPool.listeners(EVENT_SESSION_RETIRED)).toHaveLength(1);
                 session.retire();
             },
         });
@@ -566,7 +566,7 @@ describe('BrowserCrawler', () => {
         await requestList.initialize();
         await browserCrawler.run();
         await Apify.utils.sleep(5000);
-        expect(browserCrawler.sessionPool.listeners(EVENTS.SESSION_RETIRED)).toHaveLength(0);
+        expect(browserCrawler.sessionPool.listeners(EVENT_SESSION_RETIRED)).toHaveLength(0);
         await browserCrawler.browserPool.destroy();
     });
 
@@ -745,7 +745,7 @@ describe('BrowserCrawler', () => {
             };
 
             const handleFailedRequestFunction = async (crawlingContext) => {
-                expect(crawlingContext === prepareCrawlingContext).toEqual(true);
+                expect(crawlingContext).toBe(prepareCrawlingContext);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
                 expect(crawlingContext.session).toBeInstanceOf(Session);

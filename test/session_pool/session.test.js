@@ -1,7 +1,7 @@
 import { Session } from '../../build/session_pool/session';
 import { SessionPool } from '../../build/session_pool/session_pool';
 import { ProxyConfiguration } from '../../build/proxy_configuration';
-import EVENTS from '../../build/session_pool/events';
+import { EVENT_SESSION_RETIRED } from '../../build/session_pool/events';
 import { STATUS_CODES_BLOCKED } from '../../build/constants';
 
 import Apify from '../../build';
@@ -82,7 +82,7 @@ describe('Session - testing session behaviour ', () => {
 
     test('should retire session', () => {
         let discarded = false;
-        sessionPool.on(EVENTS.SESSION_RETIRED, (ses) => {
+        sessionPool.on(EVENT_SESSION_RETIRED, (ses) => {
             expect(ses instanceof Session).toBe(true);
             discarded = true;
         });

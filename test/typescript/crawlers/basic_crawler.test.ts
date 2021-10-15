@@ -1,19 +1,11 @@
-import { BasicCrawler, BasicCrawlerOptions } from "../../..";
-
-interface RequestData {
-    myValue: string;
-    myMaybeValue?: boolean;
-}
-
-interface SessionData {
-    userAgent: string;
-}
+import { BasicCrawlerOptions } from '../../../src';
 
 describe('BasicCrawler TS', () => {
     describe('generics', () => {
         test('options', () => {
             const requestQueue: any = {
-                addRequest: () => {}
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+                addRequest: () => {},
             };
 
             const options: BasicCrawlerOptions = {
@@ -23,28 +15,29 @@ describe('BasicCrawler TS', () => {
                     sessionOptions: {
                         sessionPool: null as any,
                         userData: {
-                            userAgent: 'user-agent'
-                        }
-                    }
-                }
+                            userAgent: 'user-agent',
+                        },
+                    },
+                },
             };
 
             options.requestQueue!.addRequest({
                 url: '',
                 userData: {
-                    myValue: 'asdf'
-                }
+                    myValue: 'asdf',
+                },
             });
 
             options.requestQueue!.addRequest({
                 url: '',
                 userData: {
                     myValue: 'asdf',
-                    myMaybeValue: false
-                }
+                    myMaybeValue: false,
+                },
             }, { forefront: true });
 
-            (options.sessionPoolOptions!.sessionOptions!.userData! as any).userAgent === 'user-agent';
-        })
+            // eslint-disable-next-line no-unused-expressions
+            options.sessionPoolOptions!.sessionOptions!.userData.userAgent === 'user-agent';
+        });
     });
 });

@@ -1,4 +1,26 @@
 {
-    "extends": ["@apify"],
-    "parser": "@babel/eslint-parser"
+    "root": true,
+    "env": {
+        "browser": true,
+        "es2020": true,
+        "node": true
+    },
+    "extends": [
+        "@apify/eslint-config-ts"
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.eslint.json",
+        "ecmaVersion": 2020
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "ignorePatterns": ["node_modules", "dist", "coverage", "**/*.js", "**/*.d.ts"],
+    "rules": {
+        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+        "@typescript-eslint/ban-ts-comment": 0,
+        "@typescript-eslint/no-unused-vars": "off",
+        "no-continue": "off",
+        "@typescript-eslint/array-type": "error"
+    }
 }

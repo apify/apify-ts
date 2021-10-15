@@ -16,9 +16,9 @@ import { Session } from '../../build/session_pool/session';
 import { STATUS_CODES_BLOCKED } from '../../build/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import * as utilsRequest from '../../build/utils_request';
-import CrawlerExtension from '../../build/crawlers/crawler_extension';
-import Request from '../../build/request';
-import AutoscaledPool from '../../build/autoscaling/autoscaled_pool';
+import { CrawlerExtension } from '../../build/crawlers/crawler_extension';
+import { Request } from '../../build/request';
+import { AutoscaledPool } from '../../build/autoscaling/autoscaled_pool';
 import { mergeCookies } from '../../build/crawlers/crawler_utils';
 
 const HOST = '127.0.0.1';

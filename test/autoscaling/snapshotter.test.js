@@ -6,7 +6,7 @@ import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import log from '../../build/utils_log';
 import Apify from '../../build/index';
 import events from '../../build/events';
-import Snapshotter from '../../build/autoscaling/snapshotter';
+import { Snapshotter } from '../../build/autoscaling/snapshotter';
 import * as utils from '../../build/utils';
 
 const toBytes = (x) => x * 1024 * 1024;

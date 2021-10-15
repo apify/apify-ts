@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import log from '../../build/utils_log';
 import { sleep } from '../../build/utils';
-import AutoscaledPool from '../../build/autoscaling/autoscaled_pool';
+import { AutoscaledPool } from '../../build/autoscaling/autoscaled_pool';
 
 /* eslint-disable no-underscore-dangle */
 

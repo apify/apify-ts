@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import Statistics from '../../build/crawlers/statistics';
+import { Statistics } from '../../build/crawlers/statistics';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import Apify from '../../build';
 import events from '../../build/events';

@@ -1,4 +1,4 @@
-import PseudoUrl from '../../build/pseudo_url';
+import { PseudoUrl } from '../../build/pseudo_url';
 import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from '../../build/enqueue_links/shared';
 
 describe('Enqueue links shared functions', () => {

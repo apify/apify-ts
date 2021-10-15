@@ -1,7 +1,7 @@
-import Apify from "../..";
+import Apify from '../..';
 
 describe('utils.log TS', () => {
-    const log = Apify.utils.log;
+    const { log } = Apify.utils;
 
     test('log.debug()', () => {
         log.debug('Debug level log');

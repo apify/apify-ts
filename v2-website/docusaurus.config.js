@@ -54,13 +54,22 @@ module.exports = {
     plugins: [
         [
             'docusaurus-plugin-typedoc',
-            /** @type {Parameters<import('docusaurus-plugin-typedoc')['default']>[1]} */ ({
-                entryPoints: ['../src/index.js'],
+            {
+                entryPoints: ['../src/exports.ts'],
                 tsconfig: '../tsconfig.json',
                 docsRoot: '../docs',
                 out: 'api-apify',
-                readme: null,
-            }),
+                // sort: ['source-order'],
+                readme: 'none',
+                excludeExternals: true,
+                excludePrivate: true,
+                excludeProtected: true,
+                excludeInternal: true,
+                defaultCategory: 'Apify',
+                categoryOrder: ['Apify', '*', 'Interfaces'],
+                externalPattern: '**/node_modules/*',
+                cleanOutputDir: true,
+            },
         ],
     ],
     themeConfig:
@@ -96,58 +105,8 @@ module.exports = {
                     position: 'left',
                 },
                 {
-                    label: 'Version',
-                    to: 'docs',
-                    position: 'right',
-                    items: [
-                        {
-                            label: '2.0.6',
-                            to: 'docs/',
-                            activeBaseRegex:
-                                    'docs/(?!0.22.4|1.0.0|1.0.1|1.0.2|1.1.0|1.1.2|1.2.0|1.3.1|2.0.1|2.0.6|next)',
-                        },
-                        {
-                            label: '2.0.1',
-                            to: 'docs/2.0.1/',
-                        },
-                        {
-                            label: '1.3.1',
-                            to: 'docs/1.3.1/',
-                        },
-                        {
-                            label: '1.2.0',
-                            to: 'docs/1.2.0/',
-                        },
-                        {
-                            label: '1.1.2',
-                            to: 'docs/1.1.2/',
-                        },
-                        {
-                            label: '1.1.0',
-                            to: 'docs/1.1.0/',
-                        },
-                        {
-                            label: '1.0.2',
-                            to: 'docs/1.0.2/',
-                        },
-                        {
-                            label: '1.0.1',
-                            to: 'docs/1.0.1/',
-                        },
-                        {
-                            label: '1.0.0',
-                            to: 'docs/1.0.0/',
-                        },
-                        {
-                            label: '0.22.4',
-                            to: 'docs/0.22.4/',
-                        },
-                        {
-                            label: 'Main/Unreleased',
-                            to: 'docs/next/',
-                            activeBaseRegex: 'docs/next/(?!support|team|resources)',
-                        },
-                    ],
+                    type: 'docsVersionDropdown',
+                    position: 'left',
                 },
             ],
         },
