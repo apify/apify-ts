@@ -30,7 +30,7 @@ jobs:
     - name: Build & deploy docs
       run: |
         cd v2-website
-        npm install
+        npm install --force
         npm run deploy
       env:
         GIT_USER: "B4nan:${{ secrets.GH_TOKEN }}"
