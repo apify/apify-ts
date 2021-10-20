@@ -4,12 +4,11 @@ const { externalLinkProcessor } = require('./tools/utils/externalLink');
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
     title: 'Apify SDK',
-    tagline:
-        'The scalable web crawling, scraping and automation library for JavaScript/Node.js.',
-    url: 'https://sdk.apify.com',
+    tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js.',
+    url: 'https://apify-ts.github.io',
     baseUrl: '/',
     organizationName: 'apify',
-    projectName: 'apify-js',
+    projectName: 'apify-ts',
     scripts: [],
     favicon: 'img/favicon.ico',
     customFields: {
@@ -27,7 +26,7 @@ module.exports = {
                 'typedefs/puppeteer-goto-inputs',
             ],
         },
-        repoUrl: 'https://github.com/apify/apify-js',
+        repoUrl: 'https://github.com/apify/apify-ts',
     },
     onBrokenLinks:
     /** @type {import('@docusaurus/types').ReportingSeverity} */ ('log'),
