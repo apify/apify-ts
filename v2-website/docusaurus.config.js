@@ -5,8 +5,8 @@ const { externalLinkProcessor } = require('./tools/utils/externalLink');
 module.exports = {
     title: 'Apify SDK',
     tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js.',
-    url: 'https://apify-ts.github.io',
-    baseUrl: '/',
+    url: 'https://apify.github.io',
+    baseUrl: '/apify-ts/',
     organizationName: 'apify',
     projectName: 'apify-ts',
     scripts: [],
