@@ -29,7 +29,7 @@ const EMAIL_REGEX_STRING = '(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&\'
  * @type {RegExp}
  * @memberOf social
  */
-const EMAIL_REGEX = new RegExp(`^${EMAIL_REGEX_STRING}$`, 'i');
+export const EMAIL_REGEX = new RegExp(`^${EMAIL_REGEX_STRING}$`, 'i');
 
 /**
  * Regular expression to find multiple email addresses in a text.
@@ -37,7 +37,7 @@ const EMAIL_REGEX = new RegExp(`^${EMAIL_REGEX_STRING}$`, 'i');
  * @type {RegExp}
  * @memberOf social
  */
-const EMAIL_REGEX_GLOBAL = new RegExp(EMAIL_REGEX_STRING, 'ig');
+export const EMAIL_REGEX_GLOBAL = new RegExp(EMAIL_REGEX_STRING, 'ig');
 
 const EMAIL_URL_PREFIX_REGEX = /^mailto:/i;
 
@@ -49,7 +49,7 @@ const EMAIL_URL_PREFIX_REGEX = /^mailto:/i;
  * If no emails are found, the function returns an empty array.
  * @memberOf social
  */
-function emailsFromText(text: string): string[] {
+export function emailsFromText(text: string): string[] {
     if (!_.isString(text)) return [];
     return text.match(EMAIL_REGEX_GLOBAL) || [];
 }
@@ -63,7 +63,7 @@ function emailsFromText(text: string): string[] {
  * If no emails are found, the function returns an empty array.
  * @memberOf social
  */
-function emailsFromUrls(urls: string[]): string[] {
+export function emailsFromUrls(urls: string[]): string[] {
     if (!Array.isArray(urls)) throw new Error('The "urls" parameter must be an array');
     const emails = [];
 
@@ -146,7 +146,7 @@ const SKIP_PHONE_REGEX = new RegExp(`^(${SKIP_PHONE_REGEXS.join('|')})$`, 'i');
  * If no phone numbers are found, the function returns an empty array.
  * @memberOf social
  */
-function phonesFromText(text: string): string[] {
+export function phonesFromText(text: string): string[] {
     if (!_.isString(text)) return [];
 
     let phones = text.match(PHONE_REGEX_GLOBAL) || [];
@@ -173,7 +173,7 @@ function phonesFromText(text: string): string[] {
  * If no phone numbers are found, the function returns an empty array.
  * @memberOf social
  */
-function phonesFromUrls(urls: string[]): string[] {
+export function phonesFromUrls(urls: string[]): string[] {
     if (!Array.isArray(urls)) throw new Error('The "urls" parameter must be an array');
 
     const phones = [];
@@ -210,16 +210,16 @@ const FACEBOOK_REGEX_STRING = `(?<!\\w)(?:http(?:s)?:\\/\\/)?(?:www.)?(?:faceboo
 // eslint-disable-next-line max-len
 const YOUTUBE_REGEX_STRING = '(?:https?:\\/\\/)?(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch|v|embed|user|c(?:hannel)?)(?:\\.php)?(?:\\?[^ ]*v=|\\/))([a-zA-Z0-9\\-_]+)';
 
-let LINKEDIN_REGEX: RegExp;
-let LINKEDIN_REGEX_GLOBAL: RegExp;
-let INSTAGRAM_REGEX: RegExp;
-let INSTAGRAM_REGEX_GLOBAL: RegExp;
-let TWITTER_REGEX: RegExp;
-let TWITTER_REGEX_GLOBAL: RegExp;
-let FACEBOOK_REGEX: RegExp;
-let FACEBOOK_REGEX_GLOBAL: RegExp;
-let YOUTUBE_REGEX: RegExp;
-let YOUTUBE_REGEX_GLOBAL: RegExp;
+let LINKEDIN_REGEX_TMP: RegExp;
+let LINKEDIN_REGEX_GLOBAL_TMP: RegExp;
+let INSTAGRAM_REGEX_TMP: RegExp;
+let INSTAGRAM_REGEX_GLOBAL_TMP: RegExp;
+let TWITTER_REGEX_TMP: RegExp;
+let TWITTER_REGEX_GLOBAL_TMP: RegExp;
+let FACEBOOK_REGEX_TMP: RegExp;
+let FACEBOOK_REGEX_GLOBAL_TMP: RegExp;
+let YOUTUBE_REGEX_TMP: RegExp;
+let YOUTUBE_REGEX_GLOBAL_TMP: RegExp;
 
 try {
     /**
@@ -239,14 +239,14 @@ try {
      *
      * Example usage:
      * ```
-     * if (Apify.utils.social.LINKEDIN_REGEX.test('https://www.linkedin.com/in/alan-turing')) {
+     * if (Apify.utils.social.LINKEDIN_REGEX_TMP.test('https://www.linkedin.com/in/alan-turing')) {
      *     console.log('Match!');
      * }
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    LINKEDIN_REGEX = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
+    LINKEDIN_REGEX_TMP = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
 
     /**
      * Regular expression to find multiple LinkedIn profile URLs in a text or HTML.
@@ -269,13 +269,13 @@ try {
      *
      * Example usage:
      * ```
-     * const matches = text.match(Apify.utils.social.LINKEDIN_REGEX_GLOBAL);
+     * const matches = text.match(Apify.utils.social.LINKEDIN_REGEX_GLOBAL_TMP);
      * if (matches) console.log(`${matches.length} LinkedIn profiles found!`);
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    LINKEDIN_REGEX_GLOBAL = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
+    LINKEDIN_REGEX_GLOBAL_TMP = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
 
     /**
      * Regular expression to exactly match a single Instagram profile URL.
@@ -294,14 +294,14 @@ try {
      *
      * Example usage:
      * ```
-     * if (Apify.utils.social.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague')) {
+     * if (Apify.utils.social.INSTAGRAM_REGEX_TMP.test('https://www.instagram.com/old_prague')) {
      *     console.log('Match!');
      * }
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    INSTAGRAM_REGEX = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
+    INSTAGRAM_REGEX_TMP = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
 
     /**
      * Regular expression to find multiple Instagram profile URLs in a text or HTML.
@@ -324,13 +324,13 @@ try {
      *
      * Example usage:
      * ```
-     * const matches = text.match(Apify.utils.social.INSTAGRAM_REGEX_GLOBAL);
+     * const matches = text.match(Apify.utils.social.INSTAGRAM_REGEX_GLOBAL_TMP);
      * if (matches) console.log(`${matches.length} Instagram profiles found!`);
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    INSTAGRAM_REGEX_GLOBAL = new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
+    INSTAGRAM_REGEX_GLOBAL_TMP = new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
 
     /**
      * Regular expression to exactly match a single Twitter profile URL.
@@ -348,14 +348,14 @@ try {
      *
      * Example usage:
      * ```
-     * if (Apify.utils.social.TWITTER_REGEX.test('https://www.twitter.com/apify')) {
+     * if (Apify.utils.social.TWITTER_REGEX_TMP.test('https://www.twitter.com/apify')) {
      *     console.log('Match!');
      * }
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    TWITTER_REGEX = new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
+    TWITTER_REGEX_TMP = new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
 
     /**
      * Regular expression to find multiple Twitter profile URLs in a text or HTML.
@@ -383,7 +383,7 @@ try {
      * @type {RegExp}
      * @memberOf social
      */
-    TWITTER_REGEX_GLOBAL = new RegExp(TWITTER_REGEX_STRING, 'ig');
+    TWITTER_REGEX_GLOBAL_TMP = new RegExp(TWITTER_REGEX_STRING, 'ig');
 
     /**
      * Regular expression to exactly match a single Facebook profile URL.
@@ -403,14 +403,14 @@ try {
      *
      * Example usage:
      * ```
-     * if (Apify.utils.social.FACEBOOK_REGEX.test('https://www.facebook.com/apifytech')) {
+     * if (Apify.utils.social.FACEBOOK_REGEX_TMP.test('https://www.facebook.com/apifytech')) {
      *     console.log('Match!');
      * }
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    FACEBOOK_REGEX = new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
+    FACEBOOK_REGEX_TMP = new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
 
     /**
      * Regular expression to find multiple Facebook profile URLs in a text or HTML.
@@ -433,13 +433,13 @@ try {
      *
      * Example usage:
      * ```
-     * const matches = text.match(Apify.utils.social.FACEBOOK_REGEX_GLOBAL);
+     * const matches = text.match(Apify.utils.social.FACEBOOK_REGEX_GLOBAL_TMP);
      * if (matches) console.log(`${matches.length} Facebook profiles found!`);
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    FACEBOOK_REGEX_GLOBAL = new RegExp(FACEBOOK_REGEX_STRING, 'ig');
+    FACEBOOK_REGEX_GLOBAL_TMP = new RegExp(FACEBOOK_REGEX_STRING, 'ig');
 
     /**
      * Regular expression to exactly match a single Youtube channel, user or video URL.
@@ -456,14 +456,14 @@ try {
      *
      * Example usage:
      * ```
-     * if (Apify.utils.social.YOUTUBE_REGEX.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
+     * if (Apify.utils.social.YOUTUBE_REGEX_TMP.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
      *     console.log('Match!');
      * }
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    YOUTUBE_REGEX = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
+    YOUTUBE_REGEX_TMP = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
 
     /**
      * Regular expression to find multiple Youtube channel, user or video URLs in a text or HTML.
@@ -480,13 +480,13 @@ try {
      *
      * Example usage:
      * ```
-     * const matches = text.match(Apify.utils.social.YOUTUBE_REGEX_GLOBAL);
+     * const matches = text.match(Apify.utils.social.YOUTUBE_REGEX_GLOBAL_TMP);
      * if (matches) console.log(`${matches.length} Youtube videos found!`);
      * ```
      * @type {RegExp}
      * @memberOf social
      */
-    YOUTUBE_REGEX_GLOBAL = new RegExp(YOUTUBE_REGEX_STRING, 'ig');
+    YOUTUBE_REGEX_GLOBAL_TMP = new RegExp(YOUTUBE_REGEX_STRING, 'ig');
 } catch (e) {
     // Older versions of Node don't support negative lookbehind and lookahead expressions.
     // Show warning instead of failing.
@@ -543,7 +543,7 @@ export interface SocialHandles {
  * @return {SocialHandles} An object with the social handles.
  * @memberOf social
  */
-function parseHandlesFromHtml(html: string, data: Record<string, unknown> = null): SocialHandles {
+export function parseHandlesFromHtml(html: string, data: Record<string, unknown> = null): SocialHandles {
     const result = {
         emails: [],
         phones: [],
@@ -579,11 +579,11 @@ function parseHandlesFromHtml(html: string, data: Record<string, unknown> = null
     //  https://www.linkedin.com/in/carl-newman-123456a/detail/recent-activity/
     // they match just:
     //  https://www.linkedin.com/in/carl-newman-123456a
-    result.linkedIns = html.match(LINKEDIN_REGEX_GLOBAL) || [];
-    result.twitters = html.match(TWITTER_REGEX_GLOBAL) || [];
-    result.instagrams = html.match(INSTAGRAM_REGEX_GLOBAL) || [];
-    result.facebooks = html.match(FACEBOOK_REGEX_GLOBAL) || [];
-    result.youtubes = html.match(YOUTUBE_REGEX_GLOBAL) || [];
+    result.linkedIns = html.match(LINKEDIN_REGEX_GLOBAL_TMP) || [];
+    result.twitters = html.match(TWITTER_REGEX_GLOBAL_TMP) || [];
+    result.instagrams = html.match(INSTAGRAM_REGEX_GLOBAL_TMP) || [];
+    result.facebooks = html.match(FACEBOOK_REGEX_GLOBAL_TMP) || [];
+    result.youtubes = html.match(YOUTUBE_REGEX_GLOBAL_TMP) || [];
 
     // Sort and deduplicate handles
     // eslint-disable-next-line guard-for-in, no-restricted-syntax
@@ -594,6 +594,17 @@ function parseHandlesFromHtml(html: string, data: Record<string, unknown> = null
 
     return result;
 }
+
+export const LINKEDIN_REGEX = LINKEDIN_REGEX_TMP;
+export const LINKEDIN_REGEX_GLOBAL = LINKEDIN_REGEX_GLOBAL_TMP;
+export const INSTAGRAM_REGEX = INSTAGRAM_REGEX_TMP;
+export const INSTAGRAM_REGEX_GLOBAL = INSTAGRAM_REGEX_GLOBAL_TMP;
+export const TWITTER_REGEX = TWITTER_REGEX_TMP;
+export const TWITTER_REGEX_GLOBAL = TWITTER_REGEX_GLOBAL_TMP;
+export const FACEBOOK_REGEX = FACEBOOK_REGEX_TMP;
+export const FACEBOOK_REGEX_GLOBAL = FACEBOOK_REGEX_GLOBAL_TMP;
+export const YOUTUBE_REGEX = YOUTUBE_REGEX_TMP;
+export const YOUTUBE_REGEX_GLOBAL = YOUTUBE_REGEX_GLOBAL_TMP;
 
 /** @internal */
 export const socialUtils = {

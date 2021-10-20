@@ -48,7 +48,6 @@
  * @packageDocumentation
  * @module Apify
  */
-// export * from './main';
 export * from './actor';
 export * from './configuration';
 export * from './crawlers/basic_crawler';
@@ -61,11 +60,6 @@ export * from './storages/dataset';
 export * from './storages/storage_manager';
 export * from './storages/key_value_store';
 export * as utils from './utils';
-// export * as utilsLog from './utils_log';
-// export * as utilsRequest from './utils_request';
-// export * as utilsSocial from './utils_social';
-// export * as utilsPlaywright from './playwright_utils';
-// export * as utilsPuppeteer from './puppeteer_utils';
 export * from './request_list';
 export * from './request';
 export * from './session_pool/session';

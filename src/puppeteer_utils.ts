@@ -93,7 +93,7 @@ const injectedFilesCache = new LruCache({ maxLength: MAX_INJECT_FILE_CACHE_SIZE 
  *   re-injected on each navigation before any other scripts get the chance to execute.
  * @memberOf puppeteer
  */
-async function injectFile(page: Page, filePath: string, options: { surviveNavigations?: boolean } = {}): Promise<unknown> {
+export async function injectFile(page: Page, filePath: string, options: { surviveNavigations?: boolean } = {}): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(filePath, ow.string);
     ow(options, ow.object.exactShape({
@@ -138,7 +138,7 @@ async function injectFile(page: Page, filePath: string, options: { surviveNaviga
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @memberOf puppeteer
  */
-function injectJQuery(page: Page): Promise<unknown> {
+export function injectJQuery(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     return injectFile(page, jqueryPath, { surviveNavigations: true });
 }
@@ -163,7 +163,7 @@ function injectJQuery(page: Page): Promise<unknown> {
  * @param page Puppeteer [Page](https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#class-page) object.
  * @memberOf puppeteer
  */
-function injectUnderscore(page: Page): Promise<unknown> {
+export function injectUnderscore(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     return injectFile(page, underscorePath, { surviveNavigations: true });
 }
@@ -219,7 +219,7 @@ function injectUnderscore(page: Page): Promise<unknown> {
  *   If you just want to append to the default blocked patterns, use this property.
  * @memberOf puppeteer
  */
-async function blockRequests(page: Page, options: { urlPatterns?: string[]; extraUrlPatterns?: string[] } = {}): Promise<void> {
+export async function blockRequests(page: Page, options: { urlPatterns?: string[]; extraUrlPatterns?: string[] } = {}): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(options, ow.object.exactShape({
         urlPatterns: ow.optional.array.ofType(ow.string),
@@ -269,7 +269,7 @@ const blockResources = async (page, resourceTypes = ['stylesheet', 'font', 'imag
  * @memberOf puppeteer
  * @deprecated
  */
-async function cacheResponses(page: Page, cache: Dictionary, responseUrlRules: (string | RegExp)[]): Promise<void> {
+export async function cacheResponses(page: Page, cache: Dictionary, responseUrlRules: (string | RegExp)[]): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(cache, ow.object);
     ow(responseUrlRules, ow.array.ofType(ow.any(ow.string, ow.regExp)));
@@ -341,12 +341,9 @@ async function cacheResponses(page: Page, cache: Dictionary, responseUrlRules: (
  * make sure to only pass the really necessary objects to the context. Preferably making
  * secured copies beforehand.
  *
- * @param {string} scriptString
- * @param {Object<string, *>} context
- * @return {CompiledScriptFunction}
  * @memberOf puppeteer
  */
-const compileScript = (scriptString, context = Object.create(null)) => {
+export function compileScript(scriptString: string, context: Dictionary = Object.create(null)): CompiledScriptFunction {
     const funcString = `async ({ page, request }) => {${scriptString}}`;
 
     let func;
@@ -360,7 +357,7 @@ const compileScript = (scriptString, context = Object.create(null)) => {
     if (!_.isFunction(func)) throw new Error('Compilation result is not a function!'); // This should not happen...
 
     return func;
-};
+}
 
 /**
  * Extended version of Puppeteer's `page.goto()` allowing to perform requests with HTTP method other than GET,
@@ -579,13 +576,12 @@ export interface SaveSnapshotOptions {
 
 /**
  * Saves a full screenshot and HTML of the current page into a Key-Value store.
- * @param {Page} page
+ * @param page
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
- * @param {object} [options]
- * @returns {Promise<void>}
+ * @param [options]
  * @memberOf puppeteer
  */
-async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}) {
+export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(options, ow.object.exactShape({
         key: ow.optional.string.nonEmpty,

@@ -61,11 +61,9 @@ export interface DirectNavigationOptions {
  *   Puppeteer [`Page`](https://playwright.dev/docs/api/class-page) object.
  * @param request
  * @param [gotoOptions] Custom options for `page.goto()`.
- * @return {Promise<Response | null>}
- *
  * @memberOf playwright
  */
-export const gotoExtended = async (page: Page, request: Request, gotoOptions: DirectNavigationOptions = {}) => {
+export async function gotoExtended(page: Page, request: Request, gotoOptions: DirectNavigationOptions = {}): Promise<Response | null> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(request, ow.object.partialShape({
         url: ow.string.url,
@@ -106,7 +104,7 @@ export const gotoExtended = async (page: Page, request: Request, gotoOptions: Di
     }
 
     return page.goto(url, gotoOptions);
-};
+}
 
 /** @internal */
 export const playwrightUtils = {
