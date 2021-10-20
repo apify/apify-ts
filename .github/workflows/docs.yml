@@ -1,0 +1,37 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - typedoc-tests
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 15
+      uses: actions/setup-node@v2-beta
+      with:
+        node-version: 15
+
+    - name: Set git identity
+      run: |
+        git config --global user.name "Martin Adámek"
+        git config --global user.email "martin@apify.com"
+
+#    - name: Cache node_modules
+#      uses: actions/cache@v2
+#      with:
+#        path: '**/node_modules'
+#        key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+    - name: Build & deploy docs
+      run: |
+        cd v2-website
+        npm install
+        npm run deploy
+      env:
+        GIT_USER: "B4nan:${{ secrets.GH_TOKEN }}"
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
