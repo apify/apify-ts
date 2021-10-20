@@ -52,7 +52,7 @@ module.exports = {
     ]),
     plugins: [
         [
-            `${__dirname}/typedoc-plugins/docusaurus-plugin-typedoc/dist`,
+            './typedoc-plugins/docusaurus-plugin-typedoc/dist',
             {
                 entryPoints: ['../src/exports.ts'],
                 tsconfig: '../tsconfig.json',
@@ -60,7 +60,7 @@ module.exports = {
                 out: 'api-apify',
                 // sort: ['source-order'],
                 plugin: [
-                    `${__dirname}/typedoc-plugins/docusaurus-plugin-typedoc/dist/typedoc_plugin.js`,
+                    './typedoc-plugins/docusaurus-plugin-typedoc/dist/typedoc_plugin.js',
                 ],
                 readme: 'none',
                 excludeExternals: true,
