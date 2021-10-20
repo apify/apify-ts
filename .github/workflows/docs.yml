@@ -29,12 +29,19 @@ jobs:
 
             -   name: Build & deploy docs
                 run: |
+                    # install project deps
                     npm install --force
+                    # go to website dir
                     cd v2-website
-                    cd typedoc-plugins/docusaurus-plugin-typedoc
-                    npx tsc
-                    cd ../..
+                    # install website deps
                     npm install --force
+                    # go to custom docusuarus/typedoc plugin
+                    cd typedoc-plugins/docusaurus-plugin-typedoc
+                    # build the plugin
+                    npx tsc
+                    # go back
+                    cd ../..
+                    # build and deploy the docs
                     npm run deploy
                 env:
                     GIT_USER: "B4nan:${{ secrets.GH_TOKEN }}"
