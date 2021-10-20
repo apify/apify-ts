@@ -1,3 +1,19 @@
+/**
+ * A namespace that contains various utilities.
+ *
+ * **Example usage:**
+ *
+ * ```javascript
+ * const Apify = require('apify');
+ *
+ * ...
+ *
+ * // Sleep 1.5 seconds
+ * await Apify.utils.sleep(1500);
+ * ```
+ * @module utils
+ */
+
 import psTree from '@apify/ps-tree';
 import { execSync } from 'child_process';
 import { ApifyClient } from 'apify-client';
@@ -721,20 +737,16 @@ export const purgeLocalStorage = async (folder) => {
     await rimrafp(folder);
 };
 
-/**
- * A namespace that contains various utilities.
- *
- * **Example usage:**
- *
- * ```javascript
- * const Apify = require('apify');
- *
- * ...
- *
- * // Sleep 1.5 seconds
- * await Apify.utils.sleep(1500);
- * ```
- */
+// regular re-export as those methods should be part of `utils`
+export * from './utils_request';
+
+// namespace re-export as those will be nested namespaces under `utils.*`
+export * as log from './utils_log';
+export * as social from './utils_social';
+export * as playwright from './playwright_utils';
+export * as puppeteer from './puppeteer_utils';
+
+/** @internal */
 export const publicUtils = {
     isDocker,
     sleep,

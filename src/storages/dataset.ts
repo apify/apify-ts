@@ -86,7 +86,7 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
  * Typically it is used to store crawling results.
  *
  * Do not instantiate this class directly, use the
- * {@link Apify#openDataset} function instead.
+ * {@link Apify.openDataset} function instead.
  *
  * `Dataset` stores its data either on local disk or in the Apify cloud,
  * depending on whether the `APIFY_LOCAL_STORAGE_DIR` or `APIFY_TOKEN` environment variables are set.
@@ -103,7 +103,7 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` not, the data is stored in the
  * [Apify Dataset](https://docs.apify.com/storage/dataset)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify#openDataset} function,
+ * option to {@link Apify.openDataset} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
@@ -195,7 +195,7 @@ export class Dataset {
     /**
      * Returns {@link DatasetContent} object holding the items in the dataset based on the provided parameters.
      *
-     * If you need to get data in an unparsed format, use the {@link Apify#newClient} function to get a new
+     * If you need to get data in an unparsed format, use the {@link Apify.newClient} function to get a new
      * `apify-client` instance and call
      * [`datasetClient.downloadItems()`](https://github.com/apify/apify-client-js#DatasetClient+downloadItems)
      *
@@ -429,7 +429,7 @@ export async function openDataset(datasetIdOrName?: string, options = {}) {
 /**
  * Stores an object or an array of objects to the default {@link Dataset} of the current actor run.
  *
- * This is just a convenient shortcut for {@link Dataset#pushData}.
+ * This is just a convenient shortcut for {@link Dataset.pushData}.
  * For example, calling the following code:
  * ```javascript
  * await Apify.pushData({ myValue: 123 });
@@ -441,7 +441,7 @@ export async function openDataset(datasetIdOrName?: string, options = {}) {
  * await dataset.pushData({ myValue: 123 });
  * ```
  *
- * For more information, see {@link Apify#openDataset} and {@link Dataset#pushData}
+ * For more information, see {@link Apify.openDataset} and {@link Dataset.pushData}
  *
  * **IMPORTANT**: Make sure to use the `await` keyword when calling `pushData()`,
  * otherwise the actor process might finish before the data are stored!

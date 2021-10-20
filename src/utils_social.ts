@@ -1,3 +1,17 @@
+/**
+ * A namespace that contains various utilities to help you extract social handles
+ * from text, URLs and and HTML documents.
+ *
+ * **Example usage:**
+ *
+ * ```javascript
+ * const Apify = require('apify');
+ *
+ * const emails = Apify.utils.social.emailsFromText('alice@example.com bob@example.com');
+ * ```
+ * @module socialUtils
+ */
+
 import _ from 'underscore';
 import cheerio from 'cheerio';
 import log from './utils_log';
@@ -504,7 +518,7 @@ export interface SocialHandles {
  * The function removes duplicates from the resulting arrays and sorts the items alphabetically.
  *
  * Note that the `phones` field contains phone numbers extracted from the special phone links
- * such as `[call us](tel:+1234556789)` (see {@link social#phonesFromUrls})
+ * such as `[call us](tel:+1234556789)` (see {@link social.phonesFromUrls})
  * and potentially other sources with high certainty, while `phonesUncertain` contains phone numbers
  * extracted from the plain text, which might be very inaccurate.
  *
@@ -581,18 +595,7 @@ function parseHandlesFromHtml(html: string, data: Record<string, unknown> = null
     return result;
 }
 
-/**
- * A namespace that contains various utilities to help you extract social handles
- * from text, URLs and and HTML documents.
- *
- * **Example usage:**
- *
- * ```javascript
- * const Apify = require('apify');
- *
- * const emails = Apify.utils.social.emailsFromText('alice@example.com bob@example.com');
- * ```
- */
+/** @internal */
 export const socialUtils = {
     emailsFromText,
     emailsFromUrls,

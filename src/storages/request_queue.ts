@@ -58,7 +58,7 @@ export function getRequestId(uniqueKey: string) {
 
 /**
  * A helper class that is used to report results from various
- * {@link RequestQueue} functions as well as {@link utils#enqueueLinks}.
+ * {@link RequestQueue} functions as well as {@link utils.enqueueLinks}.
  */
 export interface QueueOperationInfo {
 
@@ -88,7 +88,7 @@ export interface QueueOperationInfo {
  * corresponding {@link Request} objects will need to have different `uniqueKey` properties.
  *
  * Do not instantiate this class directly, use the
- * {@link Apify#openRequestQueue} function instead.
+ * {@link Apify.openRequestQueue} function instead.
  *
  * `RequestQueue` is used by {@link BasicCrawler}, {@link CheerioCrawler}, {@link PuppeteerCrawler}
  * and {@link PlaywrightCrawler} as a source of URLs to crawl.
@@ -104,7 +104,7 @@ export interface QueueOperationInfo {
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` is not, the data is stored in the
  * [Apify Request Queue](https://docs.apify.com/storage/request-queue)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify#openRequestQueue} function,
+ * option to {@link Apify.openRequestQueue} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
@@ -192,7 +192,7 @@ export class RequestQueue {
      * {@link QueueOperationInfo} object.
      *
      * To add multiple requests to the queue by extracting links from a webpage,
-     * see the {@link utils#enqueueLinks} helper function.
+     * see the {@link utils.enqueueLinks} helper function.
      *
      * @param {(Request|RequestOptions)} requestLike {@link Request} object or vanilla object with request data.
      * Note that the function sets the `uniqueKey` and `id` fields to the passed Request.
@@ -276,15 +276,15 @@ export class RequestQueue {
      * Returns a next request in the queue to be processed, or `null` if there are no more pending requests.
      *
      * Once you successfully finish processing of the request, you need to call
-     * {@link RequestQueue#markRequestHandled}
+     * {@link RequestQueue.markRequestHandled}
      * to mark the request as handled in the queue. If there was some error in processing the request,
-     * call {@link RequestQueue#reclaimRequest} instead,
+     * call {@link RequestQueue.reclaimRequest} instead,
      * so that the queue will give the request to some other consumer in another call to the `fetchNextRequest` function.
      *
      * Note that the `null` return value doesn't mean the queue processing finished,
      * it means there are currently no pending requests.
      * To check whether all requests in queue were finished,
-     * use {@link RequestQueue#isFinished} instead.
+     * use {@link RequestQueue.isFinished} instead.
      *
      * @returns {Promise<(Request|null)>}
      * Returns the request object or `null` if there are no more pending requests.
@@ -348,7 +348,7 @@ export class RequestQueue {
 
     /**
      * Marks a request that was previously returned by the
-     * {@link RequestQueue#fetchNextRequest}
+     * {@link RequestQueue.fetchNextRequest}
      * function as handled after successful processing.
      * Handled requests will never again be returned by the `fetchNextRequest` function.
      *
@@ -388,7 +388,7 @@ export class RequestQueue {
 
     /**
      * Reclaims a failed request back to the queue, so that it can be returned for processed later again
-     * by another call to {@link RequestQueue#fetchNextRequest}.
+     * by another call to {@link RequestQueue.fetchNextRequest}.
      * The request record in the queue is updated using the provided `request` parameter.
      * For example, this lets you store the number of retries or error messages for the request.
      *
@@ -396,7 +396,7 @@ export class RequestQueue {
      * @param {object} [options]
      * @param {boolean} [options.forefront=false]
      * If `true` then the request it placed to the beginning of the queue, so that it's returned
-     * in the next call to {@link RequestQueue#fetchNextRequest}.
+     * in the next call to {@link RequestQueue.fetchNextRequest}.
      * By default, it's put to the end of the queue.
      * @return {Promise<QueueOperationInfo>}
      */
@@ -441,10 +441,10 @@ export class RequestQueue {
     }
 
     /**
-     * Resolves to `true` if the next call to {@link RequestQueue#fetchNextRequest}
+     * Resolves to `true` if the next call to {@link RequestQueue.fetchNextRequest}
      * would return `null`, otherwise it resolves to `false`.
      * Note that even if the queue is empty, there might be some pending requests currently being processed.
-     * If you need to ensure that there is no activity in the queue, use {@link RequestQueue#isFinished}.
+     * If you need to ensure that there is no activity in the queue, use {@link RequestQueue.isFinished}.
      *
      * @returns {Promise<boolean>}
      */

@@ -1,3 +1,24 @@
+/**
+ * A namespace that contains various utilities for
+ * [Playwright](https://github.com/microsoft/playwright) - the headless Chrome Node API.
+ *
+ * **Example usage:**
+ *
+ * ```javascript
+ * const Apify = require('apify');
+ * const { playwright } = Apify.utils;
+ *
+ * // Navigate to https://www.example.com in Playwright with a POST request
+ * const browser = await Apify.launchPlaywright();
+ * const page = await browser.newPage();
+ * await playwright.gotoExtended(page, {
+ *     url: 'https://example.com,
+ *     method: 'POST',
+ * });
+ * ```
+ * @module playwrightUtils
+ */
+
 import ow from 'ow';
 import _ from 'underscore';
 import { Page, Response } from 'playwright';
@@ -5,7 +26,7 @@ import log from './utils_log';
 import { validators } from './validators';
 import { Request } from './request';
 
-export type DirectNavigationOptions = {
+export interface DirectNavigationOptions {
     /**
      * Maximum operation time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The
      * default value can be changed by using the browserContext.setDefaultNavigationTimeout(timeout),
@@ -26,7 +47,7 @@ export type DirectNavigationOptions = {
      * Referer header value. If provided it will take preference over the referer header value set by page.setExtraHTTPHeaders(headers).
      */
     referer?: string;
-};
+}
 
 /**
  * Extended version of Playwright's `page.goto()` allowing to perform requests with HTTP method other than GET,
@@ -87,25 +108,7 @@ export const gotoExtended = async (page: Page, request: Request, gotoOptions: Di
     return page.goto(url, gotoOptions);
 };
 
-/**
- * A namespace that contains various utilities for
- * [Playwright](https://github.com/microsoft/playwright) - the headless Chrome Node API.
- *
- * **Example usage:**
- *
- * ```javascript
- * const Apify = require('apify');
- * const { playwright } = Apify.utils;
- *
- * // Navigate to https://www.example.com in Playwright with a POST request
- * const browser = await Apify.launchPlaywright();
- * const page = await browser.newPage();
- * await playwright.gotoExtended(page, {
- *     url: 'https://example.com,
- *     method: 'POST',
- * });
- * ```
- */
+/** @internal */
 export const playwrightUtils = {
     gotoExtended,
 };

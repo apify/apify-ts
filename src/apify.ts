@@ -64,7 +64,7 @@ interface AddWebhookOptions {
      * Idempotency key enables you to ensure that a webhook will not be added multiple times in case of
      * an actor restart or other situation that would cause the `addWebhook()` function to be called again.
      * We suggest using the actor run ID as the idempotency key. You can get the run ID by calling
-     * {@link Apify#getEnv} function.
+     * {@link Apify.getEnv} function.
      */
     idempotencyKey?: string;
 
@@ -207,7 +207,7 @@ export class Apify {
      * If the actor run fails, the function throws the {@link ApifyCallError} exception.
      *
      * If you want to run an actor task rather than an actor, please use the
-     * {@link Apify#callTask} function instead.
+     * {@link Apify.callTask} function instead.
      *
      * For more information about actors, read the
      * [documentation](https://docs.apify.com/actor).
@@ -310,7 +310,7 @@ export class Apify {
      *
      * Note that an actor task is a saved input configuration and options for an actor.
      * If you want to run an actor directly rather than an actor task, please use the
-     * {@link Apify#call} function instead.
+     * {@link Apify.call} function instead.
      *
      * For more information about actor tasks, read the [documentation](https://docs.apify.com/tasks).
      *
@@ -487,7 +487,7 @@ export class Apify {
     /**
      * Stores an object or an array of objects to the default {@link Dataset} of the current actor run.
      *
-     * This is just a convenient shortcut for {@link Dataset#pushData}.
+     * This is just a convenient shortcut for {@link Dataset.pushData}.
      * For example, calling the following code:
      * ```javascript
      * await Apify.pushData({ myValue: 123 });
@@ -499,7 +499,7 @@ export class Apify {
      * await dataset.pushData({ myValue: 123 });
      * ```
      *
-     * For more information, see {@link Apify#openDataset} and {@link Dataset#pushData}
+     * For more information, see {@link Apify.openDataset} and {@link Dataset.pushData}
      *
      * **IMPORTANT**: Make sure to use the `await` keyword when calling `pushData()`,
      * otherwise the actor process might finish before the data are stored!
@@ -542,7 +542,7 @@ export class Apify {
     /**
      * Gets a value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for {@link KeyValueStore#getValue}.
+     * This is just a convenient shortcut for {@link KeyValueStore.getValue}.
      * For example, calling the following code:
      * ```javascript
      * const value = await Apify.getValue('my-key');
@@ -554,10 +554,10 @@ export class Apify {
      * const value = await store.getValue('my-key');
      * ```
      *
-     * To store the value to the default key-value store, you can use the {@link Apify#setValue} function.
+     * To store the value to the default key-value store, you can use the {@link Apify.setValue} function.
      *
-     * For more information, see  {@link Apify#openKeyValueStore}
-     * and  {@link KeyValueStore#getValue}.
+     * For more information, see  {@link Apify.openKeyValueStore}
+     * and  {@link KeyValueStore.getValue}.
      *
      * @param {string} key
      *   Unique record key.
@@ -575,7 +575,7 @@ export class Apify {
     /**
      * Stores or deletes a value in the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for  {@link KeyValueStore#setValue}.
+     * This is just a convenient shortcut for  {@link KeyValueStore.setValue}.
      * For example, calling the following code:
      * ```javascript
      * await Apify.setValue('OUTPUT', { foo: "bar" });
@@ -587,10 +587,10 @@ export class Apify {
      * await store.setValue('OUTPUT', { foo: "bar" });
      * ```
      *
-     * To get a value from the default key-value store, you can use the  {@link Apify#getValue} function.
+     * To get a value from the default key-value store, you can use the  {@link Apify.getValue} function.
      *
-     * For more information, see  {@link Apify#openKeyValueStore}
-     * and  {@link KeyValueStore#getValue}.
+     * For more information, see  {@link Apify.openKeyValueStore}
+     * and  {@link KeyValueStore.getValue}.
      *
      * @param {string} key
      *   Unique record key.
@@ -628,8 +628,8 @@ export class Apify {
      * If you need to use the input multiple times in your actor,
      * it is far more efficient to read it once and store it locally.
      *
-     * For more information, see  {@link Apify#openKeyValueStore}
-     * and {@link KeyValueStore#getValue}.
+     * For more information, see  {@link Apify.openKeyValueStore}
+     * and {@link KeyValueStore.getValue}.
      *
      * @returns {Promise<Object<string, *>|string|Buffer|null>}
      *   Returns a promise that resolves to an object, string

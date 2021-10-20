@@ -4,7 +4,7 @@ import { ActorRun } from './typedefs';
 export const APIFY_CALL_ERROR_NAME = 'ApifyCallError';
 
 /**
- * The class represents exceptions thrown by the {@link Apify#call} function.
+ * The class represents exceptions thrown by the {@link Apify.call} function.
  *
  * @property message
  *   Error message

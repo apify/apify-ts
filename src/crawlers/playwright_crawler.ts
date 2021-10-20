@@ -48,7 +48,7 @@ export interface PlaywrightCrawlerOptions {
      *   To make this work, you should **always**
      *   let your function throw exceptions rather than catch them.
      *   The exceptions are logged to the request using the
-     *   {@link Request#pushErrorMessage} function.
+     *   {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: PlaywrightHandlePageFunction;
 
@@ -110,7 +110,7 @@ export interface PlaywrightCrawlerOptions {
     postNavigationHooks?: PlaywrightHook[];
 
     /**
-     * The same options as used by {@link Apify#launchPlaywright}.
+     * The same options as used by {@link Apify.launchPlaywright}.
      */
     launchContext?: PlaywrightLaunchContext;
 

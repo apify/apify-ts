@@ -5,7 +5,7 @@ export type Dictionary<T = unknown> = Record<string, T>;
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;
 
 /**
- * Represents information about an actor run, as returned by the {@link Apify#call} or {@link Apify#callTask} function.
+ * Represents information about an actor run, as returned by the {@link Apify.call} or {@link Apify.callTask} function.
  * The object is almost equivalent to the JSON response of the [Actor run](https://apify.com/docs/api/v2#/reference/actors/run-collection/run-actor)
  * Apify API endpoint and extended with certain fields. For more details, see [Runs.](https://docs.apify.com/actor/run)
  */
@@ -115,7 +115,7 @@ export interface ActorRun {
 
     /**
      * Contains output of the actor run. The value is `null` or `undefined` in case the actor is still running,
-     * or if you pass `false` to the `fetchOutput` option of {@link Apify#call}.
+     * or if you pass `false` to the `fetchOutput` option of {@link Apify.call}.
      *
      * For example:
      * ```

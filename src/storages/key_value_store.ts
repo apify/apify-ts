@@ -49,16 +49,16 @@ export const maybeStringify = (value, options) => {
  * for saving screenshots, actor inputs and outputs, web pages, PDFs or to persist the state of crawlers.
  *
  * Do not instantiate this class directly, use the
- * {@link Apify#openKeyValueStore} function instead.
+ * {@link Apify.openKeyValueStore} function instead.
  *
  * Each actor run is associated with a default key-value store, which is created exclusively
  * for the run. By convention, the actor input and output are stored into the
  * default key-value store under the `INPUT` and `OUTPUT` key, respectively.
  * Typically, input and output are JSON files, although it can be any other format.
  * To access the default key-value store directly, you can use the
- * {@link Apify#getValue} and {@link Apify#setValue} convenience functions.
+ * {@link Apify.getValue} and {@link Apify.setValue} convenience functions.
  *
- * To access the input, you can also use the {@link Apify#getInput} convenience function.
+ * To access the input, you can also use the {@link Apify.getInput} convenience function.
  *
  * `KeyValueStore` stores its data either on local disk or in the Apify cloud,
  * depending on whether the [`APIFY_LOCAL_STORAGE_DIR`](../guides/environment-variables#apify_local_storage_dir)
@@ -77,7 +77,7 @@ export const maybeStringify = (value, options) => {
  * [`APIFY_LOCAL_STORAGE_DIR`](../guides/environment-variables#apify_local_storage_dir) not,
  * the data is stored in the [Apify Key-value store](https://docs.apify.com/storage/key-value-store)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify#openKeyValueStore} function, even if the
+ * option to {@link Apify.openKeyValueStore} function, even if the
  * [`APIFY_LOCAL_STORAGE_DIR`](../guides/environment-variables#apify_local_storage_dir) variable is set.
  *
  * **Example usage:**
@@ -138,7 +138,7 @@ export class KeyValueStore {
      * If the record does not exist, the function resolves to `null`.
      *
      * To save or delete a value in the key-value store, use the
-     * {@link KeyValueStore#setValue} function.
+     * {@link KeyValueStore.setValue} function.
      *
      * **Example usage:**
      *
@@ -191,7 +191,7 @@ export class KeyValueStore {
      * regardless whether the record existed or not.
      *
      * To retrieve a value from the key-value store, use the
-     * {@link KeyValueStore#getValue} function.
+     * {@link KeyValueStore.getValue} function.
      *
      * **IMPORTANT:** Always make sure to use the `await` keyword when calling `setValue()`,
      * otherwise the actor process might finish before the value is stored!
@@ -356,7 +356,7 @@ export async function openKeyValueStore(storeIdOrName?: string, options: OpenKey
 /**
  * Gets a value from the default {@link KeyValueStore} associated with the current actor run.
  *
- * This is just a convenient shortcut for {@link KeyValueStore#getValue}.
+ * This is just a convenient shortcut for {@link KeyValueStore.getValue}.
  * For example, calling the following code:
  * ```javascript
  * const value = await Apify.getValue('my-key');
@@ -368,10 +368,10 @@ export async function openKeyValueStore(storeIdOrName?: string, options: OpenKey
  * const value = await store.getValue('my-key');
  * ```
  *
- * To store the value to the default key-value store, you can use the {@link Apify#setValue} function.
+ * To store the value to the default key-value store, you can use the {@link Apify.setValue} function.
  *
- * For more information, see  {@link Apify#openKeyValueStore}
- * and  {@link KeyValueStore#getValue}.
+ * For more information, see  {@link Apify.openKeyValueStore}
+ * and  {@link KeyValueStore.getValue}.
  *
  * @param key
  *   Unique record key.
@@ -392,7 +392,7 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
 /**
  * Stores or deletes a value in the default {@link KeyValueStore} associated with the current actor run.
  *
- * This is just a convenient shortcut for  {@link KeyValueStore#setValue}.
+ * This is just a convenient shortcut for  {@link KeyValueStore.setValue}.
  * For example, calling the following code:
  * ```javascript
  * await Apify.setValue('OUTPUT', { foo: "bar" });
@@ -404,10 +404,10 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
  * await store.setValue('OUTPUT', { foo: "bar" });
  * ```
  *
- * To get a value from the default key-value store, you can use the  {@link Apify#getValue} function.
+ * To get a value from the default key-value store, you can use the  {@link Apify.getValue} function.
  *
- * For more information, see  {@link Apify#openKeyValueStore}
- * and  {@link KeyValueStore#getValue}.
+ * For more information, see  {@link Apify.openKeyValueStore}
+ * and  {@link KeyValueStore.getValue}.
  *
  * @param key
  *   Unique record key.
@@ -432,7 +432,7 @@ export async function setValue<T>(key: string, value: T, options?: unknown): Pro
 /**
  * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
  *
- * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+ * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store.getvalue).
  * For example, calling the following code:
  * ```javascript
  * const input = await Apify.getInput();
@@ -448,8 +448,8 @@ export async function setValue<T>(key: string, value: T, options?: unknown): Pro
  * If you need to use the input multiple times in your actor,
  * it is far more efficient to read it once and store it locally.
  *
- * For more information, see  {@link Apify#openKeyValueStore}
- * and {@link KeyValueStore#getValue}.
+ * For more information, see  {@link Apify.openKeyValueStore}
+ * and {@link KeyValueStore.getValue}.
  *
  * @returns {T}
  *   Returns a promise that resolves to an object, string
@@ -463,7 +463,7 @@ export async function getInput<T extends Dictionary | string | Buffer>(): Promis
 }
 
 /**
- * User-function used in the  {@link KeyValueStore#forEachKey} method.
+ * User-function used in the  {@link KeyValueStore.forEachKey} method.
  */
 export interface KeyConsumer {
     /**

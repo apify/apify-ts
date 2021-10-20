@@ -22,7 +22,7 @@ const STARTING_Z_INDEX = 2147400000;
  * requests, including their methods, headers and payloads are then enqueued to a provided
  * {@link RequestQueue}. This is useful to crawl JavaScript heavy pages where links are not available
  * in `href` elements, but rather navigations are triggered in click handlers.
- * If you're looking to find URLs in `href` attributes of the page, see {@link utils#enqueueLinks}.
+ * If you're looking to find URLs in `href` attributes of the page, see {@link utils.enqueueLinks}.
  *
  * Optionally, the function allows you to filter the target links' URLs using an array of {@link PseudoUrl} objects
  * and override settings of the enqueued {@link Request} objects.
@@ -61,7 +61,7 @@ const STARTING_Z_INDEX = 2147400000;
  * @param {RequestQueue} options.requestQueue
  *   A request queue to which the URLs will be enqueued.
  * @param {string} options.selector
- *   A CSS selector matching elements to be clicked on. Unlike in {@link utils#enqueueLinks}, there is no default
+ *   A CSS selector matching elements to be clicked on. Unlike in {@link utils.enqueueLinks}, there is no default
  *   value. This is to prevent suboptimal use of this function by using it too broadly.
  * @param {Array<(string|RegExp|Object<string, *>)>} [options.pseudoUrls]
  *   An array of {@link PseudoUrl}s matching the URLs to be enqueued,

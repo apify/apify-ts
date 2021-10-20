@@ -1,3 +1,24 @@
+/**
+ * A namespace that contains various utilities for
+ * [Puppeteer](https://github.com/puppeteer/puppeteer) - the headless Chrome Node API.
+ *
+ * **Example usage:**
+ *
+ * ```javascript
+ * const Apify = require('apify');
+ * const { puppeteer } = Apify.utils;
+ *
+ * // Open https://www.example.com in Puppeteer
+ * const browser = await Apify.launchPuppeteer();
+ * const page = await browser.newPage();
+ * await page.goto('https://www.example.com');
+ *
+ * // Inject jQuery into a page
+ * await puppeteer.injectJQuery(page);
+ * ```
+ * @module puppeteerUtils
+ */
+
 import fs from 'fs';
 import ow from 'ow';
 import vm from 'vm';
@@ -28,6 +49,7 @@ export interface DirectNavigationOptions {
      * page.setDefaultTimeout(timeout) methods.
      */
     timeout?: number;
+
     /**
      * When to consider operation succeeded, defaults to `load`. Events can be either:
      * - `'domcontentloaded'` - consider operation to be finished when the `DOMContentLoaded` event is fired.
@@ -35,6 +57,7 @@ export interface DirectNavigationOptions {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      */
     waitUntil?: 'domcontentloaded' | 'load' | 'networkidle';
+
     /**
      * Referer header value. If provided it will take preference over the referer header value set by page.setExtraHTTPHeaders(headers).
      */
@@ -600,25 +623,7 @@ async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}) {
     }
 }
 
-/**
- * A namespace that contains various utilities for
- * [Puppeteer](https://github.com/puppeteer/puppeteer) - the headless Chrome Node API.
- *
- * **Example usage:**
- *
- * ```javascript
- * const Apify = require('apify');
- * const { puppeteer } = Apify.utils;
- *
- * // Open https://www.example.com in Puppeteer
- * const browser = await Apify.launchPuppeteer();
- * const page = await browser.newPage();
- * await page.goto('https://www.example.com');
- *
- * // Inject jQuery into a page
- * await puppeteer.injectJQuery(page);
- * ```
- */
+/** @internal */
 export const puppeteerUtils = {
     injectFile,
     injectJQuery,

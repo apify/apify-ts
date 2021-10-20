@@ -69,7 +69,7 @@ export interface BrowserCrawlerOptions {
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
-     * {@link Request#pushErrorMessage} function.
+     * {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: BrowserHandlePageFunction;
 

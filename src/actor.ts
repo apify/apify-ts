@@ -35,7 +35,7 @@ const tryParseDate = (str) => {
 
 /**
  * Parsed representation of the `APIFY_XXX` environmental variables.
- * This object is returned by the {@link Apify#getEnv} function.
+ * This object is returned by the {@link Apify.getEnv} function.
  */
 export interface ApifyEnv {
     /**
@@ -330,7 +330,7 @@ export interface CallOptions {
  * If the actor run fails, the function throws the {@link ApifyCallError} exception.
  *
  * If you want to run an actor task rather than an actor, please use the
- * {@link Apify#callTask} function instead.
+ * {@link Apify.callTask} function instead.
  *
  * For more information about actors, read the
  * [documentation](https://docs.apify.com/actor).
@@ -481,7 +481,7 @@ export interface CallTaskOptions {
  *
  * Note that an actor task is a saved input configuration and options for an actor.
  * If you want to run an actor directly rather than an actor task, please use the
- * {@link Apify#call} function instead.
+ * {@link Apify.call} function instead.
  *
  * For more information about actor tasks, read the [documentation](https://docs.apify.com/tasks).
  *
@@ -666,7 +666,7 @@ export interface AddWebhookOptions {
      *   Idempotency key enables you to ensure that a webhook will not be added multiple times in case of
      *   an actor restart or other situation that would cause the `addWebhook()` function to be called again.
      *   We suggest using the actor run ID as the idempotency key. You can get the run ID by calling
-     *   {@link Apify#getEnv} function.
+     *   {@link Apify.getEnv} function.
      */
     idempotencyKey?: string;
 }

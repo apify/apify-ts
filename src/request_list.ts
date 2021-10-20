@@ -110,12 +110,12 @@ export interface RequestListOptions {
 
     /**
      * Identifies the key in the default key-value store under which the `RequestList` persists its
-     * Requests during the {@link RequestList#initialize} call.
+     * Requests during the {@link RequestList.initialize} call.
      * This is necessary if `persistStateKey` is set and the source URLs might potentially change,
      * to ensure consistency of the source URLs and state object. However, it comes with some
      * storage and performance overheads.
      *
-     * If `persistRequestsKey` is not set, {@link RequestList#initialize} will always fetch the sources
+     * If `persistRequestsKey` is not set, {@link RequestList.initialize} will always fetch the sources
      * from their origin, check that they are consistent with the restored state (if any)
      * and throw an error if they are not.
      */
@@ -173,7 +173,7 @@ export interface RequestListOptions {
  * `uniqueKey` properties. You can use the `keepDuplicateUrls` option to do this for you when initializing the
  * `RequestList` from sources.
  *
- * Once you create an instance of `RequestList`, you need to call the {@link RequestList#initialize} function
+ * Once you create an instance of `RequestList`, you need to call the {@link RequestList.initialize} function
  * before the instance can be used. After that, no more URLs can be added to the list.
  * Unlike {@link RequestQueue}, `RequestList` is static but it can contain even millions of URLs.
  * > Note that `RequestList` can be used together with `RequestQueue` by the same crawler.
@@ -560,7 +560,7 @@ export class RequestList {
     }
 
     /**
-     * Resolves to `true` if the next call to {@link RequestList#fetchNextRequest} function
+     * Resolves to `true` if the next call to {@link RequestList.fetchNextRequest} function
      * would return `null`, otherwise it resolves to `false`.
      * Note that even if the list is empty, there might be some pending requests currently being processed.
      *
@@ -585,7 +585,7 @@ export class RequestList {
 
     /**
      * Gets the next {@link Request} to process. First, the function gets a request previously reclaimed
-     * using the {@link RequestList#reclaimRequest} function, if there is any.
+     * using the {@link RequestList.reclaimRequest} function, if there is any.
      * Otherwise it gets the next request from sources.
      *
      * The function's `Promise` resolves to `null` if there are no more
@@ -907,7 +907,7 @@ export async function openRequestList(listName: string | null, sources: Source[]
 
 /**
  * Represents state of a {@link RequestList}. It can be used to resume a {@link RequestList} which has been previously processed.
- * You can obtain the state by calling {@link RequestList#getState} and receive an object with
+ * You can obtain the state by calling {@link RequestList.getState} and receive an object with
  * the following structure:
  *
  * ```

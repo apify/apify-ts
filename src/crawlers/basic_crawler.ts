@@ -72,7 +72,7 @@ export interface BasicCrawlerOptions {
      *   To make this work, you should **always**
      *   let your function throw exceptions rather than catch them.
      *   The exceptions are logged to the request using the
-     *   {@link Request#pushErrorMessage} function.
+     *   {@link Request.pushErrorMessage} function.
      */
     handleRequestFunction: HandleRequest;
 
@@ -249,10 +249,10 @@ export class BasicCrawler {
 
     /**
      * A reference to the underlying {@link AutoscaledPool} class that manages the concurrency of the crawler.
-     * Note that this property is only initialized after calling the {@link BasicCrawler#run} function.
+     * Note that this property is only initialized after calling the {@link BasicCrawler.run} function.
      * You can use it to change the concurrency settings on the fly,
-     * to pause the crawler by calling {@link AutoscaledPool#pause}
-     * or to abort it by calling {@link AutoscaledPool#abort}.
+     * to pause the crawler by calling {@link AutoscaledPool.pause}
+     * or to abort it by calling {@link AutoscaledPool.abort}.
      */
     autoscaledPool?: AutoscaledPool;
 
@@ -706,10 +706,10 @@ export interface HandleRequestInputs {
     /**
      * The original {Request} object.
      * A reference to the underlying {@link AutoscaledPool} class that manages the concurrency of the crawler.
-     * Note that this property is only initialized after calling the {@link BasicCrawler#run} function.
+     * Note that this property is only initialized after calling the {@link BasicCrawler.run} function.
      * You can use it to change the concurrency settings on the fly,
-     * to pause the crawler by calling {@link AutoscaledPool#pause}
-     * or to abort it by calling {@link AutoscaledPool#abort}.
+     * to pause the crawler by calling {@link AutoscaledPool.pause}
+     * or to abort it by calling {@link AutoscaledPool.abort}.
      */
     request: Request;
     session?: Session;

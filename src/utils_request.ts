@@ -256,7 +256,7 @@ export async function requestAsBrowser(options: RequestAsBrowserOptions = {} as 
  * an alias of `body`. It must be exclusive as well.
  * @param {RequestAsBrowserOptions} requestAsBrowserOptions
  * @return {boolean}
- * @private
+ * @internal
  * @ignore
  */
 function areBodyOptionsCompatible(requestAsBrowserOptions) {
@@ -277,7 +277,7 @@ function areBodyOptionsCompatible(requestAsBrowserOptions) {
  * @param {string|Buffer} payload
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
- * @private
+ * @internal
  */
 function normalizePayloadOption(payload, gotScrapingOptions) {
     if (payload !== undefined) gotScrapingOptions.body = payload;
@@ -290,7 +290,7 @@ function normalizePayloadOption(payload, gotScrapingOptions) {
  * @param {*} json
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
- * @private
+ * @internal
  */
 function normalizeJsonOption(json, gotScrapingOptions) {
     // If it's a boolean, then it's the old requestAsBrowser API.
@@ -316,7 +316,7 @@ function normalizeJsonOption(json, gotScrapingOptions) {
  * them from user-provided headers because we switched the default from HTTP1 to 2.
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
- * @private
+ * @internal
  */
 function ensureCorrectHttp2Headers(gotScrapingOptions) {
     if (gotScrapingOptions.http2 && gotScrapingOptions.headers) {
@@ -339,7 +339,7 @@ function ensureCorrectHttp2Headers(gotScrapingOptions) {
  * @param {function} abortFunction
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
- * @private
+ * @internal
  */
 function maybeAddAbortHook(abortFunction, gotScrapingOptions) {
     // Stream aborting must be handled on the response object because `got`
@@ -385,7 +385,7 @@ function ensureRequestIsDispatched(duplexStream, gotScrapingOptions) {
 /**
  * @param {RequestAsBrowserOptions} options
  * @ignore
- * @private
+ * @internal
  */
 function logDeprecatedOptions(options) {
     const deprecatedOptions = [
@@ -432,7 +432,7 @@ function logDeprecatedOptions(options) {
  * @param {http.IncomingMessage} response
  * @return {GotStream}
  * @ignore
- * @private
+ * @internal
  */
 function addResponsePropertiesToStream(stream, response) {
     const properties = [
