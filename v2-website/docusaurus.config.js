@@ -52,20 +52,23 @@ module.exports = {
     ]),
     plugins: [
         [
-            'docusaurus-plugin-typedoc',
+            `${__dirname}/typedoc-plugins/docusaurus-plugin-typedoc/dist`,
             {
                 entryPoints: ['../src/exports.ts'],
                 tsconfig: '../tsconfig.json',
                 docsRoot: '../docs',
                 out: 'api-apify',
                 // sort: ['source-order'],
+                plugin: [
+                    `${__dirname}/typedoc-plugins/docusaurus-plugin-typedoc/dist/typedoc_plugin.js`,
+                ],
                 readme: 'none',
                 excludeExternals: true,
                 excludePrivate: true,
                 excludeProtected: true,
                 excludeInternal: true,
                 defaultCategory: 'Apify',
-                categoryOrder: ['Apify', '*', 'Interfaces'],
+                categoryOrder: ['Apify', 'Functions', 'Interfaces', 'Variables'],
                 externalPattern: '**/node_modules/*',
                 cleanOutputDir: true,
             },

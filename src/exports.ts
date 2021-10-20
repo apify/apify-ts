@@ -49,6 +49,7 @@
  * @module Apify
  */
 export * from './actor';
+export * from './apify';
 export * from './configuration';
 export * from './crawlers/basic_crawler';
 export * from './crawlers/cheerio_crawler';
@@ -62,6 +63,7 @@ export * from './storages/key_value_store';
 export * as utils from './utils';
 export * from './request_list';
 export * from './request';
+export * from './pseudo_url';
 export * from './session_pool/session';
 export * from './session_pool/session_pool';
 export * from './proxy_configuration';

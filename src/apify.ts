@@ -890,7 +890,6 @@ export class Apify {
 
     /**
      * @param {Function} storageClass
-     * @return {}
      */
     private _getStorageManager<T>(storageClass): StorageManager<T> {
         if (!this.storageManagers.has(storageClass)) {
