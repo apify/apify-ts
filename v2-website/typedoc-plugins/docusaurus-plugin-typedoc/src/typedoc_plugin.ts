@@ -6,10 +6,10 @@ export function load(app: Application) {
         // rename `apify` to `Apify` on the docs HP
         context.project.name = 'Apify';
     });
-    app.converter.on(Converter.EVENT_RESOLVE, (context: Context) => {
-        console.log(context);
-        // if (app.options.getValue("plugin-option") === "something") {
-        //     // ...
-        // }
-    });
+    // app.converter.on(Converter.EVENT_RESOLVE, (context: Context) => {
+    //     console.log(context);
+    //     // if (app.options.getValue("plugin-option") === "something") {
+    //     //     // ...
+    //     // }
+    // });
 }
