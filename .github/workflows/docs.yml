@@ -29,6 +29,7 @@ jobs:
 
     - name: Build & deploy docs
       run: |
+        npm install --force
         cd v2-website
         npm install --force
         npm run deploy
