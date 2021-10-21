@@ -222,270 +222,15 @@ let YOUTUBE_REGEX_TMP: RegExp;
 let YOUTUBE_REGEX_GLOBAL_TMP: RegExp;
 
 try {
-    /**
-     * Regular expression to exactly match a single LinkedIn profile URL.
-     * It has the following form: `/^...$/i` and matches URLs such as:
-     * ```
-     * https://www.linkedin.com/in/alan-turing
-     * en.linkedin.com/in/alan-turing
-     * linkedin.com/in/alan-turing
-     * ```
-     *
-     * The regular expression does NOT match URLs with additional
-     * subdirectories or query parameters, such as:
-     * ```
-     * https://www.linkedin.com/in/linus-torvalds/latest-activity
-     * ```
-     *
-     * Example usage:
-     * ```
-     * if (Apify.utils.social.LINKEDIN_REGEX_TMP.test('https://www.linkedin.com/in/alan-turing')) {
-     *     console.log('Match!');
-     * }
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     LINKEDIN_REGEX_TMP = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
-
-    /**
-     * Regular expression to find multiple LinkedIn profile URLs in a text or HTML.
-     * It has the following form: `/.../ig` and matches URLs such as:
-     * ```
-     * https://www.linkedin.com/in/alan-turing
-     * en.linkedin.com/in/alan-turing
-     * linkedin.com/in/alan-turing
-     * ```
-     *
-     * If the profile URL contains subdirectories or query parameters, the regular expression
-     * extracts just the base part of the profile URL. For example, from text such as:
-     * ```
-     * https://www.linkedin.com/in/linus-torvalds/latest-activity
-     * ```
-     * the expression extracts just the following base URL:
-     * ```
-     * https://www.linkedin.com/in/linus-torvalds
-     * ```
-     *
-     * Example usage:
-     * ```
-     * const matches = text.match(Apify.utils.social.LINKEDIN_REGEX_GLOBAL_TMP);
-     * if (matches) console.log(`${matches.length} LinkedIn profiles found!`);
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     LINKEDIN_REGEX_GLOBAL_TMP = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
-
-    /**
-     * Regular expression to exactly match a single Instagram profile URL.
-     * It has the following form: `/^...$/i` and matches URLs such as:
-     * ```
-     * https://www.instagram.com/old_prague
-     * www.instagram.com/old_prague/
-     * instagr.am/old_prague
-     * ```
-     *
-     * The regular expression does NOT match URLs with additional
-     * subdirectories or query parameters, such as:
-     * ```
-     * https://www.instagram.com/cristiano/followers
-     * ```
-     *
-     * Example usage:
-     * ```
-     * if (Apify.utils.social.INSTAGRAM_REGEX_TMP.test('https://www.instagram.com/old_prague')) {
-     *     console.log('Match!');
-     * }
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     INSTAGRAM_REGEX_TMP = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
-
-    /**
-     * Regular expression to find multiple Instagram profile URLs in a text or HTML.
-     * It has the following form: `/.../ig` and matches URLs such as:
-     * ```
-     * https://www.instagram.com/old_prague
-     * www.instagram.com/old_prague/
-     * instagr.am/old_prague
-     * ```
-     *
-     * If the profile URL contains subdirectories or query parameters, the regular expression
-     * extracts just the base part of the profile URL. For example, from text such as:
-     * ```
-     * https://www.instagram.com/cristiano/followers
-     * ```
-     * the expression extracts just the following base URL:
-     * ```
-     * https://www.instagram.com/cristiano
-     * ```
-     *
-     * Example usage:
-     * ```
-     * const matches = text.match(Apify.utils.social.INSTAGRAM_REGEX_GLOBAL_TMP);
-     * if (matches) console.log(`${matches.length} Instagram profiles found!`);
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     INSTAGRAM_REGEX_GLOBAL_TMP = new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
-
-    /**
-     * Regular expression to exactly match a single Twitter profile URL.
-     * It has the following form: `/^...$/i` and matches URLs such as:
-     * ```
-     * https://www.twitter.com/apify
-     * twitter.com/apify
-     * ```
-     *
-     * The regular expression does NOT match URLs with additional
-     * subdirectories or query parameters, such as:
-     * ```
-     * https://www.twitter.com/realdonaldtrump/following
-     * ```
-     *
-     * Example usage:
-     * ```
-     * if (Apify.utils.social.TWITTER_REGEX_TMP.test('https://www.twitter.com/apify')) {
-     *     console.log('Match!');
-     * }
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     TWITTER_REGEX_TMP = new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
-
-    /**
-     * Regular expression to find multiple Twitter profile URLs in a text or HTML.
-     * It has the following form: `/.../ig` and matches URLs such as:
-     * ```
-     * https://www.twitter.com/apify
-     * twitter.com/apify
-     * ```
-     *
-     * If the profile URL contains subdirectories or query parameters, the regular expression
-     * extracts just the base part of the profile URL. For example, from text such as:
-     * ```
-     * https://www.twitter.com/realdonaldtrump/following
-     * ```
-     * the expression extracts only the following base URL:
-     * ```
-     * https://www.twitter.com/realdonaldtrump
-     * ```
-     *
-     * Example usage:
-     * ```
-     * const matches = text.match(Apify.utils.social.TWITTER_REGEX_STRING);
-     * if (matches) console.log(`${matches.length} Twitter profiles found!`);
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     TWITTER_REGEX_GLOBAL_TMP = new RegExp(TWITTER_REGEX_STRING, 'ig');
-
-    /**
-     * Regular expression to exactly match a single Facebook profile URL.
-     * It has the following form: `/^...$/i` and matches URLs such as:
-     * ```
-     * https://www.facebook.com/apifytech
-     * facebook.com/apifytech
-     * fb.com/apifytech
-     * https://www.facebook.com/profile.php?id=123456789
-     * ```
-     *
-     * The regular expression does NOT match URLs with additional
-     * subdirectories or query parameters, such as:
-     * ```
-     * https://www.facebook.com/apifytech/photos
-     * ```
-     *
-     * Example usage:
-     * ```
-     * if (Apify.utils.social.FACEBOOK_REGEX_TMP.test('https://www.facebook.com/apifytech')) {
-     *     console.log('Match!');
-     * }
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     FACEBOOK_REGEX_TMP = new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
-
-    /**
-     * Regular expression to find multiple Facebook profile URLs in a text or HTML.
-     * It has the following form: `/.../ig` and matches URLs such as:
-     * ```
-     * https://www.facebook.com/apifytech
-     * facebook.com/apifytech
-     * fb.com/apifytech
-     * ```
-     *
-     * If the profile URL contains subdirectories or query parameters, the regular expression
-     * extracts just the base part of the profile URL. For example, from text such as:
-     * ```
-     * https://www.facebook.com/apifytech/photos
-     * ```
-     * the expression extracts only the following base URL:
-     * ```
-     * https://www.facebook.com/apifytech
-     * ```
-     *
-     * Example usage:
-     * ```
-     * const matches = text.match(Apify.utils.social.FACEBOOK_REGEX_GLOBAL_TMP);
-     * if (matches) console.log(`${matches.length} Facebook profiles found!`);
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     FACEBOOK_REGEX_GLOBAL_TMP = new RegExp(FACEBOOK_REGEX_STRING, 'ig');
-
-    /**
-     * Regular expression to exactly match a single Youtube channel, user or video URL.
-     * It has the following form: `/^...$/i` and matches URLs such as:
-     * ```
-     * https://www.youtube.com/watch?v=kM7YfhfkiEE
-     * https://youtu.be/kM7YfhfkiEE
-     * https://www.youtube.com/c/TrapNation
-     * https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA
-     * https://www.youtube.com/user/pewdiepie
-     * ```
-     *
-     * Please note that this won't match URLs like https://www.youtube.com/pewdiepie that redirect to /user or /channel.
-     *
-     * Example usage:
-     * ```
-     * if (Apify.utils.social.YOUTUBE_REGEX_TMP.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
-     *     console.log('Match!');
-     * }
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     YOUTUBE_REGEX_TMP = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
-
-    /**
-     * Regular expression to find multiple Youtube channel, user or video URLs in a text or HTML.
-     * It has the following form: `/.../ig` and matches URLs such as:
-     * ```
-     * https://www.youtube.com/watch?v=kM7YfhfkiEE
-     * https://youtu.be/kM7YfhfkiEE
-     * https://www.youtube.com/c/TrapNation
-     * https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA
-     * https://www.youtube.com/user/pewdiepie
-     * ```
-     *
-     * Please note that this won't match URLs like https://www.youtube.com/pewdiepie that redirect to /user or /channel.
-     *
-     * Example usage:
-     * ```
-     * const matches = text.match(Apify.utils.social.YOUTUBE_REGEX_GLOBAL_TMP);
-     * if (matches) console.log(`${matches.length} Youtube videos found!`);
-     * ```
-     * @type {RegExp}
-     * @memberOf social
-     */
     YOUTUBE_REGEX_GLOBAL_TMP = new RegExp(YOUTUBE_REGEX_STRING, 'ig');
 } catch (e) {
     // Older versions of Node don't support negative lookbehind and lookahead expressions.
@@ -595,15 +340,250 @@ export function parseHandlesFromHtml(html: string, data: Record<string, unknown>
     return result;
 }
 
+/**
+ * Regular expression to exactly match a single LinkedIn profile URL.
+ * It has the following form: `/^...$/i` and matches URLs such as:
+ * ```
+ * https://www.linkedin.com/in/alan-turing
+ * en.linkedin.com/in/alan-turing
+ * linkedin.com/in/alan-turing
+ * ```
+ *
+ * The regular expression does NOT match URLs with additional
+ * subdirectories or query parameters, such as:
+ * ```
+ * https://www.linkedin.com/in/linus-torvalds/latest-activity
+ * ```
+ *
+ * Example usage:
+ * ```
+ * if (Apify.utils.social.LINKEDIN_REGEX_TMP.test('https://www.linkedin.com/in/alan-turing')) {
+ *     console.log('Match!');
+ * }
+ * ```
+ */
 export const LINKEDIN_REGEX = LINKEDIN_REGEX_TMP;
+
+/**
+ * Regular expression to find multiple LinkedIn profile URLs in a text or HTML.
+ * It has the following form: `/.../ig` and matches URLs such as:
+ * ```
+ * https://www.linkedin.com/in/alan-turing
+ * en.linkedin.com/in/alan-turing
+ * linkedin.com/in/alan-turing
+ * ```
+ *
+ * If the profile URL contains subdirectories or query parameters, the regular expression
+ * extracts just the base part of the profile URL. For example, from text such as:
+ * ```
+ * https://www.linkedin.com/in/linus-torvalds/latest-activity
+ * ```
+ * the expression extracts just the following base URL:
+ * ```
+ * https://www.linkedin.com/in/linus-torvalds
+ * ```
+ *
+ * Example usage:
+ * ```
+ * const matches = text.match(Apify.utils.social.LINKEDIN_REGEX_GLOBAL_TMP);
+ * if (matches) console.log(`${matches.length} LinkedIn profiles found!`);
+ * ```
+ */
 export const LINKEDIN_REGEX_GLOBAL = LINKEDIN_REGEX_GLOBAL_TMP;
+
+/**
+ * Regular expression to exactly match a single Instagram profile URL.
+ * It has the following form: `/^...$/i` and matches URLs such as:
+ * ```
+ * https://www.instagram.com/old_prague
+ * www.instagram.com/old_prague/
+ * instagr.am/old_prague
+ * ```
+ *
+ * The regular expression does NOT match URLs with additional
+ * subdirectories or query parameters, such as:
+ * ```
+ * https://www.instagram.com/cristiano/followers
+ * ```
+ *
+ * Example usage:
+ * ```
+ * if (Apify.utils.social.INSTAGRAM_REGEX_TMP.test('https://www.instagram.com/old_prague')) {
+ *     console.log('Match!');
+ * }
+ * ```
+ */
 export const INSTAGRAM_REGEX = INSTAGRAM_REGEX_TMP;
+
+/**
+ * Regular expression to find multiple Instagram profile URLs in a text or HTML.
+ * It has the following form: `/.../ig` and matches URLs such as:
+ * ```
+ * https://www.instagram.com/old_prague
+ * www.instagram.com/old_prague/
+ * instagr.am/old_prague
+ * ```
+ *
+ * If the profile URL contains subdirectories or query parameters, the regular expression
+ * extracts just the base part of the profile URL. For example, from text such as:
+ * ```
+ * https://www.instagram.com/cristiano/followers
+ * ```
+ * the expression extracts just the following base URL:
+ * ```
+ * https://www.instagram.com/cristiano
+ * ```
+ *
+ * Example usage:
+ * ```
+ * const matches = text.match(Apify.utils.social.INSTAGRAM_REGEX_GLOBAL_TMP);
+ * if (matches) console.log(`${matches.length} Instagram profiles found!`);
+ * ```
+ */
 export const INSTAGRAM_REGEX_GLOBAL = INSTAGRAM_REGEX_GLOBAL_TMP;
+
+/**
+ * Regular expression to exactly match a single Twitter profile URL.
+ * It has the following form: `/^...$/i` and matches URLs such as:
+ * ```
+ * https://www.twitter.com/apify
+ * twitter.com/apify
+ * ```
+ *
+ * The regular expression does NOT match URLs with additional
+ * subdirectories or query parameters, such as:
+ * ```
+ * https://www.twitter.com/realdonaldtrump/following
+ * ```
+ *
+ * Example usage:
+ * ```
+ * if (Apify.utils.social.TWITTER_REGEX_TMP.test('https://www.twitter.com/apify')) {
+ *     console.log('Match!');
+ * }
+ * ```
+ */
 export const TWITTER_REGEX = TWITTER_REGEX_TMP;
+
+/**
+ * Regular expression to find multiple Twitter profile URLs in a text or HTML.
+ * It has the following form: `/.../ig` and matches URLs such as:
+ * ```
+ * https://www.twitter.com/apify
+ * twitter.com/apify
+ * ```
+ *
+ * If the profile URL contains subdirectories or query parameters, the regular expression
+ * extracts just the base part of the profile URL. For example, from text such as:
+ * ```
+ * https://www.twitter.com/realdonaldtrump/following
+ * ```
+ * the expression extracts only the following base URL:
+ * ```
+ * https://www.twitter.com/realdonaldtrump
+ * ```
+ *
+ * Example usage:
+ * ```
+ * const matches = text.match(Apify.utils.social.TWITTER_REGEX_STRING);
+ * if (matches) console.log(`${matches.length} Twitter profiles found!`);
+ * ```
+ */
 export const TWITTER_REGEX_GLOBAL = TWITTER_REGEX_GLOBAL_TMP;
+
+/**
+ * Regular expression to exactly match a single Facebook profile URL.
+ * It has the following form: `/^...$/i` and matches URLs such as:
+ * ```
+ * https://www.facebook.com/apifytech
+ * facebook.com/apifytech
+ * fb.com/apifytech
+ * https://www.facebook.com/profile.php?id=123456789
+ * ```
+ *
+ * The regular expression does NOT match URLs with additional
+ * subdirectories or query parameters, such as:
+ * ```
+ * https://www.facebook.com/apifytech/photos
+ * ```
+ *
+ * Example usage:
+ * ```
+ * if (Apify.utils.social.FACEBOOK_REGEX_TMP.test('https://www.facebook.com/apifytech')) {
+ *     console.log('Match!');
+ * }
+ * ```
+ */
 export const FACEBOOK_REGEX = FACEBOOK_REGEX_TMP;
+
+/**
+ * Regular expression to find multiple Facebook profile URLs in a text or HTML.
+ * It has the following form: `/.../ig` and matches URLs such as:
+ * ```
+ * https://www.facebook.com/apifytech
+ * facebook.com/apifytech
+ * fb.com/apifytech
+ * ```
+ *
+ * If the profile URL contains subdirectories or query parameters, the regular expression
+ * extracts just the base part of the profile URL. For example, from text such as:
+ * ```
+ * https://www.facebook.com/apifytech/photos
+ * ```
+ * the expression extracts only the following base URL:
+ * ```
+ * https://www.facebook.com/apifytech
+ * ```
+ *
+ * Example usage:
+ * ```
+ * const matches = text.match(Apify.utils.social.FACEBOOK_REGEX_GLOBAL_TMP);
+ * if (matches) console.log(`${matches.length} Facebook profiles found!`);
+ * ```
+ */
 export const FACEBOOK_REGEX_GLOBAL = FACEBOOK_REGEX_GLOBAL_TMP;
+
+/**
+ * Regular expression to exactly match a single Youtube channel, user or video URL.
+ * It has the following form: `/^...$/i` and matches URLs such as:
+ * ```
+ * https://www.youtube.com/watch?v=kM7YfhfkiEE
+ * https://youtu.be/kM7YfhfkiEE
+ * https://www.youtube.com/c/TrapNation
+ * https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA
+ * https://www.youtube.com/user/pewdiepie
+ * ```
+ *
+ * Please note that this won't match URLs like https://www.youtube.com/pewdiepie that redirect to /user or /channel.
+ *
+ * Example usage:
+ * ```
+ * if (Apify.utils.social.YOUTUBE_REGEX_TMP.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
+ *     console.log('Match!');
+ * }
+ * ```
+ */
 export const YOUTUBE_REGEX = YOUTUBE_REGEX_TMP;
+
+/**
+ * Regular expression to find multiple Youtube channel, user or video URLs in a text or HTML.
+ * It has the following form: `/.../ig` and matches URLs such as:
+ * ```
+ * https://www.youtube.com/watch?v=kM7YfhfkiEE
+ * https://youtu.be/kM7YfhfkiEE
+ * https://www.youtube.com/c/TrapNation
+ * https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA
+ * https://www.youtube.com/user/pewdiepie
+ * ```
+ *
+ * Please note that this won't match URLs like https://www.youtube.com/pewdiepie that redirect to /user or /channel.
+ *
+ * Example usage:
+ * ```
+ * const matches = text.match(Apify.utils.social.YOUTUBE_REGEX_GLOBAL_TMP);
+ * if (matches) console.log(`${matches.length} Youtube videos found!`);
+ * ```
+ */
 export const YOUTUBE_REGEX_GLOBAL = YOUTUBE_REGEX_GLOBAL_TMP;
 
 /** @internal */

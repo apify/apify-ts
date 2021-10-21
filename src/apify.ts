@@ -12,7 +12,7 @@ import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configura
 import { addCharsetToContentType, logSystemInfo, printOutdatedSdkWarning, publicUtils, sleep } from './utils';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
-import { Configuration } from './configuration';
+import { Configuration, ConfigurationOptions } from './configuration';
 import { puppeteerUtils } from './puppeteer_utils';
 import { playwrightUtils } from './playwright_utils';
 import { socialUtils } from './utils_social';
@@ -81,7 +81,7 @@ export class Apify {
 
     private readonly storageManagers = new Map<string, StorageManager<unknown>>();
 
-    constructor(options = {}) {
+    constructor(options: ConfigurationOptions = {}) {
         this.config = new Configuration(options);
     }
 
