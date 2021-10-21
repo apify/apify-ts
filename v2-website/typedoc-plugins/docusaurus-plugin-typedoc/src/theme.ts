@@ -2,6 +2,7 @@ import {
     BindOption,
     DeclarationReflection,
     PageEvent,
+    ParameterReflection,
     ReflectionKind,
     Renderer,
     RendererEvent,
@@ -14,9 +15,9 @@ import * as path from 'path';
 
 import { FrontMatter, SidebarOptions } from './types';
 import {
-    getPageTitle,
     prependYAML,
 } from 'typedoc-plugin-markdown/dist/utils/front-matter';
+import { escapeChars } from 'typedoc-plugin-markdown/dist/utils';
 
 const CATEGORY_POSITION = {
     [ReflectionKind.Module]: 1,
@@ -86,7 +87,7 @@ export class DocusaurusTheme extends MarkdownTheme {
 
     getYamlItems(page: PageEvent<DeclarationReflection>): any {
         const pageId = this.getId(page);
-        const pageTitle = this.getTitle(page);
+        const pageTitle = this.getTitle(page, pageId);
         const sidebarLabel = this.getSidebarLabel(page);
         const sidebarPosition = this.getSidebarPosition(page);
         let items: FrontMatter = {
@@ -150,12 +151,43 @@ export class DocusaurusTheme extends MarkdownTheme {
         return path.basename(page.url, path.extname(page.url));
     }
 
-    getTitle(page: PageEvent) {
+    private getPageTitle(page: PageEvent<any>, pageId: string, shouldEscape = true) {
+        const title: string[] = [''];
+        if (
+            page.model &&
+            page.model.kindString &&
+            page.url !== page.project.url
+        ) {
+            // title.push(`${page.model.kindString}: `);
+        }
+        if (page.url === page.project.url) {
+            title.push(this.indexTitle || page.project.name);
+        } else {
+            if (pageId.includes('.')) {
+                title.unshift(pageId.substr(0, pageId.lastIndexOf('.') + 1));
+            }
+
+            title.push(
+                shouldEscape ? escapeChars(page.model.name) : page.model.name,
+            );
+            if (page.model.typeParameters) {
+                const typeParameters = page.model.typeParameters
+                    .map((typeParameter: ParameterReflection) => typeParameter.name)
+                    .join(', ');
+                title.push(`<${typeParameters}${shouldEscape ? '\\>' : '>'}`);
+            }
+        }
+        return title.join('');
+    }
+
+    getTitle(page: PageEvent, pageId: string) {
         const readmeTitle = this.readmeTitle || page.project.name;
+
         if (page.url === this.entryDocument && page.url !== page.project.url) {
             return readmeTitle;
         }
-        return getPageTitle(page);
+
+        return this.getPageTitle(page, pageId, false);
     }
 
     override get mappings() {

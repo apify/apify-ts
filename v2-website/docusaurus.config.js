@@ -62,6 +62,9 @@ module.exports = {
                 plugin: [
                     './typedoc-plugins/docusaurus-plugin-typedoc/dist/typedoc_plugin.js',
                 ],
+                sidebar: {
+                    fullNames: true,
+                },
                 readme: 'none',
                 excludeExternals: true,
                 excludePrivate: true,
