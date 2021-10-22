@@ -8,13 +8,15 @@ import { getFirstKey, publicUtils } from './utils';
 import { getValue, setValue } from './storages/key_value_store';
 import { serializeArray, createDeserialize } from './serialization';
 
+/** @internal */
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';
+
+/** @internal */
 export const REQUESTS_PERSISTENCE_KEY = 'REQUEST_LIST_REQUESTS';
 
 const CONTENT_TYPE_BINARY = 'application/octet-stream';
 
 export interface RequestListOptions {
-
     /**
      * An array of sources of URLs for the {@link RequestList}. It can be either an array of strings,
      * plain objects that define at least the `url` property, or an array of {@link Request} instances.
@@ -152,7 +154,6 @@ export interface RequestListOptions {
      * @default false
      */
     keepDuplicateUrls?: boolean;
-
 }
 
 /**

@@ -181,8 +181,7 @@ export type PlaywrightHandlePageFunction = (context: PlaywrightHandlePageFunctio
  * parameter of the `PlaywrightCrawler` constructor. For user convenience, the `minConcurrency` and `maxConcurrency`
  * {@link AutoscaledPoolOptions} are available directly in the `PlaywrightCrawler` constructor.
  *
- * Note that the pool of Playwright instances is internally managed by the {@link BrowserPool} class.
- * Many constructor options such as {@link PlaywrightCrawlerOptions.maxOpenPagesPerInstance} or
+ * Note that the pool of Playwright instances is internally managed by the [BrowserPool](https://github.com/apify/browser-pool) class.
  *
  * **Example usage:**
  *

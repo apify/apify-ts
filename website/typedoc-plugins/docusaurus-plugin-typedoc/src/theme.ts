@@ -47,7 +47,6 @@ export class DocusaurusTheme extends MarkdownTheme {
             [RendererEvent.END]: this.onRendererEnd,
         });
 
-        console.log('register partials');
         registerPartials();
     }
 

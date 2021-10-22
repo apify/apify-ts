@@ -8,8 +8,12 @@ import log from '../utils_log';
 
 import { Configuration } from '../configuration';
 
+/** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;
+
+/** @internal */
 export const LOCAL_FILENAME_DIGITS = 9; // TODO not used anywhere, can we remove it?
+
 const SAFETY_BUFFER_PERCENT = 0.01 / 100; // 0.01%
 
 /**

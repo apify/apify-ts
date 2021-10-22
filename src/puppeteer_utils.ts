@@ -619,6 +619,8 @@ export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}
     }
 }
 
+export { enqueueLinksByClickingElements };
+
 /** @internal */
 export const puppeteerUtils = {
     injectFile,

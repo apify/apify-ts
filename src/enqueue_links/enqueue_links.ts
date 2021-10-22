@@ -87,7 +87,7 @@ export interface EnqueueLinksOptions {
  * and enqueues the URLs in their `href` attributes to the provided {@link RequestQueue}.
  * If you're looking to find URLs in JavaScript heavy pages where links are not available
  * in `href` elements, but rather navigations are triggered in click handlers
- * see {@link puppeteer.enqueueLinksByClickingElements}.
+ * see {@link utils.puppeteer.enqueueLinksByClickingElements}.
  *
  * Optionally, the function allows you to filter the target links' URLs using an array of {@link PseudoUrl} objects
  * and override settings of the enqueued {@link Request} objects.

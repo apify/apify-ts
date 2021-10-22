@@ -6,18 +6,25 @@ export const APIFY_CALL_ERROR_NAME = 'ApifyCallError';
 
 /**
  * The class represents exceptions thrown by the {@link Apify.call} function.
- *
- * @property message
- *   Error message
- * @property run
- *   Object representing the failed actor run.
- * @property name
- *   Contains `"ApifyCallError"`
  */
 export class ApifyCallError extends Error {
-    constructor(readonly run: Partial<ActorRun>, message = 'The actor invoked by Apify.call() did not succeed') {
+    /** Contains `"ApifyCallError"` */
+    override name: string;
+
+    /** Error message */
+    override message: string;
+
+    /** Object representing the failed actor run. */
+    readonly run: Partial<ActorRun>
+
+    /**
+     * @param run Object representing the failed actor run.
+     * @param message Error message
+     */
+    constructor(run: Partial<ActorRun>, message = 'The actor invoked by Apify.call() did not succeed') {
         super(`${message} (run ID: ${run.id})`);
         this.name = APIFY_CALL_ERROR_NAME;
+        this.run = run;
         Error.captureStackTrace(this, ApifyCallError);
     }
 }

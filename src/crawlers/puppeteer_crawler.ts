@@ -160,7 +160,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions {
  * parameter of the `PuppeteerCrawler` constructor. For user convenience, the `minConcurrency` and `maxConcurrency`
  * {@link AutoscaledPoolOptions} are available directly in the `PuppeteerCrawler` constructor.
  *
- * Note that the pool of Puppeteer instances is internally managed by the {@link BrowserPool} class.
+ * Note that the pool of Puppeteer instances is internally managed by the [BrowserPool](https://github.com/apify/browser-pool) class.
  *
  * **Example usage:**
  *

@@ -184,7 +184,7 @@ export interface BrowserCrawlerOptions extends BasicCrawlerOptions {
  * parameter of the `BrowserCrawler` constructor. For user convenience, the `minConcurrency` and `maxConcurrency`
  * {@link AutoscaledPoolOptions} are available directly in the `BrowserCrawler` constructor.
  *
- * Note that the pool of browser instances is internally managed by the {@link BrowserPool} class.
+ * Note that the pool of browser instances is internally managed by the [BrowserPool](https://github.com/apify/browser-pool) class.
  * ```js
  * await crawler.run();
  * ```
