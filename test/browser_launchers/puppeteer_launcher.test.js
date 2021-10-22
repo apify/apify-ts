@@ -98,7 +98,6 @@ describe('Apify.launchPuppeteer()', () => {
         await expect(Apify.launchPuppeteer({ proxyUrl: {} })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPuppeteer({ proxyUrl: 'https://user:pass@example.com:1234' })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: 'socks4://user:pass@example.com:1234' })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: 'socks5://user:pass@example.com:1234' })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: ' something really bad' })).rejects.toThrow(Error);
@@ -144,7 +143,7 @@ describe('Apify.launchPuppeteer()', () => {
             .then(() => browser.close());
     });
 
-    test('opens https://www.example.com via proxy with authentication', () => {
+    test.skip('opens https://www.example.com via proxy with authentication', () => {
         let browser;
         let page;
 
@@ -243,6 +242,7 @@ describe('Apify.launchPuppeteer()', () => {
                         return {
                             on() {},
                             close() {},
+                            newPage() {},
                         };
                     },
                     someProps,
