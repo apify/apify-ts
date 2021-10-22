@@ -32,7 +32,7 @@ jobs:
                     # install project deps
                     npm install --force
                     # go to website dir
-                    cd v2-website
+                    cd website
                     # install website deps
                     npm install --force
                     # go to custom docusuarus/typedoc plugin
