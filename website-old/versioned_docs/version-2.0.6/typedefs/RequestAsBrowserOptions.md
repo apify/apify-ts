@@ -1,5 +1,5 @@
 ---
-id: request-as-browser-options
+id: version-2.0.6-request-as-browser-options
 title: RequestAsBrowserOptions
 original_id: request-as-browser-options
 ---

@@ -1,5 +1,5 @@
 ---
-id: apify
+id: version-2.0.6-apify
 title: Apify
 original_id: apify
 ---

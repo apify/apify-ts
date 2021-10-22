@@ -21,7 +21,7 @@ exports.escape = function escape(input) {
     return input.replace(/([*|])/g, '$1');
 };
 
-exports.lowerCase = (text) => text.toLowerCase();
+exports.lowerCase = text => text.toLowerCase();
 
 exports.class = (options) => {
     options.hash.kind = 'class';
