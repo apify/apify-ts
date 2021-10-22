@@ -158,7 +158,6 @@ async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers
  * @param page
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param handler Request interception handler.
- * @memberOf puppeteer
  */
 export async function addInterceptRequestHandler(page: Page, handler: InterceptHandler): Promise<void> {
     ow(page, ow.object.hasKeys('goto', 'evaluate'));
@@ -204,7 +203,6 @@ export async function addInterceptRequestHandler(page: Page, handler: InterceptH
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param {InterceptHandler} handler Request interception handler.
  * @return {Promise<void>}
- * @memberOf puppeteer
  */
 export const removeInterceptRequestHandler = async (page, handler) => {
     ow(page, ow.object.hasKeys('goto', 'evaluate'));

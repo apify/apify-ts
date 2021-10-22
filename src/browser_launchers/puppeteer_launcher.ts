@@ -210,7 +210,6 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
  *   If you want to pass custom `puppeteer.launch(options)` options you can use the `PuppeteerLaunchContext.launchOptions` property.
  * @returns {Promise<Browser>}
  *   Promise that resolves to Puppeteer's `Browser` instance.
- * @memberof module:Apify
  */
 export async function launchPuppeteer(launchContext?: PuppeteerLaunchContext): Promise<Browser> {
     const puppeteerLauncher = new PuppeteerLauncher(launchContext);

@@ -884,7 +884,6 @@ export class RequestList {
  *   The {@link RequestList} options. Note that the `listName` parameter supersedes
  *   the {@link RequestListOptions.persistStateKey} and {@link RequestListOptions.persistRequestsKey}
  *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
- * @memberof module:Apify
  */
 export async function openRequestList(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
     ow(listName, ow.any(ow.string, ow.null));

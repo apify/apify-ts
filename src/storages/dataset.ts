@@ -7,6 +7,7 @@ import { StorageManager } from './storage_manager';
 import log from '../utils_log';
 
 import { Configuration } from '../configuration';
+import { Dictionary } from '../typedefs';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;
@@ -169,11 +170,10 @@ export class Dataset {
      * the items have already been saved to the dataset while other items from the source array were not.
      * To overcome this limitation, the developer may, for example, read the last item saved in the dataset
      * and re-attempt the save of the data from this item onwards to prevent duplicates.
-     * @param {object|Array<object>} data Object or array of objects containing data to be stored in the default dataset.
-     * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
-     * @return {Promise<void>}
+     * @param data Object or array of objects containing data to be stored in the default dataset.
+     *   The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
-    async pushData(data) {
+    async pushData(data: unknown): Promise<void> {
         ow(data, ow.object);
         // eslint-disable-next-line no-return-await
         const dispatch = async (payload) => await this.client.pushItems(payload);
@@ -225,9 +225,8 @@ export class Dataset {
      * @param {boolean} [options.skipEmpty=false]
      *   If `true` then the function doesn't return empty items.
      *   Note that in this case the returned number of items might be lower than limit parameter and pagination must be done using the `limit` value.
-     * @return {Promise<DatasetContent>}
      */
-    async getData(options = {}) {
+    async getData<T = unknown>(options = {}): Promise<DatasetContent<T>> {
         try {
             // @ts-ignore
             return await this.client.listItems(options);
@@ -261,10 +260,8 @@ export class Dataset {
      *   cleanItemCount: 10
      * }
      * ```
-     *
-     * @returns {Promise<object>}
      */
-    async getInfo() {
+    async getInfo<T extends Dictionary = Dictionary>(): Promise<T> {
         // @ts-ignore
         return this.client.get();
     }
@@ -284,16 +281,15 @@ export class Dataset {
      * });
      * ```
      *
-     * @param {DatasetConsumer} iteratee A function that is called for every item in the dataset.
-     * @param {Object} [options] All `forEach()` parameters are passed
+     * @param iteratee A function that is called for every item in the dataset.
+     * @param [options] All `forEach()` parameters are passed
      *   via an options object with the following keys:
      * @param {boolean} [options.desc=false] If `true` then the objects are sorted by `createdAt` in descending order.
      * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys.
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @param {number} [index=0] Specifies the initial index number passed to the `iteratee` function.
-     * @return {Promise<void>}
      */
-    async forEach(iteratee, options = {}, index = 0) {
+    async forEach(iteratee: DatasetConsumer, options: Dictionary = {}, index = 0): Promise<void> {
         // @ts-ignore
         if (!options.offset) options.offset = 0;
         // @ts-ignore
@@ -320,15 +316,14 @@ export class Dataset {
      *
      * If `iteratee` returns a `Promise` then it's awaited before a next call.
      *
-     * @param {DatasetMapper} iteratee
-     * @param {Object} [options] All `map()` parameters are passed
+     * @param iteratee
+     * @param [options] All `map()` parameters are passed
      *   via an options object with the following keys:
      * @param {boolean} [options.desc=false] If `true` then the objects are sorted by createdAt in descending order.
      * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
-     * @return {Promise<Array<object>>}
      */
-    map(iteratee, options) {
+    map(iteratee: DatasetMapper, options: Dictionary = {}): Promise<Dictionary[]> {
         const result = [];
 
         const wrappedFunc = (item, index) => {
@@ -354,16 +349,16 @@ export class Dataset {
      *
      * If `iteratee()` returns a `Promise` then it's awaited before a next call.
      *
-     * @param {DatasetReducer} iteratee
-     * @param {object} memo Initial state of the reduction.
-     * @param {Object} [options] All `reduce()` parameters are passed
+     * @param iteratee
+     * @param memo Initial state of the reduction.
+     * @param [options] All `reduce()` parameters are passed
      *   via an options object with the following keys:
      * @param {boolean} [options.desc=false] If `true` then the objects are sorted by createdAt in descending order.
      * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @return {Promise<object>}
      */
-    reduce(iteratee, memo, options) {
+    reduce(iteratee: DatasetReducer, memo: Dictionary, options: Dictionary) {
         let currentMemo = memo;
 
         const wrappedFunc = (item, index) => {
@@ -416,7 +411,6 @@ export class Dataset {
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
  * @returns {Promise<Dataset>}
- * @memberof module:Apify
  */
 export async function openDataset(datasetIdOrName?: string, options = {}) {
     ow(datasetIdOrName, ow.optional.string);
@@ -452,11 +446,8 @@ export async function openDataset(datasetIdOrName?: string, options = {}) {
  *
  * @param {object} item Object or array of objects containing data to be stored in the default dataset.
  * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
- * @returns {Promise<void>}
- *
- * @memberof module:Apify
  */
-export async function pushData(item) {
+export async function pushData(item): Promise<void> {
     // @ts-ignore
     const dataset = await openDataset();
     // @ts-ignore

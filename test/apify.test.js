@@ -2,17 +2,10 @@ import path from 'path';
 import _ from 'underscore';
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
 import { ApifyClient } from 'apify-client';
-import { ApifyCallError } from '../build/errors';
-import * as utils from '../build/utils';
-import { Dataset } from '../build/storages/dataset';
-import { KeyValueStore } from '../build/storages/key_value_store';
+import { Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore, StorageManager, ProxyConfiguration, SessionPool } from '../src';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
-import { StorageManager } from '../build/storages/storage_manager';
-import { ProxyConfiguration } from '../build/proxy_configuration';
-import { SessionPool } from '../build/session_pool/session_pool';
 
-// NOTE: test use of require() here because this is how its done in acts
-const { Apify, Configuration, RequestList, utils: { log, sleep } } = require('../build/index');
+const { log, sleep } = utils;
 
 /**
  * Helper function that enables testing of Apify.main()

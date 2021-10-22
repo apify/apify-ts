@@ -129,7 +129,6 @@ export type AbortFunction = (response: IncomingMessage) => boolean;
  * @return {Promise<RequestAsBrowserResult>} The result can be various objects, but it will always be like a
  * [Node.js HTTP response stream](https://nodejs.org/api/http.html#http_class_http_incomingmessage)
  * with a 'body' property for the parsed response body, unless the 'stream' option is used.
- * @memberOf utils
  */
 export async function requestAsBrowser(options: RequestAsBrowserOptions = {} as RequestAsBrowserOptions): Promise<RequestAsBrowserResult> {
     logDeprecatedOptions(options);

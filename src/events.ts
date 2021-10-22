@@ -41,8 +41,6 @@ import { Configuration } from './configuration';
  *   in which case the `isMigrating` flag is set to `true`. Otherwise the flag is `false`.
  *   Note that the `persistState` event is provided merely for user convenience,
  *   you can achieve the same effect using `setInterval()` and listening for the `migrating` event.
- *
- * @memberof module:Apify
  */
 export const events = new EventEmitter();
 
@@ -72,8 +70,6 @@ const emitPersistStateEvent = (isMigrating = false) => {
 /**
  * Initializes `Apify.events` event emitter by creating a connection to a websocket that provides them.
  * This is an internal function that is automatically called by `Apify.main()`.
- *
- * @memberof module:Apify
  * @ignore
  */
 export function initializeEvents(config = Configuration.getGlobalConfig()) {
@@ -127,8 +123,6 @@ export function initializeEvents(config = Configuration.getGlobalConfig()) {
  * Closes websocket providing events from Actor infrastructure and also stops sending internal events
  * of Apify package such as `persistState`.
  * This is automatically called at the end of `Apify.main()`.
- *
- * @memberof module:Apify
  * @ignore
  */
 export function stopEvents() {

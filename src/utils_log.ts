@@ -153,7 +153,6 @@ export default log;
  * Map of available log levels that's useful for easy setting of appropriate log levels.
  * Each log level is represented internally by a number. Eg. `log.LEVELS.DEBUG === 5`.
  * @type Object
- * @memberOf log
  */
 
 /**
@@ -167,7 +166,6 @@ export default log;
  * Default log level is INFO.
  * @param {number} level
  * @method
- * @memberOf log
  */
 
 /**
@@ -176,28 +174,24 @@ export default log;
  * to construct the message, such as querying a DB for some metadata that need to be added. If the log
  * level is not high enough at the moment, it doesn't make sense to execute the query.
  * @method
- * @memberOf log
  */
 
 /**
  * Configures logger.
  * @param {LoggerOptions} options
  * @method
- * @memberOf log
  */
 
 /**
  * Creates a new instance of logger that inherits settings from a parent logger.
  * @param {LoggerOptions} [options] Supports the same options as the `setOptions()` method.
  * @method
- * @memberOf log
  */
 
 /**
  * Returns the logger configuration.
  * @method
  * @returns {LoggerOptions}
- * @memberOf log
  */
 
 /**
@@ -208,7 +202,6 @@ export default log;
  * @param {string} message
  * @param {object} [data]
  * @method
- * @memberOf log
  */
 
 /**
@@ -217,7 +210,6 @@ export default log;
  * @param {string} message
  * @param {object} [data]
  * @method
- * @memberOf log
  */
 
 /**
@@ -225,7 +217,6 @@ export default log;
  * @param {string} message
  * @param {object} [data]
  * @method
- * @memberOf log
  */
 
 /**
@@ -234,7 +225,6 @@ export default log;
  * @param {string} message
  * @param {object} [data]
  * @method
- * @memberOf log
  */
 
 /**
@@ -244,7 +234,6 @@ export default log;
  * @param {string} [message]
  * @param {object} [data]
  * @method
- * @memberOf log
  */
 
 // // variable can't be the same from the namespace above

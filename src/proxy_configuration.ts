@@ -538,8 +538,6 @@ export class ProxyConfiguration {
  * ```
  * { useApifyProxy: false }
  * ```
- *
- * @memberof module:Apify
  */
 export async function createProxyConfiguration(
     proxyConfigurationOptions: ProxyConfigurationOptions & { useApifyProxy?: boolean } = {},

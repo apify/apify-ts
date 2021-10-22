@@ -61,7 +61,6 @@ export interface DirectNavigationOptions {
  *   Puppeteer [`Page`](https://playwright.dev/docs/api/class-page) object.
  * @param request
  * @param [gotoOptions] Custom options for `page.goto()`.
- * @memberOf playwright
  */
 export async function gotoExtended(page: Page, request: Request, gotoOptions: DirectNavigationOptions = {}): Promise<Response | null> {
     ow(page, ow.object.validate(validators.browserPage));

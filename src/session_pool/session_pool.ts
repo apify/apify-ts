@@ -445,8 +445,6 @@ export class SessionPool extends EventEmitter {
  * of the {@link SessionPool} class that is already initialized.
  *
  * For more details and code examples, see the {@link SessionPool} class.
- *
- * @memberof module:Apify
  */
 export async function openSessionPool(sessionPoolOptions: SessionPoolOptions): Promise<SessionPool> {
     const sessionPool = new SessionPool(sessionPoolOptions);

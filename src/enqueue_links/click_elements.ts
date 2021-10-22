@@ -112,7 +112,6 @@ const STARTING_Z_INDEX = 2147400000;
  *   See `waitForPageIdleSecs` above for an explanation.
  * @return {Promise<Array<QueueOperationInfo>>}
  *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
- * @memberOf puppeteer
  */
 export async function enqueueLinksByClickingElements(options) {
     ow(options, ow.object.exactShape({

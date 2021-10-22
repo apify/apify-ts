@@ -102,8 +102,6 @@ export type EventTypes = (keyof typeof WEBHOOK_EVENT_TYPES)[];
  * For the list of the `APIFY_XXX` environment variables, see
  * [Actor documentation](https://docs.apify.com/actor/run#environment-variables).
  * If some of the variables are not defined or are invalid, the corresponding value in the resulting object will be null.
- *
- * @memberof module:Apify
  */
 export function getEnv(): ApifyEnv {
     // NOTE: Don't throw if env vars are invalid to simplify local development and debugging of actors
@@ -190,8 +188,6 @@ export type UserFunc = () => Promise<void>;
  *
  * @param {UserFunc} userFunc User function to be executed. If it returns a promise,
  * the promise will be awaited. The user function is called with no arguments.
- *
- * @memberof module:Apify
  */
 export function main(userFunc): void {
     if (!userFunc || typeof (userFunc) !== 'function') {
@@ -354,8 +350,6 @@ export interface CallOptions {
  *  Otherwise the `options.contentType` parameter must be provided.
  * @param [options]
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
- *
- * @memberof module:Apify
  */
 export async function call(actId: string, input?: Record<string, unknown>, options: CallOptions = {}): Promise<ActorRun> {
     ow(actId, ow.string);
@@ -503,8 +497,6 @@ export interface CallTaskOptions {
  *  JSON and its content type set to `application/json; charset=utf-8`.
  *  Provided input will be merged with actor task input.
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
- *
- * @memberof module:Apify
  */
 export async function callTask(taskId: string, input?: Record<string, unknown>, options: CallTaskOptions = {}): Promise<ActorRun> {
     ow(taskId, ow.string);
@@ -589,8 +581,6 @@ function isRunUnsuccessful(status) {
  *  JSON and its content type set to `application/json; charset=utf-8`.
  *  Otherwise the `options.contentType` parameter must be provided.
  * @param [options]
- *
- * @memberof module:Apify
  */
 export async function metamorph(targetActorId: string, input: Dictionary, options: MetamorphOptions = {}): Promise<void> {
     ow(targetActorId, ow.string);
@@ -681,8 +671,6 @@ export interface AddWebhookOptions {
  * @param options
  * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
  * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
- *
- * @memberof module:Apify
  */
 export async function addWebhook(options: AddWebhookOptions): Promise<WebhookRun | undefined> {
     ow(options, ow.object.exactShape({

@@ -83,9 +83,6 @@ const psTreePromised = util.promisify(psTree);
  * @param {string} [options.token]
  * @param {string} [options.maxRetries]
  * @param {string} [options.minDelayBetweenRetriesMillis]
- * @memberof module:Apify
- * @function
- * @return {ApifyClient}
  */
 export const newClient = (options = {}) => {
     ow(options, ow.object.exactShape({
@@ -166,9 +163,6 @@ const createIsDockerPromise = () => {
  *
  * @param {boolean} forceReset
  * @return {Promise<boolean>}
- *
- * @memberof utils
- * @function
  */
 export const isDocker = (forceReset) => {
     // Parameter forceReset is just internal for unit tests.
@@ -220,8 +214,6 @@ export interface MemoryInfo {
  *
  * Beware that the function is quite inefficient because it spawns a new process.
  * Therefore you shouldn't call it too often, like more than once per second.
- *
- * @memberof module:Apify
  */
 export async function getMemoryInfo(): Promise<MemoryInfo> {
     // lambda does *not* have `ps` and other command line tools
@@ -389,8 +381,6 @@ export function addTimeoutToPromise<T>(promise: Promise<T>, timeoutMillis: numbe
 
 /**
  * Returns `true` when code is running on Apify platform and `false` otherwise (for example locally).
- *
- * @memberof module:Apify
  */
 export function isAtHome(): boolean {
     return !!process.env[ENV_VARS.IS_AT_HOME];
@@ -411,7 +401,6 @@ export function isAtHome(): boolean {
  * await Apify.utils.sleep(1500);
  * ```
  * @param millis Period of time to sleep, in milliseconds. If not a positive number, the returned promise resolves immediately.
- * @memberof utils
  */
 export function sleep(millis: number): Promise<void> {
     return new Promise((res) => setTimeout(res, millis));
@@ -427,7 +416,6 @@ export function sleep(millis: number): Promise<void> {
  * @param [options.urlRegExp=URL_NO_COMMAS_REGEX]
  *   Custom regular expression to identify the URLs in the file to extract.
  *   The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
- * @memberOf utils
  */
 async function downloadListOfUrls(options: { url: string; encoding?: BufferEncoding; urlRegExp?: RegExp }): Promise<string[]> {
     ow(options, ow.object.exactShape({
@@ -446,7 +434,6 @@ async function downloadListOfUrls(options: { url: string; encoding?: BufferEncod
  * @param options
  * @param options.string
  * @param [options.urlRegExp=Apify.utils.URL_NO_COMMAS_REGEX]
- * @memberOf utils
  */
 function extractUrls(options: { string: string; urlRegExp: RegExp }): string[] {
     ow(options, ow.object.exactShape({
@@ -489,7 +476,6 @@ const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|
  * @param {(string|cheerio.Root)} html HTML text or parsed HTML represented using a
  * [cheerio](https://www.npmjs.com/package/cheerio) function.
  * @return {string} Plain text
- * @memberOf utils
  * @function
  */
 const htmlToText = (html) => {
@@ -663,8 +649,6 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
  *  that's used by the default ApifyClient instance.
  *  E.g. you can track other users' runs.
  * @returns {Promise<ActorRun>}
- * @memberOf utils
- * @function
  * @deprecated
  *  Please use the 'waitForFinish' functions of 'apify-client'.
  * @ignore
@@ -719,7 +703,6 @@ export const waitForRunToFinish = async (options) => {
  *
  * @param {string} [folder] The folder to clean up
  * @returns {Promise<void>}
- * @memberOf utils
  * @function
  */
 export const purgeLocalStorage = async (folder) => {

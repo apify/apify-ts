@@ -27,7 +27,6 @@ const EMAIL_REGEX_STRING = '(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&\'
  * Regular expression to exactly match a single email address.
  * It has the following form: `/^...$/i`.
  * @type {RegExp}
- * @memberOf social
  */
 export const EMAIL_REGEX = new RegExp(`^${EMAIL_REGEX_STRING}$`, 'i');
 
@@ -35,7 +34,6 @@ export const EMAIL_REGEX = new RegExp(`^${EMAIL_REGEX_STRING}$`, 'i');
  * Regular expression to find multiple email addresses in a text.
  * It has the following form: `/.../ig`.
  * @type {RegExp}
- * @memberOf social
  */
 export const EMAIL_REGEX_GLOBAL = new RegExp(EMAIL_REGEX_STRING, 'ig');
 
@@ -47,7 +45,6 @@ const EMAIL_URL_PREFIX_REGEX = /^mailto:/i;
  * @param {string} text Text to search in.
  * @return {string[]} Array of emails addresses found.
  * If no emails are found, the function returns an empty array.
- * @memberOf social
  */
 export function emailsFromText(text: string): string[] {
     if (!_.isString(text)) return [];
@@ -61,7 +58,6 @@ export function emailsFromText(text: string): string[] {
  * @param urls Array of URLs.
  * @return {string[]} Array of emails addresses found.
  * If no emails are found, the function returns an empty array.
- * @memberOf social
  */
 export function emailsFromUrls(urls: string[]): string[] {
     if (!Array.isArray(urls)) throw new Error('The "urls" parameter must be an array');
@@ -144,7 +140,6 @@ const SKIP_PHONE_REGEX = new RegExp(`^(${SKIP_PHONE_REGEXS.join('|')})$`, 'i');
  * @param text Text to search the phone numbers in.
  * @return {string[]} Array of phone numbers found.
  * If no phone numbers are found, the function returns an empty array.
- * @memberOf social
  */
 export function phonesFromText(text: string): string[] {
     if (!_.isString(text)) return [];
@@ -171,7 +166,6 @@ export function phonesFromText(text: string): string[] {
  * @param urls Array of URLs.
  * @return {string[]} Array of phone numbers found.
  * If no phone numbers are found, the function returns an empty array.
- * @memberOf social
  */
 export function phonesFromUrls(urls: string[]): string[] {
     if (!Array.isArray(urls)) throw new Error('The "urls" parameter must be an array');
@@ -286,7 +280,6 @@ export interface SocialHandles {
  *   that contain text content of the HTML and `cheerio` object, respectively. This is an optimization
  *   so that the caller doesn't need to parse the HTML document again, if needed.
  * @return {SocialHandles} An object with the social handles.
- * @memberOf social
  */
 export function parseHandlesFromHtml(html: string, data: Record<string, unknown> = null): SocialHandles {
     const result = {

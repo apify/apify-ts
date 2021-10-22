@@ -91,7 +91,6 @@ const injectedFilesCache = new LruCache({ maxLength: MAX_INJECT_FILE_CACHE_SIZE 
  *   Enables the injected script to survive page navigations and reloads without need to be re-injected manually.
  *   This does not mean, however, that internal state will be preserved. Just that it will be automatically
  *   re-injected on each navigation before any other scripts get the chance to execute.
- * @memberOf puppeteer
  */
 export async function injectFile(page: Page, filePath: string, options: { surviveNavigations?: boolean } = {}): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -136,7 +135,6 @@ export async function injectFile(page: Page, filePath: string, options: { surviv
  *
  * @param page
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
- * @memberOf puppeteer
  */
 export function injectJQuery(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -161,7 +159,6 @@ export function injectJQuery(page: Page): Promise<unknown> {
  * ```
  *
  * @param page Puppeteer [Page](https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#class-page) object.
- * @memberOf puppeteer
  */
 export function injectUnderscore(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -217,7 +214,6 @@ export function injectUnderscore(page: Page): Promise<unknown> {
  *   `.png` is the same as `*.png*`.
  * @param [options.extraUrlPatterns]
  *   If you just want to append to the default blocked patterns, use this property.
- * @memberOf puppeteer
  */
 export async function blockRequests(page: Page, options: { urlPatterns?: string[]; extraUrlPatterns?: string[] } = {}): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -266,7 +262,6 @@ const blockResources = async (page, resourceTypes = ['stylesheet', 'font', 'imag
  * @param responseUrlRules
  *   List of rules that are used to check if the response should be cached.
  *   String rules are compared as page.url().includes(rule) while RegExp rules are evaluated as rule.test(page.url()).
- * @memberOf puppeteer
  * @deprecated
  */
 export async function cacheResponses(page: Page, cache: Dictionary, responseUrlRules: (string | RegExp)[]): Promise<void> {
@@ -341,7 +336,6 @@ export async function cacheResponses(page: Page, cache: Dictionary, responseUrlR
  * make sure to only pass the really necessary objects to the context. Preferably making
  * secured copies beforehand.
  *
- * @memberOf puppeteer
  */
 export function compileScript(scriptString: string, context: Dictionary = Object.create(null)): CompiledScriptFunction {
     const funcString = `async ({ page, request }) => {${scriptString}}`;
@@ -371,7 +365,6 @@ export function compileScript(scriptString: string, context: Dictionary = Object
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param request
  * @param [gotoOptions] Custom options for `page.goto()`.
- * @memberOf puppeteer
  */
 export async function gotoExtended(page: Page, request: Request, gotoOptions: DirectNavigationOptions = {}): Promise<HTTPResponse | null> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -449,7 +442,6 @@ export interface InfiniteScrollOptions {
  * @param page
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param [options]
- * @memberOf puppeteer
  */
 export async function infiniteScroll(page: Page, options: InfiniteScrollOptions = {}): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -579,7 +571,6 @@ export interface SaveSnapshotOptions {
  * @param page
  *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param [options]
- * @memberOf puppeteer
  */
 export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));

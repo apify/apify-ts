@@ -148,7 +148,6 @@ function getDefaultExecutablePath(launchContext: PlaywrightLaunchContext): strin
  *   the object may contain our own  {@link PlaywrightLaunchContext} that enable additional features.
  * @returns {Promise<unknown>}
  *   Promise that resolves to Playwright's `Browser` instance.
- * @memberof module:Apify
  */
 export async function launchPlaywright(launchContext?: PlaywrightLaunchContext): Promise<unknown> {
     const playwrightLauncher = new PlaywrightLauncher(launchContext);

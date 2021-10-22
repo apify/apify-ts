@@ -681,7 +681,6 @@ export class RequestQueue {
  * @param [options.forceCloud=false]
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
- * @memberof module:Apify
  */
 export async function openRequestQueue(queueIdOrName?: string, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
     ow(queueIdOrName, ow.optional.string);

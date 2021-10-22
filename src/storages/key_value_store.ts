@@ -339,8 +339,6 @@ export interface OpenKeyValueStoreOptions {
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
- * @returns {}
- * @memberof module:Apify
  */
 export async function openKeyValueStore(storeIdOrName?: string, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
     ow(storeIdOrName, ow.optional.string);
@@ -380,7 +378,6 @@ export async function openKeyValueStore(storeIdOrName?: string, options: OpenKey
  *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
  *   on the MIME content type of the record, or `null`
  *   if the record is missing.
- * @memberof module:Apify
  */
 export async function getValue<T extends Dictionary | string | Buffer>(key: string): Promise<T | null> {
     const store = await openKeyValueStore();
@@ -420,7 +417,6 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
  * @param [options]
  * @param {string} [options.contentType]
  *   Specifies a custom MIME content type of the record.
- * @memberof module:Apify
  */
 export async function setValue<T>(key: string, value: T, options?: unknown): Promise<void> {
     const store = await openKeyValueStore();
@@ -432,7 +428,7 @@ export async function setValue<T>(key: string, value: T, options?: unknown): Pro
 /**
  * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
  *
- * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store.getvalue).
+ * This is just a convenient shortcut for {@link getValue | `keyValueStore.getValue('INPUT')` }.
  * For example, calling the following code:
  * ```javascript
  * const input = await Apify.getInput();
@@ -456,7 +452,6 @@ export async function setValue<T>(key: string, value: T, options?: unknown): Pro
  *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
  *   on the MIME content type of the record, or `null`
  *   if the record is missing.
- * @memberof module:Apify
  */
 export async function getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
     return getValue<T>(process.env[ENV_VARS.INPUT_KEY] || KEY_VALUE_STORE_KEYS.INPUT);
