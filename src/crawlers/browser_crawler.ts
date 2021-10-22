@@ -28,9 +28,6 @@ export type BrowserHook = Hook<BrowserCrawlingContext>;
 export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Promise<void>;
 export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Promise<any>;
 
-/**
- * @internal
- */
 export interface BrowserCrawlerOptions {
     /**
      * Function that is called to process each request.
@@ -255,10 +252,9 @@ export interface BrowserCrawlerOptions {
  * ```js
  * await crawler.run();
  * ```
- * @internal
  * @category Crawlers
  */
-export class BrowserCrawler extends BasicCrawler {
+export abstract class BrowserCrawler extends BasicCrawler {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.

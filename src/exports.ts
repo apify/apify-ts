@@ -52,6 +52,7 @@ export * from './actor';
 export * from './apify';
 export * from './configuration';
 export * from './crawlers/basic_crawler';
+export * from './crawlers/browser_crawler';
 export * from './crawlers/cheerio_crawler';
 export * from './crawlers/playwright_crawler';
 export * from './crawlers/puppeteer_crawler';
