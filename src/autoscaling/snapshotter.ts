@@ -4,7 +4,7 @@ import { betterSetInterval, betterClearInterval } from '@apify/utilities';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import { Log } from '@apify/log';
 import { getMemoryInfo, isAtHome, apifyClient } from '../utils';
-import events from '../events';
+import { events } from '../events';
 import defaultLog from '../utils_log';
 import { SystemInfo } from './system_status';
 

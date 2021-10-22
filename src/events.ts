@@ -6,25 +6,6 @@ import defaultLog from './utils_log';
 import { Configuration } from './configuration';
 
 /**
- * Event emitter providing events from underlying Actor infrastructure and Apify package.
- * @ignore
- */
-const events = new EventEmitter();
-
-/**
- * Websocket connection to actor events.
- * @ignore
- */
-let eventsWs: WebSocket | null = null;
-
-/**
- * Interval that emits persist state events.
- * @type {*}
- * @ignore
- */
-let persistStateInterval = null;
-
-/**
  * Gets an instance of a Node.js'
  * [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter)
  * class that emits various events from the SDK or the Apify platform.
@@ -63,7 +44,20 @@ let persistStateInterval = null;
  *
  * @memberof module:Apify
  */
-export default events;
+export const events = new EventEmitter();
+
+/**
+ * Websocket connection to actor events.
+ * @ignore
+ */
+let eventsWs: WebSocket | null = null;
+
+/**
+ * Interval that emits persist state events.
+ * @type {*}
+ * @ignore
+ */
+let persistStateInterval = null;
 
 /**
  * Emits event telling all components that they should persist their state at regular intervals and also when an actor is being

@@ -5,7 +5,7 @@ import log from '../../build/utils_log';
 import Apify from '../../build';
 import * as keyValueStore from '../../build/storages/key_value_store';
 import { RequestQueue } from '../../build/storages/request_queue';
-import events from '../../build/events';
+import { events } from '../../build/events';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import * as utils from '../../build/utils';
 

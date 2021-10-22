@@ -2,7 +2,7 @@ import sinon from 'sinon';
 import { Statistics } from '../../build/crawlers/statistics';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import Apify from '../../build';
-import events from '../../build/events';
+import { events } from '../../build/events';
 import { ACTOR_EVENT_NAMES_EX } from '../../build/constants';
 
 describe('Statistics', () => {

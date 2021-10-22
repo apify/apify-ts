@@ -7,7 +7,7 @@ import { AutoscaledPool } from './autoscaling/autoscaled_pool';
 import { BasicCrawler } from './crawlers/basic_crawler';
 import { CheerioCrawler } from './crawlers/cheerio_crawler';
 import { pushData, openDataset } from './storages/dataset';
-import events, { initializeEvents, stopEvents } from './events';
+import { events, initializeEvents, stopEvents } from './events';
 import { getValue, setValue, getInput, openKeyValueStore } from './storages/key_value_store';
 import { launchPuppeteer } from './browser_launchers/puppeteer_launcher';
 import { launchPlaywright } from './browser_launchers/playwright_launcher';

@@ -5,7 +5,7 @@ import _ from 'underscore';
 import { Log } from '@apify/log';
 import { IncomingMessage } from 'http';
 import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
-import events from '../events';
+import { events } from '../events';
 import { openSessionPool, SessionPool, SessionPoolOptions } from '../session_pool/session_pool';
 import { Statistics } from './statistics';
 import { addTimeoutToPromise } from '../utils';

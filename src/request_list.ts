@@ -2,7 +2,7 @@ import ow, { ArgumentError } from 'ow';
 import _ from 'underscore';
 import { ACTOR_EVENT_NAMES_EX } from './constants';
 import { Request, RequestOptions } from './request'; // eslint-disable-line import/no-duplicates
-import events from './events';
+import { events } from './events';
 import log from './utils_log';
 import { getFirstKey, publicUtils } from './utils';
 import { getValue, setValue } from './storages/key_value_store';

@@ -3,7 +3,7 @@ import ow from 'ow';
 import { KeyValueStore, openKeyValueStore } from '../storages/key_value_store';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import defaultLog from '../utils_log';
-import events from '../events';
+import { events } from '../events';
 
 /**
  * @ignore
