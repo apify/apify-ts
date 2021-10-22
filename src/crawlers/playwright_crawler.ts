@@ -1,6 +1,6 @@
 import ow from 'ow';
 import { Page } from 'playwright';
-import { BrowserPoolOptions, BrowserPool, PlaywrightPlugin } from 'browser-pool';
+import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import { LaunchContext } from 'browser-pool/dist/launch-context';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
@@ -224,11 +224,10 @@ export class PlaywrightCrawler extends BrowserCrawler {
      * All `PlaywrightCrawler` parameters are passed via an options object.
      */
     constructor(options: PlaywrightCrawlerOptions) {
-        // FIXME ow is messing up the options type hard, so we need casting :/
         ow(options, 'PlaywrightCrawlerOptions', ow.object.exactShape(PlaywrightCrawler.optionsShape));
 
         const {
-            launchContext = {} as LaunchContext,
+            launchContext = {},
             browserPoolOptions = {} as BrowserPoolOptions<PlaywrightPlugin>,
             ...browserCrawlerOptions
         } = options;
@@ -244,13 +243,8 @@ export class PlaywrightCrawler extends BrowserCrawler {
             playwrightLauncher.createBrowserPlugin(),
         ];
 
-        // @ts-ignore ow is messing up the options types somehow
-        super({
-            ...browserCrawlerOptions,
-            browserPoolOptions,
-        });
-
-        this.launchContext = launchContext as LaunchContext;
+        super({ ...browserCrawlerOptions, browserPoolOptions });
+        this.launchContext = launchContext;
     }
 
     protected override async _navigationHandler(crawlingContext, gotoOptions) {

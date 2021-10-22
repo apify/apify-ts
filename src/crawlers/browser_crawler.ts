@@ -15,6 +15,7 @@ import { ProxyConfiguration } from '../proxy_configuration';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
+import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 
 export interface BrowserCrawlingContext extends CrawlingContext {
     browserController: BrowserController;
@@ -204,7 +205,7 @@ export abstract class BrowserCrawler extends BasicCrawler {
      */
     browserPool: BrowserPool<any, any, any, any, any, any>;
 
-    launchContext: LaunchContext;
+    launchContext: BrowserLaunchContext;
 
     protected handlePageFunction: BrowserHandlePageFunction;
     protected handlePageTimeoutSecs: number;
@@ -240,7 +241,7 @@ export abstract class BrowserCrawler extends BasicCrawler {
     /**
      * All `BrowserCrawler` parameters are passed via an options object.
      */
-    constructor(options: BrowserCrawlerOptions) {
+    protected constructor(options: BrowserCrawlerOptions) {
         ow(options, 'BrowserCrawlerOptions', ow.object.exactShape(BrowserCrawler.optionsShape));
         const {
             handlePageFunction,

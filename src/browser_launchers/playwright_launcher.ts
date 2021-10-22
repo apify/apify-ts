@@ -66,10 +66,9 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
     }
 
     /**
-    * @param {PlaywrightLaunchContext} launchContext
-    * All `PlaywrightLauncher` parameters are passed via this launchContext object.
-    */
-    constructor(launchContext = {}) {
+     * All `PlaywrightLauncher` parameters are passed via this launchContext object.
+     */
+    constructor(launchContext: PlaywrightLaunchContext = {}) {
         ow(launchContext, 'PlaywrightLauncherOptions', ow.object.exactShape(PlaywrightLauncher.optionsShape));
 
         const {

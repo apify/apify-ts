@@ -1,7 +1,6 @@
 import ow from 'ow';
 import { BrowserPoolOptions } from 'browser-pool';
 import { Page } from 'puppeteer';
-import { LaunchContext } from 'browser-pool/dist/launch-context';
 import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
@@ -211,10 +210,7 @@ export class PuppeteerCrawler extends BrowserCrawler {
             proxyConfiguration,
             ...browserCrawlerOptions
         } = options;
-
-        const {
-            stealth = false,
-        } = launchContext;
+        const { stealth = false } = launchContext;
 
         if (launchContext.proxyUrl) {
             throw new Error('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.'
@@ -227,23 +223,18 @@ export class PuppeteerCrawler extends BrowserCrawler {
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        // @ts-ignore ow is messing up the options types somehow
-        super({
-            ...browserCrawlerOptions,
-            proxyConfiguration,
-            browserPoolOptions,
-        });
+        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
 
         if (stealth) {
             this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
                 // @TODO: We can do this better now. It is not necessary to override the page.
-                // we can modify the page in the postPageCreateHook
+                //   we can modify the page in the postPageCreateHook
                 const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions;
                 await applyStealthToBrowser(browserController.browser, newStealthOptions);
             });
         }
 
-        this.launchContext = launchContext as LaunchContext;
+        this.launchContext = launchContext;
     }
 
     protected override async _navigationHandler(crawlingContext, gotoOptions) {
