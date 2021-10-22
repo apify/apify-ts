@@ -809,11 +809,13 @@ export class CheerioCrawler extends BasicCrawler {
     private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: RequestAsBrowserOptions): void {
         const userCookie = request.headers.Cookie ?? request.headers.cookie;
         const sessionCookie = session.getCookieString(request.url);
+        const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie]);
 
         // merge cookies from all possible sources
-        requestAsBrowserOptions.headers = {
-            Cookie: mergeCookies(request.url, [sessionCookie, userCookie]),
-        };
+        if (mergedCookies) {
+            requestAsBrowserOptions.headers ??= {};
+            requestAsBrowserOptions.headers.Cookie = mergedCookies;
+        }
     }
 
     /**
