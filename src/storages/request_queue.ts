@@ -12,28 +12,39 @@ import { Request, RequestOptions } from '../request';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
-/** When requesting queue head we always fetch requestsInProgressCount * QUERY_HEAD_BUFFER number of requests. */
+/**
+ * When requesting queue head we always fetch requestsInProgressCount * QUERY_HEAD_BUFFER number of requests.
+ * @internal
+ */
 export const QUERY_HEAD_MIN_LENGTH = 100;
+
+/** @internal */
 export const QUERY_HEAD_BUFFER = 3;
 
 /**
  * If queue was modified (request added/updated/deleted) before more than API_PROCESSED_REQUESTS_DELAY_MILLIS
  * then we assume the get head operation to be consistent.
+ * @internal
  */
 export const API_PROCESSED_REQUESTS_DELAY_MILLIS = 10_000;
 
-/** How many times we try to get queue head with queueModifiedAt older than API_PROCESSED_REQUESTS_DELAY_MILLIS. */
+/**
+ * How many times we try to get queue head with queueModifiedAt older than API_PROCESSED_REQUESTS_DELAY_MILLIS.
+ * @internal
+ */
 export const MAX_QUERIES_FOR_CONSISTENCY = 6;
 
 /**
  * This number must be large enough so that processing of all these requests cannot be done in
  * a time lower than expected maximum latency of DynamoDB, but low enough not to waste too much memory.
+ * @internal
  */
 const RECENTLY_HANDLED_CACHE_SIZE = 1000;
 
 /**
  * Indicates how long it usually takes for the underlying storage to propagate all writes
  * to be available to subsequent reads.
+ * @internal
  */
 export const STORAGE_CONSISTENCY_DELAY_MILLIS = 3000;
 
@@ -44,7 +55,7 @@ export const STORAGE_CONSISTENCY_DELAY_MILLIS = 3000;
  * This function may not exactly match how requestId is created server side.
  * So we never pass requestId created by this to server and use it only for local cache.
  *
- * @ignore
+ * @internal
  */
 export function getRequestId(uniqueKey: string) {
     const str = crypto

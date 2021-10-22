@@ -51,28 +51,28 @@ const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
 export interface BasicCrawlerOptions {
     /**
-     *   User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
+     * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
-     *   The function receives the following object as an argument:
+     * The function receives the following object as an argument:
      * ```
      * {
-     *   request: Request,
-     *   session: Session,
-     *   crawler: BasicCrawler,
+     *     request: Request,
+     *     session: Session,
+     *     crawler: BasicCrawler,
      * }
      * ```
-     *   where the {@link Request} instance represents the URL to crawl.
+     * where the {@link Request} instance represents the URL to crawl.
      *
-     *   The function must return a promise, which is then awaited by the crawler.
+     * The function must return a promise, which is then awaited by the crawler.
      *
-     *   If the function throws an exception, the crawler will try to re-crawl the
-     *   request later, up to `option.maxRequestRetries` times.
-     *   If all the retries fail, the crawler calls the function
-     *   provided to the `handleFailedRequestFunction` parameter.
-     *   To make this work, you should **always**
-     *   let your function throw exceptions rather than catch them.
-     *   The exceptions are logged to the request using the
-     *   {@link Request.pushErrorMessage} function.
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
      */
     handleRequestFunction: HandleRequest;
 
@@ -90,6 +90,7 @@ export interface BasicCrawlerOptions {
 
     /**
      * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
+     * @default 60
      */
     handleRequestTimeoutSecs?: number;
 
@@ -115,7 +116,8 @@ export interface BasicCrawlerOptions {
     handleFailedRequestFunction?: HandleFailedRequest;
 
     /**
-     * Indicates how many times the request is retried if {@link BasicCrawlerOptions.handleRequestFunction} fails.
+     * Indicates how many times the request is retried if {@link handleRequestFunction} or {@link handlePageFunction} fails.
+     * @default 3
      */
     maxRequestRetries?: number;
 
@@ -129,7 +131,7 @@ export interface BasicCrawlerOptions {
     /**
      * Custom options passed to the underlying {@link AutoscaledPool} constructor.
      * Note that the `runTaskFunction` and `isTaskReadyFunction` options
-     * are provided by `BasicCrawler` and cannot be overridden.
+     * are provided by the crawler and cannot be overridden.
      * However, you can provide a custom implementation of `isFinishedFunction`.
      */
     autoscaledPoolOptions?: AutoscaledPoolOptions;

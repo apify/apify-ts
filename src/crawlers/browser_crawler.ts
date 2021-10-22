@@ -1,5 +1,4 @@
 import ow from 'ow';
-import { Log } from '@apify/log';
 // @ts-ignore BrowserController is not exported?
 import { BrowserPool, BrowserController, BrowserPoolOptions } from 'browser-pool';
 import { LaunchContext } from 'browser-pool/dist/launch-context'; // TODO this should be exported
@@ -11,13 +10,11 @@ import {
     throwOnBlockedRequest,
     handleRequestTimeout,
 } from './crawler_utils';
-import { BasicCrawler, CrawlingContext, HandleFailedRequest } from './basic_crawler';
+import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './basic_crawler';
 import { ProxyConfiguration } from '../proxy_configuration';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
-import { SessionPoolOptions } from '../session_pool/session_pool';
-import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 
 export interface BrowserCrawlingContext extends CrawlingContext {
     browserController: BrowserController;
@@ -28,7 +25,7 @@ export type BrowserHook = Hook<BrowserCrawlingContext>;
 export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Promise<void>;
 export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Promise<any>;
 
-export interface BrowserCrawlerOptions {
+export interface BrowserCrawlerOptions extends BasicCrawlerOptions {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -86,14 +83,14 @@ export interface BrowserCrawlerOptions {
      * The function receives the following object as an argument:
      * ```
      * {
-     *   request: Request,
-     *   response: Response,
-     *   page: Page,
-     *   browserPool: BrowserPool,
-     *   autoscaledPool: AutoscaledPool,
-     *   session: Session,
-     *   browserController: BrowserController,
-     *   proxyInfo: ProxyInfo,
+     *     request: Request,
+     *     response: Response,
+     *     page: Page,
+     *     browserPool: BrowserPool,
+     *     autoscaledPool: AutoscaledPool,
+     *     session: Session,
+     *     browserController: BrowserController,
+     *     proxyInfo: ProxyInfo,
      * }
      * ```
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
@@ -108,12 +105,7 @@ export interface BrowserCrawlerOptions {
     browserPoolOptions?: BrowserPoolOptions;
 
     /**
-     * Automatically saves cookies to Session. Works only if Session Pool is used.
-     */
-    persistCookiesPerSession?: boolean;
-
-    /**
-     * If set, `PuppeteerCrawler` will be configured for all connections to use
+     * If set, the crawler will be configured for all connections to use
      * [Apify Proxy](https://my.apify.com/proxy) or your own Proxy URLs provided and rotated according to the configuration.
      * For more information, see the [documentation](https://docs.apify.com/proxy).
      */
@@ -126,10 +118,10 @@ export interface BrowserCrawlerOptions {
      * Example:
      * ```
      * preNavigationHooks: [
-     *   async (crawlingContext, gotoOptions) => {
-     *     const { page } = crawlingContext;
-     *     await page.evaluate((attr) => { window.foo = attr; }, 'bar');
-     *   },
+     *     async (crawlingContext, gotoOptions) => {
+     *         const { page } = crawlingContext;
+     *         await page.evaluate((attr) => { window.foo = attr; }, 'bar');
+     *     },
      * ]
      * ```
      */
@@ -141,80 +133,24 @@ export interface BrowserCrawlerOptions {
      * Example:
      * ```
      * postNavigationHooks: [
-     *   async (crawlingContext) => {
-     *     const { page } = crawlingContext;
-     *     if (hasCaptcha(page)) {
-     *       await solveCaptcha (page);
-     *     }
-     *   },
+     *     async (crawlingContext) => {
+     *         const { page } = crawlingContext;
+     *         if (hasCaptcha(page)) {
+     *             await solveCaptcha (page);
+     *         }
+     *     },
      * ]
      * ```
      */
     postNavigationHooks?: BrowserHook[];
 
     /**
-     * Static list of URLs to be processed.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
-     */
-    requestList?: RequestList;
-
-    /**
-     * Dynamic queue of URLs to be processed. This is useful for recursive crawling of websites.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
-     */
-    requestQueue?: RequestQueue;
-
-    /**
      * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
      */
     handleRequestTimeoutSecs?: number;
 
-    /**
-     * Indicates how many times the request is retried if {@link BasicCrawlerOptions.handleRequestFunction} fails.
-     */
-    maxRequestRetries?: number;
-
-    /**
-     * Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.
-     * Always set this value in order to prevent infinite loops in misconfigured crawlers.
-     * Note that in cases of parallel crawling, the actual number of pages visited might be slightly higher than this value.
-     */
-    maxRequestsPerCrawl?: number;
-
-    /**
-     * Custom options passed to the underlying {@link AutoscaledPool} constructor.
-     * Note that the `runTaskFunction` and `isTaskReadyFunction` options
-     * are provided by `BasicCrawler` and cannot be overridden.
-     * However, you can provide a custom implementation of `isFinishedFunction`.
-     */
-    autoscaledPoolOptions?: AutoscaledPoolOptions;
-
-    /**
-     * Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     *
-     * *WARNING:* If you set this value too high with respect to the available system memory and CPU, your crawler will run extremely slow or crash.
-     * If you're not sure, just keep the default value and the concurrency will scale up automatically.
-     */
-    minConcurrency?: number;
-
-    /**
-     * Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     */
-    maxConcurrency?: number;
-
-    /**
-     * Browser crawler will initialize the  {@link SessionPool} with the corresponding `sessionPoolOptions`.
-     * The session instance will be than available in the `handleRequestFunction`.
-     */
-    useSessionPool?: boolean;
-
-    /**
-     * The configuration options for {@link SessionPool} to use.
-     */
-    sessionPoolOptions?: SessionPoolOptions;
-
     /** @internal */
-    log?: Log;
+    handleRequestFunction: never;
 }
 
 /**
@@ -227,7 +163,7 @@ export interface BrowserCrawlerOptions {
  * Since `BrowserCrawler` uses headless or even headfull browsers to download web pages and extract data,
  * it is useful for crawling of websites that require to execute JavaScript.
  * If the target website doesn't need JavaScript, consider using {@link CheerioCrawler},
- * which downloads the pages using raw HTTP requests and is about 10x faster. @TODO: more?
+ * which downloads the pages using raw HTTP requests and is about 10x faster.
  *
  * The source URLs are represented using {@link Request} objects that are fed from
  * {@link RequestList} or {@link RequestQueue} instances provided by the {@link BrowserCrawlerOptions.requestList}

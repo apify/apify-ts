@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import { ActorRun } from './typedefs';
 
+/** @internal */
 export const APIFY_CALL_ERROR_NAME = 'ApifyCallError';
 
 /**

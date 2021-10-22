@@ -4,8 +4,7 @@ import { PuppeteerPlugin } from 'browser-pool';
 import { BrowserLauncher } from './browser_launcher';
 import { isAtHome } from '../utils';
 import { DEFAULT_USER_AGENT } from '../constants';
-
-import { applyStealthToBrowser, StealthOptions } from '../stealth/stealth'; // eslint-disable-line no-unused-vars,import/named
+import { applyStealthToBrowser, StealthOptions } from '../stealth/stealth';
 
 const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
     width: 1366,

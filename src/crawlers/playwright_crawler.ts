@@ -2,19 +2,16 @@ import ow from 'ow';
 import { Page } from 'playwright';
 import { BrowserPoolOptions, BrowserPool, PlaywrightPlugin } from 'browser-pool';
 import { LaunchContext } from 'browser-pool/dist/launch-context';
-import { Log } from '@apify/log';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
-import { BrowserCrawler, BrowserCrawlingContext } from './browser_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
 import { HandleFailedRequest, CrawlingContext } from './basic_crawler';
-import { ProxyConfiguration } from '../proxy_configuration';
-import { SessionPoolOptions } from '../session_pool/session_pool';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
 import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 import { gotoExtended } from '../playwright_utils';
 
-export interface PlaywrightCrawlerOptions {
+export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions {
     /**
      *   Function that is called to process each request.
      *   It is passed an object with the following fields:
@@ -110,91 +107,14 @@ export interface PlaywrightCrawlerOptions {
     postNavigationHooks?: PlaywrightHook[];
 
     /**
-     * The same options as used by {@link Apify.launchPlaywright}.
+     * The same options as used by {@link launchPlaywright}.
      */
     launchContext?: PlaywrightLaunchContext;
 
-    /**
-     * Timeout in which the function passed as `handlePageFunction` needs to finish, in seconds.
-     */
-    handlePageTimeoutSecs?: number;
-
-    /**
-     * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
-     * You can tweak those to fine-tune browser management.
-     */
-    browserPoolOptions?: BrowserPoolOptions;
-
-    /**
-     * Automatically saves cookies to Session. Works only if Session Pool is used.
-     */
-    persistCookiesPerSession?: boolean;
-
-    /**
-     * If set, `PlaywrightCrawler` will be configured for all connections to use
-     * [Apify Proxy](https://my.apify.com/proxy) or your own Proxy URLs provided and rotated according to the configuration.
-     * For more information, see the [documentation](https://docs.apify.com/proxy).
-     */
-    proxyConfiguration?: ProxyConfiguration;
-
-    /**
-     * Static list of URLs to be processed.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
-     */
-    requestList?: RequestList;
-
-    /**
-     * Dynamic queue of URLs to be processed. This is useful for recursive crawling of websites.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
-     */
-    requestQueue?: RequestQueue;
-
-    /**
-     * Indicates how many times the request is retried if {@link PlaywrightCrawlerOptions.handlePageFunction} fails.
-     */
-    maxRequestRetries?: number;
-
-    /**
-     * Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.
-     * Always set this value in order to prevent infinite loops in misconfigured crawlers.
-     * Note that in cases of parallel crawling, the actual number of pages visited might be slightly higher than this value.
-     */
-    maxRequestsPerCrawl?: number;
-
-    /**
-     * Custom options passed to the underlying {@link AutoscaledPool} constructor.
-     * Note that the `runTaskFunction` and `isTaskReadyFunction` options
-     * are provided by `BasicCrawler` and cannot be overridden.
-     * However, you can provide a custom implementation of `isFinishedFunction`.
-     */
-    autoscaledPoolOptions?: AutoscaledPoolOptions;
-
-    /**
-     * Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     *
-     * *WARNING:* If you set this value too high with respect to the available system memory and CPU, your crawler will run extremely slow or crash.
-     * If you're not sure, just keep the default value and the concurrency will scale up automatically.
-     */
-    minConcurrency?: number;
-
-    /**
-     * Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     */
-    maxConcurrency?: number;
-
-    /**
-     * Playwright crawler will initialize the  {@link SessionPool} with the corresponding `sessionPoolOptions`.
-     * The session instance will be than available in the `handleRequestFunction`.
-     */
-    useSessionPool?: boolean;
-
-    /**
-     * The configuration options for {@link SessionPool} to use.
-     */
-    sessionPoolOptions?: SessionPoolOptions;
-
-    /** @internal */
-    log?: Log;
+    // /**
+    //  * Indicates how many times the request is retried if {@link handlePageFunction} fails.
+    //  */
+    // maxRequestRetries?: number;
 }
 
 export interface PlaywrightGotoOptions {

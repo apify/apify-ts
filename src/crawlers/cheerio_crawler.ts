@@ -14,9 +14,9 @@ import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { addTimeoutToPromise, parseContentTypeFromResponse } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
-import { BasicCrawler, HandleFailedRequest, CrawlingContext } from './basic_crawler';
+import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions } from './basic_crawler';
 import { CrawlerExtension } from './crawler_extension';
-import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
+import { AutoscaledPool } from '../autoscaling/autoscaled_pool';
 import { Request, RequestOptions } from '../request';
 import { RequestList } from '../request_list';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
@@ -41,7 +41,7 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioCrawlerOptions {
+export interface CheerioCrawlerOptions extends BasicCrawlerOptions {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
@@ -103,18 +103,6 @@ export interface CheerioCrawlerOptions {
      * {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: CheerioHandlePage;
-
-    /**
-     * Static list of URLs to be processed.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
-     */
-    requestList?: RequestList;
-
-    /**
-     * Dynamic queue of URLs to be processed. This is useful for recursive crawling of websites.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
-     */
-    requestQueue?: RequestQueue;
 
     /**
      * > This option is deprecated, use `preNavigationHooks` instead.
@@ -281,51 +269,6 @@ export interface CheerioCrawlerOptions {
     forceResponseEncoding?: string;
 
     /**
-     * Indicates how many times the request is retried if either `requestFunction` or `handlePageFunction` fails.
-     */
-    maxRequestRetries?: number;
-
-    /**
-     * Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.
-     * Always set this value in order to prevent infinite loops in misconfigured crawlers.
-     * Note that in cases of parallel crawling, the actual number of pages visited might be slightly higher than this value.
-     */
-    maxRequestsPerCrawl?: number;
-
-    /**
-     * Custom options passed to the underlying {@link AutoscaledPool} constructor.
-     * Note that the `runTaskFunction`, `isTaskReadyFunction` and `isFinishedFunction` options
-     * are provided by `CheerioCrawler` and cannot be overridden. Reasonable {@link Snapshotter}
-     * and {@link SystemStatus} defaults are provided to account for the fact that `cheerio`
-     * parses HTML synchronously and therefore blocks the event loop.
-     */
-    autoscaledPoolOptions?: AutoscaledPoolOptions;
-
-    /**
-     * Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     *
-     * *WARNING:* If you set this value too high with respect to the available system memory and CPU, your crawler will run extremely slow or crash.
-     * If you're not sure, just keep the default value and the concurrency will scale up automatically.
-     */
-    minConcurrency?: number;
-
-    /**
-     * Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     */
-    maxConcurrency?: number;
-
-    /**
-     * If set to true Crawler will automatically use Session Pool. It will automatically retire sessions on 403, 401 and 429 status codes.
-     * It also marks Session as bad after a request timeout.
-     */
-    useSessionPool?: boolean;
-
-    /**
-     * Custom options passed to the underlying {@link SessionPool} constructor.
-     */
-    sessionPoolOptions?: SessionPoolOptions;
-
-    /**
      * Automatically saves cookies to Session. Works only if Session Pool is used.
      *
      * It parses cookie from response "set-cookie" header saves or updates cookies for session and once the session is used for next request.
@@ -334,7 +277,7 @@ export interface CheerioCrawlerOptions {
     persistCookiesPerSession?: boolean;
 
     /** @internal */
-    log?: Log;
+    handleRequestFunction: never;
 }
 
 export interface PrepareRequestInputs {

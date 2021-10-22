@@ -110,7 +110,6 @@ export interface EnqueueLinksOptions {
  *   All `enqueueLinks()` parameters are passed via an options object.
  * @return {Promise<QueueOperationInfo[]>}
  *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
- * @memberOf utils
  */
 export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueOperationInfo[]> {
     const {

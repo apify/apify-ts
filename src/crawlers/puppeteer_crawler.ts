@@ -6,9 +6,7 @@ import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
 import { CrawlingContext, HandleFailedRequest } from './basic_crawler';
-import { BrowserCrawler, BrowserCrawlingContext } from './browser_crawler';
-import { ProxyConfiguration } from '../proxy_configuration';
-import { SessionPoolOptions } from '../session_pool/session_pool';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
@@ -16,7 +14,7 @@ import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 export type PuppeteerHook = (crawlingContext: {
     page: Page;
     crawler: PuppeteerCrawler;
-} & BrowserCrawlingContext & CrawlingContext, gotoOptions: any) => Promise<void>;
+} & BrowserCrawlingContext & CrawlingContext, gotoOptions: Record<string, any>) => Promise<void>;
 
 export interface PuppeteerHandlePageFunctionParam {
     page: Page;
@@ -28,43 +26,43 @@ export type PuppeteerHandlePage = (context: CrawlingContext & BrowserCrawlingCon
     crawler: PuppeteerCrawler;
 }) => Promise<void>;
 
-export interface PuppeteerCrawlerOptions {
+export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions {
     /**
-     *   Function that is called to process each request.
-     *   It is passed an object with the following fields:
+     * Function that is called to process each request.
+     * It is passed an object with the following fields:
      *
      * ```
      * {
-     *   request: Request,
-     *   response: Response,
-     *   page: Page,
-     *   session: Session,
-     *   browserController: BrowserController,
-     *   proxyInfo: ProxyInfo,
-     *   crawler: PuppeteerCrawler,
+     *     request: Request,
+     *     response: Response,
+     *     page: Page,
+     *     session: Session,
+     *     browserController: BrowserController,
+     *     proxyInfo: ProxyInfo,
+     *     crawler: PuppeteerCrawler,
      * }
      * ```
      *
-     *   `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     *   `page` is an instance of the `Puppeteer`
-     *   [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page)
-     *   `browserPool` is an instance of the
-     *   [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool),
-     *   `browserController` is an instance of the
-     *   [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     *   `response` is an instance of the `Puppeteer`
-     *   [`Response`](https://pptr.dev/#?product=Puppeteer&show=api-class-response),
-     *   which is the main resource response as returned by `page.goto(request.url)`.
-     *   The function must return a promise, which is then awaited by the crawler.
+     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * `page` is an instance of the `Puppeteer`
+     * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page)
+     * `browserPool` is an instance of the
+     * [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool),
+     * `browserController` is an instance of the
+     * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
+     * `response` is an instance of the `Puppeteer`
+     * [`Response`](https://pptr.dev/#?product=Puppeteer&show=api-class-response),
+     * which is the main resource response as returned by `page.goto(request.url)`.
+     * The function must return a promise, which is then awaited by the crawler.
      *
-     *   If the function throws an exception, the crawler will try to re-crawl the
-     *   request later, up to `option.maxRequestRetries` times.
-     *   If all the retries fail, the crawler calls the function
-     *   provided to the `handleFailedRequestFunction` parameter.
-     *   To make this work, you should **always**
-     *   let your function throw exceptions rather than catch them.
-     *   The exceptions are logged to the request using the
-     *   {@link Request.pushErrorMessage} function.
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: PuppeteerHandlePage;
 
@@ -94,32 +92,9 @@ export interface PuppeteerCrawlerOptions {
     handleFailedRequestFunction?: HandleFailedRequest;
 
     /**
-     * Options used by {@link Apify.launchPuppeteer} to start new Puppeteer instances.
+     * Options used by {@link launchPuppeteer} to start new Puppeteer instances.
      */
     launchContext?: PuppeteerLaunchContext;
-
-    /**
-     * Timeout in which the function passed as `handlePageFunction` needs to finish, in seconds.
-     */
-    handlePageTimeoutSecs?: number;
-
-    /**
-     * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
-     * You can tweak those to fine-tune browser management.
-     */
-    browserPoolOptions?: BrowserPoolOptions;
-
-    /**
-     * Automatically saves cookies to Session. Works only if Session Pool is used.
-     */
-    persistCookiesPerSession?: boolean;
-
-    /**
-     * If set, `PuppeteerCrawler` will be configured for all connections to use
-     * [Apify Proxy](https://my.apify.com/proxy) or your own Proxy URLs provided and rotated according to the configuration.
-     * For more information, see the [documentation](https://docs.apify.com/proxy).
-     */
-    proxyConfiguration?: ProxyConfiguration;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -153,50 +128,6 @@ export interface PuppeteerCrawlerOptions {
      * ```
      */
     postNavigationHooks?: PuppeteerHook[];
-
-    /**
-     * Indicates how many times the request is retried if {@link PuppeteerCrawlerOptions.handlePageFunction} fails.
-     */
-    maxRequestRetries?: number;
-
-    /**
-     * Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.
-     * Always set this value in order to prevent infinite loops in misconfigured crawlers.
-     * Note that in cases of parallel crawling, the actual number of pages visited might be slightly higher than this value.
-     */
-    maxRequestsPerCrawl?: number;
-
-    /**
-     * Custom options passed to the underlying {@link AutoscaledPool} constructor.
-     * Note that the `runTaskFunction` and `isTaskReadyFunction` options
-     * are provided by the crawler and cannot be overridden.
-     * However, you can provide a custom implementation of `isFinishedFunction`.
-     */
-    autoscaledPoolOptions?: AutoscaledPoolOptions;
-
-    /**
-     * Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     *
-     * *WARNING:* If you set this value too high with respect to the available system memory and CPU, your crawler will run extremely slow or crash.
-     * If you're not sure, just keep the default value and the concurrency will scale up automatically.
-     */
-    minConcurrency?: number;
-
-    /**
-     * Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     */
-    maxConcurrency?: number;
-
-    /**
-     * Puppeteer crawler will initialize the  {@link SessionPool} with the corresponding `sessionPoolOptions`.
-     * The session instance will be than available in the `handleRequestFunction`.
-     */
-    useSessionPool?: boolean;
-
-    /**
-     * The configuration options for {@link SessionPool} to use.
-     */
-    sessionPoolOptions?: SessionPoolOptions;
 }
 
 /**
