@@ -9,6 +9,7 @@ import {
     UrlMapping,
 } from 'typedoc';
 import * as fs from 'fs';
+import * as Handlebars from 'handlebars';
 import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
 import { getKindPlural } from 'typedoc-plugin-markdown/dist/groups';
 import * as path from 'path';
@@ -45,6 +46,9 @@ export class DocusaurusTheme extends MarkdownTheme {
             [PageEvent.END]: this.onPageEnd,
             [RendererEvent.END]: this.onRendererEnd,
         });
+
+        console.log('register partials');
+        registerPartials();
     }
 
     override getRelativeUrl(url: string) {
@@ -191,20 +195,61 @@ export class DocusaurusTheme extends MarkdownTheme {
     }
 
     override get mappings() {
-        return super.mappings.map((mapping) => {
-            if (mapping.kind.includes(ReflectionKind.Namespace)) {
-                return {
-                    ...mapping,
-                    directory: 'namespaces',
-                };
-            }
-            return mapping;
-        });
+        return [
+            {
+                kind: [ReflectionKind.Module],
+                isLeaf: false,
+                directory: 'modules',
+                template: this.getReflectionTemplate(),
+            },
+            {
+                kind: [ReflectionKind.Namespace],
+                isLeaf: false,
+                directory: 'namespaces',
+                template: this.getReflectionTemplate(),
+            },
+            {
+                kind: [ReflectionKind.Enum],
+                isLeaf: false,
+                directory: 'enums',
+                template: this.getReflectionTemplate(),
+            },
+            {
+                kind: [ReflectionKind.Class],
+                isLeaf: false,
+                directory: 'classes',
+                template: this.getReflectionTemplate(),
+            },
+            {
+                kind: [ReflectionKind.Interface],
+                isLeaf: false,
+                directory: 'interfaces',
+                template: this.getReflectionTemplate(),
+            },
+            {
+                kind: [ReflectionKind.TypeAlias],
+                isLeaf: true,
+                directory: 'types',
+                template: this.getReflectionMemberTemplate(),
+            },
+        ];
     }
 
     override get globalsFile() {
         return 'modules.md';
     }
+}
+
+export function registerPartials() {
+    const partialsFolder = path.join(__dirname, '../partials');
+    const partialFiles = fs.readdirSync(partialsFolder);
+    partialFiles.forEach((partialFile) => {
+        const partialName = path.basename(partialFile, '.hbs');
+        const partialContent = fs
+            .readFileSync(partialsFolder + '/' + partialFile)
+            .toString();
+        Handlebars.registerPartial(partialName, partialContent);
+    });
 }
 
 const writeCategoryYaml = (

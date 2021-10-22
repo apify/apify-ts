@@ -1,17 +1,12 @@
 import ow, { ArgumentError } from 'ow';
 import _ from 'underscore';
 import { ACTOR_EVENT_NAMES_EX } from './constants';
-import { Request } from './request'; // eslint-disable-line import/no-duplicates
+import { Request, RequestOptions } from './request'; // eslint-disable-line import/no-duplicates
 import events from './events';
 import log from './utils_log';
 import { getFirstKey, publicUtils } from './utils';
 import { getValue, setValue } from './storages/key_value_store';
 import { serializeArray, createDeserialize } from './serialization';
-
-// TYPE IMPORTS
-/* eslint-disable no-unused-vars,import/named,import/no-duplicates,import/order */
-import { RequestOptions } from './request';
-/* eslint-enable no-unused-vars,import/named,import/no-duplicates,import/order */
 
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';
 export const REQUESTS_PERSISTENCE_KEY = 'REQUEST_LIST_REQUESTS';

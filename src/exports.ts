@@ -70,3 +70,5 @@ export * from './proxy_configuration';
 export * from './autoscaling/autoscaled_pool';
 export * from './autoscaling/snapshotter';
 export * from './autoscaling/system_status';
+export * from './errors';
+export * from './typedefs';

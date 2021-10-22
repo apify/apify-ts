@@ -475,6 +475,9 @@ export interface KeyConsumer {
     (key: string, index: number, info: { size: number }): unknown;
 }
 
+/**
+ * @internal
+ */
 export interface KeyValueStoreOptions {
     id: string;
     name?: string;
