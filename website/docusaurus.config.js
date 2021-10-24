@@ -1,5 +1,6 @@
 const { createHref } = require('./tools/utils/createHref');
-const { externalLinkProcessor } = require('./tools/utils/externalLink');
+// FIXME for some reason this breaks the HP
+// const { externalLinkProcessor } = require('./tools/utils/externalLink');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
@@ -42,7 +43,7 @@ module.exports = {
                     showLastUpdateTime: true,
                     path: '../docs',
                     sidebarPath: './sidebars.json',
-                    rehypePlugins: [externalLinkProcessor],
+                    // rehypePlugins: [externalLinkProcessor],
                 },
                 theme: {
                     customCss: '../src/css/customTheme.css',
@@ -52,28 +53,15 @@ module.exports = {
     ]),
     plugins: [
         [
-            './typedoc-plugins/docusaurus-plugin-typedoc/dist',
+            'docusaurus-plugin-typedoc-api',
             {
-                entryPoints: ['../src/exports.ts'],
-                tsconfig: '../tsconfig.json',
-                docsRoot: '../docs',
-                out: 'api',
-                // sort: ['source-order'],
-                plugin: [
-                    './typedoc-plugins/docusaurus-plugin-typedoc/dist/typedoc_plugin.js',
+                projectRoot: `${__dirname}/..`,
+                packages: [
+                    {
+                        path: 'packages/apify',
+                        entry: 'src/exports.ts',
+                    },
                 ],
-                sidebar: {
-                    fullNames: true,
-                },
-                readme: 'none',
-                excludeExternals: true,
-                excludePrivate: true,
-                excludeProtected: true,
-                excludeInternal: true,
-                defaultCategory: 'Apify',
-                categoryOrder: ['Apify', 'Functions', 'Interfaces', 'Variables'],
-                externalPattern: '**/node_modules/*',
-                cleanOutputDir: true,
             },
         ],
     ],
@@ -100,7 +88,7 @@ module.exports = {
                     position: 'left',
                 },
                 {
-                    to: 'docs/api/apify',
+                    to: 'api',
                     label: 'API Reference',
                     position: 'left',
                 },

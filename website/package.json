@@ -1,7 +1,7 @@
 {
     "scripts": {
         "examples": "docusaurus-examples",
-        "start": "./build_plugin.sh && rimraf .docusaurus && docusaurus start",
+        "start": "rimraf .docusaurus && docusaurus start",
         "build": "rimraf .docusaurus && docusaurus build",
         "publish-gh-pages": "docusaurus-publish",
         "write-translations": "docusaurus write-translations",
@@ -14,14 +14,14 @@
         "docusaurus": "docusaurus"
     },
     "devDependencies": {
-        "@apify/tsconfig": "^0.1.0",
         "@apify/eslint-config-ts": "^0.1.4",
+        "@apify/tsconfig": "^0.1.0",
         "@types/react": "^17.0.25",
         "@typescript-eslint/eslint-plugin": "^5.0.0",
         "@typescript-eslint/parser": "^5.0.0",
         "camelcase": "^6.2.0",
         "decamelize": "^5.0.1",
-        "docusaurus-plugin-typedoc": "^0.16.3",
+        "docusaurus-plugin-typedoc-api": "^1.5.0",
         "eslint": "^8.0.1",
         "eslint-plugin-react": "^7.26.1",
         "eslint-plugin-react-hooks": "^4.2.0",
@@ -29,11 +29,9 @@
         "got": "^11.8.2",
         "jsdoc-plugin-intersection": "^1.0.4",
         "jsdoc-to-markdown": "^7.0.1",
+        "path-browserify": "^1.0.1",
         "prettier": "^2.4.1",
-        "rimraf": "^3.0.2",
-        "typedoc": "^0.22.5",
-        "typedoc-plugin-external-module-name": "^4.0.6",
-        "typedoc-plugin-markdown": "^3.11.3"
+        "rimraf": "^3.0.2"
     },
     "dependencies": {
         "@docusaurus/core": "2.0.0-beta.8",

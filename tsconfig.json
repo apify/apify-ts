@@ -12,9 +12,12 @@
         "strict": false,
         "resolveJsonModule": false,
         "noUnusedLocals": false,
-        "outDir": "build"
+        "outDir": "build",
+        "paths": {
+            "apify": ["packages/apify/src"]
+        }
     },
     "include": [
-        "./src/**/*"
+        "./packages/*/src/**/*"
     ]
 }

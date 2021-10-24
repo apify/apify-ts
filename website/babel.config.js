@@ -1,4 +1,3 @@
 module.exports = {
-    presets: [require.resolve("@docusaurus/core/lib/babel/preset")],
-    sourceType: "unambiguous"
+    presets: [require.resolve('@docusaurus/core/lib/babel/preset')],
 };
