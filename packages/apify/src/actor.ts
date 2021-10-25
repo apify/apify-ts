@@ -632,31 +632,31 @@ export interface WebhookRun {
 
 export interface AddWebhookOptions {
     /**
-     *   Array of event types, which you can set for actor run, see
-     *   the [actor run events](https://docs.apify.com/webhooks/events#actor-run) in the Apify doc.
+     * Array of event types, which you can set for actor run, see
+     * the [actor run events](https://docs.apify.com/webhooks/events#actor-run) in the Apify doc.
      */
     eventTypes: EventTypes;
 
     /**
-     *   URL which will be requested using HTTP POST request, when actor run will reach the set event type.
+     * URL which will be requested using HTTP POST request, when actor run will reach the set event type.
      */
     requestUrl: string;
 
     /**
-     *   Payload template is a JSON-like string that describes the structure of the webhook POST request payload.
-     *   It uses JSON syntax, extended with a double curly braces syntax for injecting variables `{{variable}}`.
-     *   Those variables are resolved at the time of the webhook's dispatch, and a list of available variables with their descriptions
-     *   is available in the [Apify webhook documentation](https://docs.apify.com/webhooks).
-     *   If `payloadTemplate` is omitted, the default payload template is used
-     *   ([view docs](https://docs.apify.com/webhooks/actions#payload-template)).
+     * Payload template is a JSON-like string that describes the structure of the webhook POST request payload.
+     * It uses JSON syntax, extended with a double curly braces syntax for injecting variables `{{variable}}`.
+     * Those variables are resolved at the time of the webhook's dispatch, and a list of available variables with their descriptions
+     * is available in the [Apify webhook documentation](https://docs.apify.com/webhooks).
+     * If `payloadTemplate` is omitted, the default payload template is used
+     * ([view docs](https://docs.apify.com/webhooks/actions#payload-template)).
      */
     payloadTemplate?: string;
 
     /**
-     *   Idempotency key enables you to ensure that a webhook will not be added multiple times in case of
-     *   an actor restart or other situation that would cause the `addWebhook()` function to be called again.
-     *   We suggest using the actor run ID as the idempotency key. You can get the run ID by calling
-     *   {@link Apify.getEnv} function.
+     * Idempotency key enables you to ensure that a webhook will not be added multiple times in case of
+     * an actor restart or other situation that would cause the `addWebhook()` function to be called again.
+     * We suggest using the actor run ID as the idempotency key. You can get the run ID by calling
+     * {@link Apify.getEnv} function.
      */
     idempotencyKey?: string;
 }
