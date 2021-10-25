@@ -61,6 +61,9 @@ module.exports = {
                         path: 'packages/apify',
                         entry: 'src/exports.ts',
                     },
+                    {
+                        path: 'packages/dummy',
+                    },
                 ],
             },
         ],
