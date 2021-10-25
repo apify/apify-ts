@@ -35,12 +35,6 @@ jobs:
                     cd website
                     # install website deps
                     npm install --force
-                    # go to custom docusuarus/typedoc plugin
-                    cd typedoc-plugins/docusaurus-plugin-typedoc
-                    # build the plugin
-                    npx tsc
-                    # go back
-                    cd ../..
                     # build and deploy the docs
                     npm run deploy
                 env:
