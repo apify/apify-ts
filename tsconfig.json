@@ -1,23 +1,9 @@
 {
-    "extends": "@apify/tsconfig",
+    "extends": "./tsconfig.build.json",
     "compilerOptions": {
-        "target": "ES2020",
-        "lib": [
-            "DOM",
-            "ES2020"
-        ],
         "baseUrl": ".",
-        "allowJs": true,
-        "skipLibCheck": true,
-        "strict": false,
-        "resolveJsonModule": false,
-        "noUnusedLocals": false,
-        "outDir": "build",
         "paths": {
-            "apify": ["packages/apify/src"]
+            "@apify/*": ["packages/*/src"]
         }
-    },
-    "include": [
-        "./packages/*/src/**/*"
-    ]
+    }
 }

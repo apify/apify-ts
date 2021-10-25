@@ -5,8 +5,8 @@
     "engines": {
         "node": ">=15.10.0"
     },
-    "main": "build/index.js",
-    "types": "build/index.d.ts",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "keywords": [
         "apify",
         "headless",
@@ -38,16 +38,12 @@
         "build"
     ],
     "scripts": {
-        "build": "npm run clean && tsc -p tsconfig.json && node ./tools/typescript_fixes.js",
-        "build-docs": "npm run build && node ./website/tools/build_docs.js",
-        "build-readme": "node ./tools/build_readme.js",
-        "test": "npm run build && jest",
-        "prepare": "npm run build",
-        "prepublishOnly": "(test $CI || (echo \"Publishing is reserved to CI!\"; exit 1))",
-        "clean": "rimraf ./build",
-        "lint": "eslint ./src ./test",
-        "lint:fix": "eslint ./src ./test --fix"
+        "build": "npm run clean && npm run compile && npm run copy",
+        "clean": "rimraf ./dist",
+        "compile": "tsc -p tsconfig.build.json",
+        "copy": "ts-node -T ../../scripts/copy.ts"
     },
-    "dependencies": {
+    "publishConfig": {
+        "access": "public"
     }
 }
