@@ -1,4 +1,4 @@
-import Apify from '../..';
+import Apify from 'apify';
 
 describe('utils.log TS', () => {
     const { log } = Apify.utils;

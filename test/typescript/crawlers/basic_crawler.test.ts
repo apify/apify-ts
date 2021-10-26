@@ -1,4 +1,4 @@
-import { BasicCrawlerOptions } from '../../../src';
+import { BasicCrawlerOptions } from 'apify';
 
 describe('BasicCrawler TS', () => {
     describe('generics', () => {

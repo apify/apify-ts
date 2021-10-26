@@ -12,13 +12,13 @@
         "skipLibCheck": true,
         "strict": false,
         "resolveJsonModule": false,
-        "noUnusedLocals": false,
-        "outDir": "build",
-        "paths": {
-            "apify": ["packages/apify/src"]
-        }
+        "noUnusedLocals": false
     },
     "include": [
         "./packages/*/src/**/*"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/dist"
     ]
 }

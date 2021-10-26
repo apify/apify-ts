@@ -41,7 +41,7 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioCrawlerOptions extends BasicCrawlerOptions {
+export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
@@ -275,9 +275,6 @@ export interface CheerioCrawlerOptions extends BasicCrawlerOptions {
      * It passes the "Cookie" header to the request with the session cookies.
      */
     persistCookiesPerSession?: boolean;
-
-    /** @internal */
-    handleRequestFunction: never;
 }
 
 export interface PrepareRequestInputs {

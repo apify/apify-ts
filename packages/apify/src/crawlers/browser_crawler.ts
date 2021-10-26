@@ -26,7 +26,7 @@ export type BrowserHook = Hook<BrowserCrawlingContext>;
 export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Promise<void>;
 export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Promise<any>;
 
-export interface BrowserCrawlerOptions extends BasicCrawlerOptions {
+export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -149,9 +149,6 @@ export interface BrowserCrawlerOptions extends BasicCrawlerOptions {
      * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
      */
     handleRequestTimeoutSecs?: number;
-
-    /** @internal */
-    handleRequestFunction: never;
 }
 
 /**

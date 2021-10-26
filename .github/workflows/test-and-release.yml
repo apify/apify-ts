@@ -35,7 +35,7 @@ jobs:
                 with:
                     node-version: ${{ matrix.node-version }}
             -   name: Install Dependencies
-                run: npm install
+                run: npm install --force
             -   name: Run Tests
                 run: npm test
 
@@ -50,53 +50,53 @@ jobs:
                 with:
                     node-version: 16
             -   name: Install Dependencies
-                run: npm install
+                run: npm install --force
             -   name: Run Linter
                 run: npm run lint
 
     # The deploy job is long but there are only 2 important parts. NPM publish
     # and triggering of docker image builds in the apify-actor-docker repo.
-    deploy:
-        name: Publish to NPM and release images
-        if: github.ref == 'refs/heads/master' || github.event_name == 'release'
-        needs: [ lint, build_and_test ]
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v2
-            -   uses: actions/setup-node@v2
-                with:
-                    node-version: 16
-                    registry-url: https://registry.npmjs.org/
-            -   name: Install Dependencies
-                run: npm install
-            - # Determine if this is a beta or latest release
-                name: Set Release Tag
-                run: echo "RELEASE_TAG=$(if [ ${{ github.event_name }} = release ]; then echo latest; else echo beta; fi)" >> $GITHUB_ENV
-            - # Check version consistency and increment pre-release version number for beta only.
-                name: Bump pre-release version
-                if: env.RELEASE_TAG == 'beta'
-                run: node ./.github/scripts/before-beta-release.js
-            -   name: Collect Versions For Images
-                id: versions
-                run: |
-                    apify=`node -p "require('./package.json').version"`
-                    echo "::set-output name=apify::$apify"
-                    puppeteer=`node -p "require('./package.json').devDependencies.puppeteer"`
-                    echo "::set-output name=puppeteer::$puppeteer"
-                    playwright=`node -p "require('./package.json').devDependencies.playwright"`
-                    echo "::set-output name=playwright::$playwright"
-            -   name: Publish to NPM
-                run: NODE_AUTH_TOKEN=${{secrets.NPM_TOKEN}} npm publish --tag ${{ env.RELEASE_TAG }}
-            -   name: Trigger Docker Image Build
-                uses: peter-evans/repository-dispatch@v1
-                with:
-                    token: ${{ secrets.TRIGGER_DOCKER_IMAGE_BUILD_TOKEN }}
-                    repository: apify/apify-actor-docker
-                    event-type: build-node-images
-                    client-payload: >
-                        {
-                          "release_tag": "${{ env.RELEASE_TAG }}",
-                          "apify_version": "${{ steps.versions.outputs.apify }}",
-                          "puppeteer_version": "${{ steps.versions.outputs.puppeteer }}",
-                          "playwright_version": "${{ steps.versions.outputs.playwright }}"
-                        }
+#    deploy:
+#        name: Publish to NPM and release images
+#        if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+#        needs: [ lint, build_and_test ]
+#        runs-on: ubuntu-latest
+#        steps:
+#            -   uses: actions/checkout@v2
+#            -   uses: actions/setup-node@v2
+#                with:
+#                    node-version: 16
+#                    registry-url: https://registry.npmjs.org/
+#            -   name: Install Dependencies
+#                run: npm install --force
+#            - # Determine if this is a beta or latest release
+#                name: Set Release Tag
+#                run: echo "RELEASE_TAG=$(if [ ${{ github.event_name }} = release ]; then echo latest; else echo beta; fi)" >> $GITHUB_ENV
+#            - # Check version consistency and increment pre-release version number for beta only.
+#                name: Bump pre-release version
+#                if: env.RELEASE_TAG == 'beta'
+#                run: node ./.github/scripts/before-beta-release.js
+#            -   name: Collect Versions For Images
+#                id: versions
+#                run: |
+#                    apify=`node -p "require('./package.json').version"`
+#                    echo "::set-output name=apify::$apify"
+#                    puppeteer=`node -p "require('./package.json').devDependencies.puppeteer"`
+#                    echo "::set-output name=puppeteer::$puppeteer"
+#                    playwright=`node -p "require('./package.json').devDependencies.playwright"`
+#                    echo "::set-output name=playwright::$playwright"
+#            -   name: Publish to NPM
+#                run: NODE_AUTH_TOKEN=${{secrets.NPM_TOKEN}} npm publish --tag ${{ env.RELEASE_TAG }}
+#            -   name: Trigger Docker Image Build
+#                uses: peter-evans/repository-dispatch@v1
+#                with:
+#                    token: ${{ secrets.TRIGGER_DOCKER_IMAGE_BUILD_TOKEN }}
+#                    repository: apify/apify-actor-docker
+#                    event-type: build-node-images
+#                    client-payload: >
+#                        {
+#                          "release_tag": "${{ env.RELEASE_TAG }}",
+#                          "apify_version": "${{ steps.versions.outputs.apify }}",
+#                          "puppeteer_version": "${{ steps.versions.outputs.puppeteer }}",
+#                          "playwright_version": "${{ steps.versions.outputs.playwright }}"
+#                        }

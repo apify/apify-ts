@@ -4,7 +4,7 @@ import Apify, {
     CheerioHandlePage,
     CheerioHandlePageInputs,
     RequestList,
-} from '../../../src';
+} from 'apify';
 
 describe('CheerioCrawler TS', () => {
     describe('CheerioHandlePage', () => {
