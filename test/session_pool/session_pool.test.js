@@ -1,10 +1,10 @@
-import { SessionPool, openSessionPool } from '../../build/session_pool/session_pool';
-import Apify from '../../build';
-import { events } from '../../build/events';
-import { ACTOR_EVENT_NAMES_EX } from '../../build/constants';
-import { Session } from '../../build/session_pool/session';
+import { SessionPool, openSessionPool } from 'apify';
+import Apify from 'apify';
+import { events } from 'apify';
+import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
+import { Session } from 'apify';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import { Log } from '../../build/utils_log';
+import { Log } from 'apify/src/utils_log';
 
 describe('SessionPool - testing session pool', () => {
     let sessionPool;

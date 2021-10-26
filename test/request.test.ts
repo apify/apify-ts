@@ -1,14 +1,17 @@
 import util from 'util';
 import { normalizeUrl } from '@apify/utilities';
-import { hashPayload } from '../build/request';
-import Apify from '../build/index';
+import Apify, { hashPayload } from '../packages/apify/src';
 
 describe('Apify.Request', () => {
     test('should not accept invalid values', () => {
+        // @ts-expect-error
         expect(() => new Apify.Request({ url: 1 })).toThrowError();
         expect(() => new Apify.Request({ url: 'https://example.com' })).not.toThrowError();
+        // @ts-expect-error
         expect(() => new Apify.Request({ url: 'https://example.com', method: 1 })).toThrowError();
+        // @ts-expect-error
         expect(() => new Apify.Request({ url: 'https://example.com', headers: 'x' })).toThrowError();
+        // @ts-expect-error
         expect(() => new Apify.Request({ url: 'https://example.com', foo: 'invalid-property' })).toThrowError();
     });
 
@@ -26,6 +29,7 @@ describe('Apify.Request', () => {
         const payload = JSON.stringify({ foo: 'bar' });
         const payloadHash = hashPayload(payload);
         const normalizedUrl = normalizeUrl(url);
+        // @ts-ignore TODO should we change the types so we allow lower case too?
         const request = new Apify.Request({ url, method: 'post', payload, useExtendedUniqueKey: true });
 
         const uniqueKey = `POST(${payloadHash}):${normalizedUrl}`;
@@ -53,9 +57,13 @@ describe('Apify.Request', () => {
             },
             handledAt: new Date(),
         };
+        // FIXME so what is `handledAt`, a string or a Date?
+        // @ts-ignore
         expect(new Apify.Request(data)).toMatchObject(data);
 
+        // @ts-ignore
         data.handledAt = (new Date()).toISOString();
+        // @ts-ignore
         expect((new Apify.Request(data)).handledAt).toBeInstanceOf(Date);
     });
 
@@ -65,7 +73,7 @@ describe('Apify.Request', () => {
         expect(request.errorMessages).toEqual([]);
 
         // Make a circular, unstringifiable object.
-        const circularObj = { prop: 1 };
+        const circularObj = { prop: 1 } as any;
         circularObj.obj = circularObj;
         const circularObjInspect = util.inspect(circularObj);
 

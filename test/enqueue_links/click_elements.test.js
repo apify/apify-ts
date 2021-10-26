@@ -1,6 +1,6 @@
-import Apify from '../../build';
-import { RequestQueue } from '../../build/storages/request_queue';
-import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from '../../build/enqueue_links/click_elements';
+import Apify from '../../packages/apify/src';
+import { RequestQueue } from '../../packages/apify/src/storages/request_queue';
+import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from '../../packages/apify/src/enqueue_links/click_elements';
 
 describe('enqueueLinksByClickingElements()', () => {
     let browser;

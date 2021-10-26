@@ -5,15 +5,15 @@ import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
 import { BrowserPool, PuppeteerPlugin } from 'browser-pool';
 import puppeteer from 'puppeteer';
-import log from '../../build/utils_log';
-import Apify from '../../build';
-import { STATUS_CODES_BLOCKED } from '../../build/constants';
+import log from '../../packages/apify/src/utils_log';
+import Apify from '../../packages/apify/src';
+import { STATUS_CODES_BLOCKED } from '../../packages/apify/src/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utilsRequest from '../../build/utils_request';
-import { Request } from '../../build/request';
-import { AutoscaledPool } from '../../build/autoscaling/autoscaled_pool';
-import { Session } from '../../build/session_pool/session';
-import { EVENT_SESSION_RETIRED } from '../../build/session_pool/events';
+import * as utilsRequest from '../../packages/apify/src/utils_request';
+import { Request } from '../../packages/apify/src/request';
+import { AutoscaledPool } from '../../packages/apify/src/autoscaling/autoscaled_pool';
+import { Session } from '../../packages/apify/src/session_pool/session';
+import { EVENT_SESSION_RETIRED } from '../../packages/apify/src/session_pool/events';
 
 describe('BrowserCrawler', () => {
     let prevEnvHeadless;

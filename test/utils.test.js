@@ -7,10 +7,10 @@ import os from 'os';
 import cheerio from 'cheerio';
 import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
-import Apify from '../build/index';
-import * as utils from '../build/utils';
-import log from '../build/utils_log';
-import * as requestUtils from '../build/utils_request';
+import Apify from 'apify/src';
+import * as utils from '../packages/apify/src/utils';
+import log from '../packages/apify/src/utils_log';
+import * as requestUtils from '../packages/apify/src/utils_request';
 import htmlToTextData from './data/html_to_text_test_data';
 
 describe('utils.newClient()', () => {

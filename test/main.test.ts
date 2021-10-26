@@ -1,18 +1,15 @@
-// eslint-disable-next-line import/no-duplicates
-import {
-    ENV_VARS,
-    KEY_VALUE_STORE_KEYS,
-} from '@apify/consts';
-import ApifyDefault from '../build/index';
-// eslint-disable-next-line import/no-duplicates
-import * as ApifyWithWildcard from '../build/index';
+import { ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
+import ApifyDefault from '../packages/apify/src';
+import * as ApifyWithWildcard from '../packages/apify/src/index';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
-// eslint-disable-next-line global-require
-const Apify = require('../build');
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Apify = require('../packages/apify/src');
 
 describe('Apify module', () => {
     test('import Apify from \'apify\' - should fail', () => {
         expect(ApifyDefault).not.toBeUndefined();
+        // @ts-ignore TODO ??
         expect(ApifyDefault.default).toBeUndefined();
     });
     test('import * as Apify from \'apify\'', () => {
@@ -46,11 +43,13 @@ describe('Apify functions for storages', () => {
             const defaultStore = await Apify.openKeyValueStore();
             // Uses default value.
             const oldGet = defaultStore.getValue;
+            // @ts-ignore TODO use spyOn instead of this
             defaultStore.getValue = async (key) => expect(key).toEqual(KEY_VALUE_STORE_KEYS.INPUT);
             await Apify.getInput();
 
             // Uses value from env var.
             process.env[ENV_VARS.INPUT_KEY] = 'some-value';
+            // @ts-ignore TODO use spyOn instead of this
             defaultStore.getValue = async (key) => expect(key).toBe('some-value');
             await Apify.getInput();
 
@@ -82,6 +81,7 @@ describe('Apify functions for storages', () => {
             const defaultStore = await Apify.openKeyValueStore();
 
             const oldGet = defaultStore.getValue;
+            // @ts-ignore TODO use spyOn instead of this
             defaultStore.getValue = async (key) => expect(key).toBe('key-1');
 
             await Apify.getValue('key-1');
@@ -95,6 +95,7 @@ describe('Apify functions for storages', () => {
             const defaultStore = await Apify.openKeyValueStore();
 
             const oldGet = defaultStore.getValue;
+            // @ts-ignore TODO use spyOn instead of this
             defaultStore.getValue = async (key) => expect(key).toBe('key-1');
 
             await Apify.getValue('key-1');

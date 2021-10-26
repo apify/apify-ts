@@ -1,12 +1,12 @@
 import _ from 'underscore';
 import sinon from 'sinon';
-import log from '../build/utils_log';
-import { ACTOR_EVENT_NAMES_EX } from '../build/constants';
-import { deserializeArray } from '../build/serialization';
-import Apify from '../build/index';
-import * as keyValueStore from '../build/storages/key_value_store';
-import * as utils from '../build/utils';
-import * as requestUtils from '../build/utils_request';
+import Apify from 'apify/src';
+import log from '../packages/apify/src/utils_log';
+import { ACTOR_EVENT_NAMES_EX } from '../packages/apify/src/constants';
+import { deserializeArray } from '../packages/apify/src/serialization';
+import * as keyValueStore from '../packages/apify/src/storages/key_value_store';
+import * as utils from '../packages/apify/src/utils';
+import * as requestUtils from '../packages/apify/src/utils_request';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
 describe('Apify.RequestList', () => {
@@ -134,12 +134,12 @@ describe('Apify.RequestList', () => {
             mock.expects('downloadListOfUrls')
                 .once()
                 .withArgs({ url: 'http://example.com/list-1', urlRegExp: undefined })
-                .returns(new Promise((resolve) => setTimeout(resolve(list1), 100)));
+                .returns(new Promise((resolve) => setTimeout(resolve(list1) as any, 100)));
 
             mock.expects('downloadListOfUrls')
                 .once()
                 .withArgs({ url: 'http://example.com/list-2', urlRegExp: undefined })
-                .returns(Promise.resolve(list2), 0);
+                .returns(Promise.resolve(list2));
 
             const requestList = new Apify.RequestList({
                 sources: [
@@ -506,124 +506,117 @@ describe('Apify.RequestList', () => {
         },
     );
 
-    test(
-        'should correctly persist its sources when persistRequestsKey is set',
-        async () => {
-            const PERSIST_REQUESTS_KEY = 'some-key';
-            const SDK_KEY = `SDK_${PERSIST_REQUESTS_KEY}`;
-            const getValueStub = sinon.stub(keyValueStore, 'getValue');
-            const setValueStub = sinon.stub(keyValueStore, 'setValue');
+    test('should correctly persist its sources when persistRequestsKey is set', async () => {
+        const PERSIST_REQUESTS_KEY = 'some-key';
+        const SDK_KEY = `SDK_${PERSIST_REQUESTS_KEY}`;
+        const getValueStub = sinon.stub(keyValueStore, 'getValue');
+        const setValueStub = sinon.stub(keyValueStore, 'setValue');
 
-            let persistedRequests;
+        let persistedRequests;
 
-            const opts = {
-                sources: [
-                    { url: 'https://example.com/1' },
-                    { url: 'https://example.com/2' },
-                    { url: 'https://example.com/3' },
-                ],
-                persistRequestsKey: PERSIST_REQUESTS_KEY,
-            };
+        const opts = {
+            sources: [
+                { url: 'https://example.com/1' },
+                { url: 'https://example.com/2' },
+                { url: 'https://example.com/3' },
+            ],
+            persistRequestsKey: PERSIST_REQUESTS_KEY,
+        };
 
-            const requestList = new Apify.RequestList(opts);
-            expect(requestList.areRequestsPersisted).toBe(false);
+        const requestList = new Apify.RequestList(opts);
+        expect(requestList.areRequestsPersisted).toBe(false);
 
-            // Expect an attempt to load sources.
-            getValueStub.withArgs(SDK_KEY)
-                .onFirstCall()
-                .resolves(null)
-                // See second RequestList below.
-                .onSecondCall()
-                .callsFake(() => {
-                    return persistedRequests;
-                });
+        // Expect an attempt to load sources.
+        getValueStub.withArgs(SDK_KEY)
+            .onFirstCall()
+            .resolves(null)
+            // See second RequestList below.
+            .onSecondCall()
+            .callsFake(() => {
+                return persistedRequests;
+            });
 
-            // Expect persist sources.
-            setValueStub.withArgs(SDK_KEY)
-                .callsFake(async (key, value) => {
-                    persistedRequests = value;
-                });
+        // Expect persist sources.
+        setValueStub.withArgs(SDK_KEY, undefined)
+            .callsFake(async (_key, value) => {
+                persistedRequests = value;
+            });
 
-            await requestList.initialize();
-            expect(requestList.areRequestsPersisted).toBe(true);
+        await requestList.initialize();
+        expect(requestList.areRequestsPersisted).toBe(true);
 
-            const opts2 = {
-                sources: [
-                    { url: 'https://test.com/1' },
-                    { url: 'https://test.com/2' },
-                    { url: 'https://test.com/3' },
-                ],
-                persistRequestsKey: PERSIST_REQUESTS_KEY,
-            };
+        const opts2 = {
+            sources: [
+                { url: 'https://test.com/1' },
+                { url: 'https://test.com/2' },
+                { url: 'https://test.com/3' },
+            ],
+            persistRequestsKey: PERSIST_REQUESTS_KEY,
+        };
 
-            const requestList2 = new Apify.RequestList(opts2);
-            expect(requestList2.areRequestsPersisted).toBe(false);
+        const requestList2 = new Apify.RequestList(opts2);
+        expect(requestList2.areRequestsPersisted).toBe(false);
 
-            // Now initialize new request list from saved sources and check that
-            // they are same as state of original request list.
-            await requestList2.initialize();
-            expect(requestList2.areRequestsPersisted).toBe(true);
-            expect(requestList2.requests).toEqual(requestList.requests);
+        // Now initialize new request list from saved sources and check that
+        // they are same as state of original request list.
+        await requestList2.initialize();
+        expect(requestList2.areRequestsPersisted).toBe(true);
+        expect(requestList2.requests).toEqual(requestList.requests);
 
-            getValueStub.restore();
-            setValueStub.restore();
-        },
-    );
+        getValueStub.restore();
+        setValueStub.restore();
+    });
 
-    test(
-        'should correctly persist sources from requestsFromUrl if persistRequestsKey is set',
-        async () => {
-            const PERSIST_REQUESTS_KEY = 'some-key';
-            const SDK_KEY = `SDK_${PERSIST_REQUESTS_KEY}`;
-            const kvsMock = sinon.mock(keyValueStore);
-            const publicUtilsMock = sinon.mock(utils.publicUtils);
+    test('should correctly persist sources from requestsFromUrl if persistRequestsKey is set', async () => {
+        const PERSIST_REQUESTS_KEY = 'some-key';
+        const SDK_KEY = `SDK_${PERSIST_REQUESTS_KEY}`;
+        const kvsMock = sinon.mock(keyValueStore);
+        const publicUtilsMock = sinon.mock(utils.publicUtils);
+        let persistedRequests;
 
-            let persistedRequests;
+        const opts = {
+            sources: [
+                { url: 'https://example.com/1' },
+                { url: 'https://example.com/2' },
+                { requestsFromUrl: 'http://example.com/list-urls.txt', userData: { isFromUrl: true } },
+                { url: 'https://example.com/5' },
+            ],
+            persistRequestsKey: PERSIST_REQUESTS_KEY,
+        };
 
-            const opts = {
-                sources: [
-                    { url: 'https://example.com/1' },
-                    { url: 'https://example.com/2' },
-                    { requestsFromUrl: 'http://example.com/list-urls.txt', userData: { isFromUrl: true } },
-                    { url: 'https://example.com/5' },
-                ],
-                persistRequestsKey: PERSIST_REQUESTS_KEY,
-            };
+        const urlsFromTxt = ['http://example.com/3', 'http://example.com/4'];
 
-            const urlsFromTxt = ['http://example.com/3', 'http://example.com/4'];
+        const requestList = new Apify.RequestList(opts);
+        expect(requestList.areRequestsPersisted).toBe(false);
 
-            const requestList = new Apify.RequestList(opts);
-            expect(requestList.areRequestsPersisted).toBe(false);
+        // Expect an attempt to load sources.
+        kvsMock.expects('getValue')
+            .once()
+            .withArgs(SDK_KEY)
+            .resolves(null);
 
-            // Expect an attempt to load sources.
-            kvsMock.expects('getValue')
-                .once()
-                .withArgs(SDK_KEY)
-                .resolves(null);
+        // Expect persist sources.
+        kvsMock.expects('setValue')
+            .once()
+            .withArgs(SDK_KEY)
+            .callsFake((_key, value) => {
+                persistedRequests = value;
+            });
+        // Expect downloadListOfUrls returns list of URLs
+        publicUtilsMock.expects('downloadListOfUrls')
+            .once()
+            .withArgs({ url: 'http://example.com/list-urls.txt', urlRegExp: undefined })
+            .returns(Promise.resolve(urlsFromTxt));
 
-            // Expect persist sources.
-            kvsMock.expects('setValue')
-                .once()
-                .withArgs(SDK_KEY)
-                .callsFake((key, value) => {
-                    persistedRequests = value;
-                });
-            // Expect downloadListOfUrls returns list of URLs
-            publicUtilsMock.expects('downloadListOfUrls')
-                .once()
-                .withArgs({ url: 'http://example.com/list-urls.txt', urlRegExp: undefined })
-                .returns(Promise.resolve(urlsFromTxt));
+        await requestList.initialize();
+        expect(requestList.areRequestsPersisted).toBe(true);
+        const requests = await deserializeArray(persistedRequests);
+        expect(requestList.requests).toHaveLength(5);
+        expect(requests).toEqual(requestList.requests);
 
-            await requestList.initialize();
-            expect(requestList.areRequestsPersisted).toBe(true);
-            const requests = await deserializeArray(persistedRequests);
-            expect(requestList.requests).toHaveLength(5);
-            expect(requests).toEqual(requestList.requests);
-
-            kvsMock.verify();
-            publicUtilsMock.verify();
-        },
-    );
+        kvsMock.verify();
+        publicUtilsMock.verify();
+    });
 
     test('handles correctly inconsistent inProgress fields in state', async () => {
         // NOTE: This is a test for the deleteFromInProgress hotfix - see RequestList.initialize()
@@ -769,9 +762,13 @@ describe('Apify.RequestList', () => {
 
             const rl = await Apify.openRequestList(name, sources);
             expect(rl).toBeInstanceOf(Apify.RequestList);
+            // @ts-expect-error accessing private var
             expect(rl.persistStateKey.startsWith(SDK_KEY)).toBe(true);
+            // @ts-expect-error accessing private var
             expect(rl.persistRequestsKey.startsWith(SDK_KEY)).toBe(true);
+            // @ts-expect-error accessing private var
             expect(rl.sources).toEqual([]);
+            // @ts-expect-error accessing private var
             expect(rl.isInitialized).toBe(true);
 
             mock.verify();
@@ -788,9 +785,12 @@ describe('Apify.RequestList', () => {
 
             const rl = await Apify.openRequestList(name, sources);
             expect(rl).toBeInstanceOf(Apify.RequestList);
+            // @ts-expect-error accessing private var
             expect(rl.persistStateKey.startsWith(SDK_KEY)).toBe(true);
+            // @ts-expect-error accessing private var
             expect(rl.persistRequestsKey.startsWith(SDK_KEY)).toBe(true);
             expect(rl.requests).toEqual(requests);
+            // @ts-expect-error accessing private var
             expect(rl.isInitialized).toBe(true);
 
             mock.verify();
@@ -812,10 +812,14 @@ describe('Apify.RequestList', () => {
 
             const rl = await Apify.openRequestList(name, sources, options);
             expect(rl).toBeInstanceOf(Apify.RequestList);
+            // @ts-expect-error accessing private var
             expect(rl.persistStateKey.startsWith(SDK_KEY)).toBe(true);
+            // @ts-expect-error accessing private var
             expect(rl.persistRequestsKey.startsWith(SDK_KEY)).toBe(true);
             expect(rl.requests).toEqual(requests);
+            // @ts-expect-error accessing private var
             expect(rl.isInitialized).toBe(true);
+            // @ts-expect-error accessing private var
             expect(rl.keepDuplicateUrls).toBe(true);
 
             mock.verify();
@@ -831,9 +835,12 @@ describe('Apify.RequestList', () => {
 
             const rl = await Apify.openRequestList(name, sources);
             expect(rl).toBeInstanceOf(Apify.RequestList);
+            // @ts-expect-error accessing private var
             expect(rl.persistStateKey == null).toBe(true);
+            // @ts-expect-error accessing private var
             expect(rl.persistRequestsKey == null).toBe(true);
             expect(rl.requests).toEqual(requests);
+            // @ts-expect-error accessing private var
             expect(rl.isInitialized).toBe(true);
 
             mock.verify();
@@ -847,6 +854,7 @@ describe('Apify.RequestList', () => {
             ];
             for (const arg of args) {
                 try {
+                    // @ts-ignore
                     await Apify.openRequestList(...arg);
                     throw new Error('wrong error');
                 } catch (err) {

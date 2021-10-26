@@ -1,9 +1,9 @@
 import sinon from 'sinon';
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import Apify from '../build/index';
-import * as requestUtils from '../build/utils_request';
-import * as utils from '../build/utils';
-import { ProxyConfiguration } from '../build/proxy_configuration';
+import Apify from 'apify';
+import * as requestUtils from '../packages/apify/src/utils_request';
+import * as utils from '../packages/apify/src/utils';
+import { ProxyConfiguration } from '../packages/apify/src/proxy_configuration';
 
 const { apifyClient } = utils;
 

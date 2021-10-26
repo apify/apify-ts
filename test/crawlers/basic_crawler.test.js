@@ -1,13 +1,13 @@
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
-import log from '../../build/utils_log';
-import Apify from '../../build';
-import * as keyValueStore from '../../build/storages/key_value_store';
-import { RequestQueue } from '../../build/storages/request_queue';
-import { events } from '../../build/events';
+import log from '../../packages/apify/src/utils_log';
+import Apify from '../../packages/apify/src';
+import * as keyValueStore from '../../packages/apify/src/storages/key_value_store';
+import { RequestQueue } from '../../packages/apify/src/storages/request_queue';
+import { events } from '../../packages/apify/src/events';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utils from '../../build/utils';
+import * as utils from '../../packages/apify/src/utils';
 
 describe('BasicCrawler', () => {
     let logLevel;

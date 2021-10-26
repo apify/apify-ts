@@ -1,10 +1,10 @@
-import { Session } from '../../build/session_pool/session';
-import { SessionPool } from '../../build/session_pool/session_pool';
-import { ProxyConfiguration } from '../../build/proxy_configuration';
-import { EVENT_SESSION_RETIRED } from '../../build/session_pool/events';
-import { STATUS_CODES_BLOCKED } from '../../build/constants';
+import { Session } from '../../packages/apify/src/session_pool/session';
+import { SessionPool } from '../../packages/apify/src/session_pool/session_pool';
+import { ProxyConfiguration } from '../../packages/apify/src/proxy_configuration';
+import { EVENT_SESSION_RETIRED } from '../../packages/apify/src/session_pool/events';
+import { STATUS_CODES_BLOCKED } from '../../packages/apify/src/constants';
 
-import Apify from '../../build';
+import Apify from '../../packages/apify/src';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool;

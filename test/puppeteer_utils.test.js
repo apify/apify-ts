@@ -1,8 +1,8 @@
 import sinon from 'sinon';
 import path from 'path';
 import express from 'express';
-import Apify from '../build/index';
-import * as keyValueStore from '../build/storages/key_value_store';
+import Apify from 'apify';
+import * as keyValueStore from '../packages/apify/src/storages/key_value_store';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
 

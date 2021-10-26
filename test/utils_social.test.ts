@@ -1,6 +1,5 @@
 import _ from 'underscore';
-// import * as utils from '../build/utils';
-import Apify from '../build/index';
+import Apify from 'apify/src';
 
 const { social } = Apify.utils;
 
@@ -11,6 +10,7 @@ describe('utils.social', () => {
         };
 
         test('works with arg with no emails or invalid', () => {
+            // @ts-expect-error invalid input type
             expect(social.emailsFromText()).toEqual([]);
             testEmailsFromText('', []);
             testEmailsFromText(null, []);
@@ -53,24 +53,29 @@ describe('utils.social', () => {
     describe('emailsFromUrls()', () => {
         test('throws on invalid arg', () => {
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.emailsFromUrls();
             }).toThrowError(/must be an array/);
 
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.emailsFromUrls({});
             }).toThrowError(/must be an array/);
 
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.emailsFromUrls('fwefwef');
             }).toThrowError(/must be an array/);
 
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.emailsFromUrls(12345);
             }).toThrowError(/must be an array/);
         });
 
         test('extracts emails correctly', () => {
             expect(social.emailsFromUrls([])).toEqual([]);
+            // @ts-expect-error invalid input type
             expect(social.emailsFromUrls([1, 2, {}, 'fwef', null, undefined])).toEqual([]);
 
             expect(social.emailsFromUrls([
@@ -111,6 +116,7 @@ describe('utils.social', () => {
         };
 
         test('works with arg with no phones or invalid', () => {
+            // @ts-expect-error invalid input type
             expect(social.phonesFromText()).toEqual([]);
 
             testPhonesFromText('', []);
@@ -242,24 +248,29 @@ describe('utils.social', () => {
     describe('phonesFromUrls()', () => {
         test('throws on invalid arg', () => {
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.phonesFromUrls();
             }).toThrowError(/must be an array/);
 
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.phonesFromUrls({});
             }).toThrowError(/must be an array/);
 
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.phonesFromUrls('fwefwef');
             }).toThrowError(/must be an array/);
 
             expect(() => {
+                // @ts-expect-error invalid input type
                 social.phonesFromUrls(12345);
             }).toThrowError(/must be an array/);
         });
 
         test('extracts phones correctly', () => {
             expect(social.phonesFromUrls([])).toEqual([]);
+            // @ts-expect-error invalid input type
             expect(social.phonesFromUrls([1, 2, {}, 'fwef', null, undefined])).toEqual([]);
 
             expect(social.phonesFromUrls([
@@ -318,10 +329,13 @@ describe('utils.social', () => {
         };
 
         test('handles invalid arg', () => {
+            // @ts-expect-error invalid input type
             expect(social.parseHandlesFromHtml()).toEqual(EMPTY_RESULT);
             expect(social.parseHandlesFromHtml(undefined)).toEqual(EMPTY_RESULT);
             expect(social.parseHandlesFromHtml(null)).toEqual(EMPTY_RESULT);
+            // @ts-expect-error invalid input type
             expect(social.parseHandlesFromHtml({})).toEqual(EMPTY_RESULT);
+            // @ts-expect-error invalid input type
             expect(social.parseHandlesFromHtml(1234)).toEqual(EMPTY_RESULT);
         });
 
@@ -432,7 +446,7 @@ describe('utils.social', () => {
         });
 
         test('data is set correctly', () => {
-            const data = {};
+            const data = {} as any;
             social.parseHandlesFromHtml(`
                 <html>
                     <head>

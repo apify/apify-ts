@@ -2,16 +2,16 @@ import {
     ENV_VARS,
     MAX_PAYLOAD_SIZE_BYTES,
 } from '@apify/consts';
-import { apifyClient } from '../../build/utils';
+import { apifyClient } from '../../packages/apify/src/utils';
 import {
     Dataset,
     checkAndSerialize,
     chunkBySize,
-} from '../../build/storages/dataset';
-import Apify from '../../build';
-import { StorageManager } from '../../build/storages/storage_manager';
+} from '../../packages/apify/src/storages/dataset';
+import Apify from '../../packages/apify/src';
+import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
 
-jest.mock('../../build/storages/storage_manager');
+jest.mock('../../packages/apify/src/storages/storage_manager');
 
 describe('dataset', () => {
     beforeEach(async () => {

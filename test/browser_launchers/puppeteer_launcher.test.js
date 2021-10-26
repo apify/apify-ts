@@ -10,8 +10,8 @@ import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
 import { startExpressAppPromise } from '../_helper';
-import Apify from '../../build/index';
-import * as utils from '../../build/utils';
+import Apify from '../../packages/apify/src/index';
+import * as utils from '../../packages/apify/src/utils';
 
 let prevEnvHeadless;
 let proxyServer;

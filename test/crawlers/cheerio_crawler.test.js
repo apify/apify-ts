@@ -9,17 +9,17 @@ import sinon from 'sinon';
 import { Readable } from 'stream';
 import iconv from 'iconv-lite';
 import { Log } from '@apify/log';
-import log from '../../build/utils_log';
-import Apify from '../../build';
-import { sleep } from '../../build/utils';
-import { Session } from '../../build/session_pool/session';
-import { STATUS_CODES_BLOCKED } from '../../build/constants';
+import log from '../../packages/apify/src/utils_log';
+import Apify from '../../packages/apify/src';
+import { sleep } from '../../packages/apify/src/utils';
+import { Session } from '../../packages/apify/src/session_pool/session';
+import { STATUS_CODES_BLOCKED } from '../../packages/apify/src/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utilsRequest from '../../build/utils_request';
-import { CrawlerExtension } from '../../build/crawlers/crawler_extension';
-import { Request } from '../../build/request';
-import { AutoscaledPool } from '../../build/autoscaling/autoscaled_pool';
-import { mergeCookies } from '../../build/crawlers/crawler_utils';
+import * as utilsRequest from '../../packages/apify/src/utils_request';
+import { CrawlerExtension } from '../../packages/apify/src/crawlers/crawler_extension';
+import { Request } from '../../packages/apify/src/request';
+import { AutoscaledPool } from '../../packages/apify/src/autoscaling/autoscaled_pool';
+import { mergeCookies } from '../../packages/apify/src/crawlers/crawler_utils';
 
 const HOST = '127.0.0.1';
 

@@ -1,9 +1,9 @@
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
-import log from '../../build/utils_log';
-import Apify from '../../build';
+import log from '../../packages/apify/src/utils_log';
+import Apify from '../../packages/apify/src';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utils from '../../build/utils';
+import * as utils from '../../packages/apify/src/utils';
 
 describe('PuppeteerCrawler', () => {
     let prevEnvHeadless;

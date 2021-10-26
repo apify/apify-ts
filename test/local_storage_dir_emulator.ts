@@ -2,8 +2,10 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import { LOCAL_STORAGE_SUBDIRS, LOCAL_ENV_VARS, ENV_VARS } from '@apify/consts';
 import fs from 'fs-extra';
 import path from 'path';
-import log from '../build/utils_log';
-import cacheContainer from '../build/cache_container';
+import { utils } from 'apify/src';
+import cacheContainer from '../packages/apify/src/cache_container';
+
+const { log } = utils;
 
 const LOCAL_EMULATION_DIR = path.join(__dirname, '..', 'tmp', 'local-emulation-dir');
 
@@ -11,7 +13,7 @@ const DEFAULT_FOLDERS = Object.values(LOCAL_STORAGE_SUBDIRS)
     .concat([
         `${LOCAL_STORAGE_SUBDIRS.keyValueStores}/${LOCAL_ENV_VARS[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID]}`,
         'live_view',
-    ]);
+    ] as any);
 
 /**
  * Emulates storage for testing purposes.
@@ -22,9 +24,7 @@ const DEFAULT_FOLDERS = Object.values(LOCAL_STORAGE_SUBDIRS)
  * call `clean()` in afterEach hook and finally call `destroy()` in afterAll hook.
  */
 class LocalStorageDirEmulator {
-    constructor() {
-        this.localStorageDirs = [];
-    }
+    localStorageDirs: string[] = [];
 
     async init(dirName = cryptoRandomObjectId(10)) {
         cacheContainer.clearAllCaches();
@@ -40,7 +40,6 @@ class LocalStorageDirEmulator {
 
     /**
      * Removes the folder itself
-     * @return {Promise}
      */
     async destroy() {
         delete process.env.APIFY_LOCAL_STORAGE_DIR;

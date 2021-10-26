@@ -1,12 +1,9 @@
 import path from 'path';
 import _ from 'underscore';
 import sinon from 'sinon';
-import { ENV_VARS, ACT_JOB_STATUSES } from '@apify/consts';
-import { ApifyCallError } from '../build/errors';
-import * as utils from '../build/utils';
-
-// NOTE: test use of require() here because this is how its done in acts
-const Apify = require('../build/index');
+import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
+import Apify, { ApifyCallError, WebhookOptions } from '../packages/apify/src';
+import * as utils from '../packages/apify/src/utils';
 
 const { utils: { log } } = Apify;
 
@@ -38,14 +35,14 @@ const testMain = async ({ userFunc, exitCode }) => {
         .expects('exit')
         .withExactArgs(exitCode)
         .once()
-        .returns();
+        .returns({});
 
     let error = null;
 
     try {
         await Promise.resolve()
             .then(() => {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     // Invoke main() function, the promise resolves after the user function is run
                     Apify.main(() => {
                         try {
@@ -66,7 +63,7 @@ const testMain = async ({ userFunc, exitCode }) => {
             .then(() => {
                 // Waits max 1000 millis for process.exit() mock to be called
                 // console.log(`XXX: grand finale: ${err}`);
-                return new Promise((resolve) => {
+                return new Promise<void>((resolve) => {
                     const waitUntil = Date.now() + 1000;
                     const intervalId = setInterval(() => {
                         // console.log('test for exitExpectation.called');
@@ -164,12 +161,14 @@ describe('Apify.getEnv()', () => {
 describe('Apify.main()', () => {
     test('throws on invalid args', () => {
         expect(() => {
+            // @ts-expect-error callback parameter is required
             Apify.main();
         }).toThrowError(Error);
     });
 
     test('works with simple user function', () => {
         return testMain({
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             userFunc: () => {},
             exitCode: 0,
         });
@@ -193,7 +192,7 @@ describe('Apify.main()', () => {
         let called = false;
         return testMain({
             userFunc: () => {
-                return new Promise((resolve) => {
+                return new Promise<void>((resolve) => {
                     setTimeout(() => {
                         called = true;
                         // console.log('called = true');
@@ -256,7 +255,7 @@ describe('Apify.call()', () => {
     test('works as expected', async () => {
         const memoryMbytes = 1024;
         const timeoutSecs = 60;
-        const webhooks = [{ a: 'a' }, { b: 'b' }];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
 
         const clientMock = sinon.mock(utils.apifyClient);
         clientMock.expects('actor')
@@ -269,8 +268,7 @@ describe('Apify.call()', () => {
             .withArgs('some-store-id')
             .returns({ getRecord: async () => output });
 
-        const callOutput = await Apify
-            .call(actId, input, { contentType, disableBodyParser: true, build, memoryMbytes, timeoutSecs, webhooks });
+        const callOutput = await Apify.call(actId, input, { contentType, disableBodyParser: true, build, memoryMbytes, timeoutSecs, webhooks });
 
         expect(callOutput).toEqual(expected);
         clientMock.verify();
@@ -296,7 +294,7 @@ describe('Apify.call()', () => {
     test('works with token', async () => {
         const memoryMbytes = 1024;
         const timeoutSecs = 60;
-        const webhooks = [{ a: 'a' }, { b: 'b' }];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
 
         const utilsMock = sinon.mock(utils);
         const callStub = sinon.stub().resolves(finishedRun);
@@ -310,8 +308,7 @@ describe('Apify.call()', () => {
                 actor: actorStub,
                 keyValueStore: keyValueStoreStub,
             });
-        const callOutput = await Apify
-            .call(actId, input, { contentType, token, disableBodyParser: true, build, memoryMbytes, timeoutSecs, webhooks });
+        const callOutput = await Apify.call(actId, input, { contentType, token, disableBodyParser: true, build, memoryMbytes, timeoutSecs, webhooks });
 
         expect(callOutput).toEqual(expected);
         expect(actorStub.calledOnceWith(actId));
@@ -346,7 +343,7 @@ describe('Apify.call()', () => {
         clientMock.verify();
     });
 
-    test('returns immediately with zero ', async () => {
+    test('returns immediately with zero', async () => {
         const waitSecs = 0;
 
         const clientMock = sinon.mock(utils.apifyClient);
@@ -403,7 +400,7 @@ describe('Apify.callTask()', () => {
     const memoryMbytes = 256;
     const timeoutSecs = 60;
     const build = 'beta';
-    const webhooks = [{ a: 'a' }, { b: 'b' }];
+    const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
 
     test('works as expected', async () => {
         const clientMock = sinon.mock(utils.apifyClient);
@@ -417,8 +414,7 @@ describe('Apify.callTask()', () => {
             .withArgs('some-store-id')
             .returns({ getRecord: async () => output });
 
-        const callOutput = await Apify
-            .callTask(taskId, input, { disableBodyParser: true, memoryMbytes, timeoutSecs, build, webhooks });
+        const callOutput = await Apify.callTask(taskId, input, { disableBodyParser: true, memoryMbytes, timeoutSecs, build, webhooks });
 
         expect(callOutput).toEqual(expected);
         clientMock.restore();
@@ -437,8 +433,7 @@ describe('Apify.callTask()', () => {
                 task: taskStub,
                 keyValueStore: keyValueStoreStub,
             });
-        const callOutput = await Apify
-            .callTask(taskId, input, { token, disableBodyParser: true, build, memoryMbytes, timeoutSecs, webhooks });
+        const callOutput = await Apify.callTask(taskId, input, { token, disableBodyParser: true, build, memoryMbytes, timeoutSecs, webhooks });
 
         expect(callOutput).toEqual(expected);
         expect(taskStub.calledOnceWith(taskId));
@@ -463,8 +458,7 @@ describe('Apify.callTask()', () => {
         clientMock.expects('keyValueStore')
             .never();
 
-        const callOutput = await Apify
-            .callTask(taskId, undefined, { disableBodyParser: true, fetchOutput: false });
+        const callOutput = await Apify.callTask(taskId, undefined, { disableBodyParser: true, fetchOutput: false });
 
         expect(callOutput).toEqual(finishedRun);
         clientMock.restore();
@@ -482,14 +476,13 @@ describe('Apify.callTask()', () => {
         clientMock.expects('keyValueStore')
             .never();
 
-        const callOutput = await Apify
-            .callTask(taskId, undefined, { disableBodyParser: true, fetchOutput: false, waitSecs });
+        const callOutput = await Apify.callTask(taskId, undefined, { disableBodyParser: true, fetchOutput: false, waitSecs });
 
         expect(callOutput).toEqual(runningRun);
         clientMock.verify();
     });
 
-    test('returns immediately with zero ', async () => {
+    test('returns immediately with zero', async () => {
         const waitSecs = 0;
 
         const clientMock = sinon.mock(utils.apifyClient);
@@ -501,8 +494,7 @@ describe('Apify.callTask()', () => {
         clientMock.expects('keyValueStore')
             .never();
 
-        const callOutput = await Apify
-            .callTask(taskId, undefined, { waitSecs });
+        const callOutput = await Apify.callTask(taskId, undefined, { waitSecs });
 
         expect(callOutput).toEqual(readyRun);
         clientMock.restore();
@@ -580,7 +572,7 @@ describe('Apify.metamorph()', () => {
 
 describe('Apify.addWebhook()', () => {
     const runId = 'my-run-id';
-    const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'];
+    const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'] as const;
     const expectedRequestUrl = 'http://example.com/api';
     const expectedPayloadTemplate = '{"hello":{{world}}';
     const expectedIdempotencyKey = 'some-key';

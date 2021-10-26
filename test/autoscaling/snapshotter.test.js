@@ -3,11 +3,11 @@
 import os from 'os';
 import sinon from 'sinon';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
-import log from '../../build/utils_log';
-import Apify from '../../build/index';
-import { events } from '../../build/events';
-import { Snapshotter } from '../../build/autoscaling/snapshotter';
-import * as utils from '../../build/utils';
+import log from '../../packages/apify/src/utils_log';
+import Apify from '../../packages/apify/src/index';
+import { events } from '../../packages/apify/src/events';
+import { Snapshotter } from '../../packages/apify/src/autoscaling/snapshotter';
+import * as utils from '../../packages/apify/src/utils';
 
 const toBytes = (x) => x * 1024 * 1024;
 

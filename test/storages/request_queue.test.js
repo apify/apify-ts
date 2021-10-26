@@ -1,14 +1,14 @@
-import Apify from '../../build';
-import { apifyClient } from '../../build/utils';
+import Apify from '../../packages/apify/src';
+import { apifyClient } from '../../packages/apify/src/utils';
 import {
     RequestQueue,
     QUERY_HEAD_MIN_LENGTH,
     API_PROCESSED_REQUESTS_DELAY_MILLIS,
     STORAGE_CONSISTENCY_DELAY_MILLIS,
-} from '../../build/storages/request_queue';
-import { StorageManager } from '../../build/storages/storage_manager';
+} from '../../packages/apify/src/storages/request_queue';
+import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
 
-jest.mock('../../build/storages/storage_manager');
+jest.mock('../../packages/apify/src/storages/storage_manager');
 
 describe('RequestQueue remote', () => {
     beforeEach(() => {

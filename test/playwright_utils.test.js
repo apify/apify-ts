@@ -1,6 +1,6 @@
 import playwright from 'playwright';
 import express from 'express';
-import Apify from '../build/index';
+import Apify from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
 

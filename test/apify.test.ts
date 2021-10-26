@@ -2,7 +2,10 @@ import path from 'path';
 import _ from 'underscore';
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
 import { ApifyClient } from 'apify-client';
-import { Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore, StorageManager, ProxyConfiguration, SessionPool } from '../src';
+import {
+    Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore,
+    StorageManager, ProxyConfiguration, SessionPool, WebhookOptions,
+} from 'apify/src';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
 const { log, sleep } = utils;
@@ -12,21 +15,22 @@ const { log, sleep } = utils;
  */
 const testMain = async ({ userFunc, exitCode }) => {
     const exitSpy = jest.spyOn(process, 'exit');
-    exitSpy.mockImplementationOnce((i) => i); // prevent `process.exit()`
+    exitSpy.mockImplementationOnce((i) => i as never); // prevent `process.exit()`
 
     let error = null;
     const sdk = new Apify();
 
     try {
         await sdk.main(() => {
-            sdk.config.get('');
+            sdk.config.get('' as any);
             if (userFunc) {
                 return userFunc(sdk);
             }
+            // @ts-ignore TODO shall we always return promise? any reason why not?
         }).catch((err) => { error = err; });
 
         // Waits max 1000 millis for process.exit() mock to be called
-        await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
             const waitUntil = Date.now() + 1000;
             const intervalId = setInterval(() => {
                 if (exitSpy.mock.calls.length === 0 && Date.now() < waitUntil) {
@@ -121,12 +125,14 @@ describe('new Apify({ ... })', () => {
     describe('main()', () => {
         test('throws on invalid args', () => {
             expect(() => {
+                // @ts-expect-error invalid options
                 new Apify().main();
             }).toThrowError(Error);
         });
 
         test('works with simple user function', () => {
             return testMain({
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
                 userFunc: () => {},
                 exitCode: 0,
             });
@@ -219,16 +225,16 @@ describe('new Apify({ ... })', () => {
         test('works as expected', async () => {
             const memoryMbytes = 1024;
             const timeoutSecs = 60;
-            const webhooks = [{ a: 'a' }, { b: 'b' }];
+            const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
 
             const getRecordMock = jest.fn();
             getRecordMock.mockResolvedValueOnce(output);
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(finishedRun);
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
-            actorSpy.mockReturnValueOnce({ call: callMock });
+            actorSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
-            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock });
+            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
             const callOutput = await new Apify().call(actId, input, {
                 contentType,
@@ -249,7 +255,7 @@ describe('new Apify({ ... })', () => {
             callMock.mockResolvedValueOnce(finishedRun);
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
-            actorSpy.mockReturnValueOnce({ call: callMock });
+            actorSpy.mockReturnValueOnce({ call: callMock } as any);
 
             const callOutput = await new Apify().call(actId, undefined, { disableBodyParser: true, fetchOutput: false });
 
@@ -260,7 +266,7 @@ describe('new Apify({ ... })', () => {
         test('works with token', async () => {
             const memoryMbytes = 1024;
             const timeoutSecs = 60;
-            const webhooks = [{ a: 'a' }, { b: 'b' }];
+            const webhooks = [{ a: 'a' }, { b: 'b' }] as any;
 
             const newClientSpy = jest.spyOn(Apify.prototype, 'newClient');
             const callMock = jest.fn();
@@ -268,9 +274,9 @@ describe('new Apify({ ... })', () => {
             const getRecordMock = jest.fn();
             getRecordMock.mockResolvedValueOnce(output);
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
-            actorSpy.mockReturnValueOnce({ call: callMock });
+            actorSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
-            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock });
+            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
             const callOutput = await new Apify({ token }).call(actId, input, {
                 contentType,
@@ -302,7 +308,7 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(runningRun);
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
-            actorSpy.mockReturnValueOnce({ call: callMock });
+            actorSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
 
             const callOutput = await new Apify().call(actId, undefined, { disableBodyParser: true, fetchOutput: false, waitSecs });
@@ -318,7 +324,7 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(readyRun);
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
-            actorSpy.mockReturnValueOnce({ call: callMock });
+            actorSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
 
             const callOutput = await new Apify().call(actId, undefined, { waitSecs });
@@ -332,7 +338,7 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(failedRun);
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
-            actorSpy.mockReturnValueOnce({ call: callMock });
+            actorSpy.mockReturnValueOnce({ call: callMock } as any);
 
             const err = 'The actor some-act-id invoked by Apify.call() did not succeed. For details, see https://my.apify.com/view/runs/some-run-id';
             await expect(new Apify().call(actId, null)).rejects.toThrowError(new ApifyCallError(failedRun, err));
@@ -360,7 +366,7 @@ describe('new Apify({ ... })', () => {
         const memoryMbytes = 256;
         const timeoutSecs = 60;
         const build = 'beta';
-        const webhooks = [{ a: 'a' }, { b: 'b' }];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as any;
 
         test('works as expected', async () => {
             const getRecordMock = jest.fn();
@@ -368,9 +374,9 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(finishedRun);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
-            taskSpy.mockReturnValueOnce({ call: callMock });
+            taskSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
-            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock });
+            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
             const callOutput = await new Apify().callTask(taskId, input, { disableBodyParser: true, memoryMbytes, timeoutSecs, build, webhooks });
 
@@ -385,9 +391,9 @@ describe('new Apify({ ... })', () => {
             const getRecordMock = jest.fn();
             getRecordMock.mockResolvedValueOnce(output);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
-            taskSpy.mockReturnValueOnce({ call: callMock });
+            taskSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
-            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock });
+            keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
             const callOutput = await new Apify({ token }).callTask(taskId, input, {
                 disableBodyParser: true,
@@ -416,7 +422,7 @@ describe('new Apify({ ... })', () => {
             callMock.mockResolvedValueOnce(finishedRun);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
-            taskSpy.mockReturnValueOnce({ call: callMock });
+            taskSpy.mockReturnValueOnce({ call: callMock } as any);
 
             const callOutput = await new Apify().callTask(taskId, undefined, { disableBodyParser: true, fetchOutput: false });
 
@@ -431,7 +437,7 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(runningRun);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
-            taskSpy.mockReturnValueOnce({ call: callMock });
+            taskSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
 
             const callOutput = await new Apify().callTask(taskId, undefined, { disableBodyParser: true, fetchOutput: false, waitSecs });
@@ -447,7 +453,7 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(readyRun);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
-            taskSpy.mockReturnValueOnce({ call: callMock });
+            taskSpy.mockReturnValueOnce({ call: callMock } as any);
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
 
             const callOutput = await new Apify().callTask(taskId, undefined, { waitSecs });
@@ -461,7 +467,7 @@ describe('new Apify({ ... })', () => {
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(failedRun);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
-            taskSpy.mockReturnValueOnce({ call: callMock });
+            taskSpy.mockReturnValueOnce({ call: callMock } as any);
 
             // eslint-disable-next-line max-len
             const err = 'The actor task some-task-id invoked by Apify.callTask() did not succeed. For details, see https://my.apify.com/view/runs/some-run-id';
@@ -494,7 +500,7 @@ describe('new Apify({ ... })', () => {
             const metamorphMock = jest.fn();
             metamorphMock.mockResolvedValueOnce(run);
             const runSpy = jest.spyOn(ApifyClient.prototype, 'run');
-            runSpy.mockReturnValueOnce({ metamorph: metamorphMock });
+            runSpy.mockReturnValueOnce({ metamorph: metamorphMock } as any);
 
             await new Apify().metamorph(targetActorId, input, { contentType, build, customAfterSleepMillis: 1 });
 
@@ -508,7 +514,7 @@ describe('new Apify({ ... })', () => {
             const metamorphMock = jest.fn();
             metamorphMock.mockResolvedValueOnce(run);
             const runSpy = jest.spyOn(ApifyClient.prototype, 'run');
-            runSpy.mockReturnValueOnce({ metamorph: metamorphMock });
+            runSpy.mockReturnValueOnce({ metamorph: metamorphMock } as any);
 
             await new Apify().metamorph(targetActorId, undefined, { customAfterSleepMillis: 1 });
 
@@ -518,7 +524,7 @@ describe('new Apify({ ... })', () => {
 
     describe('addWebhook()', () => {
         const runId = 'my-run-id';
-        const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'];
+        const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'] as const;
         const expectedRequestUrl = 'http://example.com/api';
         const expectedPayloadTemplate = '{"hello":{{world}}';
         const expectedIdempotencyKey = 'some-key';
@@ -540,7 +546,7 @@ describe('new Apify({ ... })', () => {
             const createMock = jest.fn();
             createMock.mockResolvedValueOnce(webhook);
             const webhooksSpy = jest.spyOn(ApifyClient.prototype, 'webhooks');
-            webhooksSpy.mockReturnValueOnce({ create: createMock });
+            webhooksSpy.mockReturnValueOnce({ create: createMock } as any);
 
             await new Apify().addWebhook({
                 eventTypes: expectedEventTypes,
@@ -559,7 +565,7 @@ describe('new Apify({ ... })', () => {
             const metamorphMock = jest.fn();
             const warningMock = jest.spyOn(log, 'warning');
             const runSpy = jest.spyOn(ApifyClient.prototype, 'run');
-            runSpy.mockReturnValueOnce({ metamorph: metamorphMock });
+            runSpy.mockReturnValueOnce({ metamorph: metamorphMock } as any);
 
             const sdk = new Apify();
             await sdk.addWebhook({ eventTypes: expectedEventTypes, requestUrl: expectedRequestUrl });
@@ -589,7 +595,8 @@ describe('new Apify({ ... })', () => {
         test('openSessionPool should create SessionPool', async () => {
             const sdk = new Apify();
             const initializeSpy = jest.spyOn(SessionPool.prototype, 'initialize');
-            initializeSpy.mockImplementationOnce((i) => i);
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            initializeSpy.mockImplementationOnce(async () => {});
             await sdk.openSessionPool();
             expect(initializeSpy).toBeCalledTimes(1);
         });
@@ -597,7 +604,8 @@ describe('new Apify({ ... })', () => {
         test('createProxyConfiguration should create ProxyConfiguration', async () => {
             const sdk = new Apify();
             const initializeSpy = jest.spyOn(ProxyConfiguration.prototype, 'initialize');
-            initializeSpy.mockImplementationOnce((i) => i);
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            initializeSpy.mockImplementationOnce(async () => {});
             await sdk.createProxyConfiguration();
             expect(initializeSpy).toBeCalledTimes(1);
         });
@@ -613,7 +621,7 @@ describe('new Apify({ ... })', () => {
 
         test('getInput()', async () => {
             const getValueSpy = jest.spyOn(KeyValueStore.prototype, 'getValue');
-            getValueSpy.mockImplementation(() => 123);
+            getValueSpy.mockImplementation(async () => 123);
 
             // Uses default value.
             const val1 = await sdk.getInput();
@@ -633,7 +641,8 @@ describe('new Apify({ ... })', () => {
         test('setValue()', async () => {
             const record = { foo: 'bar' };
             const setValueSpy = jest.spyOn(KeyValueStore.prototype, 'setValue');
-            setValueSpy.mockImplementationOnce((i) => i);
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            setValueSpy.mockImplementationOnce(async () => {});
 
             await sdk.setValue('key-1', record);
             expect(setValueSpy).toBeCalledTimes(1);
@@ -642,7 +651,7 @@ describe('new Apify({ ... })', () => {
 
         test('getValue()', async () => {
             const getValueSpy = jest.spyOn(KeyValueStore.prototype, 'getValue');
-            getValueSpy.mockImplementationOnce(() => 123);
+            getValueSpy.mockImplementationOnce(async () => 123);
 
             const val = await sdk.getValue('key-1');
             expect(getValueSpy).toBeCalledTimes(1);
@@ -652,7 +661,8 @@ describe('new Apify({ ... })', () => {
 
         test('pushData()', async () => {
             const pushDataSpy = jest.spyOn(Dataset.prototype, 'pushData');
-            pushDataSpy.mockImplementationOnce((i) => i);
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            pushDataSpy.mockImplementationOnce(async () => {});
 
             await sdk.pushData({ foo: 'bar' });
             expect(pushDataSpy).toBeCalledTimes(1);
@@ -661,7 +671,8 @@ describe('new Apify({ ... })', () => {
 
         test('openRequestList should create RequestList', async () => {
             const initializeSpy = jest.spyOn(RequestList.prototype, 'initialize');
-            initializeSpy.mockImplementationOnce((i) => i);
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            initializeSpy.mockImplementationOnce(async () => {});
             const list = await sdk.openRequestList('my-list', ['url-1', 'url-2', 'url-3']);
             expect(initializeSpy).toBeCalledTimes(1);
             expect(list.sources).toEqual(['url-1', 'url-2', 'url-3']);
@@ -673,7 +684,7 @@ describe('new Apify({ ... })', () => {
             const queueId = 'abc';
             const options = { forceCloud: true };
             const openStorageSpy = jest.spyOn(StorageManager.prototype, 'openStorage');
-            openStorageSpy.mockImplementationOnce((i) => i);
+            openStorageSpy.mockImplementationOnce(async (i) => i);
             await sdk.openRequestQueue(queueId, options);
             expect(openStorageSpy).toBeCalledWith(queueId, options);
             expect(openStorageSpy).toBeCalledTimes(1);

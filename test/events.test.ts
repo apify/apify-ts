@@ -1,10 +1,10 @@
 import WebSocket from 'ws';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import { ACTOR_EVENT_NAMES_EX } from '../build/constants';
-import { sleep } from '../build/utils';
+import { ACTOR_EVENT_NAMES_EX } from '../packages/apify/src/constants';
+import { sleep } from '../packages/apify/src/utils';
 
-import Apify from '../build';
+import Apify from '../packages/apify/src';
 
 describe('Apify.events', () => {
     let wss = null;
@@ -71,7 +71,7 @@ describe('Apify.events', () => {
         // Main will call process.exit() so we must stub it.
         const stubbedExit = sinon
             .stub(process, 'exit')
-            .callsFake(async (code) => {
+            .callsFake((async (code) => {
                 expect(code).toBe(0);
                 expect(eventsReceived).toEqual([[1, 2, 3], { foo: 'bar' }]);
 
@@ -82,7 +82,7 @@ describe('Apify.events', () => {
                     expect(wsClosed).toBe(true);
                     done();
                 });
-            });
+            }) as never);
     }, 60e3);
 
     test('should work without Apify.main()', async () => {

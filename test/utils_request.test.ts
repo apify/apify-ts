@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestAsBrowser } from '../build/utils_request';
+import { requestAsBrowser } from '../packages/apify/src/utils_request';
 import { startExpressAppPromise } from './_helper';
 
 const CONTENT = 'CONTENT';
@@ -12,7 +12,7 @@ describe('Apify.utils_request', () => {
     beforeAll(async () => {
         const app = express();
 
-        app.get('/406', (req, res) => {
+        app.get('/406', (_req, res) => {
             res.setHeader('content-type', 'text/html; charset=utf-8');
             res.status(406);
             res.send(CONTENT);
@@ -26,7 +26,7 @@ describe('Apify.utils_request', () => {
             res.send(JSON.stringify(req.rawHeaders));
         });
 
-        app.get('/json', (req, res) => {
+        app.get('/json', (_req, res) => {
             res.setHeader('content-type', 'application/json; charset=utf-8');
             res.send(JSON_CONTENT);
         });
@@ -36,7 +36,7 @@ describe('Apify.utils_request', () => {
             req.pipe(res);
         });
 
-        app.get('/invalidContentHeader', (req, res) => {
+        app.get('/invalidContentHeader', (_req, res) => {
             res.setHeader('Content-Type', 'non-existent-content-type');
             res.send(CONTENT);
         });
@@ -48,13 +48,13 @@ describe('Apify.utils_request', () => {
             });
         });
 
-        app.get('/invalidBody', async (req, res) => {
+        app.get('/invalidBody', async (_req, res) => {
             res.setHeader('content-encoding', 'deflate');
             res.status(500);
             res.send(Buffer.from(CONTENT, 'utf8'));
         });
 
-        app.get('/empty', async (req, res) => {
+        app.get('/empty', async (_req, res) => {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.send();
         });
@@ -103,6 +103,7 @@ describe('Apify.utils_request', () => {
             };
             const response = await requestAsBrowser(data);
             expect(response.statusCode).toBe(200);
+            // @ts-ignore TODO missing Response.request?
             expect(response.request.options.context.headerGeneratorOptions.devices).toEqual(['mobile']);
         });
 
@@ -131,6 +132,7 @@ describe('Apify.utils_request', () => {
         test.each(testQueries)(`it works with not encoded urls: '%s' (stream)`, async (query, decoded) => {
             const response = await requestAsBrowser({
                 url: `http://${HOSTNAME}:${port}/test-encoding/?q=${query}`,
+                // @ts-ignore TODO missing in options?
                 stream: true,
             });
 
@@ -150,6 +152,7 @@ describe('Apify.utils_request', () => {
             };
             const response = await requestAsBrowser(data);
             expect(response.statusCode).toBe(200);
+            // @ts-ignore TODO missing Response.request?
             expect(response.request.options.context.headerGeneratorOptions.devices).toEqual(['desktop']);
         });
 
@@ -176,6 +179,7 @@ describe('Apify.utils_request', () => {
             const response = await requestAsBrowser(options);
 
             expect(response.statusCode).toBe(200);
+            // @ts-ignore TODO missing Response.request?
             expect(response.request.options.context.headerGeneratorOptions.locales).toEqual([`${languageCode}-${countryCode}`]);
         });
 
@@ -191,6 +195,7 @@ describe('Apify.utils_request', () => {
             const response = await requestAsBrowser(options);
 
             expect(response.statusCode).toBe(200);
+            // @ts-ignore TODO missing Response.request?
             expect(response.request.options.context.headerGeneratorOptions.locales).toEqual(['test']);
         });
 
@@ -239,6 +244,7 @@ describe('Apify.utils_request', () => {
             expect(response.statusCode).toBe(200);
 
             // Split an array into chunks of two
+            // @ts-ignore TODO body is string, not array? maybe it should be generic?
             const entries = response.body.reduce((all, one, i) => {
                 const ch = Math.floor(i / 2);
                 all[ch] = [].concat((all[ch] || []), one);
@@ -292,8 +298,10 @@ describe('Apify.utils_request', () => {
             const response = await requestAsBrowser({ url, useHttp2: true });
             // TODO Node v10 does not support HTTP2 well, remove when we drop support.
             if (process.version.startsWith('v10')) {
+                // @ts-ignore TODO missing Response.request?
                 expect(response.request.options.http2).toBe(false);
             } else {
+                // @ts-ignore TODO missing Response.request?
                 expect(response.request.options.http2).toBe(true);
             }
             expect(response.body.length).toBeGreaterThan(10000);
@@ -303,8 +311,10 @@ describe('Apify.utils_request', () => {
         test('get works with streams', async () => {
             const response = await requestAsBrowser({
                 url: 'https://apify.com/',
+                // @ts-ignore TODO missing in options?
                 stream: true,
             });
+            // @ts-ignore TODO missing in options?
             expect(response.options.isStream).toBe(true);
             const chunks = [];
             for await (const chunk of response) {
@@ -318,9 +328,11 @@ describe('Apify.utils_request', () => {
             const response = await requestAsBrowser({
                 method: 'POST',
                 url: `http://${HOSTNAME}:${port}/echo-body`,
+                // @ts-ignore TODO missing in options?
                 stream: true,
                 payload: 'TEST',
             });
+            // @ts-ignore TODO missing in options?
             expect(response.options.isStream).toBe(true);
             const chunks = [];
             for await (const chunk of response) {

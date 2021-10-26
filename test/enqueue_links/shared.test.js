@@ -1,5 +1,5 @@
-import { PseudoUrl } from '../../build/pseudo_url';
-import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from '../../build/enqueue_links/shared';
+import { PseudoUrl } from '../../packages/apify/src/pseudo_url';
+import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from '../../packages/apify/src/enqueue_links/shared';
 
 describe('Enqueue links shared functions', () => {
     describe('constructPseudoUrlInstances()', () => {

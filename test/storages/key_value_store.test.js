@@ -1,15 +1,15 @@
 import {
     ENV_VARS,
 } from '@apify/consts';
-import { apifyClient } from '../../build/utils';
+import { apifyClient } from '../../packages/apify/src/utils';
 import {
     KeyValueStore,
     maybeStringify,
-} from '../../build/storages/key_value_store';
-import { StorageManager } from '../../build/storages/storage_manager';
-import Apify from '../../build';
+} from '../../packages/apify/src/storages/key_value_store';
+import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
+import Apify from '../../packages/apify/src';
 
-jest.mock('../../build/storages/storage_manager');
+jest.mock('../../packages/apify/src/storages/storage_manager');
 
 describe('KeyValueStore remote', () => {
     beforeEach(async () => {

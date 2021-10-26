@@ -1,6 +1,6 @@
-import log from '../../build/utils_log';
-import { SystemStatus } from '../../build/autoscaling/system_status';
-import { Snapshotter } from '../../build/autoscaling/snapshotter';
+import log from '../../packages/apify/src/utils_log';
+import { SystemStatus } from '../../packages/apify/src/autoscaling/system_status';
+import { Snapshotter } from '../../packages/apify/src/autoscaling/snapshotter';
 
 describe('SystemStatus', () => {
     let logLevel;

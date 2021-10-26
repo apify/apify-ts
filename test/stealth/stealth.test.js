@@ -3,7 +3,7 @@
 import scanner from 'fpscanner';
 import path from 'path';
 
-import Apify from '../../build';
+import Apify from '../../packages/apify/src';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 const fingerPrintPath = require.resolve('fpcollect/dist/fpCollect.min.js');

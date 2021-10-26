@@ -8,10 +8,10 @@ import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import Apify from '../../build/index';
-import * as utils from '../../build/utils';
+import Apify from '../../packages/apify/src/index';
+import * as utils from '../../packages/apify/src/utils';
 
-import { PlaywrightLauncher } from '../../build/browser_launchers/playwright_launcher';
+import { PlaywrightLauncher } from '../../packages/apify/src/browser_launchers/playwright_launcher';
 
 let prevEnvHeadless;
 let proxyServer;

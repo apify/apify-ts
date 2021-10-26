@@ -1,8 +1,8 @@
 import cheerio from 'cheerio';
-import Apify from '../../build';
-import { apifyClient } from '../../build/utils';
-import { enqueueLinks } from '../../build/enqueue_links/enqueue_links';
-import { RequestQueue } from '../../build/storages/request_queue';
+import Apify from '../../packages/apify/src';
+import { apifyClient } from '../../packages/apify/src/utils';
+import { enqueueLinks } from '../../packages/apify/src/enqueue_links/enqueue_links';
+import { RequestQueue } from '../../packages/apify/src/storages/request_queue';
 
 const { utils: { log } } = Apify;
 

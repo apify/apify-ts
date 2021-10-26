@@ -1,5 +1,5 @@
 import express from 'express';
-import Apify from '../build/index';
+import Apify from 'apify';
 import { startExpressAppPromise } from './_helper';
 
 const { addInterceptRequestHandler, removeInterceptRequestHandler } = Apify.utils.puppeteer;
@@ -39,6 +39,7 @@ afterAll(() => {
 
 describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptRequestHandler()', () => {
     test('should allow multiple handlers', async () => {
+        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
         const allUrls = [];
@@ -87,6 +88,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     test(
         'should not propagate aborted/responded requests to following handlers',
         async () => {
+        // @ts-ignore TODO headless is not defined option?
             const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
             const propagatedUrls = [];
 
@@ -126,6 +128,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     );
 
     test('should allow to modify request', async () => {
+        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
         try {
@@ -163,6 +166,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     });
 
     test('should allow async handler', async () => {
+        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
         try {
@@ -186,6 +190,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
 
     describe('internal handleRequest function should return correctly formated headers', () => {
         test('should correctly capitalize headers', async () => {
+        // @ts-ignore TODO headless is not defined option?
             const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
             try {
@@ -197,7 +202,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
                         ...request.headers(),
                         accept: 'text/html',
                         'accept-language': 'en-GB',
-                        'upgrade-insecure-requests': 2,
+                        'upgrade-insecure-requests': '2',
                     };
                     return request.continue({ headers });
                 });
@@ -230,6 +235,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
 
 describe('Apify.utils.puppeteer.removeInterceptRequestHandler()', () => {
     test('works', async () => {
+        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
         const loadedUrls = [];
