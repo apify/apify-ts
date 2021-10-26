@@ -406,10 +406,8 @@ export class BasicCrawler {
 
     /**
      * Runs the crawler. Returns a promise that gets resolved once all the requests are processed.
-     *
-     * @return {Promise<void>}
      */
-    async run() {
+    async run(): Promise<void> {
         if (this.isRunningPromise) return this.isRunningPromise;
 
         await this._init();

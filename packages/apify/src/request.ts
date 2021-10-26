@@ -116,7 +116,7 @@ export class Request {
      */
     constructor(options: RequestOptions) {
         ow(options, 'RequestOptions', ow.object);
-        ow(options.url, 'RequestOptions.url', ow.string.url);
+        ow(options.url, 'RequestOptions.url', ow.string);
         // 'ow' validation is slow, because it checks all predicates
         // even if the validated object has only 1 property.
         // This custom validation loop iterates only over existing
@@ -172,11 +172,8 @@ export class Request {
         // otherwise the type will be {}
         this.headers = { ...headers };
         this.userData = { ...userData };
-        // Requests received from API will have ISOString dates,
-        // but we want to have a Date instance.
-        this.handledAt = typeof handledAt === 'string'
-            ? new Date(handledAt)
-            : handledAt;
+        // Requests received from API will have ISOString dates, but we want to have a Date instance.
+        this.handledAt = new Date(handledAt);
     }
 
     /**

@@ -5,16 +5,7 @@ import { ACT_JOB_STATUSES, ENV_VARS, INTEGER_ENV_VARS, WEBHOOK_EVENT_TYPES } fro
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
-import {
-    addCharsetToContentType,
-    apifyClient,
-    isAtHome,
-    logSystemInfo,
-    newClient,
-    printOutdatedSdkWarning,
-    sleep,
-    snakeCaseToCamelCase,
-} from './utils';
+import { addCharsetToContentType, apifyClient, isAtHome, logSystemInfo, newClient, printOutdatedSdkWarning, sleep, snakeCaseToCamelCase } from './utils';
 import { maybeStringify } from './storages/key_value_store';
 import { ActorRun, Dictionary } from './typedefs';
 import { ApifyCallError } from './errors';
@@ -94,7 +85,7 @@ export interface ApifyEnv {
     memoryMbytes: number | null;
 }
 
-export type EventTypes = (keyof typeof WEBHOOK_EVENT_TYPES)[];
+export type EventType = (typeof WEBHOOK_EVENT_TYPES)[keyof typeof WEBHOOK_EVENT_TYPES];
 
 /**
  * Returns a new {@link ApifyEnv} object which contains information parsed from all the `APIFY_XXX` environment variables.
@@ -246,13 +237,6 @@ export function main(userFunc: UserFunc): void {
     });
 }
 
-export interface AdhocWebhook {
-    eventTypes: EventTypes;
-    requestUrl: string;
-    idempotencyKey?: string;
-    payloadTemplate?: string;
-}
-
 export interface CallOptions {
     /**
      * Content type for the `input`. If not specified,
@@ -311,7 +295,7 @@ export interface CallOptions {
      * to receive a notification e.g. when the actor finished or failed, see
      * [ad hook webhooks documentation](https://docs.apify.com/webhooks/ad-hoc-webhooks) for detailed description.
      */
-    webhooks?: AdhocWebhook[];
+    webhooks?: readonly WebhookOptions[];
 }
 
 /**
@@ -351,7 +335,7 @@ export interface CallOptions {
  * @param [options]
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
-export async function call(actId: string, input?: Record<string, unknown>, options: CallOptions = {}): Promise<ActorRun> {
+export async function call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRun> {
     ow(actId, ow.string);
     // input can be anything, no reason to validate
     ow(options, ow.object.exactShape({
@@ -455,11 +439,24 @@ export interface CallTaskOptions {
     waitSecs?: number;
 
     /**
+     * If `false` then the function does not fetch output of the actor.
+     * @default true
+     */
+    fetchOutput?: boolean;
+
+    /**
+     * If `true` then the function will not attempt to parse the
+     * actor's output and will return it in a raw `Buffer`.
+     * @default false
+     */
+    disableBodyParser?: boolean;
+
+    /**
      * Specifies optional webhooks associated with the actor run, which can be used
      * to receive a notification e.g. when the actor finished or failed, see
      * [ad hook webhooks documentation](https://docs.apify.com/webhooks/ad-hoc-webhooks) for detailed description.
      */
-    webhooks?: AdhocWebhook[];
+    webhooks?: readonly WebhookOptions[];
 }
 
 /**
@@ -496,9 +493,10 @@ export interface CallTaskOptions {
  *  Input overrides for the actor task. If it is an object, it will be stringified to
  *  JSON and its content type set to `application/json; charset=utf-8`.
  *  Provided input will be merged with actor task input.
+ * @param [options]
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
-export async function callTask(taskId: string, input?: Record<string, unknown>, options: CallTaskOptions = {}): Promise<ActorRun> {
+export async function callTask(taskId: string, input?: Dictionary | string, options: CallTaskOptions = {}): Promise<ActorRun> {
     ow(taskId, ow.string);
     ow(input, ow.optional.any(ow.string, ow.object));
     ow(options, ow.object.exactShape({
@@ -582,7 +580,7 @@ function isRunUnsuccessful(status) {
  *  Otherwise the `options.contentType` parameter must be provided.
  * @param [options]
  */
-export async function metamorph(targetActorId: string, input: Dictionary, options: MetamorphOptions = {}): Promise<void> {
+export async function metamorph(targetActorId: string, input: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
     ow(targetActorId, ow.string);
     // input can be anything, no reason to validate
     ow(options, ow.object.exactShape({
@@ -620,7 +618,7 @@ export interface WebhookRun {
     modifiedAt: string;
     userId: string;
     isAdHoc: boolean;
-    eventTypes: EventTypes;
+    eventTypes: readonly EventType[];
     condition: any;
     ignoreSslErrors: boolean;
     doNotRetry: boolean;
@@ -630,12 +628,12 @@ export interface WebhookRun {
     stats: any;
 }
 
-export interface AddWebhookOptions {
+export interface WebhookOptions {
     /**
      * Array of event types, which you can set for actor run, see
      * the [actor run events](https://docs.apify.com/webhooks/events#actor-run) in the Apify doc.
      */
-    eventTypes: EventTypes;
+    eventTypes: readonly EventType[];
 
     /**
      * URL which will be requested using HTTP POST request, when actor run will reach the set event type.
@@ -672,7 +670,7 @@ export interface AddWebhookOptions {
  * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
  * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
  */
-export async function addWebhook(options: AddWebhookOptions): Promise<WebhookRun | undefined> {
+export async function addWebhook(options: WebhookOptions): Promise<WebhookRun | undefined> {
     ow(options, ow.object.exactShape({
         eventTypes: ow.array.ofType(ow.string),
         requestUrl: ow.string,
@@ -692,6 +690,7 @@ export async function addWebhook(options: AddWebhookOptions): Promise<WebhookRun
         throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
     }
 
+    // @ts-ignore client types for `eventTypes` are wrong, we want to use the same fixed definition as here in the SDK
     return apifyClient.webhooks().create({
         isAdHoc: true,
         // @ts-ignore ow is messing up the types

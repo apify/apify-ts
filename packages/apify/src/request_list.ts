@@ -230,8 +230,9 @@ export class RequestList {
     /**
      * Array of all requests from all sources, in the order as they appeared in sources.
      * All requests in the array have distinct uniqueKey!
+     * @internal (TODO or should be public maybe?)
      */
-    private requests: Request[] = [];
+    requests: Request[] = [];
 
     /** Index to the next item in requests array to fetch. All previous requests are either handled or in progress. */
     private nextIndex = 0;
@@ -243,22 +244,30 @@ export class RequestList {
      * Dictionary of requests that were returned by fetchNextRequest().
      * The key is uniqueKey, value is true.
      * TODO: Change this to Set
+     * @internal (TODO or should be public maybe?)
      */
-    private inProgress: Record<string, boolean> = {};
+    inProgress: Record<string, boolean> = {};
 
     /**
      * Dictionary of requests for which reclaimRequest() was called.
      * The key is uniqueKey, value is true.
      * Note that reclaimedRequests is always a subset of inProgress!
      * TODO: Change this to Set
+     * @internal (TODO or should be public maybe?)
      */
-    private reclaimed: Record<string, boolean> = {};
+    reclaimed: Record<string, boolean> = {};
 
-    /** Starts as true because until we handle the first request, the list is effectively persisted by doing nothing. */
-    private isStatePersisted = true;
+    /**
+     * Starts as true because until we handle the first request, the list is effectively persisted by doing nothing.
+     * @internal (TODO or should be public maybe?)
+     */
+    isStatePersisted = true;
 
-    /** Starts as false because we don't know yet and sources might change in the meantime (eg. download from live list). */
-    private areRequestsPersisted = false;
+    /**
+     * Starts as false because we don't know yet and sources might change in the meantime (eg. download from live list).
+     * @internal
+     */
+    areRequestsPersisted = false;
 
     private isLoading = false;
     private isInitialized = false;
@@ -929,5 +938,5 @@ export interface RequestListState {
 
 }
 
-export type Source = RequestOptions | Request | { requestsFromUrl: string } | string;
+export type Source = RequestOptions | Request | { requestsFromUrl: string } | { regex: RegExp } | string;
 export type RequestListSourcesFunction = () => Promise<Source[]>;

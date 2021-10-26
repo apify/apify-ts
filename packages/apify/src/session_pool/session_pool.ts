@@ -446,7 +446,7 @@ export class SessionPool extends EventEmitter {
  *
  * For more details and code examples, see the {@link SessionPool} class.
  */
-export async function openSessionPool(sessionPoolOptions: SessionPoolOptions): Promise<SessionPool> {
+export async function openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
     const sessionPool = new SessionPool(sessionPoolOptions);
     await sessionPool.initialize();
     return sessionPool;

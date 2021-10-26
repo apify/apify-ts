@@ -1,13 +1,13 @@
 import ow from 'ow';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import { AddWebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun } from './actor';
+import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun } from './actor';
 import { initializeEvents, stopEvents } from './events';
 import { StorageManager } from './storages/storage_manager';
 import { Dataset } from './storages/dataset';
 import { KeyValueStore, maybeStringify } from './storages/key_value_store';
 import { RequestList, RequestListOptions, REQUESTS_PERSISTENCE_KEY, STATE_PERSISTENCE_KEY } from './request_list';
 import { RequestQueue } from './storages/request_queue';
-import { SessionPool } from './session_pool/session_pool';
+import { SessionPool, SessionPoolOptions } from './session_pool/session_pool';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
 import { addCharsetToContentType, logSystemInfo, printOutdatedSdkWarning, publicUtils, sleep } from './utils';
 import log from './utils_log';
@@ -19,7 +19,7 @@ import { socialUtils } from './utils_social';
 import { enqueueLinks } from './enqueue_links/enqueue_links';
 import { requestAsBrowser } from './utils_request';
 import { ApifyCallError } from './errors';
-import { ActorRun } from './typedefs';
+import { ActorRun, Dictionary } from './typedefs';
 import { Request, RequestOptions } from './request';
 
 export interface MetamorphOptions {
@@ -36,6 +36,9 @@ export interface MetamorphOptions {
      * If not provided, the run uses build tag or number from the default actor run configuration (typically `latest`).
      */
     build?: string;
+
+    /** @internal */
+    customAfterSleepMillis?: number;
 }
 
 /**
@@ -200,7 +203,7 @@ export class Apify {
      * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async call(actId: string, input?: Record<string, unknown>, options: CallOptions = {}): Promise<ActorRun> {
+    async call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRun> {
         ow(actId, ow.string);
         // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
@@ -302,7 +305,7 @@ export class Apify {
      * @param {object} [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async callTask(taskId: string, input?: Record<string, unknown>, options: CallTaskOptions = {}): Promise<ActorRun> {
+    async callTask(taskId: string, input?: Dictionary | string, options: CallTaskOptions = {}): Promise<ActorRun> {
         ow(taskId, ow.string);
         ow(input, ow.optional.any(ow.string, ow.object));
         ow(options, ow.object.exactShape({
@@ -376,7 +379,7 @@ export class Apify {
      *  Otherwise the `options.contentType` parameter must be provided.
      * @param {object} [options]
      */
-    async metamorph(targetActorId: string, input?: Record<string, unknown>, options: MetamorphOptions = {}): Promise<void> {
+    async metamorph(targetActorId: string, input?: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
         ow(targetActorId, ow.string);
         // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
@@ -419,7 +422,7 @@ export class Apify {
      * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
      * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
      */
-    async addWebhook(options: AddWebhookOptions): Promise<WebhookRun | undefined> {
+    async addWebhook(options: WebhookOptions): Promise<WebhookRun | undefined> {
         ow(options, ow.object.exactShape({
             eventTypes: ow.array.ofType(ow.string),
             requestUrl: ow.string,
@@ -743,11 +746,8 @@ export class Apify {
      * of the {@link SessionPool} class that is already initialized.
      *
      * For more details and code examples, see the {@link SessionPool} class.
-     *
-     * @param {SessionPoolOptions} sessionPoolOptions
-     * @return {Promise<SessionPool>}
      */
-    async openSessionPool(sessionPoolOptions) {
+    async openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
         const sessionPool = new SessionPool(sessionPoolOptions, this.config);
         await sessionPool.initialize();
 

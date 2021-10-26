@@ -45,7 +45,9 @@ export {
     Configuration,
     main,
     getEnv,
+    // TODO deprecate in v2
     call,
+    // TODO deprecate in v2
     callTask,
     metamorph,
     getMemoryInfo,

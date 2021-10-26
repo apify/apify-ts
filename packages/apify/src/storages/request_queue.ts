@@ -211,22 +211,25 @@ export class RequestQueue {
      * @param {boolean} [options.forefront=false] If `true`, the request will be added to the foremost position in the queue.
      * @return {Promise<QueueOperationInfo>}
      */
-    async addRequest(requestLike, options = {}) {
+    async addRequest(requestLike, options: any = {}) {
         ow(requestLike, ow.object.partialShape({
-            url: ow.string.url,
+            url: ow.string,
             id: ow.undefined,
         }));
         ow(options, ow.object.exactShape({
             forefront: ow.optional.boolean,
         }));
 
+        // @ts-ignore
         const { forefront = false } = options;
 
         const request = requestLike instanceof Request
             ? requestLike
             : new Request(requestLike);
 
-        const cacheKey = getRequestId(request.uniqueKey);
+        // TODO we dont need to hash the cache key probably
+        // const cacheKey = getRequestId(request.uniqueKey);
+        const cacheKey = request.uniqueKey;
         const cachedInfo = this.requestsCache.get(cacheKey);
 
         if (cachedInfo) {
@@ -706,6 +709,6 @@ export interface RequestQueueInfo {
 export interface RequestQueueOptions {
     id: string;
     name?: string;
-    isLocal: boolean;
-    client: ApifyClient|ApifyStorageLocal;
+    isLocal?: boolean;
+    client: ApifyClient | ApifyStorageLocal;
 }
