@@ -15,12 +15,26 @@
     "plugins": [
         "@typescript-eslint"
     ],
-    "ignorePatterns": ["node_modules", "dist", "coverage", "**/*.js", "**/*.d.ts"],
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        "coverage",
+        "**/*.js",
+        "**/*.d.ts"
+    ],
     "rules": {
-        "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+        "@typescript-eslint/array-type": "error",
         "@typescript-eslint/ban-ts-comment": 0,
         "@typescript-eslint/no-unused-vars": "off",
-        "no-continue": "off",
-        "@typescript-eslint/array-type": "error"
+        "import/no-extraneous-dependencies": "off",
+        "lines-between-class-members": [
+            "error",
+            "always",
+            {
+                "exceptAfterSingleLine": true
+            }
+        ],
+        "max-len": ["error", 160],
+        "no-continue": "off"
     }
 }
