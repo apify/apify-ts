@@ -184,15 +184,15 @@ export interface ProxyInfo {
  */
 export class ProxyConfiguration {
     private groups: string[];
-    private countryCode: string;
-    private password: string;
+    private countryCode?: string;
+    private password?: string;
     private hostname: string;
-    private port: number;
+    private port?: number;
     private nextCustomUrlIndex = 0;
     private proxyUrls: string[];
     private usedProxyUrls = new Map<string, string>();
-    private newUrlFunction: ProxyConfigurationFunction;
-    private usesApifyProxy: boolean;
+    private newUrlFunction?: ProxyConfigurationFunction;
+    private usesApifyProxy?: boolean;
     public isManInTheMiddle = false;
     private log = defaultLog.child({ prefix: 'ProxyConfiguration' });
 
@@ -234,7 +234,7 @@ export class ProxyConfiguration {
         this.groups = groupsToUse;
         this.countryCode = countryCodeToUse;
         this.password = password;
-        this.hostname = hostname;
+        this.hostname = hostname!;
         this.port = port;
         this.proxyUrls = proxyUrls;
         this.newUrlFunction = newUrlFunction;
@@ -255,10 +255,8 @@ export class ProxyConfiguration {
      *
      * You should use the {@link Apify.createProxyConfiguration} function to create a pre-initialized
      * `ProxyConfiguration` instance instead of calling this manually.
-     *
-     * @returns {Promise<void>}
      */
-    async initialize() {
+    async initialize(): Promise<void> {
         if (this.usesApifyProxy) {
             await this._setPasswordIfToken();
 
@@ -295,7 +293,7 @@ export class ProxyConfiguration {
             url,
             groups,
             countryCode,
-            password,
+            password: password!, // TODO maybe should be optional in ProxyInfo? or empty string default?
             hostname,
             // TODO should it be really a string in the response, maybe string|number would be better?
             port: port as unknown as string,
@@ -319,7 +317,7 @@ export class ProxyConfiguration {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
         ow(sessionId, ow.optional.string.maxLength(MAX_SESSION_ID_LENGTH).matches(APIFY_PROXY_VALUE_REGEX));
         if (this.newUrlFunction) {
-            return this._callNewUrlFunction(sessionId);
+            return this._callNewUrlFunction(sessionId)!;
         }
         if (this.proxyUrls) {
             return this._handleCustomUrl(sessionId);
@@ -332,16 +330,11 @@ export class ProxyConfiguration {
 
     /**
      * Returns proxy username.
-     * @param {string} [sessionId]
-     * @return {string} the proxy username
-     * @ignore
-     * @protected
-     * @internal
      */
-    _getUsername(sessionId) {
+    protected _getUsername(sessionId?: string): string {
         let username;
         const { groups, countryCode } = this;
-        const parts = [];
+        const parts: string[] = [];
 
         if (groups && groups.length) {
             parts.push(`groups-${groups.join('+')}`);
@@ -361,17 +354,14 @@ export class ProxyConfiguration {
     }
 
     /**
-     * Checks if Apify Token is provided in env
-     * and gets the password via API and sets it to env
-     * @returns {Promise<void>}
-     * @ignore
-     * @protected
-     * @internal
+     * Checks if Apify Token is provided in env and gets the password via API and sets it to env
      */
-    async _setPasswordIfToken() {
+    protected async _setPasswordIfToken(): Promise<void> {
         const token = this.config.get('token');
         if (token) {
-            const { proxy: { password } } = await apifyClient.user().get();
+            const { proxy } = await apifyClient.user().get();
+            const { password } = proxy!;
+
             if (this.password) {
                 if (this.password !== password) {
                     this.log.warning('The Apify Proxy password you provided belongs to'
@@ -391,7 +381,6 @@ export class ProxyConfiguration {
      * Checks whether the user has access to the proxies specified in the provided ProxyConfigurationOptions.
      * If the check can not be made, it only prints a warning and allows the program to continue. This is to
      * prevent program crashes caused by short downtimes of Proxy.
-     * @internal
      */
     protected async _checkAccess(): Promise<void> {
         const status = await this._fetchStatus();
@@ -408,7 +397,6 @@ export class ProxyConfiguration {
 
     /**
      * Apify Proxy can be down for a second or a minute, but this should not crash processes.
-     * @internal
      */
     protected async _fetchStatus(): Promise<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean } | undefined> {
         const requestOpts = {
@@ -432,8 +420,6 @@ export class ProxyConfiguration {
 
     /**
      * Handles custom url rotation with session
-     * @returns {string} url
-     * @internal
      */
     protected _handleCustomUrl(sessionId?: string): string {
         let customUrlToUse: string;
@@ -443,7 +429,7 @@ export class ProxyConfiguration {
         }
 
         if (this.usedProxyUrls.has(sessionId)) {
-            customUrlToUse = this.usedProxyUrls.get(sessionId);
+            customUrlToUse = this.usedProxyUrls.get(sessionId)!;
         } else {
             customUrlToUse = this.proxyUrls[this.nextCustomUrlIndex++ % this.proxyUrls.length];
             this.usedProxyUrls.set(sessionId, customUrlToUse);
@@ -454,13 +440,12 @@ export class ProxyConfiguration {
 
     /**
      * Calls the custom newUrlFunction and checks format of its return value
-     * @internal
      */
     protected _callNewUrlFunction(sessionId?: string) {
-        let proxyUrl: string;
+        let proxyUrl: string | undefined;
 
         try {
-            proxyUrl = this.newUrlFunction(sessionId);
+            proxyUrl = this.newUrlFunction!(sessionId!);
             new URL(proxyUrl); // eslint-disable-line no-new
         } catch (err) {
             this._throwNewUrlFunctionInvalid(err);

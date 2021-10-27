@@ -25,7 +25,7 @@ export class CacheContainer {
 
     clearCache(name: string) {
         const cache = this.caches.get(name);
-        cache.clear();
+        cache?.clear();
     }
 
     clearAllCaches() {

@@ -150,7 +150,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     // Construct pseudoUrls from input where necessary.
     const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls as PseudoUrlInput[] || []);
 
-    const urls = page ? await extractUrlsFromPage(page, selector) : extractUrlsFromCheerio($, selector, baseUrl);
+    const urls = page ? await extractUrlsFromPage(page, selector) : extractUrlsFromCheerio($!, selector, baseUrl);
     let requestOptions = createRequestOptions(urls);
     if (transformRequestFunction) {
         // @ts-ignore `url` is missing in the dictionary?
@@ -177,7 +177,7 @@ export async function extractUrlsFromPage(page: { $$eval: Function }, selector: 
  * @todo how to support cheerio.Selector?
  * @ignore
  */
-export function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl: string): string[] {
+export function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: string): string[] {
     return $(selector)
         .map((_i, el) => $(el).attr('href'))
         .get()

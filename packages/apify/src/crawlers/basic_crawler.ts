@@ -260,8 +260,8 @@ export class BasicCrawler {
 
     protected log: Log;
     protected userProvidedHandler: HandleRequest;
-    protected failedContextHandler: HandleFailedRequest;
-    protected handleFailedRequestFunction: HandleFailedRequest;
+    protected failedContextHandler?: HandleFailedRequest;
+    protected handleFailedRequestFunction?: HandleFailedRequest;
     protected handleRequestTimeoutMillis: number;
     protected maxRequestRetries: number;
     protected handledRequestsCount: number;
@@ -277,7 +277,7 @@ export class BasicCrawler {
         // Subclasses override this function instead of passing it
         // in constructor, so this validation needs to apply only
         // if the user creates an instance of BasicCrawler directly.
-        handleRequestFunction: ow.function,
+        handleRequestFunction: ow.function as never,
         handleRequestTimeoutSecs: ow.optional.number,
         handleFailedRequestFunction: ow.optional.function,
         maxRequestRetries: ow.optional.number,
@@ -396,8 +396,7 @@ export class BasicCrawler {
         };
 
         this.autoscaledPoolOptions = _.defaults({}, basicCrawlerAutoscaledPoolConfiguration, autoscaledPoolOptions);
-
-        this.isRunningPromise = null;
+        this.isRunningPromise = undefined;
 
         // Attach a listener to handle migration and aborting events gracefully.
         events.on(ACTOR_EVENT_NAMES.MIGRATING, this._pauseOnMigration.bind(this));
@@ -411,7 +410,7 @@ export class BasicCrawler {
         if (this.isRunningPromise) return this.isRunningPromise;
 
         await this._init();
-        this.isRunningPromise = this.autoscaledPool.run();
+        this.isRunningPromise = this.autoscaledPool!.run();
         await this.stats.startCapturing();
 
         try {
@@ -430,10 +429,7 @@ export class BasicCrawler {
         }
     }
 
-    /**
-     * @return {Promise<void>}
-     */
-    protected async _init() {
+    protected async _init(): Promise<void> {
         // Initialize AutoscaledPool before awaiting _loadHandledRequestCount(),
         // so that the caller can get a reference to it before awaiting the promise returned from run()
         // (otherwise there would be no way)
@@ -501,7 +497,7 @@ export class BasicCrawler {
      *
      */
     protected async _fetchNextRequest() {
-        if (!this.requestList) return this.requestQueue.fetchNextRequest();
+        if (!this.requestList) return this.requestQueue!.fetchNextRequest();
         const request = await this.requestList.fetchNextRequest();
         if (!this.requestQueue) return request;
         if (!request) return this.requestQueue.fetchNextRequest();
@@ -528,13 +524,13 @@ export class BasicCrawler {
      *
      */
     protected async _runTaskFunction() {
-        const source = this.requestQueue || this.requestList;
+        const source = this.requestQueue || this.requestList!;
 
         let request;
         let session;
 
         if (this.useSessionPool) {
-            [request, session] = await Promise.all([this._fetchNextRequest(), this.sessionPool.getSession()]);
+            [request, session] = await Promise.all([this._fetchNextRequest(), this.sessionPool!.getSession()]);
         } else {
             request = await this._fetchNextRequest();
         }
@@ -695,7 +691,7 @@ export class BasicCrawler {
      */
     async teardown(): Promise<void> {
         if (this.useSessionPool) {
-            await this.sessionPool.teardown();
+            await this.sessionPool!.teardown();
         }
     }
 }

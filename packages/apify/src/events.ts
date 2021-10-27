@@ -55,7 +55,7 @@ let eventsWs: WebSocket | null = null;
  * @type {*}
  * @ignore
  */
-let persistStateInterval = null;
+let persistStateInterval: any = null;
 
 /**
  * Emits event telling all components that they should persist their state at regular intervals and also when an actor is being

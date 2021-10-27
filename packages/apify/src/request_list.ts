@@ -271,12 +271,12 @@ export class RequestList {
 
     private isLoading = false;
     private isInitialized = false;
-    private persistStateKey: string;
-    private persistRequestsKey: string;
-    private initialState: RequestListState;
+    private persistStateKey?: string;
+    private persistRequestsKey?: string;
+    private initialState?: RequestListState;
     private keepDuplicateUrls: boolean;
     private sources: (Source)[];
-    private sourcesFunction: RequestListSourcesFunction;
+    private sourcesFunction?: RequestListSourcesFunction;
 
     /**
      * @param options All `RequestList` configuration options
@@ -447,12 +447,11 @@ export class RequestList {
      *
      * @return {Promise<void>}
      * @ignore
-     * @protected
      * @internal
      */
-    async _persistRequests() {
+    protected async _persistRequests() {
         const serializedRequests = await serializeArray(this.requests);
-        await setValue(this.persistRequestsKey, serializedRequests, { contentType: CONTENT_TYPE_BINARY });
+        await setValue(this.persistRequestsKey!, serializedRequests, { contentType: CONTENT_TYPE_BINARY });
         this.areRequestsPersisted = true;
     }
 
@@ -479,7 +478,7 @@ export class RequestList {
             throw new Error('The state object is not consistent with RequestList the order of URLs seems to have changed.');
         }
 
-        const deleteFromInProgress = [];
+        const deleteFromInProgress: string[] = [];
         _.keys(state.inProgress).forEach((uniqueKey) => {
             const index = this.uniqueKeyToIndex[uniqueKey];
             if (typeof index !== 'number') {

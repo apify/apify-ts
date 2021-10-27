@@ -9,7 +9,6 @@ import util from 'util';
 import { TimeoutError } from 'got-scraping';
 import { IncomingMessage } from 'http';
 import { Readable } from 'stream';
-import { Log } from '@apify/log';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { addTimeoutToPromise, parseContentTypeFromResponse } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
@@ -22,7 +21,6 @@ import { RequestList } from '../request_list';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
-import { SessionPoolOptions } from '../session_pool/session_pool';
 import { validators } from '../validators';
 import { BrowserHandlePageFunction, GotoFunction, Hook } from './browser_crawler';
 
@@ -464,16 +462,16 @@ export class CheerioCrawler extends BasicCrawler {
     protected persistCookiesPerSession: boolean;
     protected requestTimeoutMillis: number;
     protected ignoreSslErrors: boolean;
-    protected suggestResponseEncoding: string;
-    protected forceResponseEncoding: string;
-    protected prepareRequestFunction: PrepareRequest;
-    protected postResponseFunction: PostResponse;
+    protected suggestResponseEncoding?: string;
+    protected forceResponseEncoding?: string;
+    protected prepareRequestFunction?: PrepareRequest;
+    protected postResponseFunction?: PostResponse;
     protected readonly supportedMimeTypes: Set<string>;
 
     protected static override optionsShape = {
         ...BasicCrawler.optionsShape,
         // TODO temporary until the API is unified in V2
-        handleRequestFunction: ow.undefined,
+        handleRequestFunction: ow.undefined as never,
 
         handlePageFunction: ow.function,
         requestTimeoutSecs: ow.optional.number,
@@ -549,7 +547,7 @@ export class CheerioCrawler extends BasicCrawler {
         this.proxyConfiguration = proxyConfiguration;
         this.preNavigationHooks = preNavigationHooks;
         this.postNavigationHooks = [
-            ({ request, response }) => this._abortDownloadOfBody(request, response),
+            ({ request, response }) => this._abortDownloadOfBody(request, response!),
             ...postNavigationHooks,
         ];
 
@@ -609,7 +607,7 @@ export class CheerioCrawler extends BasicCrawler {
 
         await this._handleNavigation(crawlingContext);
 
-        const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response);
+        const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response!);
 
         if (this.useSessionPool) {
             this._throwOnBlockedRequest(session, response.statusCode);
@@ -631,13 +629,13 @@ export class CheerioCrawler extends BasicCrawler {
             } as CheerioOptions)
             : null;
 
-        crawlingContext.$ = $;
+        crawlingContext.$ = $!;
         crawlingContext.contentType = contentType;
         crawlingContext.response = response;
         Object.defineProperty(crawlingContext, 'json', {
             get() {
                 if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
-                const jsonString = body.toString(contentType.encoding);
+                const jsonString = body!.toString(contentType.encoding);
                 return JSON.parse(jsonString);
             },
         });
@@ -647,7 +645,7 @@ export class CheerioCrawler extends BasicCrawler {
                 // This is to save memory for high-concurrency crawls. The downside is that changes
                 // made to DOM are reflected in the HTML, but we can live with that...
                 if (dom) {
-                    return isXml ? $.xml() : $.html({ decodeEntities: false });
+                    return isXml ? $!.xml() : $!.html({ decodeEntities: false });
                 }
                 return body;
             },
@@ -673,11 +671,11 @@ export class CheerioCrawler extends BasicCrawler {
         }
 
         const { request, session } = crawlingContext;
-        const cookieSnapshot = request.headers.Cookie ?? request.headers.cookie;
+        const cookieSnapshot = request.headers?.Cookie ?? request.headers?.cookie;
         // TODO crawling context vs browser crawling context?
         await this._executeHooks(this.preNavigationHooks, crawlingContext as any, requestAsBrowserOptions);
         const proxyUrl = crawlingContext.proxyInfo && crawlingContext.proxyInfo.url;
-        this._mergeRequestCookieDiff(request, cookieSnapshot, requestAsBrowserOptions);
+        this._mergeRequestCookieDiff(request, cookieSnapshot!, requestAsBrowserOptions);
 
         crawlingContext.response = await addTimeoutToPromise(
             this._requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }),
@@ -704,11 +702,11 @@ export class CheerioCrawler extends BasicCrawler {
      * This way we can still use both `requestAsBrowserOptions` and `context.request` in the hooks (not both).
      */
     private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, requestAsBrowserOptions: RequestAsBrowserOptions) {
-        const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers.Cookie ?? request.headers.cookie);
+        const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers?.Cookie ?? request.headers?.cookie);
 
         if (cookieDiff.length > 0) {
-            requestAsBrowserOptions.headers.Cookie = mergeCookies(request.url, [
-                requestAsBrowserOptions.headers.Cookie,
+            requestAsBrowserOptions.headers!.Cookie = mergeCookies(request.url, [
+                requestAsBrowserOptions.headers!.Cookie,
                 cookieDiff,
             ]);
         }
@@ -747,9 +745,9 @@ export class CheerioCrawler extends BasicCrawler {
      * the session cookie will be merged with them. User provided cookies on `request` object have precedence.
      */
     private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: RequestAsBrowserOptions): void {
-        const userCookie = request.headers.Cookie ?? request.headers.cookie;
+        const userCookie = request.headers?.Cookie ?? request.headers?.cookie;
         const sessionCookie = session.getCookieString(request.url);
-        const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie]);
+        const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie!]);
 
         // merge cookies from all possible sources
         if (mergedCookies) {
@@ -760,7 +758,6 @@ export class CheerioCrawler extends BasicCrawler {
 
     /**
      * Encodes and parses response according to the provided content type
-     * @returns {Promise<object>}
      */
     protected async _parseResponse(request: Request, responseStream: IncomingMessage) {
         const { statusCode } = responseStream;
@@ -768,7 +765,7 @@ export class CheerioCrawler extends BasicCrawler {
         const { response, encoding } = this._encodeResponse(request, responseStream, charset);
         const contentType = { type, encoding };
 
-        if (statusCode >= 500) {
+        if (statusCode! >= 500) {
             const body = await readStreamToString(response, encoding);
 
             // Errors are often sent as JSON, so attempt to parse them,
@@ -803,7 +800,7 @@ export class CheerioCrawler extends BasicCrawler {
             timeout: { request: this.requestTimeoutMillis },
             sessionToken: session,
             ...requestAsBrowserOptions,
-            headers: { ...request.headers, ...requestAsBrowserOptions.headers },
+            headers: { ...request.headers, ...requestAsBrowserOptions?.headers },
             https: {
                 // @ts-ignore missing https property - intentional?
                 ...requestAsBrowserOptions.https,
@@ -922,7 +919,7 @@ export class CheerioCrawler extends BasicCrawler {
             throw new Error(`Resource ${request.url} is not available in the format requested by the Accept header. Skipping resource.`);
         }
 
-        if (!this.supportedMimeTypes.has(type) && statusCode < 500) {
+        if (!this.supportedMimeTypes.has(type) && statusCode! < 500) {
             request.noRetry = true;
             throw new Error(`Resource ${request.url} served Content-Type ${type}, `
                     + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);

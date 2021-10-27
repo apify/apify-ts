@@ -60,18 +60,19 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
     if (items.length === 1) return items;
 
     let lastChunkBytes = 2; // Add 2 bytes for [] wrapper.
-    const chunks = [];
+    const chunks: string[][] = [];
     // Split payloads into buckets of valid size.
     for (const payload of items) { // eslint-disable-line
         const bytes = Buffer.byteLength(payload);
 
         if (bytes <= limitBytes && (bytes + 2) > limitBytes) {
             // Handle cases where wrapping with [] would fail, but solo object is fine.
+            // @ts-ignore TODO what is this exactly doing? chunks is a mix of `string` and `string[]`?
             chunks.push(payload);
             lastChunkBytes = bytes;
         } else if (lastChunkBytes + bytes <= limitBytes) {
             if (!Array.isArray(_.last(chunks))) chunks.push([]); // ensure array
-            _.last(chunks).push(payload);
+            _.last(chunks)!.push(payload);
             lastChunkBytes += bytes + 1; // Add 1 byte for ',' separator.
         } else {
             chunks.push([payload]);
@@ -133,8 +134,8 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
  */
 export class Dataset {
     id: string;
-    name: string;
-    isLocal: boolean;
+    name?: string;
+    isLocal?: boolean;
     client: DatasetClient;
     log = log.child({ prefix: 'Dataset' });
 
@@ -323,19 +324,15 @@ export class Dataset {
      * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      */
-    map(iteratee: DatasetMapper, options: Dictionary = {}): Promise<Dictionary[]> {
-        const result = [];
+    async map(iteratee: DatasetMapper, options: Dictionary = {}): Promise<Dictionary[]> {
+        const result: Dictionary[] = [];
 
-        const wrappedFunc = (item, index) => {
-            return Promise
-                .resolve()
-                .then(() => iteratee(item, index))
-                .then((res) => result.push(res));
-        };
+        await this.forEach(async (item, index) => {
+            const res = await iteratee(item, index);
+            result.push(res);
+        }, options);
 
-        return this
-            .forEach(wrappedFunc, options)
-            .then(() => result);
+        return result;
     }
 
     /**
@@ -382,11 +379,8 @@ export class Dataset {
     /**
      * Removes the dataset either from the Apify cloud storage or from the local directory,
      * depending on the mode of operation.
-     *
-     * @return {Promise<void>}
      */
-    async drop() {
-        // @ts-ignore
+    async drop(): Promise<void> {
         await this.client.delete();
         const manager = new StorageManager(Dataset);
         manager.closeStorage(this);
@@ -402,17 +396,17 @@ export class Dataset {
  *
  * For more details and code examples, see the {@link Dataset} class.
  *
- * @param {string} [datasetIdOrName]
+ * @param [datasetIdOrName]
  *   ID or name of the dataset to be opened. If `null` or `undefined`,
  *   the function returns the default dataset associated with the actor run.
- * @param {Object} [options]
- * @param {boolean} [options.forceCloud=false]
+ * @param [options]
+ * @param [options.forceCloud=false]
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
  * @returns {Promise<Dataset>}
  */
-export async function openDataset(datasetIdOrName?: string, options = {}) {
+export async function openDataset(datasetIdOrName?: string, options: Dictionary = {}) {
     ow(datasetIdOrName, ow.optional.string);
     ow(options, ow.object.exactShape({
         forceCloud: ow.optional.boolean,
@@ -496,7 +490,7 @@ export interface DatasetMapper {
      * @param item Currect {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: unknown, index: number): object;
+    (item: unknown, index: number): Dictionary;
 
 }
 

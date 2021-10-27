@@ -304,7 +304,7 @@ describe('Apify.createProxyConfiguration()', () => {
     const userData = { proxy: { password } };
 
     test('should work with all options', async () => {
-        const mock = sinon.mock(requestUtils);
+        const mock = sinon.mock(Apify.utils);
         const status = { connected: true };
         const proxyUrl = proxyUrlNoSession;
         const url = 'http://proxy.apify.com/?format=json';

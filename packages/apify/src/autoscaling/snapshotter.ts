@@ -82,7 +82,7 @@ export interface SnapshotterOptions {
     log?: Log;
 }
 
-type MemorySnapshot = { createdAt: Date; isOverloaded: boolean; usedBytes: number };
+type MemorySnapshot = { createdAt: Date; isOverloaded: boolean; usedBytes?: number };
 type CpuSnapshot = { createdAt: Date; isOverloaded: boolean; usedRatio: number; ticks?: { idle: number; total: number } };
 type EventLoopSnapshot = { createdAt: Date; isOverloaded: boolean; exceededMillis: number };
 type ClientSnapshot = { createdAt: Date; isOverloaded: boolean; rateLimitErrorCount: number };
@@ -123,14 +123,14 @@ export class Snapshotter {
     maxUsedMemoryRatio: number;
     maxUsedCpuRatio: number;
     maxClientErrors: number;
-    maxMemoryBytes: number;
+    maxMemoryBytes: number | null;
 
     cpuSnapshots: CpuSnapshot[] = [];
     eventLoopSnapshots: EventLoopSnapshot[] = [];
     memorySnapshots: MemorySnapshot[] = [];
     clientSnapshots: ClientSnapshot[] = [];
 
-    // TODO add better types for better internal? :]
+    // TODO add better types for better interval? :]
     eventLoopInterval: any = null;
     memoryInterval: any = null;
     clientInterval: any = null;
@@ -179,7 +179,7 @@ export class Snapshotter {
         this.maxUsedMemoryRatio = maxUsedMemoryRatio;
         this.maxUsedCpuRatio = maxUsedCpuRatio;
         this.maxClientErrors = maxClientErrors;
-        this.maxMemoryBytes = (parseInt(process.env[ENV_VARS.MEMORY_MBYTES], 10) * 1024 * 1024) || null;
+        this.maxMemoryBytes = (parseInt(process.env[ENV_VARS.MEMORY_MBYTES]!, 10) * 1024 * 1024) || null;
 
         // We need to pre-bind those functions to be able to successfully remove listeners.
         this._snapshotCpuOnPlatform = this._snapshotCpuOnPlatform.bind(this);
@@ -207,9 +207,8 @@ export class Snapshotter {
 
     /**
      * Stops all resource capturing.
-     * @return {Promise<void>}
      */
-    async stop() {
+    async stop(): Promise<void> {
         betterClearInterval(this.eventLoopInterval);
         betterClearInterval(this.memoryInterval);
         betterClearInterval(this.cpuInterval);
@@ -223,54 +222,42 @@ export class Snapshotter {
     /**
      * Returns a sample of latest memory snapshots, with the size of the sample defined
      * by the sampleDurationMillis parameter. If omitted, it returns a full snapshot history.
-     * @param {number} [sampleDurationMillis]
-     * @return {Array<*>}
      */
-    getMemorySample(sampleDurationMillis) {
+    getMemorySample(sampleDurationMillis?: number) {
         return this._getSample(this.memorySnapshots, sampleDurationMillis);
     }
 
     /**
      * Returns a sample of latest event loop snapshots, with the size of the sample defined
      * by the sampleDurationMillis parameter. If omitted, it returns a full snapshot history.
-     * @param {number} [sampleDurationMillis]
-     * @return {Array<*>}
      */
-    getEventLoopSample(sampleDurationMillis) {
+    getEventLoopSample(sampleDurationMillis?: number) {
         return this._getSample(this.eventLoopSnapshots, sampleDurationMillis);
     }
 
     /**
      * Returns a sample of latest CPU snapshots, with the size of the sample defined
      * by the sampleDurationMillis parameter. If omitted, it returns a full snapshot history.
-     * @param {number} [sampleDurationMillis]
-     * @return {Array<*>}
      */
-    getCpuSample(sampleDurationMillis) {
+    getCpuSample(sampleDurationMillis?: number) {
         return this._getSample(this.cpuSnapshots, sampleDurationMillis);
     }
 
     /**
      * Returns a sample of latest Client snapshots, with the size of the sample defined
      * by the sampleDurationMillis parameter. If omitted, it returns a full snapshot history.
-     * @param {number} sampleDurationMillis
-     * @return {Array<*>}
      */
-    getClientSample(sampleDurationMillis) {
+    getClientSample(sampleDurationMillis?: number) {
         return this._getSample(this.clientSnapshots, sampleDurationMillis);
     }
 
     /**
      * Finds the latest snapshots by sampleDurationMillis in the provided array.
-     * @param {Array<*>} snapshots
-     * @param {number} [sampleDurationMillis]
-     * @return {Array<*>}
-     * @internal
      */
     protected _getSample<T extends { createdAt: Date }>(snapshots: T[], sampleDurationMillis?: number): T[] {
         if (!sampleDurationMillis) return snapshots;
 
-        const sample = [];
+        const sample: T[] = [];
         let idx = snapshots.length;
         if (!idx) return sample;
 
@@ -296,9 +283,9 @@ export class Snapshotter {
         const now = new Date();
         this._pruneSnapshots(this.memorySnapshots, now);
         const { memCurrentBytes } = systemInfo;
-        const snapshot = {
+        const snapshot: MemorySnapshot = {
             createdAt: now,
-            isOverloaded: memCurrentBytes / this.maxMemoryBytes > this.maxUsedMemoryRatio,
+            isOverloaded: memCurrentBytes! / this.maxMemoryBytes! > this.maxUsedMemoryRatio,
             usedBytes: memCurrentBytes,
         };
 
@@ -320,7 +307,7 @@ export class Snapshotter {
             const usedBytes = mainProcessBytes + childProcessesBytes;
             const snapshot = {
                 createdAt: now,
-                isOverloaded: usedBytes / this.maxMemoryBytes > this.maxUsedMemoryRatio,
+                isOverloaded: usedBytes / this.maxMemoryBytes! > this.maxUsedMemoryRatio,
                 usedBytes,
             };
 
@@ -340,13 +327,13 @@ export class Snapshotter {
         const now = new Date();
         if (this.lastLoggedCriticalMemoryOverloadAt && +now < +this.lastLoggedCriticalMemoryOverloadAt + CRITICAL_OVERLOAD_RATE_LIMIT_MILLIS) return;
 
-        const maxDesiredMemoryBytes = this.maxUsedMemoryRatio * this.maxMemoryBytes;
-        const reserveMemory = this.maxMemoryBytes * (1 - this.maxUsedMemoryRatio) * RESERVE_MEMORY_RATIO;
+        const maxDesiredMemoryBytes = this.maxUsedMemoryRatio * this.maxMemoryBytes!;
+        const reserveMemory = this.maxMemoryBytes! * (1 - this.maxUsedMemoryRatio) * RESERVE_MEMORY_RATIO;
         const criticalOverloadBytes = maxDesiredMemoryBytes + reserveMemory;
-        const isCriticalOverload = memCurrentBytes > criticalOverloadBytes;
+        const isCriticalOverload = memCurrentBytes! > criticalOverloadBytes;
 
         if (isCriticalOverload) {
-            const usedPercentage = Math.round((memCurrentBytes / this.maxMemoryBytes) * 100);
+            const usedPercentage = Math.round((memCurrentBytes! / this.maxMemoryBytes!) * 100);
             const toMb = (bytes) => Math.round(bytes / (1024 ** 2));
             this.log.warning('Memory is critically overloaded. '
                 + `Using ${toMb(memCurrentBytes)} MB of ${toMb(this.maxMemoryBytes)} MB (${usedPercentage}%). Consider increasing the actor memory.`);
@@ -421,10 +408,11 @@ export class Snapshotter {
         };
 
         const previousSnapshot = this.cpuSnapshots[this.cpuSnapshots.length - 1];
+
         if (previousSnapshot) {
             const { ticks: prevTicks } = previousSnapshot;
-            const idleTicksDelta = ticks.idle - prevTicks.idle;
-            const totalTicksDelta = ticks.total - prevTicks.total;
+            const idleTicksDelta = ticks.idle - prevTicks!.idle;
+            const totalTicksDelta = ticks.total - prevTicks!.total;
             const usedCpuRatio = 1 - (idleTicksDelta / totalTicksDelta);
 
             if (usedCpuRatio > this.maxUsedCpuRatio) snapshot.isOverloaded = true;

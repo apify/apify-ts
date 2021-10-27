@@ -161,7 +161,6 @@ export class SystemStatus {
 
     /**
      * Returns a system status object.
-     * @internal
      */
     protected _isSystemIdle(sampleDurationMillis?: number): SystemInfo {
         const memInfo = this._isMemoryOverloaded(sampleDurationMillis);
@@ -180,10 +179,8 @@ export class SystemStatus {
     /**
      * Returns an object with an isOverloaded property set to true
      * if the memory has been overloaded in the last sampleDurationMillis.
-     *
-     * @internal
      */
-    protected _isMemoryOverloaded(sampleDurationMillis: number) {
+    protected _isMemoryOverloaded(sampleDurationMillis?: number) {
         const sample = this.snapshotter.getMemorySample(sampleDurationMillis);
         return this._isSampleOverloaded(sample, this.maxMemoryOverloadedRatio);
     }
@@ -191,10 +188,8 @@ export class SystemStatus {
     /**
      * Returns an object with an isOverloaded property set to true
      * if the event loop has been overloaded in the last sampleDurationMillis.
-     *
-     * @internal
      */
-    protected _isEventLoopOverloaded(sampleDurationMillis: number) {
+    protected _isEventLoopOverloaded(sampleDurationMillis?: number) {
         const sample = this.snapshotter.getEventLoopSample(sampleDurationMillis);
         return this._isSampleOverloaded(sample, this.maxEventLoopOverloadedRatio);
     }
@@ -202,10 +197,8 @@ export class SystemStatus {
     /**
      * Returns an object with an isOverloaded property set to true
      * if the CPU has been overloaded in the last sampleDurationMillis.
-     *
-     * @internal
      */
-    protected _isCpuOverloaded(sampleDurationMillis: number) {
+    protected _isCpuOverloaded(sampleDurationMillis?: number) {
         const sample = this.snapshotter.getCpuSample(sampleDurationMillis);
         return this._isSampleOverloaded(sample, this.maxCpuOverloadedRatio);
     }
@@ -213,10 +206,8 @@ export class SystemStatus {
     /**
      * Returns an object with an isOverloaded property set to true
      * if the client has been overloaded in the last sampleDurationMillis.
-     * @return {{isOverloaded: boolean, maxOverloadedRatio: number, actualRatio: number}}
-     * @internal
      */
-    protected _isClientOverloaded(sampleDurationMillis: number): ClientInfo {
+    protected _isClientOverloaded(sampleDurationMillis?: number): ClientInfo {
         const sample = this.snapshotter.getClientSample(sampleDurationMillis);
         return this._isSampleOverloaded(sample, this.maxClientOverloadedRatio);
     }
@@ -227,7 +218,6 @@ export class SystemStatus {
      *
      * @param {Array<*>} sample
      * @param {number} ratio
-     * @internal
      */
     protected _isSampleOverloaded<T extends { createdAt: Date; isOverloaded: boolean }>(sample: T[], ratio: number): ClientInfo {
         const weights: number[] = [];

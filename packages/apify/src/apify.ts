@@ -263,7 +263,7 @@ export class Apify {
         let getRecordOptions = {} as { buffer: true };
         if (disableBodyParser) getRecordOptions = { buffer: true };
 
-        const { value: body, contentType } = await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions);
+        const { value: body, contentType } = (await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions))!;
 
         return { ...run, output: { contentType, body } };
     }
@@ -361,7 +361,7 @@ export class Apify {
         let getRecordOptions = {} as { buffer: true };
         if (disableBodyParser) getRecordOptions = { buffer: true };
 
-        const { value: body, contentType } = await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions);
+        const { value: body, contentType } = (await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions))!;
 
         return { ...run, output: { contentType, body } };
     }

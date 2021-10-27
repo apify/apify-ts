@@ -1,6 +1,6 @@
 import ow from 'ow';
 import { BrowserPoolOptions } from 'browser-pool';
-import { Page } from 'puppeteer';
+import { LaunchOptions, Page } from 'puppeteer';
 import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
@@ -64,11 +64,6 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions {
      * {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: PuppeteerHandlePage;
-
-    /**
-     * Timeout in which page navigation needs to finish, in seconds.
-     */
-    navigationTimeoutSecs?: number;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -190,7 +185,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions {
  * ```
  * @category Crawlers
  */
-export class PuppeteerCrawler extends BrowserCrawler {
+export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
@@ -229,7 +224,7 @@ export class PuppeteerCrawler extends BrowserCrawler {
             this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
                 // @TODO: We can do this better now. It is not necessary to override the page.
                 //   we can modify the page in the postPageCreateHook
-                const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions;
+                const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
                 await applyStealthToBrowser(browserController.browser, newStealthOptions);
             });
         }

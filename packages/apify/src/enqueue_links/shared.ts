@@ -94,7 +94,7 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
  * @ignore
  */
 export async function addRequestsToQueueInBatches(requests: Request[], requestQueue: RequestQueue, batchSize = 5): Promise<QueueOperationInfo[]> {
-    const queueOperationInfos = [];
+    const queueOperationInfos: Promise<QueueOperationInfo>[] = [];
     for (const request of requests) {
         queueOperationInfos.push(requestQueue.addRequest(request));
         if (queueOperationInfos.length % batchSize === 0) await Promise.all(queueOperationInfos);

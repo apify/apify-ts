@@ -9,8 +9,8 @@ export function getCookiesFromResponse(response: IncomingMessage | HTTPResponse)
 
     try {
         return Array.isArray(cookieHeader)
-            ? cookieHeader.map((cookie) => Cookie.parse(cookie))
-            : [Cookie.parse(cookieHeader)];
+            ? cookieHeader.map((cookie) => Cookie.parse(cookie)!)
+            : [Cookie.parse(cookieHeader)!];
     } catch (e) {
         throw new CookieParseError(cookieHeader);
     }

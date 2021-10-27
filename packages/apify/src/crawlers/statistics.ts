@@ -19,7 +19,7 @@ class Job {
     }
 
     finish() {
-        this.durationMillis = Date.now() - this.lastRunAt;
+        this.durationMillis = Date.now() - this.lastRunAt!;
         return this.durationMillis;
     }
 
@@ -283,7 +283,7 @@ export class Statistics {
         this.state.crawlerStartedAt = savedState.crawlerStartedAt ? new Date(savedState.crawlerStartedAt) : null;
         this.state.statsPersistedAt = savedState.statsPersistedAt ? new Date(savedState.statsPersistedAt) : null;
         this.state.crawlerRuntimeMillis = savedState.crawlerRuntimeMillis;
-        this.instanceStart = Date.now() - (+this.state.statsPersistedAt - savedState.crawlerLastStartTimestamp);
+        this.instanceStart = Date.now() - (+this.state.statsPersistedAt! - savedState.crawlerLastStartTimestamp);
 
         this.log.debug('Loaded from KeyValueStore');
     }

@@ -9,6 +9,7 @@ import { STATUS_CODES_BLOCKED } from '../constants';
 import { getCookiesFromResponse } from './session_utils';
 import defaultLog from '../utils_log';
 import { SessionPool } from './session_pool';
+import { Dictionary } from '../typedefs';
 
 export type PuppeteerCookie = Protocol.Network.Cookie;
 
@@ -42,7 +43,7 @@ export interface SessionOptions {
     maxAgeSecs?: number;
 
     /** Object where custom user data can be stored. For example custom headers. */
-    userData?: Record<string, any>;
+    userData?: Dictionary;
 
     /**
      * Maximum number of marking session as blocked usage.
@@ -98,7 +99,7 @@ export interface SessionOptions {
 export class Session {
     readonly id: string;
     private maxAgeSecs: number;
-    private userData: Record<string, any>;
+    private userData: Dictionary;
     private maxErrorScore: number;
     private errorScoreDecrement: number;
     private createdAt: Date;
@@ -149,7 +150,7 @@ export class Session {
 
         this.log = log.child({ prefix: 'Session' });
 
-        this.cookieJar = cookieJar.setCookie ? cookieJar : CookieJar.fromJSON(JSON.stringify(cookieJar));
+        this.cookieJar = cookieJar.setCookie as unknown ? cookieJar : CookieJar.fromJSON(JSON.stringify(cookieJar));
         this.id = id;
         this.maxAgeSecs = maxAgeSecs;
         this.userData = userData;

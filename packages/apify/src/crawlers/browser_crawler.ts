@@ -146,6 +146,11 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
     postNavigationHooks?: BrowserHook[];
 
     /**
+     * Timeout in which page navigation needs to finish, in seconds.
+     */
+    navigationTimeoutSecs?: number;
+
+    /**
      * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
      */
     handleRequestTimeoutSecs?: number;
@@ -188,7 +193,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
  * ```
  * @category Crawlers
  */
-export abstract class BrowserCrawler extends BasicCrawler {
+export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -202,13 +207,13 @@ export abstract class BrowserCrawler extends BasicCrawler {
      */
     browserPool: BrowserPool<any, any, any, any, any, any>;
 
-    launchContext: BrowserLaunchContext;
+    launchContext: BrowserLaunchContext<TOptions>;
 
     protected handlePageFunction: BrowserHandlePageFunction;
     protected handlePageTimeoutSecs: number;
     protected handlePageTimeoutMillis: number;
     protected navigationTimeoutMillis: number;
-    protected gotoFunction: GotoFunction;
+    protected gotoFunction?: GotoFunction;
     protected defaultGotoOptions: { timeout: number };
     protected preNavigationHooks: BrowserHook[];
     protected postNavigationHooks: BrowserHook[];
@@ -217,7 +222,7 @@ export abstract class BrowserCrawler extends BasicCrawler {
     protected static override optionsShape = {
         ...BasicCrawler.optionsShape,
         // TODO temporary until the API is unified in V2
-        handleRequestFunction: ow.undefined,
+        handleRequestFunction: ow.undefined as never,
 
         handlePageFunction: ow.function,
         gotoFunction: ow.optional.function,
@@ -451,7 +456,7 @@ export abstract class BrowserCrawler extends BasicCrawler {
             };
 
             this.sessionPool.on(EVENT_SESSION_RETIRED, listener);
-            browserController.on('browserClosed', () => this.sessionPool.removeListener(EVENT_SESSION_RETIRED, listener));
+            browserController.on('browserClosed', () => this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener));
         }
     }
 

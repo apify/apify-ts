@@ -267,7 +267,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
 
     if (isLambdaEnvironment) {
         // memory size is defined in megabytes
-        totalBytes = parseInt(process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE, 10) * 1000000;
+        totalBytes = parseInt(process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE!, 10) * 1000000;
         usedBytes = mainProcessBytes + childProcessesBytes;
         freeBytes = totalBytes - usedBytes;
 

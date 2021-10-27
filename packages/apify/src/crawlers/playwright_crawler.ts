@@ -1,7 +1,6 @@
 import ow from 'ow';
-import { Page } from 'playwright';
+import { LaunchOptions, Page } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
-import { LaunchContext } from 'browser-pool/dist/launch-context';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
 import { HandleFailedRequest, CrawlingContext } from './basic_crawler';
@@ -48,11 +47,6 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions {
      *   {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: PlaywrightHandlePageFunction;
-
-    /**
-     * Timeout in which page navigation needs to finish, in seconds.
-     */
-    navigationTimeoutSecs?: number;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -212,7 +206,7 @@ export type PlaywrightHandlePageFunction = (context: PlaywrightHandlePageFunctio
  * ```
  * @category Crawlers
  */
-export class PlaywrightCrawler extends BrowserCrawler {
+export class PlaywrightCrawler extends BrowserCrawler<LaunchOptions> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,

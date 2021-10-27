@@ -3,12 +3,13 @@ import { ListDictionary, LruCache } from '@apify/datastructures';
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@apify/storage-local';
-import { ApifyClient, RequestQueueClient } from 'apify-client';
+import { ApifyClient, RequestQueueClient, RequestQueue as RequestQueueInfo } from 'apify-client';
 import ow from 'ow';
 import { StorageManager } from './storage_manager';
 import { sleep } from '../utils';
 import log from '../utils_log';
 import { Request, RequestOptions } from '../request';
+import { Dictionary } from '../typedefs';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -137,8 +138,8 @@ export interface QueueOperationInfo {
 export class RequestQueue {
     log = log.child({ prefix: 'RequestQueue' });
     id: string;
-    name: string;
-    isLocal: boolean;
+    name?: string;
+    isLocal?: boolean;
     clientKey = cryptoRandomObjectId();
     client: RequestQueueClient;
 
@@ -148,13 +149,13 @@ export class RequestQueue {
      * Need to apply a type here to the generated TS types don't try to use types-apify
      */
     private queueHeadDict = new ListDictionary<string>();
-    queryQueueHeadPromise: Promise<{
+    queryQueueHeadPromise?: Promise<{
         wasLimitReached: boolean;
         prevLimit: number;
         queueModifiedAt: Date;
         queryStartedAt: Date;
         hadMultipleClients: boolean;
-    }> | undefined = null;
+    }> | null = null;
 
     // A set of all request IDs that are currently being handled,
     // i.e. which were returned by fetchNextRequest() but not markRequestHandled()
@@ -205,13 +206,12 @@ export class RequestQueue {
      * To add multiple requests to the queue by extracting links from a webpage,
      * see the {@link utils.enqueueLinks} helper function.
      *
-     * @param {(Request|RequestOptions)} requestLike {@link Request} object or vanilla object with request data.
+     * @param requestLike {@link Request} object or vanilla object with request data.
      * Note that the function sets the `uniqueKey` and `id` fields to the passed Request.
-     * @param {Object} [options]
+     * @param [options]
      * @param {boolean} [options.forefront=false] If `true`, the request will be added to the foremost position in the queue.
-     * @return {Promise<QueueOperationInfo>}
      */
-    async addRequest(requestLike, options: any = {}) {
+    async addRequest(requestLike: Request | RequestOptions, options: Dictionary = {}): Promise<QueueOperationInfo> {
         ow(requestLike, ow.object.partialShape({
             url: ow.string,
             id: ow.undefined,
@@ -244,8 +244,8 @@ export class RequestQueue {
             };
         }
 
-        // @ts-ignore
-        const queueOperationInfo = await this.client.addRequest(request, { forefront }) as Record<string, any>;
+        // @ts-ignore TODO client types should maybe allow `payload: Buffer`?
+        const queueOperationInfo = await this.client.addRequest(request, { forefront }) as QueueOperationInfo;
         const { requestId, wasAlreadyPresent } = queueOperationInfo;
         this._cacheRequest(cacheKey, queueOperationInfo);
 
@@ -256,7 +256,7 @@ export class RequestQueue {
             this._maybeAddRequestToQueueHead(requestId, forefront);
         }
 
-        queueOperationInfo.request = { ...request, id: requestId };
+        queueOperationInfo.request = { ...request, id: requestId } as Request;
 
         return queueOperationInfo;
     }
@@ -658,11 +658,9 @@ export class RequestQueue {
      *   pendingRequestCount: 20,
      * }
      * ```
-     *
-     * @returns {Promise<RequestQueueInfo>}
      */
-    async getInfo() {
-        return this.client.get();
+    async getInfo(): Promise<RequestQueueInfo> {
+        return this.client.get() as Promise<RequestQueueInfo>;
     }
 }
 
@@ -692,18 +690,6 @@ export async function openRequestQueue(queueIdOrName?: string, options: { forceC
     }));
     const manager = new StorageManager(RequestQueue);
     return manager.openStorage(queueIdOrName, options);
-}
-
-export interface RequestQueueInfo {
-    id: string;
-    name: string;
-    userId: string;
-    createdAt: Date;
-    modifiedAt: Date;
-    accessedAt: Date;
-    totalRequestCount: number;
-    handledRequestCount: number;
-    pendingRequestCount: number;
 }
 
 export interface RequestQueueOptions {

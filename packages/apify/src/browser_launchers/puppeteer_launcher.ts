@@ -1,10 +1,11 @@
 import ow from 'ow';
 import { Browser, LaunchOptions } from 'puppeteer';
 import { PuppeteerPlugin } from 'browser-pool';
-import { BrowserLauncher } from './browser_launcher';
+import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
 import { isAtHome } from '../utils';
 import { DEFAULT_USER_AGENT } from '../constants';
 import { applyStealthToBrowser, StealthOptions } from '../stealth/stealth';
+import { BrowserPlugin } from './browser_plugin';
 
 const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
     width: 1366,
@@ -32,7 +33,7 @@ const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
  * }
  * ```
  */
-export interface PuppeteerLaunchContext {
+export interface PuppeteerLaunchContext extends BrowserLaunchContext<LaunchOptions> {
     /**
      *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-puppeteerlaunchoptions)
      */
@@ -117,22 +118,23 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
         super({
             ...browserLauncherOptions,
             launcher,
-        });
+        } as any); // TODO we could type it as `BrowserLaunchContext<LaunchOptions>` probably, but it fails (maybe again plugin incompatibility)
         this.userAgent = userAgent;
         this.stealth = stealth;
         this.stealthOptions = {
             hideWebDriver: true,
             ...stealthOptions,
         };
-        // @ts-ignore
-        this.Plugin = PuppeteerPlugin;
+
+        // TODO should not be needed, caused by incompatible plugin interfaces
+        this.Plugin = PuppeteerPlugin as typeof PuppeteerPlugin & BrowserPlugin;
     }
 
     override async launch() {
         const browser = await super.launch() as Browser;
 
         if (this.stealth) {
-            const { hideWebDriver, ...newStealthOptions } = this.stealthOptions;
+            const { hideWebDriver, ...newStealthOptions } = this.stealthOptions!;
 
             applyStealthToBrowser(browser, newStealthOptions);
         }

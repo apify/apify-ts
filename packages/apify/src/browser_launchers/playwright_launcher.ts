@@ -1,7 +1,7 @@
 import ow from 'ow';
 import { LaunchOptions } from 'playwright';
 import { PlaywrightPlugin } from 'browser-pool';
-import { BrowserLauncher } from './browser_launcher';
+import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
 
 /**
  * Apify extends the launch options of Playwright.
@@ -24,7 +24,7 @@ import { BrowserLauncher } from './browser_launcher';
  * }
  * ```
  */
-export interface PlaywrightLaunchContext {
+export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOptions> {
     /** `browserType.launch` [options](https://playwright.dev/docs/api/class-browsertype?_highlight=launch#browsertypelaunchoptions) */
     launchOptions?: LaunchOptions;
 
@@ -82,7 +82,7 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
             launchOptions: {
                 ...launchOptions,
                 executablePath: getDefaultExecutablePath(launchContext),
-            },
+            } as any, // TODO maybe list executablePath in options?
             launcher,
         });
 

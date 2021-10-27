@@ -79,7 +79,7 @@ export class StorageManager<T> {
     /**
      * @internal
      */
-    protected _createCacheKey(idOrName: string, isLocal: boolean): string {
+    protected _createCacheKey(idOrName: string, isLocal?: boolean): string {
         return isLocal
             ? `LOCAL:${idOrName}`
             : `REMOTE:${idOrName}`;

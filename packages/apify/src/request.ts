@@ -173,7 +173,7 @@ export class Request {
         this.headers = { ...headers };
         this.userData = { ...userData };
         // Requests received from API will have ISOString dates, but we want to have a Date instance.
-        this.handledAt = new Date(handledAt);
+        this.handledAt = typeof handledAt === 'string' ? new Date(handledAt) : handledAt;
     }
 
     /**

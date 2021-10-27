@@ -5,11 +5,11 @@ import { BrowserPlugin } from './browser_plugin';
 import { Constructor } from '../typedefs';
 import { StealthOptions } from '../stealth/stealth';
 
-export interface BrowserLaunchContext {
+export interface BrowserLaunchContext<TOptions> {
     /**
      * `Options passed to the browser launcher function. Options are based on underlying library.
      */
-    launchOptions?: Record<string, any>;
+    launchOptions?: TOptions;
 
     /**
      * URL to a HTTP proxy server. It must define the port number,
@@ -41,16 +41,16 @@ export interface BrowserLaunchContext {
  * Abstract class for creating browser launchers, such as `PlaywrightLauncher` and `PuppeteerLauncher`.
  * @ignore
  */
-export class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> {
+export abstract class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> {
     launcher: T;
-    proxyUrl: string;
-    useChrome: boolean;
+    proxyUrl?: string;
+    useChrome?: boolean;
     launchOptions: Record<string, any>;
     otherLaunchContextProps: Record<string, any>;
-    Plugin: Constructor<T> & BrowserPlugin | null = null; // to be provided by child classes;
+    Plugin?: Constructor<T> & BrowserPlugin; // to be provided by child classes;
     userAgent?: string;
     stealth?: boolean;
-    stealthOptions?: StealthOptions;
+    stealthOptions: StealthOptions;
 
     protected static optionsShape = {
         proxyUrl: ow.optional.string.url,
@@ -79,7 +79,7 @@ export class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> {
     /**
      * All `BrowserLauncher` parameters are passed via an launchContext object.
      */
-    constructor(launchContext: BrowserLaunchContext) {
+    constructor(launchContext: BrowserLaunchContext<T>) {
         const {
             launcher,
             proxyUrl,
@@ -102,7 +102,7 @@ export class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> {
      * @ignore
      */
     createBrowserPlugin(): BrowserPlugin {
-        return new this.Plugin(this.launcher, {
+        return new this.Plugin!(this.launcher, {
             proxyUrl: this.proxyUrl,
             launchOptions: this.createLaunchOptions(),
             ...this.otherLaunchContextProps,

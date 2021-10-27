@@ -119,12 +119,12 @@ export class SessionPool extends EventEmitter {
     log: Log;
     maxPoolSize: number;
     createSessionFunction: CreateSession;
-    keyValueStore: KeyValueStore | null = null;
+    keyValueStore!: KeyValueStore;
     sessions: Session[] = [];
     sessionMap = new Map<string, Session>();
     forceCloud: boolean;
     sessionOptions: SessionOptions;
-    persistStateKeyValueStoreId: string;
+    persistStateKeyValueStoreId?: string;
     persistStateKey: string;
     private _listener: () => Promise<void>;
 

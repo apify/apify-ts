@@ -101,11 +101,11 @@ export function getEnv(): ApifyEnv {
 
     _.mapObject(ENV_VARS, (fullName, shortName) => {
         const camelCaseName = snakeCaseToCamelCase(shortName);
-        let value: string | number | Date = env[fullName];
+        let value: string | number | Date | undefined = env[fullName];
 
         // Parse dates and integers.
         if (value && fullName.endsWith('_AT')) value = tryParseDate(value);
-        else if (_.contains(INTEGER_ENV_VARS, fullName)) value = parseInt(value, 10);
+        else if (_.contains(INTEGER_ENV_VARS, fullName)) value = parseInt(value!, 10);
 
         envVars[camelCaseName] = value || value === 0
             ? value

@@ -8,7 +8,7 @@ import log from '../utils_log';
  */
 export function handleRequestTimeout(session: Session, errorMessage: string) {
     if (session) session.markBad();
-    const timeoutMillis = errorMessage.match(/(\d+)\s?ms/)[1]; // first capturing group
+    const timeoutMillis = errorMessage.match(/(\d+)\s?ms/)?.[1]; // first capturing group
     const timeoutSecs = Number(timeoutMillis) / 1000;
     throw new Error(`Navigation timed out after ${timeoutSecs} seconds.`);
 }
@@ -38,7 +38,7 @@ export function mergeCookies(url: string, sourceCookies: string[]): string {
         const cookies = sourceCookieString.split(/ *; */); // ignore extra spaces
 
         for (const cookieString of cookies) {
-            const cookie = Cookie.parse(cookieString);
+            const cookie = Cookie.parse(cookieString)!;
             const similarKeyCookie = jar.getCookiesSync(url).find((c) => {
                 return cookie.key !== c.key && cookie.key.toLowerCase() === c.key.toLowerCase();
             });
@@ -66,8 +66,8 @@ export function diffCookies(url: string, cookieString1 = '', cookieString2 = '')
         return cookieString2;
     }
 
-    const cookies1 = cookieString1.split(/ *; */).filter((item) => Boolean(item)).map((cookie) => Cookie.parse(cookie));
-    const cookies2 = cookieString2.split(/ *; */).filter((item) => Boolean(item)).map((cookie) => Cookie.parse(cookie));
+    const cookies1 = cookieString1.split(/ *; */).filter((item) => Boolean(item)).map((cookie) => Cookie.parse(cookie)!);
+    const cookies2 = cookieString2.split(/ *; */).filter((item) => Boolean(item)).map((cookie) => Cookie.parse(cookie)!);
 
     const added = cookies2.filter((newCookie) => {
         return !cookies1.find((oldCookie) => newCookie.toString() === oldCookie.toString());

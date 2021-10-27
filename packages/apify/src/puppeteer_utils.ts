@@ -25,7 +25,7 @@ import vm from 'vm';
 import util from 'util';
 import _ from 'underscore';
 import { LruCache } from '@apify/datastructures';
-import { Page, HTTPResponse } from 'puppeteer';
+import { Page, HTTPResponse, ResponseForRequest } from 'puppeteer';
 import log from './utils_log';
 import { validators } from './validators';
 
@@ -264,7 +264,7 @@ const blockResources = async (page, resourceTypes = ['stylesheet', 'font', 'imag
  *   String rules are compared as page.url().includes(rule) while RegExp rules are evaluated as rule.test(page.url()).
  * @deprecated
  */
-export async function cacheResponses(page: Page, cache: Dictionary, responseUrlRules: (string | RegExp)[]): Promise<void> {
+export async function cacheResponses(page: Page, cache: Dictionary<Partial<ResponseForRequest>>, responseUrlRules: (string | RegExp)[]): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(cache, ow.object);
     ow(responseUrlRules, ow.array.ofType(ow.any(ow.string, ow.regExp)));
@@ -474,10 +474,10 @@ export async function infiniteScroll(page: Page, options: InfiniteScrollOptions 
 
     // Move mouse to the center of the page, so we can scroll up-down
     const body = await page.$('body');
-    const boundingBox = await body.boundingBox();
+    const boundingBox = await body!.boundingBox();
     await page.mouse.move(
-        boundingBox.x + boundingBox.width / 2, // x
-        boundingBox.y + boundingBox.height / 2, // y
+        boundingBox!.x + boundingBox!.width / 2, // x
+        boundingBox!.y + boundingBox!.height / 2, // y
     );
 
     const checkFinished = setInterval(() => {
@@ -509,7 +509,7 @@ export async function infiniteScroll(page: Page, options: InfiniteScrollOptions 
     };
 
     const maybeClickButton = async () => {
-        const button = await page.$(buttonSelector);
+        const button = await page.$(buttonSelector!);
         // Box model returns null if the button is not visible
         if (button && await button.boxModel()) {
             await button.click({ delay: 10 });

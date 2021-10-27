@@ -1,4 +1,5 @@
 /* istanbul ignore file */
+import { Dictionary } from '../typedefs';
 
 export const hackPermissions = () => {
     const originalQuery = window.navigator.permissions.query;
@@ -76,7 +77,7 @@ export const emulateWindowFrame = () => {
 export const addPlugins = () => {
     function mockPluginsAndMimeTypes() {
         // Disguise custom functions as being native
-        const makeFnsNative = (fns = []) => {
+        const makeFnsNative = (fns: Dictionary[] = []) => {
             const oldCall = Function.prototype.call;
             function call() {
                 return oldCall.apply(this, arguments); // eslint-disable-line
@@ -106,7 +107,7 @@ export const addPlugins = () => {
             Function.prototype.toString = functionToString
         };
 
-        const mockedFns = [];
+        const mockedFns: any[] = [];
 
         const fakeData = {
             mimeTypes: [
