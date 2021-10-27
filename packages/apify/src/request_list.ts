@@ -567,10 +567,8 @@ export class RequestList {
      * Resolves to `true` if the next call to {@link RequestList.fetchNextRequest} function
      * would return `null`, otherwise it resolves to `false`.
      * Note that even if the list is empty, there might be some pending requests currently being processed.
-     *
-     * @returns {Promise<boolean>}
      */
-    async isEmpty() {
+    async isEmpty(): Promise<boolean> {
         this._ensureIsInitialized();
 
         return !getFirstKey(this.reclaimed) && this.nextIndex >= this.requests.length;
@@ -594,10 +592,8 @@ export class RequestList {
      *
      * The function's `Promise` resolves to `null` if there are no more
      * requests to process.
-     *
-     * @returns {Promise<(Request|null)>}
      */
-    async fetchNextRequest() {
+    async fetchNextRequest(): Promise<Request | null> {
         this._ensureIsInitialized();
 
         // First return reclaimed requests if any.

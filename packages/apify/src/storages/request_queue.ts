@@ -264,10 +264,10 @@ export class RequestQueue {
     /**
      * Gets the request from the queue specified by ID.
      *
-     * @param {string} id ID of the request.
-     * @return {Promise<(Request|null)>} Returns the request object, or `null` if it was not found.
+     * @param id ID of the request.
+     * @return {Promise<Request | null>} Returns the request object, or `null` if it was not found.
      */
-    async getRequest(id) {
+    async getRequest(id: string): Promise<Request | null> {
         ow(id, ow.string);
 
         // TODO: Could we also use requestsCache here? It would be consistent with addRequest()
@@ -300,10 +300,10 @@ export class RequestQueue {
      * To check whether all requests in queue were finished,
      * use {@link RequestQueue.isFinished} instead.
      *
-     * @returns {Promise<(Request|null)>}
-     * Returns the request object or `null` if there are no more pending requests.
+     * @returns
+     *   Returns the request object or `null` if there are no more pending requests.
      */
-    async fetchNextRequest() {
+    async fetchNextRequest(): Promise<Request | null> {
         await this._ensureHeadIsNonEmpty();
 
         const nextRequestId = this.queueHeadDict.removeFirst();
@@ -459,10 +459,8 @@ export class RequestQueue {
      * would return `null`, otherwise it resolves to `false`.
      * Note that even if the queue is empty, there might be some pending requests currently being processed.
      * If you need to ensure that there is no activity in the queue, use {@link RequestQueue.isFinished}.
-     *
-     * @returns {Promise<boolean>}
      */
-    async isEmpty() {
+    async isEmpty(): Promise<boolean> {
         await this._ensureHeadIsNonEmpty();
         return this.queueHeadDict.length() === 0;
     }
@@ -683,7 +681,7 @@ export class RequestQueue {
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  */
-export async function openRequestQueue(queueIdOrName?: string, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
+export async function openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
     ow(queueIdOrName, ow.optional.string);
     ow(options, ow.object.exactShape({
         forceCloud: ow.optional.boolean,

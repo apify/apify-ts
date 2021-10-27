@@ -340,7 +340,7 @@ export interface OpenKeyValueStoreOptions {
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
  */
-export async function openKeyValueStore(storeIdOrName?: string, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
+export async function openKeyValueStore(storeIdOrName?: string | null, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
     ow(storeIdOrName, ow.optional.string);
     ow(options, ow.object.exactShape({
         forceCloud: ow.optional.boolean,

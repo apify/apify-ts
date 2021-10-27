@@ -109,7 +109,7 @@ export class Request {
      * Indicates the time when the request has been processed.
      * Is `null` if the request has not been crawled yet.
      */
-    handledAt: Date;
+    handledAt: Date | null;
 
     /**
      * `Request` parameters including the URL, HTTP method and headers, and others.

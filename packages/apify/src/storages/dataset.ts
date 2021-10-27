@@ -406,7 +406,7 @@ export class Dataset {
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
  * @returns {Promise<Dataset>}
  */
-export async function openDataset(datasetIdOrName?: string, options: Dictionary = {}) {
+export async function openDataset(datasetIdOrName?: string | null, options: Dictionary = {}) {
     ow(datasetIdOrName, ow.optional.string);
     ow(options, ow.object.exactShape({
         forceCloud: ow.optional.boolean,

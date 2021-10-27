@@ -28,7 +28,7 @@ export interface ActorRun {
     /**
      * Time when the actor run finished. Contains `null` for running actors.
      */
-    finishedAt: Date;
+    finishedAt: Date | null;
 
     /**
      * Status of the run. For possible values, see [Run lifecycle](https://docs.apify.com/actor/run#lifecycle)
@@ -88,7 +88,7 @@ export interface ActorRun {
     /**
      * Exit code of the actor run process. It's `null` if actor is still running.
      */
-    exitCode: number;
+    exitCode: number | null;
 
     /**
      * ID of the default key-value store associated with the actor run. See {@link KeyValueStore} for details.
@@ -127,5 +127,5 @@ export interface ActorRun {
      * }
      * ```
      */
-    output?: Record<string, unknown> | null;
+    output?: Dictionary | null;
 }

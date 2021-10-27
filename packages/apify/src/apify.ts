@@ -19,7 +19,7 @@ import { socialUtils } from './utils_social';
 import { enqueueLinks } from './enqueue_links/enqueue_links';
 import { requestAsBrowser } from './utils_request';
 import { ApifyCallError } from './errors';
-import { ActorRun, Dictionary } from './typedefs';
+import { ActorRun, Constructor, Dictionary } from './typedefs';
 import { Request, RequestOptions } from './request';
 
 export interface MetamorphOptions {
@@ -50,7 +50,7 @@ export class Apify {
     /** Configuration of this SDK instance (provided to its constructor). See {@link Configuration} for details. */
     readonly config: Configuration;
 
-    private readonly storageManagers = new Map<string, StorageManager<unknown>>();
+    private readonly storageManagers = new Map<Constructor, StorageManager<unknown>>();
 
     constructor(options: ConfigurationOptions = {}) {
         this.config = new Configuration(options);
@@ -500,14 +500,13 @@ export class Apify {
      *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
      *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openDataset(datasetIdOrName?: string, options: { forceCloud?: boolean } = {}): Promise<Dataset> {
+    async openDataset(datasetIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<Dataset> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        // TODO type should be inferred
-        return this._getStorageManager<Dataset>(Dataset).openStorage(datasetIdOrName, options);
+        return this._getStorageManager(Dataset).openStorage(datasetIdOrName, options);
     }
 
     /**
@@ -629,14 +628,13 @@ export class Apify {
      *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
      *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openKeyValueStore(storeIdOrName?: string, options: { forceCloud?: boolean } = {}): Promise<KeyValueStore> {
+    async openKeyValueStore(storeIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        // TODO the type should be inferred
-        return this._getStorageManager<KeyValueStore>(KeyValueStore).openStorage(storeIdOrName, options);
+        return this._getStorageManager(KeyValueStore).openStorage(storeIdOrName, options);
     }
 
     /**
@@ -723,16 +721,15 @@ export class Apify {
      *
      * For more details and code examples, see the {@link RequestQueue} class.
      *
-     * @param {string} [queueIdOrName]
+     * @param [queueIdOrName]
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
-     * @param {object} [options]
+     * @param [options]
      * @param {boolean} [options.forceCloud=false]
      *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
      *   environment variable is set. This way it is possible to combine local and cloud storage.
-     * @returns {Promise<RequestQueue>}
      */
-    async openRequestQueue(queueIdOrName, options = {}) {
+    async openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -859,7 +856,7 @@ export class Apify {
     /**
      * @param {Function} storageClass
      */
-    private _getStorageManager<T>(storageClass): StorageManager<T> {
+    private _getStorageManager<T>(storageClass: Constructor<T>): StorageManager<T> {
         if (!this.storageManagers.has(storageClass)) {
             const manager = new StorageManager(storageClass, this.config);
             this.storageManagers.set(storageClass, manager);

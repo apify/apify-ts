@@ -56,7 +56,7 @@ export interface EnqueueLinksOptions {
      * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    pseudoUrls?: Record<string, unknown>[] | string[];
+    pseudoUrls?: Record<string, unknown>[] | string[] | null;
 
     /**
      * Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used

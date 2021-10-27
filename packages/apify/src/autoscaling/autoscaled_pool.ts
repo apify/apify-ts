@@ -84,7 +84,7 @@ export interface AutoscaledPoolOptions {
      * Set to `null` to disable periodic logging.
      * @default 60
      */
-    loggingIntervalSecs?: number;
+    loggingIntervalSecs?: number | null;
 
     /**
      * Defines in seconds how often the pool should attempt to adjust the desired concurrency
@@ -242,7 +242,7 @@ export class AutoscaledPool {
         this.scaleUpStepRatio = scaleUpStepRatio;
         this.scaleDownStepRatio = scaleDownStepRatio;
         this.maybeRunIntervalMillis = maybeRunIntervalSecs * 1000;
-        this.loggingIntervalMillis = loggingIntervalSecs * 1000;
+        this.loggingIntervalMillis = loggingIntervalSecs! * 1000;
         this.autoscaleIntervalMillis = autoscaleIntervalSecs * 1000;
         this.taskTimeoutMillis = taskTimeoutSecs * 1000;
         this.runTaskFunction = runTaskFunction;
