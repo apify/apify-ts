@@ -168,7 +168,7 @@ describe('Apify.main()', () => {
 
     test('works with simple user function', () => {
         return testMain({
-                        userFunc: () => {},
+            userFunc: () => {},
             exitCode: 0,
         });
     });
