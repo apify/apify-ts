@@ -132,7 +132,6 @@ describe('new Apify({ ... })', () => {
 
         test('works with simple user function', () => {
             return testMain({
-                // eslint-disable-next-line @typescript-eslint/no-empty-function
                 userFunc: () => {},
                 exitCode: 0,
             });
@@ -595,8 +594,7 @@ describe('new Apify({ ... })', () => {
         test('openSessionPool should create SessionPool', async () => {
             const sdk = new Apify();
             const initializeSpy = jest.spyOn(SessionPool.prototype, 'initialize');
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            initializeSpy.mockImplementationOnce(async () => {});
+                        initializeSpy.mockImplementationOnce(async () => {});
             await sdk.openSessionPool();
             expect(initializeSpy).toBeCalledTimes(1);
         });
@@ -604,8 +602,7 @@ describe('new Apify({ ... })', () => {
         test('createProxyConfiguration should create ProxyConfiguration', async () => {
             const sdk = new Apify();
             const initializeSpy = jest.spyOn(ProxyConfiguration.prototype, 'initialize');
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            initializeSpy.mockImplementationOnce(async () => {});
+                        initializeSpy.mockImplementationOnce(async () => {});
             await sdk.createProxyConfiguration();
             expect(initializeSpy).toBeCalledTimes(1);
         });
@@ -641,8 +638,7 @@ describe('new Apify({ ... })', () => {
         test('setValue()', async () => {
             const record = { foo: 'bar' };
             const setValueSpy = jest.spyOn(KeyValueStore.prototype, 'setValue');
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            setValueSpy.mockImplementationOnce(async () => {});
+                        setValueSpy.mockImplementationOnce(async () => {});
 
             await sdk.setValue('key-1', record);
             expect(setValueSpy).toBeCalledTimes(1);
@@ -661,8 +657,7 @@ describe('new Apify({ ... })', () => {
 
         test('pushData()', async () => {
             const pushDataSpy = jest.spyOn(Dataset.prototype, 'pushData');
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            pushDataSpy.mockImplementationOnce(async () => {});
+                        pushDataSpy.mockImplementationOnce(async () => {});
 
             await sdk.pushData({ foo: 'bar' });
             expect(pushDataSpy).toBeCalledTimes(1);
@@ -671,8 +666,7 @@ describe('new Apify({ ... })', () => {
 
         test('openRequestList should create RequestList', async () => {
             const initializeSpy = jest.spyOn(RequestList.prototype, 'initialize');
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            initializeSpy.mockImplementationOnce(async () => {});
+                        initializeSpy.mockImplementationOnce(async () => {});
             const list = await sdk.openRequestList('my-list', ['url-1', 'url-2', 'url-3']);
             expect(initializeSpy).toBeCalledTimes(1);
             expect(list.sources).toEqual(['url-1', 'url-2', 'url-3']);

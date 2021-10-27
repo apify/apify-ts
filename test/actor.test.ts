@@ -168,8 +168,7 @@ describe('Apify.main()', () => {
 
     test('works with simple user function', () => {
         return testMain({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            userFunc: () => {},
+                        userFunc: () => {},
             exitCode: 0,
         });
     });

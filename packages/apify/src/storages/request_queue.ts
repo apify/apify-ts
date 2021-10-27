@@ -228,8 +228,8 @@ export class RequestQueue {
             : new Request(requestLike);
 
         // TODO we dont need to hash the cache key probably
-        // const cacheKey = getRequestId(request.uniqueKey);
-        const cacheKey = request.uniqueKey;
+        const cacheKey = getRequestId(request.uniqueKey);
+        // const cacheKey = request.uniqueKey;
         const cachedInfo = this.requestsCache.get(cacheKey);
 
         if (cachedInfo) {
@@ -660,6 +660,34 @@ export class RequestQueue {
     async getInfo(): Promise<RequestQueueInfo> {
         return this.client.get() as Promise<RequestQueueInfo>;
     }
+
+    /**
+     * Opens a request queue and returns a promise resolving to an instance
+     * of the {@link RequestQueue} class.
+     *
+     * {@link RequestQueue} represents a queue of URLs to crawl, which is stored either on local filesystem or in the cloud.
+     * The queue is used for deep crawling of websites, where you start with several URLs and then
+     * recursively follow links to other pages. The data structure supports both breadth-first
+     * and depth-first crawling orders.
+     *
+     * For more details and code examples, see the {@link RequestQueue} class.
+     *
+     * @param [queueIdOrName]
+     *   ID or name of the request queue to be opened. If `null` or `undefined`,
+     *   the function returns the default request queue associated with the actor run.
+     * @param [options]
+     * @param [options.forceCloud=false]
+     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
+     *   environment variable is set. This way it is possible to combine local and cloud storage.
+     */
+    static async open(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
+        ow(queueIdOrName, ow.optional.string);
+        ow(options, ow.object.exactShape({
+            forceCloud: ow.optional.boolean,
+        }));
+        const manager = new StorageManager(RequestQueue);
+        return manager.openStorage(queueIdOrName, options);
+    }
 }
 
 /**
@@ -680,14 +708,10 @@ export class RequestQueue {
  * @param [options.forceCloud=false]
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
+ * @deprecated use `RequestQueue.open()` instead
  */
 export async function openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
-    ow(queueIdOrName, ow.optional.string);
-    ow(options, ow.object.exactShape({
-        forceCloud: ow.optional.boolean,
-    }));
-    const manager = new StorageManager(RequestQueue);
-    return manager.openStorage(queueIdOrName, options);
+    return RequestQueue.open(queueIdOrName, options);
 }
 
 export interface RequestQueueOptions {

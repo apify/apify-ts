@@ -175,7 +175,7 @@ export class Dataset {
      *   The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
     async pushData(data: unknown): Promise<void> {
-        ow(data, ow.object);
+        ow(data, 'data', ow.object);
         // eslint-disable-next-line no-return-await
         const dispatch = async (payload) => await this.client.pushItems(payload);
         const limit = MAX_PAYLOAD_SIZE_BYTES - Math.ceil(MAX_PAYLOAD_SIZE_BYTES * SAFETY_BUFFER_PERCENT);
@@ -385,6 +385,36 @@ export class Dataset {
         const manager = new StorageManager(Dataset);
         manager.closeStorage(this);
     }
+
+    /**
+     * Opens a dataset and returns a promise resolving to an instance of the {@link Dataset} class.
+     *
+     * Datasets are used to store structured data where each object stored has the same attributes,
+     * such as online store products or real estate offers.
+     * The actual data is stored either on the local filesystem or in the cloud.
+     *
+     * For more details and code examples, see the {@link Dataset} class.
+     *
+     * @param [datasetIdOrName]
+     *   ID or name of the dataset to be opened. If `null` or `undefined`,
+     *   the function returns the default dataset associated with the actor run.
+     * @param [options]
+     * @param [options.forceCloud=false]
+     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
+     *   environment variable is set. This way it is possible to combine local and cloud storage.
+     * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
+     */
+    static async open(datasetIdOrName?: string | null, options: Dictionary = {}): Promise<Dataset> {
+        ow(datasetIdOrName, ow.optional.string);
+        ow(options, ow.object.exactShape({
+            forceCloud: ow.optional.boolean,
+            config: ow.optional.object.instanceOf(Configuration),
+        }));
+
+        // @ts-ignore TODO type options parameter
+        const manager = new StorageManager(Dataset, options.config);
+        return manager.openStorage(datasetIdOrName, options);
+    }
 }
 
 /**
@@ -405,17 +435,10 @@ export class Dataset {
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
  * @returns {Promise<Dataset>}
+ * @deprecated use `Dataset.open()` instead
  */
 export async function openDataset(datasetIdOrName?: string | null, options: Dictionary = {}) {
-    ow(datasetIdOrName, ow.optional.string);
-    ow(options, ow.object.exactShape({
-        forceCloud: ow.optional.boolean,
-        config: ow.optional.object.instanceOf(Configuration),
-    }));
-
-    // @ts-ignore
-    const manager = new StorageManager(Dataset, options.config);
-    return manager.openStorage(datasetIdOrName, options);
+    return Dataset.open(datasetIdOrName, options);
 }
 
 /**

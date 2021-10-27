@@ -31,8 +31,9 @@ import { validators } from './validators';
 
 import { enqueueLinksByClickingElements } from './enqueue_links/click_elements';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
-import { openKeyValueStore } from './storages/key_value_store';
+import { KeyValueStore } from './storages/key_value_store';
 import { Dictionary } from './typedefs';
+import { Request } from './request';
 
 const jqueryPath = require.resolve('jquery');
 const underscorePath = require.resolve('underscore');
@@ -591,7 +592,7 @@ export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}
     } = options;
 
     try {
-        const store = await openKeyValueStore(keyValueStoreName);
+        const store = await KeyValueStore.open(keyValueStoreName);
 
         if (saveScreenshot) {
             const screenshotName = `${key}.jpg`;

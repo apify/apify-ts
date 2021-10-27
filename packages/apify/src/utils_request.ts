@@ -3,7 +3,7 @@ import { IncomingMessage } from 'http';
 import ow from 'ow';
 import log from './utils_log';
 
-export type RequestAsBrowserResult = IncomingMessage & { body: string };
+export type RequestAsBrowserResult<T = string> = IncomingMessage & { body: T };
 
 export interface RequestAsBrowserOptions {
     /**
@@ -130,7 +130,7 @@ export type AbortFunction = (response: IncomingMessage) => boolean;
  * [Node.js HTTP response stream](https://nodejs.org/api/http.html#http_class_http_incomingmessage)
  * with a 'body' property for the parsed response body, unless the 'stream' option is used.
  */
-export async function requestAsBrowser(options: RequestAsBrowserOptions = {} as RequestAsBrowserOptions): Promise<RequestAsBrowserResult> {
+export async function requestAsBrowser<T = string>(options: RequestAsBrowserOptions = {} as RequestAsBrowserOptions): Promise<RequestAsBrowserResult<T>> {
     logDeprecatedOptions(options);
     ow(options, 'RequestAsBrowserOptions', ow.object.partialShape({
         payload: ow.optional.any(ow.string, ow.buffer),
@@ -215,7 +215,7 @@ export async function requestAsBrowser(options: RequestAsBrowserOptions = {} as 
 
     // Return the promise directly
     if (!gotScrapingOptions.isStream) {
-        return gotScraping(gotScrapingOptions);
+        return gotScraping(gotScrapingOptions) as unknown as RequestAsBrowserResult<T>;
     }
 
     // abortFunction must be handled separately for streams :(
@@ -244,7 +244,8 @@ export async function requestAsBrowser(options: RequestAsBrowserOptions = {} as 
 
                 addResponsePropertiesToStream(duplexStream, res);
 
-                return resolve(duplexStream);
+                // TODO stream vs response interface?
+                return resolve(duplexStream as any);
             });
     });
 }

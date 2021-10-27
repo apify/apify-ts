@@ -6,6 +6,6 @@
     ],
     "compilerOptions": {
         "sourceMap": true,
-//        "resolveJsonModule": true
+        "strictNullChecks": false
     }
 }

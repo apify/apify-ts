@@ -430,7 +430,6 @@ export class AutoscaledPool {
     protected async _maybeRunTask(intervalCallback): Promise<void> {
         this.log.perf('Attempting to run a task.');
         // Check if the function was invoked by the maybeRunInterval and use an empty function if not.
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         const done = intervalCallback || (() => {});
 
         // Prevent starting a new task if:

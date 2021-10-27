@@ -209,8 +209,8 @@ export class KeyValueStore {
      * @param {string} [options.contentType]
      *   Specifies a custom MIME content type of the record.
      */
-    setValue<T>(key: string, value: T | null, options = {}): Promise<void> {
-        ow(key, ow.string.nonEmpty);
+    async setValue<T>(key: string, value: T | null, options = {}): Promise<void> {
+        ow(key, 'key', ow.string.nonEmpty);
         ow(key, ow.string.validate((k) => ({
             validator: ow.isValid(k, ow.string.matches(KEY_VALUE_STORE_KEY_REGEX)),
             message: 'The "key" argument must be at most 256 characters long and only contain the following characters: a-zA-Z0-9!-_.\'()',
@@ -315,6 +315,35 @@ export class KeyValueStore {
             ? this._forEachKey(iteratee, { exclusiveStartKey: nextExclusiveStartKey }, index)
             : undefined; // [].forEach() returns undefined.
     }
+
+    /**
+     * Opens a key-value store and returns a promise resolving to an instance of the {@link KeyValueStore} class.
+     *
+     * Key-value stores are used to store records or files, along with their MIME content type.
+     * The records are stored and retrieved using a unique key.
+     * The actual data is stored either on a local filesystem or in the Apify cloud.
+     *
+     * For more details and code examples, see the {@link KeyValueStore} class.
+     *
+     * @param {string} [storeIdOrName]
+     *   ID or name of the key-value store to be opened. If `null` or `undefined`,
+     *   the function returns the default key-value store associated with the actor run.
+     * @param {object} [options]
+     * @param {boolean} [options.forceCloud=false]
+     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
+     *   environment variable is set. This way it is possible to combine local and cloud storage.
+     * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
+     */
+    static async open(storeIdOrName?: string | null, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
+        ow(storeIdOrName, ow.optional.string);
+        ow(options, ow.object.exactShape({
+            forceCloud: ow.optional.boolean,
+            config: ow.optional.object.instanceOf(Configuration),
+        }));
+
+        const manager = new StorageManager(KeyValueStore, options.config);
+        return manager.openStorage(storeIdOrName, options);
+    }
 }
 
 export interface OpenKeyValueStoreOptions {
@@ -331,24 +360,18 @@ export interface OpenKeyValueStoreOptions {
  *
  * For more details and code examples, see the {@link KeyValueStore} class.
  *
- * @param {string} [storeIdOrName]
+ * @param [storeIdOrName]
  *   ID or name of the key-value store to be opened. If `null` or `undefined`,
  *   the function returns the default key-value store associated with the actor run.
- * @param {object} [options]
+ * @param [options]
  * @param {boolean} [options.forceCloud=false]
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
  * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
+ * @deprecated use `KeyValueStore.open()` instead
  */
 export async function openKeyValueStore(storeIdOrName?: string | null, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
-    ow(storeIdOrName, ow.optional.string);
-    ow(options, ow.object.exactShape({
-        forceCloud: ow.optional.boolean,
-        config: ow.optional.object.instanceOf(Configuration),
-    }));
-
-    const manager = new StorageManager(KeyValueStore, options.config);
-    return manager.openStorage(storeIdOrName, options);
+    return KeyValueStore.open(storeIdOrName, options);
 }
 
 /**
@@ -470,9 +493,6 @@ export interface KeyConsumer {
     (key: string, index: number, info: { size: number }): unknown;
 }
 
-/**
- * @internal
- */
 export interface KeyValueStoreOptions {
     id: string;
     name?: string;

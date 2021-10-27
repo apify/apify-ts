@@ -3,7 +3,6 @@ module.exports = {
     maxWorkers: 3,
     preset: 'ts-jest',
     testEnvironment: 'node',
-    testRunner: 'jest-circus/runner',
     collectCoverage: false,
     testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
     transform: {
@@ -14,6 +13,7 @@ module.exports = {
         '<rootDir>/packages/*/src/**/*.[jt]s',
     ],
     moduleNameMapper: {
+        '^apify$': '<rootDir>/packages/apify/src',
     },
     modulePathIgnorePatterns: [
         'dist/package.json',

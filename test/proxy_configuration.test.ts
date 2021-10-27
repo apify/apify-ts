@@ -1,9 +1,9 @@
 import sinon from 'sinon';
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
 import Apify from 'apify';
-import * as requestUtils from '../packages/apify/src/utils_request';
-import * as utils from '../packages/apify/src/utils';
-import { ProxyConfiguration } from '../packages/apify/src/proxy_configuration';
+import * as utilsRequest from 'apify/src/utils_request';
+import * as utils from 'apify/src/utils';
+import { ProxyConfiguration } from 'apify/src/proxy_configuration';
 
 const { apifyClient } = utils;
 
@@ -33,10 +33,15 @@ describe('ProxyConfiguration', () => {
         const proxyConfiguration = new ProxyConfiguration(basicOpts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
+        // @ts-ignore TODO should be public/internal?
         expect(proxyConfiguration.groups).toBe(groups);
+        // @ts-ignore TODO should be public/internal?
         expect(proxyConfiguration.countryCode).toBe(countryCode);
+        // @ts-ignore TODO should be public/internal?
         expect(proxyConfiguration.password).toBe(password);
+        // @ts-ignore TODO should be public/internal?
         expect(proxyConfiguration.hostname).toBe(hostname);
+        // @ts-ignore TODO should be public/internal?
         expect(proxyConfiguration.port).toBe(port);
     });
 
@@ -73,7 +78,9 @@ describe('ProxyConfiguration', () => {
 
         const proxyConfiguration = new ProxyConfiguration(input);
 
+        // @ts-ignore
         expect(proxyConfiguration.groups).toStrictEqual(apifyProxyGroups);
+        // @ts-ignore
         expect(proxyConfiguration.countryCode).toStrictEqual(apifyProxyCountry);
     });
 
@@ -104,12 +111,16 @@ describe('ProxyConfiguration', () => {
     });
 
     test('should throw on invalid groups and countryCode args', async () => {
+        // @ts-expect-error invalid input
         expect(() => new ProxyConfiguration({ groups: [new Date()] })).toThrowError();
+        // @ts-expect-error invalid input
         expect(() => new ProxyConfiguration({ groups: [{}, 'fff', 'ccc'] })).toThrowError();
         expect(() => new ProxyConfiguration({ groups: ['ffff', 'ff-hf', 'ccc'] })).toThrowError();
         expect(() => new ProxyConfiguration({ groups: ['ffff', 'fff', 'cc$c'] })).toThrowError();
+        // @ts-expect-error invalid input
         expect(() => new ProxyConfiguration({ apifyProxyGroups: [new Date()] })).toThrowError();
 
+        // @ts-expect-error invalid input
         expect(() => new ProxyConfiguration({ countryCode: new Date() })).toThrow();
         expect(() => new ProxyConfiguration({ countryCode: 'aa' })).toThrow();
         expect(() => new ProxyConfiguration({ countryCode: 'aB' })).toThrow();
@@ -117,6 +128,7 @@ describe('ProxyConfiguration', () => {
         expect(() => new ProxyConfiguration({ countryCode: '11' })).toThrow();
         expect(() => new ProxyConfiguration({ countryCode: 'DDDD' })).toThrow();
         expect(() => new ProxyConfiguration({ countryCode: 'dddd' })).toThrow();
+        // @ts-expect-error invalid input
         expect(() => new ProxyConfiguration({ countryCode: 1111 })).toThrow();
     });
 
@@ -125,7 +137,9 @@ describe('ProxyConfiguration', () => {
 
         expect(() => proxyConfiguration.newUrl('a-b')).toThrowError();
         expect(() => proxyConfiguration.newUrl('a$b')).toThrowError();
+        // @ts-expect-error invalid input
         expect(() => proxyConfiguration.newUrl({})).toThrowError();
+        // @ts-expect-error invalid input
         expect(() => proxyConfiguration.newUrl(new Date())).toThrowError();
         expect(() => proxyConfiguration.newUrl(Array(51).fill('x').join(''))).toThrowError();
 
@@ -182,6 +196,7 @@ describe('ProxyConfiguration', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
+            // @ts-ignore TODO private property?
             const { proxyUrls } = proxyConfiguration;
             expect(proxyConfiguration.newUrl()).toEqual(proxyUrls[0]);
             expect(proxyConfiguration.newUrl()).toEqual(proxyUrls[1]);
@@ -196,6 +211,7 @@ describe('ProxyConfiguration', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
+            // @ts-ignore TODO private property?
             const { proxyUrls } = proxyConfiguration;
             expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[0]);
             expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[1]);
@@ -211,6 +227,7 @@ describe('ProxyConfiguration', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
+            // @ts-ignore TODO private property?
             const { proxyUrls } = proxyConfiguration;
             // should use same proxy URL
             expect(proxyConfiguration.newUrl(sessions[0])).toEqual(proxyUrls[0]);
@@ -304,26 +321,28 @@ describe('Apify.createProxyConfiguration()', () => {
     const userData = { proxy: { password } };
 
     test('should work with all options', async () => {
-        const mock = sinon.mock(Apify.utils);
+        const spy = jest.spyOn(utilsRequest, 'requestAsBrowser');
+
         const status = { connected: true };
         const proxyUrl = proxyUrlNoSession;
         const url = 'http://proxy.apify.com/?format=json';
-
-        mock.expects('requestAsBrowser')
-            .once()
-            .withArgs(sinon.match({ url, proxyUrl }))
-            .resolves({ body: status });
+        spy.mockResolvedValueOnce({ body: status } as any);
 
         const proxyConfiguration = await Apify.createProxyConfiguration(basicOpts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.groups).toBe(groups);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.countryCode).toBe(countryCode);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.password).toBe(password);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.hostname).toBe(hostname);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.port).toBe(port);
 
-        mock.verify();
+        expect(spy).toBeCalledWith({ url, proxyUrl, timeout: { request: 4000 }, responseType: 'json' });
     });
 
     test('should work without password (with token)', async () => {
@@ -332,7 +351,7 @@ describe('Apify.createProxyConfiguration()', () => {
         const opts = { ...basicOpts };
         delete opts.password;
 
-        const requestUtilsMock = sinon.mock(requestUtils);
+        const requestUtilsMock = sinon.mock(utilsRequest);
         const userClientMock = sinon.mock(apifyClient);
         const status = { connected: true };
         const proxyUrl = proxyUrlNoSession;
@@ -350,10 +369,15 @@ describe('Apify.createProxyConfiguration()', () => {
         const proxyConfiguration = await Apify.createProxyConfiguration(opts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.groups).toBe(groups);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.countryCode).toBe(countryCode);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.password).toBe(password);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.hostname).toBe(hostname);
+        // @ts-ignore TODO maybe should be public/internal?
         expect(proxyConfiguration.port).toBe(port);
 
         requestUtilsMock.verify();
@@ -365,7 +389,7 @@ describe('Apify.createProxyConfiguration()', () => {
 
         const status = { connected: true };
         const userClientMock = sinon.mock(apifyClient);
-        const stub1 = sinon.stub(requestUtils, 'requestAsBrowser').resolves({ body: status });
+        const stub1 = sinon.stub(utilsRequest, 'requestAsBrowser').resolves({ body: status } as any);
         const fakeUserData = { proxy: { password: 'some-other-users-password' } };
         userClientMock.expects('user')
             .once()
@@ -373,6 +397,7 @@ describe('Apify.createProxyConfiguration()', () => {
 
         // eslint-disable-next-line no-unused-vars
         const proxyConfiguration = new ProxyConfiguration(basicOpts);
+        // @ts-ignore
         const logMock = sinon.mock(proxyConfiguration.log);
         logMock.expects('warning').once();
 
@@ -393,7 +418,7 @@ describe('Apify.createProxyConfiguration()', () => {
             return { body: status };
         };
 
-        const stub = sinon.stub(requestUtils, 'requestAsBrowser').callsFake(fakeCall);
+        const stub = sinon.stub(utilsRequest, 'requestAsBrowser').callsFake(fakeCall as any);
 
         try {
             await Apify.createProxyConfiguration();
@@ -414,7 +439,7 @@ describe('Apify.createProxyConfiguration()', () => {
         const fakeRequestAsBrowser = async () => {
             return { body: status };
         };
-        const stub1 = sinon.stub(requestUtils, 'requestAsBrowser').callsFake(fakeRequestAsBrowser);
+        const stub1 = sinon.stub(utilsRequest, 'requestAsBrowser').callsFake(fakeRequestAsBrowser as any);
 
         userClientMock.expects('user')
             .once()
@@ -432,13 +457,14 @@ describe('Apify.createProxyConfiguration()', () => {
 
     test('should not throw when access check is unresponsive', async () => {
         process.env.APIFY_PROXY_PASSWORD = '123456789';
-        const requestUtilsMock = sinon.mock(requestUtils);
+        const requestUtilsMock = sinon.mock(utilsRequest);
 
         requestUtilsMock.expects('requestAsBrowser')
             .twice()
             .rejects(new Error('some error'));
 
         const proxyConfiguration = new ProxyConfiguration();
+        // @ts-expect-error private property
         const logMock = sinon.mock(proxyConfiguration.log);
         logMock.expects('warning').once();
 
@@ -453,7 +479,7 @@ describe('Apify.createProxyConfiguration()', () => {
         process.env.APIFY_PROXY_HOSTNAME = 'proxy-domain.apify.com';
         process.env.APIFY_PROXY_PASSWORD = password;
 
-        const mock = sinon.mock(requestUtils);
+        const mock = sinon.mock(utilsRequest);
         mock.expects('requestAsBrowser')
             .once()
             .withArgs(sinon.match({

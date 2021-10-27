@@ -421,32 +421,29 @@ describe('dataset', () => {
     });
 
     describe('pushData', () => {
-        test(
-            'throws if DEFAULT_DATASET_ID env var is not defined and we use cloud storage',
-            async () => {
-                delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-                process.env[ENV_VARS.TOKEN] = 'xxx';
+        test('throws if DEFAULT_DATASET_ID env var is not defined and we use cloud storage', async () => {
+            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
+            process.env[ENV_VARS.TOKEN] = 'xxx';
 
-                process.env[ENV_VARS.DEFAULT_DATASET_ID] = '';
-                await expect(Apify.pushData({ something: 123 })).rejects.toThrow(Error);
+            process.env[ENV_VARS.DEFAULT_DATASET_ID] = '';
+            await expect(Apify.pushData({ something: 123 })).rejects.toThrow(Error);
 
-                delete process.env[ENV_VARS.DEFAULT_DATASET_ID];
-                await expect(Apify.pushData({ something: 123 })).rejects.toThrow(Error);
+            delete process.env[ENV_VARS.DEFAULT_DATASET_ID];
+            await expect(Apify.pushData({ something: 123 })).rejects.toThrow(Error);
 
-                delete process.env[ENV_VARS.TOKEN];
-            },
-        );
+            delete process.env[ENV_VARS.TOKEN];
+        });
 
         test('throws on invalid args', async () => {
             const dataset = new Dataset({
                 id: 'some-id',
                 client: apifyClient,
             });
-            await expect(dataset.pushData()).rejects.toThrow('Expected argument to be of type `object` but received type `undefined`');
-            await expect(dataset.pushData('')).rejects.toThrow('Expected argument to be of type `object` but received type `string`');
-            await expect(dataset.pushData(123)).rejects.toThrow('Expected argument to be of type `object` but received type `number`');
-            await expect(dataset.pushData(true)).rejects.toThrow('Expected argument to be of type `object` but received type `boolean`');
-            await expect(dataset.pushData(false)).rejects.toThrow('Expected argument to be of type `object` but received type `boolean`');
+            await expect(dataset.pushData()).rejects.toThrow('Expected `data` to be of type `object` but received type `undefined`');
+            await expect(dataset.pushData('')).rejects.toThrow('Expected `data` to be of type `object` but received type `string`');
+            await expect(dataset.pushData(123)).rejects.toThrow('Expected `data` to be of type `object` but received type `number`');
+            await expect(dataset.pushData(true)).rejects.toThrow('Expected `data` to be of type `object` but received type `boolean`');
+            await expect(dataset.pushData(false)).rejects.toThrow('Expected `data` to be of type `object` but received type `boolean`');
             await expect(dataset.pushData(() => {})).rejects.toThrow('Data item is not an object. You can push only objects into a dataset.');
 
             const circularObj = {};

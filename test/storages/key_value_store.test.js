@@ -5,7 +5,7 @@ import { apifyClient } from '../../packages/apify/src/utils';
 import {
     KeyValueStore,
     maybeStringify,
-} from '../../packages/apify/src/storages/key_value_store';
+} from 'apify';
 import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
 import Apify from '../../packages/apify/src';
 
@@ -117,24 +117,24 @@ describe('KeyValueStore remote', () => {
                 id: 'some-id-1',
                 client: apifyClient,
             });
-            await expect(async () => store.setValue()).rejects.toThrow('Expected argument to be of type `string` but received type `undefined`');
-            await expect(async () => store.setValue('', null)).rejects.toThrow('Expected string to not be empty');
-            await expect(async () => store.setValue('', 'some value')).rejects.toThrow('Expected string to not be empty');
-            await expect(async () => store.setValue({}, 'some value'))
-                .rejects.toThrow('Expected argument to be of type `string` but received type `Object`');
-            await expect(async () => store.setValue(123, 'some value'))
-                .rejects.toThrow('Expected argument to be of type `string` but received type `number`');
+            await expect(store.setValue()).rejects.toThrow('Expected `key` to be of type `string` but received type `undefined`');
+            await expect(store.setValue('', null)).rejects.toThrow('Expected string `key` to not be empty');
+            await expect(store.setValue('', 'some value')).rejects.toThrow('Expected string `key` to not be empty');
+            await expect(store.setValue({}, 'some value'))
+                .rejects.toThrow('Expected `key` to be of type `string` but received type `Object`');
+            await expect(store.setValue(123, 'some value'))
+                .rejects.toThrow('Expected `key` to be of type `string` but received type `number`');
 
             const valueErrMsg = 'The "value" parameter must be a String or Buffer when "options.contentType" is specified';
-            await expect(async () => store.setValue('key', {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
-            await expect(async () => store.setValue('key', 12345, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
-            await expect(async () => store.setValue('key', () => {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
+            await expect(store.setValue('key', {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
+            await expect(store.setValue('key', 12345, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
+            await expect(store.setValue('key', () => {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
 
-            await expect(async () => store.setValue('key', {}, 123))
+            await expect(store.setValue('key', {}, 123))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `number`');
-            await expect(async () => store.setValue('key', {}, 'bla/bla'))
+            await expect(store.setValue('key', {}, 'bla/bla'))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `string`');
-            await expect(async () => store.setValue('key', {}, true))
+            await expect(store.setValue('key', {}, true))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `boolean`');
 
             const circularObj = {};
@@ -142,24 +142,24 @@ describe('KeyValueStore remote', () => {
             const circularErrMsg = 'The "value" parameter cannot be stringified to JSON: Converting circular structure to JSON';
             const undefinedErrMsg = 'The "value" parameter was stringified to JSON and returned undefined. '
                 + 'Make sure you\'re not trying to stringify an undefined value.';
-            await expect(async () => store.setValue('key', circularObj)).rejects.toThrow(circularErrMsg);
-            await expect(async () => store.setValue('key', undefined)).rejects.toThrow(undefinedErrMsg);
-            await expect(async () => store.setValue('key')).rejects.toThrow(undefinedErrMsg);
+            await expect(store.setValue('key', circularObj)).rejects.toThrow(circularErrMsg);
+            await expect(store.setValue('key', undefined)).rejects.toThrow(undefinedErrMsg);
+            await expect(store.setValue('key')).rejects.toThrow(undefinedErrMsg);
 
             const contTypeRedundantErrMsg = 'Expected property string `contentType` to not be empty in object';
-            await expect(async () => store.setValue('key', null, { contentType: 'image/png' }))
+            await expect(store.setValue('key', null, { contentType: 'image/png' }))
                 .rejects.toThrow('The "value" parameter must be a String or Buffer when "options.contentType" is specified.');
-            await expect(async () => store.setValue('key', null, { contentType: '' })).rejects.toThrow(contTypeRedundantErrMsg);
-            await expect(async () => store.setValue('key', null, { contentType: {} }))
+            await expect(store.setValue('key', null, { contentType: '' })).rejects.toThrow(contTypeRedundantErrMsg);
+            await expect(store.setValue('key', null, { contentType: {} }))
                 .rejects.toThrow('The "value" parameter must be a String or Buffer when "options.contentType" is specified.');
 
-            await expect(async () => store.setValue('key', 'value', { contentType: 123 }))
+            await expect(store.setValue('key', 'value', { contentType: 123 }))
                 .rejects.toThrow('Expected property `contentType` to be of type `string` but received type `number` in object');
-            await expect(async () => store.setValue('key', 'value', { contentType: {} }))
+            await expect(store.setValue('key', 'value', { contentType: {} }))
                 .rejects.toThrow('Expected property `contentType` to be of type `string` but received type `Object` in object');
-            await expect(async () => store.setValue('key', 'value', { contentType: new Date() }))
+            await expect(store.setValue('key', 'value', { contentType: new Date() }))
                 .rejects.toThrow('Expected property `contentType` to be of type `string` but received type `Date` in object');
-            await expect(async () => store.setValue('key', 'value', { contentType: '' }))
+            await expect(store.setValue('key', 'value', { contentType: '' }))
                 .rejects.toThrow('Expected property string `contentType` to not be empty in object');
         });
 

@@ -1,8 +1,7 @@
-import sinon from 'sinon';
 import path from 'path';
 import express from 'express';
-import Apify from 'apify';
-import * as keyValueStore from '../packages/apify/src/storages/key_value_store';
+import Apify, { KeyValueStore } from 'apify';
+import { Browser } from 'puppeteer';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
 
@@ -59,41 +58,49 @@ describe('Apify.utils.puppeteer', () => {
     ])('with %s', (launchName, launchContext) => {
         test('injectFile()', async () => {
         /* eslint-disable no-shadow */
-            const browser = await Apify[launchName](launchContext);
-            const survive = async (browser) => {
+            const browser2 = await Apify[launchName](launchContext);
+            const survive = async (browser: Browser) => {
             // Survive navigations
                 const page = await browser.newPage();
+                // @ts-ignore
                 let result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await Apify.utils.puppeteer.injectFile(page, path.join(__dirname, 'data', 'inject_file.txt'), { surviveNavigations: true });
+                // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('about:chrome');
+                // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('https://www.example.com');
+                // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
             };
             const remove = async (browser) => {
             // Remove with navigations
                 const page = await browser.newPage();
+                // @ts-ignore
                 let result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await page.goto('about:chrome');
+                // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await Apify.utils.puppeteer.injectFile(page, path.join(__dirname, 'data', 'inject_file.txt'));
+                // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('https://www.example.com');
+                // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
             };
             try {
-                await Promise.all([survive(browser), remove(browser)]);
+                await Promise.all([survive(browser2), remove(browser2)]);
             } finally {
-                browser.close();
+                browser2.close();
             }
         });
 
@@ -108,6 +115,7 @@ describe('Apify.utils.puppeteer', () => {
                 // (https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#queryselector)
                 const result1 = await page.evaluate(() => {
                     return {
+                        // @ts-ignore
                         isDefined: window.jQuery !== undefined,
                     };
                 });
@@ -119,7 +127,9 @@ describe('Apify.utils.puppeteer', () => {
                 const result2 = await page.evaluate(() => {
                 /* global $ */
                     return {
+                        // @ts-ignore
                         isDefined: window.jQuery === window.$,
+                        // @ts-ignore
                         text: $('h1').text(),
                     };
                 });
@@ -147,6 +157,7 @@ describe('Apify.utils.puppeteer', () => {
                 await Apify.utils.puppeteer.injectUnderscore(page);
                 const result2 = await page.evaluate(() => {
                 /* global _ */
+                    // @ts-ignore
                     return { isDefined: _.isEmpty({}) };
                 });
                 expect(result2).toEqual({ isDefined: true });
@@ -268,32 +279,29 @@ describe('Apify.utils.puppeteer', () => {
             }
         });
 
-        test(
-            'cacheResponses() throws when rule with invalid type is provided',
-            async () => {
-                const mockedPage = {
-                    setRequestInterception: () => {},
-                    on: () => {},
-                };
+        test('cacheResponses() throws when rule with invalid type is provided', async () => {
+            const mockedPage = {
+                setRequestInterception: () => {},
+                on: () => {},
+            };
 
-                const testRuleType = async (value) => {
-                    try {
-                        await Apify.utils.puppeteer.cacheResponses(mockedPage, {}, [value]);
-                    } catch (error) {
+            const testRuleType = async (value) => {
+                try {
+                    await Apify.utils.puppeteer.cacheResponses(mockedPage as any, {}, [value]);
+                } catch (error) {
                     // this is valid path for this test
-                        return;
-                    }
+                    return;
+                }
 
-                    expect(`Rule '${value}' should have thrown error`).toBe('');
-                };
-                await testRuleType(0);
-                await testRuleType(1);
-                await testRuleType(null);
-                await testRuleType([]);
-                await testRuleType(['']);
-                await testRuleType(() => {});
-            },
-        );
+                expect(`Rule '${value}' should have thrown error`).toBe('');
+            };
+            await testRuleType(0);
+            await testRuleType(1);
+            await testRuleType(null);
+            await testRuleType([]);
+            await testRuleType(['']);
+            await testRuleType(() => {});
+        });
 
         test('compileScript() works', async () => {
             const { compileScript } = Apify.utils.puppeteer;
@@ -314,7 +322,7 @@ describe('Apify.utils.puppeteer', () => {
             const browser = await Apify[launchName](launchContext);
             try {
                 const page = await browser.newPage();
-                const content = await script({ page });
+                const content = await script({ page } as any);
                 expect(typeof content).toBe('string');
                 expect(content).toBe('<html><head></head><body></body></html>');
             } finally {
@@ -354,7 +362,8 @@ describe('Apify.utils.puppeteer', () => {
 
             let browser;
             beforeAll(async () => {
-                browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+                // TODO headless is not a known option?
+                browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } as any });
             });
             afterAll(async () => {
                 await browser.close();
@@ -402,8 +411,9 @@ describe('Apify.utils.puppeteer', () => {
         });
 
         it('saveSnapshot() works', async () => {
-            const mock = sinon.mock(keyValueStore);
+            const openKVSSpy = jest.spyOn(KeyValueStore, 'open');
             const browser = await Apify[launchName](launchContext);
+
             try {
                 const page = await browser.newPage();
                 const contentHTML = '<html><head></head><body><div style="border: 1px solid black">Div number: 1</div></body></html>';
@@ -412,34 +422,22 @@ describe('Apify.utils.puppeteer', () => {
                 const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', screenshotQuality: 60 });
 
                 // Test saving both image and html
-                const object = { setValue: async () => {} };
-                const stub = sinon.stub(object, 'setValue');
-
-                mock.expects('openKeyValueStore')
-                    .once()
-                    .withExactArgs('TEST-STORE')
-                    .resolves(object);
-
+                const object = { setValue: jest.fn() };
+                openKVSSpy.mockResolvedValue(object as any);
                 await Apify.utils.puppeteer.saveSnapshot(page, { key: 'TEST', keyValueStoreName: 'TEST-STORE', screenshotQuality: 60 });
 
-                expect(stub.calledWithExactly('TEST.jpg', screenshot, { contentType: 'image/jpeg' })).toBe(true);
-                expect(stub.calledWithExactly('TEST.html', contentHTML, { contentType: 'text/html' })).toBe(true);
+                expect(object.setValue).toBeCalledWith('TEST.jpg', screenshot, { contentType: 'image/jpeg' });
+                expect(object.setValue).toBeCalledWith('TEST.html', contentHTML, { contentType: 'text/html' });
+                object.setValue.mockReset();
 
                 // Test saving only image
-                const object2 = { setValue: async () => {} };
-                const stub2 = sinon.stub(object2, 'setValue');
-                mock.expects('openKeyValueStore')
-                    .withExactArgs(undefined)
-                    .resolves(object2);
-
                 await Apify.utils.puppeteer.saveSnapshot(page, { saveHtml: false });
 
                 // Default quality is 50
                 const screenshot2 = await page.screenshot({ fullPage: true, type: 'jpeg', screenshotQuality: 50 });
-                expect(stub2.calledOnceWithExactly('SNAPSHOT.jpg', screenshot2, { contentType: 'image/jpeg' })).toBe(true);
-
-                mock.verify();
+                expect(object.setValue).toBeCalledWith('SNAPSHOT.jpg', screenshot2, { contentType: 'image/jpeg' });
             } finally {
+                openKVSSpy.mockRestore();
                 await browser.close();
             }
         });
