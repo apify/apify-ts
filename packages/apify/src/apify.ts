@@ -817,7 +817,7 @@ export class Apify {
 
     /**
      * Returns a new instance of the Apify API client. The `ApifyClient` class is provided
-     * by the <a href="https://www.npmjs.com/package/apify-client" target="_blank">apify-client</a>
+     * by the [apify-client](https://www.npmjs.com/package/apify-client)
      * NPM package, and it is automatically configured using the `APIFY_API_BASE_URL`, and `APIFY_TOKEN`
      * environment variables. You can override the token via the available options. That's useful
      * if you want to use the client as a different Apify user than the SDK internals are using.
