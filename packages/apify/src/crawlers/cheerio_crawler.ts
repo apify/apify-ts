@@ -376,9 +376,9 @@ export type CheerioHandlePage = (inputs: CheerioHandlePageInputs) => Promise<voi
  *
  * The crawler finishes when there are no more {@link Request} objects to crawl.
  *
- * `CheerioCrawler` downloads the web pages using the `{@link utils.requestAsBrowser}` utility function.
+ * `CheerioCrawler` downloads the web pages using the {@link utils.requestAsBrowser} utility function.
  * As opposed to the browser based crawlers that are automatically encoding the URLs, the
- * `{@link utils.requestAsBrowser}` function will not do so. We either need to manually encode the URLs
+ * {@link utils.requestAsBrowser} function will not do so. We either need to manually encode the URLs
  * via `encodeURI()` function, or set `forceUrlEncoding: true` in the `requestAsBrowserOptions`,
  * which will automatically encode all the URLs before accessing them.
  *
