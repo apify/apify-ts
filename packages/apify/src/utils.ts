@@ -84,9 +84,8 @@ const psTreePromised = util.promisify(psTree);
  * @param {string} [options.token]
  * @param {string} [options.maxRetries]
  * @param {string} [options.minDelayBetweenRetriesMillis]
- * @internal
  */
-export const newClient = (options = {}) => {
+export function newClient(options = {}): ApifyClient {
     ow(options, ow.object.exactShape({
         baseUrl: ow.optional.string.url,
         token: ow.optional.string,
@@ -103,7 +102,7 @@ export const newClient = (options = {}) => {
         baseUrl,
         token,
     });
-};
+}
 
 /**
  * Logs info about system, node version and apify package version.

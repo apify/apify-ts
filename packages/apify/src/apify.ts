@@ -1,6 +1,7 @@
 import ow from 'ow';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun } from './actor';
+import { ApifyClient } from 'apify-client';
+import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun, ApifyEnv } from './actor';
 import { initializeEvents, stopEvents } from './events';
 import { StorageManager } from './storages/storage_manager';
 import { Dataset } from './storages/dataset';
@@ -809,9 +810,8 @@ export class Apify {
      * For the list of the `APIFY_XXX` environment variables, see
      * [Actor documentation](https://docs.apify.com/actor/run#environment-variables).
      * If some of the variables are not defined or are invalid, the corresponding value in the resulting object will be null.
-     * @returns {ApifyEnv}
      */
-    getEnv() {
+    getEnv(): ApifyEnv {
         return getEnv();
     }
 
@@ -826,9 +826,8 @@ export class Apify {
      * @param {string} [options.token]
      * @param {string} [options.maxRetries]
      * @param {string} [options.minDelayBetweenRetriesMillis]
-     * @return {ApifyClient}
      */
-    newClient(options = {}) {
+    newClient(options = {}): ApifyClient {
         return this.config.createClient(options);
     }
 
@@ -853,9 +852,6 @@ export class Apify {
         };
     }
 
-    /**
-     * @param {Function} storageClass
-     */
     private _getStorageManager<T>(storageClass: Constructor<T>): StorageManager<T> {
         if (!this.storageManagers.has(storageClass)) {
             const manager = new StorageManager(storageClass, this.config);
