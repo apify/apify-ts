@@ -180,8 +180,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
 /**
  * Launches headless Chrome using Puppeteer pre-configured to work within the Apify platform.
  * The function has the same argument and the return value as `puppeteer.launch()`.
- * See <a href="https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#puppeteerlaunchoptions" target="_blank">
- * Puppeteer documentation</a> for more details.
+ * See [Puppeteer documentation](https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#puppeteerlaunchoptions) for more details.
  *
  * The `launchPuppeteer()` function alters the following Puppeteer options:
  *
@@ -194,8 +193,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
  *   If the proxy is HTTP (i.e. has the `http://` scheme) and contains username or password,
  *   the `launchPuppeteer` functions sets up an anonymous proxy HTTP
  *   to make the proxy work with headless Chrome. For more information, read the
- *   <a href="https://blog.apify.com/how-to-make-headless-chrome-and-puppeteer-use-a-proxy-server-with-authentication-249a21a79212"
- *   target="_blank">blog post about proxy-chain library</a>.
+ *   [blog post about proxy-chain library](https://blog.apify.com/how-to-make-headless-chrome-and-puppeteer-use-a-proxy-server-with-authentication-249a21a79212).
  *
  * To use this function, you need to have the [puppeteer](https://www.npmjs.com/package/puppeteer)
  * NPM package installed in your project.

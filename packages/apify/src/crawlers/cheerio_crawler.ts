@@ -236,9 +236,8 @@ export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
     postNavigationHooks?: Hook[];
 
     /**
-     * An array of <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types"
-     * target="_blank">MIME types</a> you want the crawler to load and process.
-     * By default, only `text/html` and `application/xhtml+xml` MIME types are supported.
+     * An array of [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
+     * you want the crawler to load and process. By default, only `text/html` and `application/xhtml+xml` MIME types are supported.
      */
     additionalMimeTypes?: string[];
 

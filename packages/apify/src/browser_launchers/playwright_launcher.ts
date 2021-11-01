@@ -118,8 +118,7 @@ function getDefaultExecutablePath(launchContext: PlaywrightLaunchContext): strin
 /**
  * Launches headless browsers using Playwright pre-configured to work within the Apify platform.
  * The function has the same return value as `browserType.launch()`.
- * See <a href="https://playwright.dev/docs/api/class-browsertype" target="_blank">
- * Playwright documentation</a> for more details.
+ * See [Playwright documentation](https://playwright.dev/docs/api/class-browsertype) for more details.
  *
  * The `launchPlaywright()` function alters the following Playwright options:
  *
@@ -132,8 +131,7 @@ function getDefaultExecutablePath(launchContext: PlaywrightLaunchContext): strin
  *   If the proxy is HTTP (i.e. has the `http://` scheme) and contains username or password,
  *   the `launchPlaywright` functions sets up an anonymous proxy HTTP
  *   to make the proxy work with headless Chrome. For more information, read the
- *   <a href="https://blog.apify.com/how-to-make-headless-chrome-and-puppeteer-use-a-proxy-server-with-authentication-249a21a79212"
- *   target="_blank">blog post about proxy-chain library</a>.
+ *   [blog post about proxy-chain library](https://blog.apify.com/how-to-make-headless-chrome-and-puppeteer-use-a-proxy-server-with-authentication-249a21a79212).
  *
  * To use this function, you need to have the [Playwright](https://www.npmjs.com/package/playwright)
  * NPM package installed in your project.

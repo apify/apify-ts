@@ -35,7 +35,10 @@
                 "exceptAfterSingleLine": true
             }
         ],
-        "max-len": ["error", 160],
+        "max-len": ["error", {
+            "code": 160,
+            "ignoreUrls": true
+        }],
         "no-continue": "off"
     }
 }
