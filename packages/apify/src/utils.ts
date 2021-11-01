@@ -41,6 +41,7 @@ import log from './utils_log';
 import { requestAsBrowser } from './utils_request';
 import { Request } from './request';
 import { ActorRun, Dictionary } from './typedefs';
+import { CheerioRoot } from './crawlers/cheerio_crawler';
 
 const rimrafp = util.promisify(rimraf);
 
@@ -83,6 +84,7 @@ const psTreePromised = util.promisify(psTree);
  * @param {string} [options.token]
  * @param {string} [options.maxRetries]
  * @param {string} [options.minDelayBetweenRetriesMillis]
+ * @internal
  */
 export const newClient = (options = {}) => {
     ow(options, ow.object.exactShape({
@@ -160,16 +162,13 @@ const createIsDockerPromise = () => {
 
 /**
  * Returns a `Promise` that resolves to true if the code is running in a Docker container.
- *
- * @param {boolean} forceReset
- * @return {Promise<boolean>}
  */
-export const isDocker = (forceReset) => {
+export function isDocker(forceReset?: boolean): Promise<boolean> {
     // Parameter forceReset is just internal for unit tests.
     if (!isDockerPromiseCache || forceReset) isDockerPromiseCache = createIsDockerPromise();
 
     return isDockerPromiseCache;
-};
+}
 
 /**
  * Computes a weighted average of an array of numbers, complemented by an array of weights.
@@ -349,17 +348,18 @@ export function getFirstKey<K extends PropertyKey>(dict: Record<K, unknown>): K 
 
 /**
  * Gets a typical path to Chrome executable, depending on the current operating system.
- *
- * @return {string}
  * @ignore
  */
-export const getTypicalChromeExecutablePath = () => {
+export function getTypicalChromeExecutablePath(): string {
     switch (os.platform()) {
-        case 'darwin': return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-        case 'win32': return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-        default: return '/usr/bin/google-chrome';
+        case 'darwin':
+            return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+        case 'win32':
+            return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        default:
+            return '/usr/bin/google-chrome';
     }
-};
+}
 
 /**
  * Wraps the provided Promise with another one that rejects with the given errorMessage
@@ -473,12 +473,10 @@ const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|
  * const html = '<html><body>Some text</body></html>';
  * const text = htmlToText(cheerio.load(html, { decodeEntities: true }));
  * ```
- * @param {(string|cheerio.Root)} html HTML text or parsed HTML represented using a
- * [cheerio](https://www.npmjs.com/package/cheerio) function.
+ * @param html HTML text or parsed HTML represented using a [cheerio](https://www.npmjs.com/package/cheerio) function.
  * @return {string} Plain text
- * @function
  */
-const htmlToText = (html) => {
+function htmlToText(html: string | CheerioRoot): string {
     if (!html) return '';
 
     // TODO: Add support for "html" being a Cheerio element, otherwise the only way
@@ -527,7 +525,7 @@ const htmlToText = (html) => {
     process($body.length > 0 ? $body : $.root());
 
     return text.trim();
-};
+}
 
 /**
  * Creates a standardized debug info from request and response. This info is usually added to dataset under the hidden `#debug` field.
@@ -648,12 +646,11 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
  *  You can supply an Apify token to override the default one
  *  that's used by the default ApifyClient instance.
  *  E.g. you can track other users' runs.
- * @returns {Promise<ActorRun>}
  * @deprecated
  *  Please use the 'waitForFinish' functions of 'apify-client'.
  * @ignore
  */
-export const waitForRunToFinish = async (options) => {
+export async function waitForRunToFinish(options): Promise<ActorRun> {
     ow(options, ow.object.exactShape({
         actorId: ow.string,
         runId: ow.string,
@@ -693,7 +690,7 @@ export const waitForRunToFinish = async (options) => {
     }
 
     return run;
-};
+}
 
 /**
  * Cleans up the local storage folder created when testing locally.
@@ -701,11 +698,9 @@ export const waitForRunToFinish = async (options) => {
  *
  * Be careful as this will remove the folder you provide and everything in it!
  *
- * @param {string} [folder] The folder to clean up
- * @returns {Promise<void>}
- * @function
+ * @param [folder] The folder to clean up
  */
-export const purgeLocalStorage = async (folder) => {
+export async function purgeLocalStorage(folder?: string): Promise<void> {
     // If the user did not provide a folder, try to get it from the env variables, or the default one
     if (!folder) {
         folder = process.env[ENV_VARS.LOCAL_STORAGE_DIR] || 'apify_storage';
@@ -713,7 +708,7 @@ export const purgeLocalStorage = async (folder) => {
 
     // Clear the folder
     await rimrafp(folder);
-};
+}
 
 // regular re-export as those methods should be part of `utils`
 export * from './utils_request';
