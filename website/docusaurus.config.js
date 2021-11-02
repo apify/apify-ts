@@ -1,6 +1,5 @@
 const { createHref } = require('./tools/utils/createHref');
-// FIXME for some reason this breaks the HP
-// const { externalLinkProcessor } = require('./tools/utils/externalLink');
+const { externalLinkProcessor } = require('./tools/utils/externalLink');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
@@ -43,7 +42,7 @@ module.exports = {
                     showLastUpdateTime: true,
                     path: '../docs',
                     sidebarPath: './sidebars.json',
-                    // rehypePlugins: [externalLinkProcessor],
+                    rehypePlugins: [externalLinkProcessor],
                 },
                 theme: {
                     customCss: '../src/css/customTheme.css',

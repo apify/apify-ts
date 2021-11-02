@@ -14,11 +14,6 @@ function isInternal(href) {
     );
 }
 
-// TODO ideally we should use this, but it breaks the HP somehow
-//   will need to debug from inside the plugin and maybe inline
-//   it to ease debugging and PR things later when they work as intended
-//   things to fix: @links and code blocks
-
 /**
  * @type {import('unified').Plugin}
  */
