@@ -10,7 +10,7 @@ import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
 import { startExpressAppPromise } from '../_helper';
-import Apify from '../../packages/apify/src/index';
+import Apify from '../../packages/apify/src';
 import * as utils from '../../packages/apify/src/utils';
 
 let prevEnvHeadless;
@@ -52,10 +52,11 @@ beforeAll(() => {
 
     // Find free port for the proxy
     return portastic.find({ min: 50100, max: 50199 }).then((ports) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const httpServer = http.createServer();
 
             // Setup proxy authorization
+            // @ts-expect-error
             httpServer.authenticate = function (req, fn) {
                 // parse the "Proxy-Authorization" header
                 const auth = req.headers['proxy-authorization'];
@@ -91,10 +92,14 @@ afterAll(() => {
 
 describe('Apify.launchPuppeteer()', () => {
     test('throws on invalid args', async () => {
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPuppeteer('some non-object')).rejects.toThrow(Error);
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPuppeteer(1234)).rejects.toThrow(Error);
 
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPuppeteer({ proxyUrl: 234 })).rejects.toThrow(Error);
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPuppeteer({ proxyUrl: {} })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
@@ -102,7 +107,9 @@ describe('Apify.launchPuppeteer()', () => {
         await expect(Apify.launchPuppeteer({ proxyUrl: 'socks5://user:pass@example.com:1234' })).rejects.toThrow(Error);
         await expect(Apify.launchPuppeteer({ proxyUrl: ' something really bad' })).rejects.toThrow(Error);
 
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPuppeteer({ launchOptions: { args: 'wrong args' } })).rejects.toThrow(Error);
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPuppeteer({ launchOptions: { args: [12, 34] } })).rejects.toThrow(Error);
     });
 
@@ -148,9 +155,11 @@ describe('Apify.launchPuppeteer()', () => {
         let page;
 
         // Test headless parameter
-        process.env[ENV_VARS.HEADLESS] = 0;
+        process.env[ENV_VARS.HEADLESS] = '0';
 
         return Apify.launchPuppeteer({
+            // TODO: how is this missing?
+            // @ts-expect-error PuppeteerLaunchOptions missing headless
             launchOptions: { headless: true },
             proxyUrl: `http://username:password@127.0.0.1:${proxyPort}`,
         })
@@ -181,6 +190,8 @@ describe('Apify.launchPuppeteer()', () => {
             userAgent: 'MyUserAgent/1234 AnotherString/456',
             launchOptions: { headless: true },
         };
+
+        // @ts-expect-error PuppeteerLaunchOptions missing headless
         return Apify.launchPuppeteer(opts)
             .then((result) => {
                 browser = result;
@@ -211,6 +222,7 @@ describe('Apify.launchPuppeteer()', () => {
         };
 
         try {
+            // @ts-expect-error Headless errors
             browser = await Apify.launchPuppeteer(opts);
             const page = await browser.newPage();
 
@@ -231,7 +243,7 @@ describe('Apify.launchPuppeteer()', () => {
     });
 
     test('launcher option works with type object', async () => {
-        const someProps = { foo: 'bar' };
+        const someProps: Record<string, unknown> = { foo: 'bar' };
         // Make it circular for extra security.
         someProps.props = someProps;
         let browser;
@@ -247,6 +259,7 @@ describe('Apify.launchPuppeteer()', () => {
                     },
                     someProps,
                 },
+                // @ts-expect-error PuppeteerLaunchOptions missing headless
                 launchOptions: { headless: true },
             });
         } finally {
@@ -259,6 +272,7 @@ describe('Apify.launchPuppeteer()', () => {
         try {
             browser = await Apify.launchPuppeteer({
                 useIncognitoPages: true,
+                // @ts-expect-error PuppeteerLaunchOptions missing headless
                 launchOptions: { headless: true },
             });
             const page1 = await browser.newPage();
@@ -276,6 +290,7 @@ describe('Apify.launchPuppeteer()', () => {
         try {
             browser = await Apify.launchPuppeteer({
                 useIncognitoPages: false,
+                // @ts-expect-error PuppeteerLaunchOptions missing headless
                 launchOptions: { headless: true },
             });
             const page1 = await browser.newPage();
@@ -296,6 +311,8 @@ describe('Apify.launchPuppeteer()', () => {
             browser = await Apify.launchPuppeteer({
                 useIncognitoPages: false,
                 launchOptions: {
+                    // TODO: see why this is missing
+                    // @ts-expect-error PuppeteerLaunchOptions missing userDataDir
                     userDataDir,
                     headless: true,
                 },

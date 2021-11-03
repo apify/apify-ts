@@ -8,7 +8,7 @@ import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import Apify from '../../packages/apify/src/index';
+import Apify from '../../packages/apify/src';
 import * as utils from '../../packages/apify/src/utils';
 
 import { PlaywrightLauncher } from '../../packages/apify/src/browser_launchers/playwright_launcher';
@@ -26,10 +26,11 @@ beforeAll(() => {
 
     // Find free port for the proxy
     return portastic.find({ min: 50000, max: 50099 }).then((ports) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const httpServer = http.createServer();
 
             // Setup proxy authorization
+            // @ts-expect-error
             httpServer.authenticate = function (req, fn) {
                 // parse the "Proxy-Authorization" header
                 const auth = req.headers['proxy-authorization'];
@@ -65,10 +66,14 @@ afterAll(() => {
 
 describe('Apify.launchPlaywright()', () => {
     test('throws on invalid args', async () => {
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPlaywright('some non-object')).rejects.toThrow(Error);
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPlaywright(1234)).rejects.toThrow(Error);
 
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPlaywright({ proxyUrl: 234 })).rejects.toThrow(Error);
+        // @ts-expect-error Validating JS side
         await expect(Apify.launchPlaywright({ proxyUrl: {} })).rejects.toThrow(Error);
         await expect(Apify.launchPlaywright({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
         await expect(Apify.launchPlaywright({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
@@ -80,26 +85,32 @@ describe('Apify.launchPlaywright()', () => {
     test('supports non-HTTP proxies without authentication', async () => {
         const closePromises = [];
         const browser1 = await Apify.launchPlaywright({ proxyUrl: 'socks4://example.com:1234' });
+        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser1.close());
 
         const browser2 = await Apify.launchPlaywright({ proxyUrl: 'socks5://example.com:1234' });
+        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser2.close());
 
         const browser3 = await Apify.launchPlaywright({ proxyUrl: 'https://example.com:1234' });
+        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser3.close());
 
         const browser4 = await Apify.launchPlaywright({ proxyUrl: 'HTTP://example.com:1234' });
+        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser4.close());
         await Promise.all(closePromises);
     });
 
     test('opens https://www.example.com', async () => {
         const browser = await Apify.launchPlaywright();
+        // @ts-expect-error Browsers marked as unknown
         const page = await browser.newPage();
 
         await page.goto('https://www.example.com');
         const html = await page.content();
         expect(html).toMatch('<h1>Example Domain</h1>');
+        // @ts-expect-error Browsers marked as unknown
         browser.close();
     });
     describe('headful mode', () => {
@@ -179,6 +190,7 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
+            // @ts-expect-error Interface for launch options is missing
             expect(plugin.launchOptions.executablePath).toEqual(target);
         });
 
@@ -189,6 +201,7 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
+            // @ts-expect-error Interface for launch options is missing
             expect(plugin.launchOptions.executablePath).toBe(utils.getTypicalChromeExecutablePath());
         });
 
@@ -203,6 +216,7 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
+            // @ts-expect-error Interface for launch options is missing
             expect(plugin.launchOptions.executablePath).toEqual(newPath);
         });
 
@@ -227,6 +241,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         try {
             browser = await Apify.launchPlaywright({
+                // @ts-expect-error Property does not exist for PlaywrightLaunchContext?
                 useIncognitoPages: true,
                 launchOptions: { headless: true },
             });
@@ -244,6 +259,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         try {
             browser = await Apify.launchPlaywright({
+                // @ts-expect-error Property does not exist for PlaywrightLaunchContext?
                 useIncognitoPages: false,
                 launchOptions: { headless: true },
             });
@@ -263,6 +279,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         try {
             browser = await Apify.launchPlaywright({
+                // @ts-expect-error Property does not exist for PlaywrightLaunchContext?
                 useIncognitoPages: false,
                 userDataDir,
             });
