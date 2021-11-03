@@ -3,11 +3,11 @@
 import os from 'os';
 import sinon from 'sinon';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
-import log from '../../packages/apify/src/utils_log';
-import Apify from '../../packages/apify/src/index';
-import { events } from '../../packages/apify/src/events';
-import { Snapshotter } from '../../packages/apify/src/autoscaling/snapshotter';
-import * as utils from '../../packages/apify/src/utils';
+import log from 'apify/src/utils_log';
+import Apify from 'apify/src';
+import { events } from 'apify/src/events';
+import { Snapshotter } from 'apify/src/autoscaling/snapshotter';
+import * as utils from 'apify/src/utils';
 
 const toBytes = (x) => x * 1024 * 1024;
 
@@ -29,7 +29,7 @@ describe('Snapshotter', () => {
     test('should collect snapshots with some values', async () => {
         // mock client data
         const oldStats = utils.apifyClient.stats;
-        utils.apifyClient.stats = {};
+        utils.apifyClient.stats = {} as never;
         utils.apifyClient.stats.rateLimitErrors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         const snapshotter = new Snapshotter();
@@ -154,19 +154,24 @@ describe('Snapshotter', () => {
         const noop = () => {};
         const snapshotter = new Snapshotter({ maxUsedCpuRatio: 0.5 });
 
+        // @ts-expect-error Calling private method
         snapshotter._snapshotCpuOnLocal(noop);
 
         times.idle++;
         times.other++;
+        // @ts-expect-error Calling private method
         snapshotter._snapshotCpuOnLocal(noop);
 
         times.other += 2;
+        // @ts-expect-error Calling private method
         snapshotter._snapshotCpuOnLocal(noop);
 
         times.idle += 2;
+        // @ts-expect-error Calling private method
         snapshotter._snapshotCpuOnLocal(noop);
 
         times.other += 4;
+        // @ts-expect-error Calling private method
         snapshotter._snapshotCpuOnLocal(noop);
 
         const loopSnapshots = snapshotter.getCpuSample();
@@ -216,21 +221,26 @@ describe('Snapshotter', () => {
                 mainProcessBytes: toBytes(1000),
                 childProcessesBytes: toBytes(1000),
             };
-            const getMem = async () => ({ ...memoryData });
+            const getMem = async () => ({ ...memoryData }) as utils.MemoryInfo;
             const stub = sinon.stub(utils, 'getMemoryInfo');
             stub.callsFake(getMem);
 
             process.env[ENV_VARS.MEMORY_MBYTES] = '10000';
 
             const snapshotter = new Snapshotter({ maxUsedMemoryRatio: 0.5 });
+            // @ts-expect-error Calling private method
             await snapshotter._snapshotMemoryOnLocal(noop);
             memoryData.mainProcessBytes = toBytes(2000);
+            // @ts-expect-error Calling private method
             await snapshotter._snapshotMemoryOnLocal(noop);
             memoryData.childProcessesBytes = toBytes(2000);
+            // @ts-expect-error Calling private method
             await snapshotter._snapshotMemoryOnLocal(noop);
             memoryData.mainProcessBytes = toBytes(3001);
+            // @ts-expect-error Calling private method
             await snapshotter._snapshotMemoryOnLocal(noop);
             memoryData.childProcessesBytes = toBytes(1999);
+            // @ts-expect-error Calling private method
             await snapshotter._snapshotMemoryOnLocal(noop);
             const memorySnapshots = snapshotter.getMemorySample();
 
@@ -259,11 +269,13 @@ describe('Snapshotter', () => {
         const stub = sinon.stub(snapshotter.log, 'warning');
         stub.callsFake(warning);
 
+        // @ts-expect-error Calling private method
         snapshotter._memoryOverloadWarning(memoryDataOverloaded);
         expect(logged).toBe(true);
 
         logged = false;
 
+        // @ts-expect-error Calling private method
         snapshotter._memoryOverloadWarning(memoryDataNotOverloaded);
         expect(logged).toBe(false);
 
@@ -276,7 +288,7 @@ describe('Snapshotter', () => {
             const noop = () => {};
             // mock client data
             const oldStats = utils.apifyClient.stats;
-            utils.apifyClient.stats = {};
+            utils.apifyClient.stats = {} as never;
             utils.apifyClient.stats.rateLimitErrors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
             const snapshotter = new Snapshotter({ maxClientErrors: 1 });
@@ -322,8 +334,9 @@ describe('Snapshotter', () => {
             const snapshot = eventLoopSnapshots[eventLoopSnapshots.length - 1 - i];
             expect(sample).toEqual(snapshot);
         }
-        const diffBetween = eventLoopSample[eventLoopSample.length - 1].createdAt - eventLoopSnapshots[eventLoopSnapshots.length - 1].createdAt;
-        const diffWithin = eventLoopSample[0].createdAt - eventLoopSample[eventLoopSample.length - 1].createdAt;
+        const diffBetween = eventLoopSample[eventLoopSample.length - 1].createdAt.getTime()
+            - eventLoopSnapshots[eventLoopSnapshots.length - 1].createdAt.getTime();
+        const diffWithin = eventLoopSample[0].createdAt.getTime() - eventLoopSample[eventLoopSample.length - 1].createdAt.getTime();
         expect(diffBetween).toBeLessThan(SAMPLE_SIZE_MILLIS);
         expect(diffWithin).toBeLessThan(SAMPLE_SIZE_MILLIS);
     });
