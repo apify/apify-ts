@@ -7,7 +7,8 @@ import os from 'os';
 import cheerio from 'cheerio';
 import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
-import Apify from 'apify/src';
+import { IncomingMessage } from 'http';
+import Apify from '../packages/apify/src';
 import * as utils from '../packages/apify/src/utils';
 import log from '../packages/apify/src/utils_log';
 import * as requestUtils from '../packages/apify/src/utils_request';
@@ -46,56 +47,78 @@ describe('utils.addCharsetToContentType()', () => {
 });
 
 describe('utils.isDocker()', () => {
-    test('works for dockerenv && cgroup', () => {
-        sinon.stub(fs, 'stat').callsFake((filePath, callback) => callback(null));
-        sinon.stub(fs, 'readFile').callsFake((filePath, encoding, callback) => callback(null, 'something ... docker ... something'));
+    test('works for dockerenv && cgroup', async () => {
+        const statStub = sinon
+            .stub(fs, 'stat')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, callback) => callback(null));
 
-        return utils
-            .isDocker(true)
-            .then((is) => {
-                expect(is).toBe(true);
-                fs.stat.restore();
-                fs.readFile.restore();
-            });
+        const readStub = sinon
+            .stub(fs, 'readFile')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... docker ... something'));
+
+        const is = await utils.isDocker(true);
+
+        expect(is).toBe(true);
+        statStub.restore();
+        readStub.restore();
     });
 
-    test('works for dockerenv', () => {
-        sinon.stub(fs, 'stat').callsFake((filePath, callback) => callback(null));
-        sinon.stub(fs, 'readFile').callsFake((filePath, encoding, callback) => callback(null, 'something ... ... something'));
+    test('works for dockerenv', async () => {
+        const statStub = sinon
+            .stub(fs, 'stat')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, callback) => callback(null));
 
-        return utils
-            .isDocker(true)
-            .then((is) => {
-                expect(is).toBe(true);
-                fs.stat.restore();
-                fs.readFile.restore();
-            });
+        const readFileStub = sinon
+            .stub(fs, 'readFile')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... ... something'));
+
+        const is = await utils.isDocker(true);
+
+        expect(is).toBe(true);
+        statStub.restore();
+        readFileStub.restore();
     });
 
-    test('works for cgroup', () => {
-        sinon.stub(fs, 'stat').callsFake((filePath, callback) => callback(new Error()));
-        sinon.stub(fs, 'readFile').callsFake((filePath, encoding, callback) => callback(null, 'something ... docker ... something'));
+    test('works for cgroup', async () => {
+        const statStub = sinon
+            .stub(fs, 'stat')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, callback) => callback(new Error()));
 
-        return utils
-            .isDocker(true)
-            .then((is) => {
-                expect(is).toBe(true);
-                fs.stat.restore();
-                fs.readFile.restore();
-            });
+        const readFileStub = sinon
+            .stub(fs, 'readFile')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... docker ... something'));
+
+        const is = await utils
+            .isDocker(true);
+
+        expect(is).toBe(true);
+        statStub.restore();
+        readFileStub.restore();
     });
 
-    test('works for nothing', () => {
-        sinon.stub(fs, 'stat').callsFake((filePath, callback) => callback(new Error()));
-        sinon.stub(fs, 'readFile').callsFake((filePath, encoding, callback) => callback(null, 'something ... ... something'));
+    test('works for nothing', async () => {
+        const statStub = sinon
+            .stub(fs, 'stat')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, callback) => callback(new Error()));
 
-        return utils
-            .isDocker(true)
-            .then((is) => {
-                expect(is).toBe(false);
-                fs.stat.restore();
-                fs.readFile.restore();
-            });
+        const readFileStub = sinon
+            .stub(fs, 'readFile')
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... ... something'));
+
+        const is = await utils
+            .isDocker(true);
+
+        expect(is).toBe(false);
+        statStub.restore();
+        readFileStub.restore();
     });
 });
 
@@ -126,7 +149,7 @@ describe('utils.getMemoryInfo()', () => {
                 freeBytes: 222,
                 usedBytes: 111,
             });
-            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20000000);
+            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
             utilsMock.verify();
             osMock.verify();
@@ -141,13 +164,15 @@ describe('utils.getMemoryInfo()', () => {
             .once()
             .returns(Promise.resolve(true));
 
-        sinon
+        const accessStub = sinon
             .stub(fs, 'access')
-            .callsFake((file, mode, callback) => callback(null));
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_file, _mode, callback) => callback(null));
 
-        sinon
+        const readFileStub = sinon
             .stub(fs, 'readFile')
-            .callsFake((filePath, encoding, callback) => {
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
                 if (filePath === '/sys/fs/cgroup/memory/memory.limit_in_bytes') callback(null, '333');
                 else if (filePath === '/sys/fs/cgroup/memory/memory.usage_in_bytes') callback(null, '111');
                 else throw new Error('Invalid path');
@@ -160,11 +185,11 @@ describe('utils.getMemoryInfo()', () => {
                 freeBytes: 222,
                 usedBytes: 111,
             });
-            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20000000);
+            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
             utilsMock.verify();
-            fs.readFile.restore();
-            fs.access.restore();
+            readFileStub.restore();
+            accessStub.restore();
         }
     });
 
@@ -197,8 +222,8 @@ describe('utils.getMemoryInfo()', () => {
                 freeBytes: 222,
                 usedBytes: 111,
             });
-            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20000000);
-            expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20000000);
+            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
+            expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
             utilsMock.verify();
             osMock.verify();
@@ -216,13 +241,15 @@ describe('utils.getMemoryInfo()', () => {
             .once()
             .returns(Promise.resolve(true));
 
-        sinon
+        const accessStub = sinon
             .stub(fs, 'access')
-            .callsFake((file, mode, callback) => callback(null));
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_file, _mode, callback) => callback(null));
 
-        sinon
+        const readFileStub = sinon
             .stub(fs, 'readFile')
-            .callsFake((filePath, encoding, callback) => {
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
                 if (filePath === '/sys/fs/cgroup/memory/memory.limit_in_bytes') callback(null, '333');
                 else if (filePath === '/sys/fs/cgroup/memory/memory.usage_in_bytes') callback(null, '111');
                 else throw new Error('Invalid path');
@@ -237,12 +264,12 @@ describe('utils.getMemoryInfo()', () => {
                 freeBytes: 222,
                 usedBytes: 111,
             });
-            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20000000);
-            expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20000000);
+            expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
+            expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
             utilsMock.verify();
-            fs.readFile.restore();
-            fs.access.restore();
+            readFileStub.restore();
+            accessStub.restore();
             delete process.env[ENV_VARS.HEADLESS];
             if (browser) browser.close();
         }
@@ -256,13 +283,15 @@ describe('utils.getMemoryInfo()', () => {
             .once()
             .returns(Promise.resolve(true));
 
-        sinon
+        const accessStub = sinon
             .stub(fs, 'access')
-            .callsFake((file, mode, callback) => callback(null));
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_file, _mode, callback) => callback(null));
 
-        sinon
+        const readFileStub = sinon
             .stub(fs, 'readFile')
-            .callsFake((filePath, encoding, callback) => {
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((filePath, _encoding, callback) => {
                 if (filePath === '/sys/fs/cgroup/memory/memory.limit_in_bytes') callback(null, '333');
                 else if (filePath === '/sys/fs/cgroup/memory/memory.usage_in_bytes') callback(null, '111');
                 else throw new Error('Invalid path');
@@ -277,8 +306,8 @@ describe('utils.getMemoryInfo()', () => {
             });
         } finally {
             utilsMock.verify();
-            fs.readFile.restore();
-            fs.access.restore();
+            readFileStub.restore();
+            accessStub.restore();
         }
     });
 
@@ -291,13 +320,15 @@ describe('utils.getMemoryInfo()', () => {
             .once()
             .returns(Promise.resolve(true));
 
-        sinon
+        const accessStub = sinon
             .stub(fs, 'access')
-            .callsFake((file, mode, callback) => callback(null));
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_file, _mode, callback) => callback(null));
 
-        sinon
+        const readFileStub = sinon
             .stub(fs, 'readFile')
-            .callsFake((filePath, encoding, callback) => {
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
                 if (filePath === '/sys/fs/cgroup/memory/memory.limit_in_bytes') callback(null, '9223372036854771712');
                 else if (filePath === '/sys/fs/cgroup/memory/memory.usage_in_bytes') callback(null, '111');
                 else throw new Error('Invalid path');
@@ -318,8 +349,8 @@ describe('utils.getMemoryInfo()', () => {
         } finally {
             utilsMock.verify();
             osMock.verify();
-            fs.readFile.restore();
-            fs.access.restore();
+            readFileStub.restore();
+            accessStub.restore();
         }
     });
 
@@ -331,13 +362,15 @@ describe('utils.getMemoryInfo()', () => {
             .once()
             .returns(Promise.resolve(true));
 
-        sinon
+        const accessStub = sinon
             .stub(fs, 'access')
-            .callsFake((file, mode, callback) => callback('error'));
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_file: string, _mode: unknown, callback: (err: string) => void) => callback('error'));
 
-        sinon
+        const readFileStub = sinon
             .stub(fs, 'readFile')
-            .callsFake((filePath, encoding, callback) => {
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
                 if (filePath === '/sys/fs/cgroup/memory.max') callback(null, '333\n');
                 else if (filePath === '/sys/fs/cgroup/memory.current') callback(null, '111\n');
                 else throw new Error('Invalid path');
@@ -352,8 +385,8 @@ describe('utils.getMemoryInfo()', () => {
             });
         } finally {
             utilsMock.verify();
-            fs.readFile.restore();
-            fs.access.restore();
+            readFileStub.restore();
+            accessStub.restore();
         }
     });
 
@@ -366,13 +399,15 @@ describe('utils.getMemoryInfo()', () => {
             .once()
             .returns(Promise.resolve(true));
 
-        sinon
+        const accessStub = sinon
             .stub(fs, 'access')
-            .callsFake((file, mode, callback) => callback('error'));
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((_file: string, _mode: unknown, callback: (err: string) => void) => callback('error'));
 
-        sinon
+        const readStub = sinon
             .stub(fs, 'readFile')
-            .callsFake((filePath, encoding, callback) => {
+            // @ts-expect-error sinon doesn't pick up certain FS overloads
+            .callsFake((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
                 if (filePath === '/sys/fs/cgroup/memory.max') callback(null, 'max\n');
                 else if (filePath === '/sys/fs/cgroup/memory.current') callback(null, '111\n');
                 else throw new Error('Invalid path');
@@ -393,8 +428,8 @@ describe('utils.getMemoryInfo()', () => {
         } finally {
             utilsMock.verify();
             osMock.verify();
-            fs.readFile.restore();
-            fs.access.restore();
+            readStub.restore();
+            accessStub.restore();
         }
     });
 });
@@ -402,7 +437,7 @@ describe('utils.getMemoryInfo()', () => {
 describe('utils.isAtHome()', () => {
     test('works', () => {
         expect(utils.isAtHome()).toBe(false);
-        process.env[ENV_VARS.IS_AT_HOME] = 1;
+        process.env[ENV_VARS.IS_AT_HOME] = '1';
         expect(utils.isAtHome()).toBe(true);
         delete process.env[ENV_VARS.IS_AT_HOME];
         expect(utils.isAtHome()).toBe(false);
@@ -422,29 +457,18 @@ describe('utils.weightedAvg()', () => {
 });
 
 describe('Apify.utils.sleep()', () => {
-    test('works', () => {
-        let timeBefore;
-        return Promise.resolve()
-            .then(() => {
-                return Apify.utils.sleep(0);
-            })
-            .then(() => {
-                return Apify.utils.sleep();
-            })
-            .then(() => {
-                return Apify.utils.sleep(null);
-            })
-            .then(() => {
-                return Apify.utils.sleep(-1);
-            })
-            .then(() => {
-                timeBefore = Date.now();
-                return Apify.utils.sleep(100);
-            })
-            .then(() => {
-                const timeAfter = Date.now();
-                expect(timeAfter - timeBefore).toBeGreaterThanOrEqual(95);
-            });
+    test('works', async () => {
+        await Promise.resolve();
+        await Apify.utils.sleep(0);
+        await Apify.utils.sleep();
+        await Apify.utils.sleep(null);
+        await Apify.utils.sleep(-1);
+
+        const timeBefore = Date.now();
+        await Apify.utils.sleep(100);
+        const timeAfter = Date.now();
+
+        expect(timeAfter - timeBefore).toBeGreaterThanOrEqual(95);
     });
 });
 
@@ -467,7 +491,7 @@ describe('Apify.utils.extractUrls()', () => {
         one: [{ http: string }],
         two: array.map((url) => ({ num: 123, url })),
     });
-    const makeCSV = (array, delimiter) => array.map((url) => ['ABC', 233, url, '.'].join(delimiter || ',')).join('\n');
+    const makeCSV = (array: string[], delimiter?: string) => array.map((url) => ['ABC', 233, url, '.'].join(delimiter || ',')).join('\n');
 
     const makeText = (array) => {
         const text = fs.readFileSync(path.join(__dirname, 'data', 'lipsum.txt'), 'utf8').split('');
@@ -603,18 +627,18 @@ describe('Apify.utils.extractUrls()', () => {
 
 describe('Apify.utils.downloadListOfUrls()', () => {
     const { downloadListOfUrls } = utils.publicUtils;
-    let stub;
+    let stub: sinon.SinonStub<[options?: utils.RequestAsBrowserOptions], Promise<utils.RequestAsBrowserResult<unknown>>>;
     beforeEach(() => {
         stub = sinon.stub(requestUtils, 'requestAsBrowser');
     });
     afterEach(() => {
-        requestUtils.requestAsBrowser.restore();
+        stub.restore();
     });
 
     test('downloads a list of URLs', () => {
         const text = fs.readFileSync(path.join(__dirname, 'data', 'simple_url_list.txt'), 'utf8');
         const arr = text.trim().split(/[\r\n]+/g).map((u) => u.trim());
-        stub.resolves({ body: text });
+        stub.resolves({ body: text } as requestUtils.RequestAsBrowserResult);
 
         return expect(downloadListOfUrls({
             url: 'http://www.nowhere12345.com',
@@ -736,7 +760,7 @@ describe('utils.createRequestDebugInfo()', () => {
             errorMessages: ['xxx'],
             someThingElse: 'xxx',
             someOther: 'yyy',
-        };
+        } as unknown as Apify.Request;
 
         const response = {
             status: () => 201,
@@ -769,12 +793,12 @@ describe('utils.createRequestDebugInfo()', () => {
             errorMessages: ['xxx'],
             someThingElse: 'xxx',
             someOther: 'yyy',
-        };
+        } as unknown as Apify.Request;
 
         const response = {
             statusCode: 201,
             another: 'yyy',
-        };
+        } as unknown as IncomingMessage;
 
         const additionalFields = {
             foo: 'bar',
@@ -889,34 +913,34 @@ describe('utils.printOutdatedSdkWarning()', () => {
 
 describe('utils.parseContentTypeFromResponse', () => {
     test('should parse content type from header', () => {
-        const parsed = utils.parseContentTypeFromResponse({ url: 'http://example.com', headers: { 'content-type': 'text/html; charset=utf-8' } });
+        const parsed = utils.parseContentTypeFromResponse({ url: 'http://example.com', headers: { 'content-type': 'text/html; charset=utf-8' } } as IncomingMessage);
         expect(parsed.type).toBe('text/html');
         expect(parsed.charset).toBe('utf-8');
     });
 
     test('should parse content type from file extension', () => {
-        const parsedHtml = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.html?someparam=foo', headers: {} });
+        const parsedHtml = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.html?someparam=foo', headers: {} } as IncomingMessage);
         expect(parsedHtml.type).toBe('text/html');
         expect(parsedHtml.charset).toBe('utf-8');
 
-        const parsedTxt = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.txt', headers: {} });
+        const parsedTxt = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.txt', headers: {} } as IncomingMessage);
         expect(parsedTxt.type).toBe('text/plain');
         expect(parsedTxt.charset).toBe('utf-8');
     });
 
     test('should return default content type for bad content type headers', () => {
-        const parsedWithoutCt = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file', headers: {} });
+        const parsedWithoutCt = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file', headers: {} } as IncomingMessage);
         expect(parsedWithoutCt.type).toBe('application/octet-stream');
         expect(parsedWithoutCt.charset).toBe('utf-8');
 
         const parsedBadHeader = utils.parseContentTypeFromResponse({
             url: 'http://www.example.com/foo/file.html',
             headers: { 'content-type': 'text/html,text/html' },
-        });
+        } as IncomingMessage);
         expect(parsedBadHeader.type).toBe('text/html');
         expect(parsedBadHeader.charset).toBe('utf-8');
 
-        const parsedReallyBad = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo', headers: { 'content-type': 'crazy-stuff' } });
+        const parsedReallyBad = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo', headers: { 'content-type': 'crazy-stuff' } } as IncomingMessage);
         expect(parsedReallyBad.type).toBe('application/octet-stream');
         expect(parsedReallyBad.charset).toBe('utf-8');
     });
