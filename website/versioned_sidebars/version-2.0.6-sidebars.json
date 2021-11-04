@@ -49,6 +49,186 @@
                     "id": "version-2.0.6/guides/migration-to-v1"
                 }
             ]
+        },
+        {
+            "type": "category",
+            "label": "Examples",
+            "items": [
+                "version-2.0.6/examples/accept-user-input",
+                "version-2.0.6/examples/add-data-to-dataset",
+                "version-2.0.6/examples/basic-crawler",
+                "version-2.0.6/examples/call-actor",
+                "version-2.0.6/examples/capture-screenshot",
+                "version-2.0.6/examples/cheerio-crawler",
+                "version-2.0.6/examples/crawl-all-links",
+                "version-2.0.6/examples/crawl-multiple-urls",
+                "version-2.0.6/examples/crawl-relative-links",
+                "version-2.0.6/examples/crawl-single-url",
+                "version-2.0.6/examples/crawl-sitemap",
+                "version-2.0.6/examples/crawl-some-links",
+                "version-2.0.6/examples/forms",
+                "version-2.0.6/examples/map-and-reduce",
+                "version-2.0.6/examples/playwright-crawler",
+                "version-2.0.6/examples/puppeteer-crawler",
+                "version-2.0.6/examples/puppeteer-recursive-crawl",
+                "version-2.0.6/examples/puppeteer-with-proxy",
+                "version-2.0.6/examples/synchronous-run",
+                "version-2.0.6/examples/use-stealth-mode"
+            ]
+        },
+        {
+            "type": "category",
+            "label": "API Reference",
+            "items": [
+                "version-2.0.6/api/apify",
+                "version-2.0.6/api/configuration",
+                {
+                    "type": "category",
+                    "label": "Crawlers",
+                    "items": [
+                        "version-2.0.6/api/basic-crawler",
+                        "version-2.0.6/api/cheerio-crawler",
+                        "version-2.0.6/api/playwright-crawler",
+                        "version-2.0.6/api/puppeteer-crawler",
+                        "version-2.0.6/api/statistics"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Result Stores",
+                    "items": [
+                        "version-2.0.6/api/dataset",
+                        "version-2.0.6/api/key-value-store"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Scaling",
+                    "items": [
+                        "version-2.0.6/api/autoscaled-pool",
+                        "version-2.0.6/api/session",
+                        "version-2.0.6/api/session-pool",
+                        "version-2.0.6/api/proxy-configuration",
+                        "version-2.0.6/api/snapshotter",
+                        "version-2.0.6/api/system-status"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Sources",
+                    "items": [
+                        "version-2.0.6/api/request",
+                        "version-2.0.6/api/request-list",
+                        "version-2.0.6/api/request-queue",
+                        "version-2.0.6/api/pseudo-url"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Utilities",
+                    "items": [
+                        "version-2.0.6/api/utils",
+                        "version-2.0.6/api/log",
+                        "version-2.0.6/api/playwright",
+                        "version-2.0.6/api/puppeteer",
+                        "version-2.0.6/api/social"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "category",
+            "label": "Type Definitions",
+            "items": [
+                {
+                    "type": "category",
+                    "label": "Constructor Options",
+                    "items": [
+                        "version-2.0.6/typedefs/autoscaled-pool-options",
+                        "version-2.0.6/typedefs/basic-crawler-options",
+                        "version-2.0.6/typedefs/cheerio-crawler-options",
+                        "version-2.0.6/typedefs/playwright-crawler-options",
+                        "version-2.0.6/typedefs/playwright-launch-context",
+                        "version-2.0.6/typedefs/puppeteer-crawler-options",
+                        "version-2.0.6/typedefs/puppeteer-launch-context",
+                        "version-2.0.6/typedefs/proxy-configuration-options",
+                        "version-2.0.6/typedefs/proxy-info",
+                        "version-2.0.6/typedefs/logger-options",
+                        "version-2.0.6/typedefs/request-options",
+                        "version-2.0.6/typedefs/request-list-options",
+                        "version-2.0.6/typedefs/request-as-browser-options",
+                        "version-2.0.6/typedefs/session-options",
+                        "version-2.0.6/typedefs/session-pool-options",
+                        "version-2.0.6/typedefs/snapshotter-options",
+                        "version-2.0.6/typedefs/stealth-options",
+                        "version-2.0.6/typedefs/system-status-options"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Functions - Crawlers",
+                    "items": [
+                        "version-2.0.6/typedefs/cheerio-handle-page",
+                        "version-2.0.6/typedefs/cheerio-handle-page-inputs",
+                        "version-2.0.6/typedefs/handle-failed-request",
+                        "version-2.0.6/typedefs/handle-failed-request-input",
+                        "version-2.0.6/typedefs/handle-request",
+                        "version-2.0.6/typedefs/handle-request-inputs",
+                        "version-2.0.6/typedefs/prepare-request",
+                        "version-2.0.6/typedefs/prepare-request-inputs",
+                        "version-2.0.6/typedefs/playwright-handle-page-function",
+                        "version-2.0.6/typedefs/playwright-handle-page-function-param",
+                        "version-2.0.6/typedefs/puppeteer-handle-page",
+                        "version-2.0.6/typedefs/puppeteer-handle-page-inputs"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Functions - Dataset",
+                    "items": [
+                        "version-2.0.6/typedefs/dataset-consumer",
+                        "version-2.0.6/typedefs/dataset-mapper",
+                        "version-2.0.6/typedefs/dataset-reducer"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Functions - KeyValueStore",
+                    "items": [
+                        "version-2.0.6/typedefs/key-consumer"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Functions - Sessions",
+                    "items": [
+                        "version-2.0.6/typedefs/create-session"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Functions - Utilities",
+                    "items": [
+                        "version-2.0.6/typedefs/request-transform"
+                    ]
+                },
+                {
+                    "type": "category",
+                    "label": "Return Types",
+                    "items": [
+                        "version-2.0.6/typedefs/actor-run",
+                        "version-2.0.6/api/apify-call-error",
+                        "version-2.0.6/typedefs/apify-env",
+                        "version-2.0.6/typedefs/dataset-content",
+                        "version-2.0.6/typedefs/memory-info",
+                        "version-2.0.6/typedefs/queue-operation-info",
+                        "version-2.0.6/typedefs/request-list-state",
+                        "version-2.0.6/typedefs/session-state",
+                        "version-2.0.6/typedefs/social-handles",
+                        "version-2.0.6/typedefs/system-info"
+                    ]
+                }
+            ]
         }
     ]
 }
