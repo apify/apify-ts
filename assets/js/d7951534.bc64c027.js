@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[8498],{2106:e=>{e.exports=JSON.parse('{"title":"Guides","keywords":["guides"],"slug":"/guides","permalink":"/docs/guides","navigation":{"previous":{"title":"Realworld example","permalink":"/docs/introduction/realworld-example"},"next":{"title":"Motivation","permalink":"/docs/"}}}')}}]);
