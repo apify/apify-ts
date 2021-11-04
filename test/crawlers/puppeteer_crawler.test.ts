@@ -1,9 +1,9 @@
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
-import log from '../../packages/apify/src/utils_log';
-import Apify from '../../packages/apify/src';
+import log from 'apify/src/utils_log';
+import Apify, { BrowserCrawlingContext, PuppeteerCookie, PuppeteerHandlePage } from 'apify/src';
+import * as utils from 'apify/src/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utils from '../../packages/apify/src/utils';
 
 describe('PuppeteerCrawler', () => {
     let prevEnvHeadless;
@@ -22,7 +22,7 @@ describe('PuppeteerCrawler', () => {
         const storageDir = await localStorageEmulator.init();
         Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
         const sources = ['http://example.com/'];
-        requestList = await Apify.openRequestList(`sources-${Math.random * 10000}`, sources);
+        requestList = await Apify.openRequestList(`sources-${Math.random() * 10000}`, sources);
     });
     afterAll(async () => {
         log.setLevel(logLevel);
@@ -43,9 +43,11 @@ describe('PuppeteerCrawler', () => {
         const processed = [];
         const failed = [];
         const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
-        const handlePageFunction = async ({ page, request, response }) => {
+        const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
             await page.waitForSelector('title');
 
+            // TODO: response is typed as IncomingMessage
+            // @ts-expect-error
             expect(await response.status()).toBe(200);
             request.userData.title = await page.title();
             processed.push(request);
@@ -56,7 +58,9 @@ describe('PuppeteerCrawler', () => {
             minConcurrency: 1,
             maxConcurrency: 1,
             handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => failed.push(request),
+            handleFailedRequestFunction: async ({ request }) => {
+                failed.push(request);
+            },
         });
 
         await requestListLarge.initialize();
@@ -80,12 +84,15 @@ describe('PuppeteerCrawler', () => {
             maxRequestRetries: 0,
             maxConcurrency: 1,
             handlePageFunction: async () => {},
-            preNavigationHooks: [(context, gotoOptions) => {
+            preNavigationHooks: [async (_context, gotoOptions) => {
                 options = gotoOptions;
             }],
+            // TODO: gotoTimeoutSecs does not exist in PuppeteerCrawlerOptions
+            // @ts-expect-error
             gotoTimeoutSecs: timeoutSecs,
         });
 
+        // @ts-expect-error Accessing private prop
         expect(puppeteerCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
         await puppeteerCrawler.run();
 
@@ -95,7 +102,9 @@ describe('PuppeteerCrawler', () => {
     test('should support custom gotoFunction', async () => {
         const functions = {
             handlePageFunction: async () => {},
-            gotoFunction: ({ page, request }, options) => {
+            gotoFunction: ({ page, request }: BrowserCrawlingContext, options) => {
+                // TODO: figure out if we can make page present in types
+                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
                 return page.goto(request.url, options);
             },
         };
@@ -109,6 +118,7 @@ describe('PuppeteerCrawler', () => {
             gotoFunction: functions.gotoFunction,
         });
 
+        // @ts-expect-error Accessing private method
         expect(puppeteerCrawler.gotoFunction).toEqual(functions.gotoFunction);
         await puppeteerCrawler.run();
 
@@ -124,12 +134,13 @@ describe('PuppeteerCrawler', () => {
             maxRequestRetries: 0,
             maxConcurrency: 1,
             handlePageFunction: async () => {},
-            preNavigationHooks: [(context, gotoOptions) => {
+            preNavigationHooks: [async (_context, gotoOptions) => {
                 options = gotoOptions;
             }],
             navigationTimeoutSecs: timeoutSecs,
         });
 
+        // @ts-expect-error Accessing private method
         expect(puppeteerCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
         await puppeteerCrawler.run();
 
@@ -138,7 +149,7 @@ describe('PuppeteerCrawler', () => {
 
     test('should throw if launchOptions.proxyUrl is supplied', async () => {
         try {
-            const puppeteerCrawler = new Apify.PuppeteerCrawler({ //eslint-disable-line
+            new Apify.PuppeteerCrawler({ //eslint-disable-line
                 requestList,
                 maxRequestRetries: 0,
                 maxConcurrency: 1,
@@ -163,6 +174,8 @@ describe('PuppeteerCrawler', () => {
             launchContext: {
                 useChrome: true,
                 launchOptions: {
+                    // TODO: headless is not defined
+                    // @ts-expect-error
                     headless: true,
                 },
             },
@@ -187,6 +200,8 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
+            // TODO: headless is not defined
+            // @ts-expect-error
             launchContext: opts,
             handlePageFunction: async ({ page }) => {
                 loadedUserAgent = await page.evaluate(() => window.navigator.userAgent);
@@ -199,13 +214,13 @@ describe('PuppeteerCrawler', () => {
     });
 
     test('should set cookies assigned to session to page', async () => {
-        const cookies = [
+        const cookies: PuppeteerCookie[] = [
             {
                 name: 'example_cookie_name',
                 domain: '.example.com',
                 value: 'example_cookie_value',
                 expires: -1,
-            },
+            } as never,
         ];
 
         let pageCookies;
@@ -214,6 +229,8 @@ describe('PuppeteerCrawler', () => {
         const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             useSessionPool: true,
+            // TODO: persistCookiesPerSession is missing
+            // @ts-expect-error
             persistCookiesPerSession: true,
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {

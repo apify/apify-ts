@@ -9,17 +9,18 @@ import sinon from 'sinon';
 import { Readable } from 'stream';
 import iconv from 'iconv-lite';
 import { Log } from '@apify/log';
-import log from '../../packages/apify/src/utils_log';
-import Apify from '../../packages/apify/src';
-import { sleep } from '../../packages/apify/src/utils';
-import { Session } from '../../packages/apify/src/session_pool/session';
-import { STATUS_CODES_BLOCKED } from '../../packages/apify/src/constants';
+import log from 'apify/src/utils_log';
+import Apify, { CheerioHandlePageInputs, Source } from 'apify/src';
+import { sleep } from 'apify/src/utils';
+import { Session } from 'apify/src/session_pool/session';
+import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
+import * as utilsRequest from 'apify/src/utils_request';
+import { CrawlerExtension } from 'apify/src/crawlers/crawler_extension';
+import { Request } from 'apify/src/request';
+import { AutoscaledPool } from 'apify/src/autoscaling/autoscaled_pool';
+import { mergeCookies } from 'apify/src/crawlers/crawler_utils';
+import { IncomingMessage } from 'http';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utilsRequest from '../../packages/apify/src/utils_request';
-import { CrawlerExtension } from '../../packages/apify/src/crawlers/crawler_extension';
-import { Request } from '../../packages/apify/src/request';
-import { AutoscaledPool } from '../../packages/apify/src/autoscaling/autoscaled_pool';
-import { mergeCookies } from '../../packages/apify/src/crawlers/crawler_utils';
 
 const HOST = '127.0.0.1';
 
@@ -189,7 +190,9 @@ describe('CheerioCrawler', () => {
             minConcurrency: 2,
             maxConcurrency: 2,
             handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => failed.push(request),
+            handleFailedRequestFunction: async ({ request }) => {
+                failed.push(request);
+            },
         });
 
         await cheerioCrawler.run();
@@ -221,6 +224,7 @@ describe('CheerioCrawler', () => {
         await requestList.initialize();
         await cheerioCrawler.run();
 
+        // @ts-expect-error Accessing private prop
         expect(cheerioCrawler.ignoreSslErrors).toBeTruthy();
     });
 
@@ -241,12 +245,11 @@ describe('CheerioCrawler', () => {
         const cheerioCrawler = new Apify.CheerioCrawler({
             requestList,
             handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => {
+            handleFailedRequestFunction: async ({ request }) => {
                 failed = request;
             },
             prepareRequestFunction: async ({ request }) => {
                 request.url = MODIFIED_URL;
-                return request;
             },
         });
         await cheerioCrawler.run();
@@ -275,7 +278,9 @@ describe('CheerioCrawler', () => {
             minConcurrency: 2,
             maxConcurrency: 2,
             handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => failed.push(request),
+            handleFailedRequestFunction: async ({ request }) => {
+                failed.push(request);
+            },
         });
 
         await cheerioCrawler.run();
@@ -300,7 +305,7 @@ describe('CheerioCrawler', () => {
             prepareRequestFunction: async () => {
             },
             postResponseFunction: async ({ response }) => {
-                response.headers['content-type'] = 'application/json; charset=utf-8'; // text/html is set
+                (response as IncomingMessage).headers['content-type'] = 'application/json; charset=utf-8'; // text/html is set
             },
             handlePageFunction: async ({ contentType }) => {
                 const { type } = contentType;
@@ -360,9 +365,12 @@ describe('CheerioCrawler', () => {
                 minConcurrency: 2,
                 maxConcurrency: 2,
                 handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => failed.push(request),
+                handleFailedRequestFunction: async ({ request }) => {
+                    failed.push(request);
+                },
             });
 
+            // @ts-expect-error Overriding private method
             cheerioCrawler._requestFunction = async () => {
                 await sleep(300);
                 return '<html><head></head><body>Body</body></html>';
@@ -395,10 +403,13 @@ describe('CheerioCrawler', () => {
                 minConcurrency: 2,
                 maxConcurrency: 2,
                 handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => failed.push(request),
+                handleFailedRequestFunction: async ({ request }) => {
+                    failed.push(request);
+                },
             });
 
             // Override low value to prevent seeing timeouts from BasicCrawler
+            // @ts-expect-error Overriding private property
             cheerioCrawler.handleRequestTimeoutMillis = 10000;
 
             await cheerioCrawler.run();
@@ -433,7 +444,9 @@ describe('CheerioCrawler', () => {
                 minConcurrency: 2,
                 maxConcurrency: 2,
                 handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => failed.push(request),
+                handleFailedRequestFunction: async ({ request }) => {
+                    failed.push(request);
+                },
             });
 
             await requestList.initialize();
@@ -451,6 +464,8 @@ describe('CheerioCrawler', () => {
             const crawler = new Apify.CheerioCrawler({
                 requestList,
                 handlePageFunction: async ({ response }) => {
+                    // TODO: this accesses IncomingMessage#request, which doesn't exist according to types
+                    // @ts-expect-error
                     headers.push(response.request.options.headers);
                 },
             });
@@ -582,7 +597,7 @@ describe('CheerioCrawler', () => {
     test('should work with all defaults content types', async () => {
         let handledRequests = 0;
         const contentTypes = ['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml', 'application/json'];
-        const sources = contentTypes.map((contentType) => ({
+        const sources: Source[] = contentTypes.map((contentType) => ({
             url: `http://${HOST}:${port}/mock?ct=${contentType}`,
             payload: JSON.stringify({ headers: { 'Content-Type': contentType }, statusCode: 200 }),
             method: 'POST',
@@ -667,6 +682,7 @@ describe('CheerioCrawler', () => {
 
             const stream = Readable.from([buf]);
 
+            // @ts-expect-error Using private method
             const { response, encoding } = crawler._encodeResponse({}, stream);
             expect(encoding).toBe('utf8');
             for await (const chunk of response) {
@@ -689,6 +705,7 @@ describe('CheerioCrawler', () => {
 
             const stream = Readable.from([buf]);
 
+            // @ts-expect-error Using private method
             const { response, encoding } = crawler._encodeResponse({}, stream, 'ascii');
             expect(encoding).toBe('utf8');
             for await (const chunk of response) {
@@ -737,7 +754,7 @@ describe('CheerioCrawler', () => {
 
             const proxies = [];
             const sessions = [];
-            const handlePageFunction = async ({ session, proxyInfo }) => {
+            const handlePageFunction = async ({ session, proxyInfo }: CheerioHandlePageInputs) => {
                 proxies.push(proxyInfo);
                 sessions.push(session);
             };
@@ -798,7 +815,9 @@ describe('CheerioCrawler', () => {
                 },
                 handlePageFunction: async () => {},
             });
+            // @ts-expect-error Accessing private prop
             expect(crawler.sessionPoolOptions.sessionOptions.maxUsageCount).toBe(1);
+            // @ts-expect-error Accessing private prop
             expect(crawler.sessionPoolOptions.persistStateKeyValueStoreId).toBe('abc');
         });
 
@@ -824,6 +843,7 @@ describe('CheerioCrawler', () => {
             expect(sessions.length).toBe(4);
             sessions.forEach((session) => {
                 // TODO this test is flaky in CI and we need some more info to debug why.
+                // @ts-expect-error Accessing private prop
                 if (session.errorScore !== 1) {
                     console.log('SESSIONS:');
                     console.dir(sessions);
@@ -856,17 +876,21 @@ describe('CheerioCrawler', () => {
                         failed.push(request);
                     },
                 });
+                // @ts-expect-error accessing private method
                 const oldCall = crawler._throwOnBlockedRequest.bind(crawler);
+                // @ts-expect-error Overriding private method
                 crawler._throwOnBlockedRequest = (session, statusCode) => {
                     sessions.push(session);
                     return oldCall(session, statusCode);
                 };
                 await crawler.run();
 
+                // eslint-disable-next-line no-loop-func
                 sessions.forEach((session) => {
                     expect(session.errorScore).toBeGreaterThanOrEqual(session.maxErrorScore);
                 });
 
+                // eslint-disable-next-line no-loop-func
                 failed.forEach((request) => {
                     expect(request.errorMessages[0].includes(`Request blocked - received ${code} status code`)).toBeTruthy();
                 });
@@ -881,7 +905,7 @@ describe('CheerioCrawler', () => {
                     useSessionPool: false,
                     persistCookiesPerSession: true,
                     maxRequestRetries: 0,
-                    handlePageFunction: () => {
+                    handlePageFunction: async () => {
                     },
                 });
             } catch (e) {
@@ -912,7 +936,7 @@ describe('CheerioCrawler', () => {
 
             const spy = jest.spyOn(utilsRequest, 'requestAsBrowser');
             await crawler.run();
-            requests.forEach((req, i) => {
+            requests.forEach((_req, i) => {
                 if (i >= 1) {
                     expect(spy.mock.calls[i][0].headers.Cookie).toBe(cookie);
                 }
@@ -1046,7 +1070,7 @@ describe('CheerioCrawler', () => {
 
             const fakeCall = async (opt) => {
                 usedRequests.push(opt);
-                return { body: status };
+                return { body: status } as never;
             };
 
             const stub = sinon.stub(utilsRequest, 'requestAsBrowser').callsFake(fakeCall);
@@ -1061,7 +1085,9 @@ describe('CheerioCrawler', () => {
                 proxyConfiguration,
             });
 
+            // @ts-expect-error Accessing private method
             const oldHandleRequestF = cheerioCrawler._handleRequestFunction;
+            // @ts-expect-error Overriding private method
             cheerioCrawler._handleRequestFunction = async (opts) => {
                 usedSession = opts.session;
                 return oldHandleRequestF.call(cheerioCrawler, opts);
@@ -1140,7 +1166,7 @@ describe('CheerioCrawler', () => {
         test('handleFailedRequestFunction contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
 
-            const stub = sinon.stub(utilsRequest, 'requestAsBrowser').resolves({ body: { connected: true } });
+            const stub = sinon.stub(utilsRequest, 'requestAsBrowser').resolves({ body: { connected: true } } as never);
 
             const proxyConfiguration = await Apify.createProxyConfiguration();
 
@@ -1170,12 +1196,11 @@ describe('CheerioCrawler', () => {
         let requestList;
 
         class DummyExtension extends CrawlerExtension {
-            constructor(options) {
+            constructor(readonly options) {
                 super();
-                this.options = options;
             }
 
-            getCrawlerOptions() {
+            override getCrawlerOptions() {
                 return this.options;
             }
         }
@@ -1194,6 +1219,7 @@ describe('CheerioCrawler', () => {
                 },
             });
             expect(
+                // @ts-expect-error Validating JS side checks
                 () => cheerioCrawler.use({}),
             ).toThrow('Expected object `{}` to be of type `CrawlerExtension`');
         });
@@ -1230,18 +1256,23 @@ describe('CheerioCrawler', () => {
                 handleFailedRequestFunction: async () => {
                 },
             });
+            // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.useSessionPool).toEqual(false);
             cheerioCrawler.use(extension);
+            // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.useSessionPool).toEqual(true);
+            // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.prepareRequestFunction).toEqual(prepareRequestFunction);
+            // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.handlePageFunction).toBeUndefined();
+            // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.userProvidedHandler).toBeUndefined();
         });
     });
 });
 
 async function getRequestListForMock(port, mockData, pathName = 'mock') {
-    const sources = [1, 2, 3, 4].map((num) => {
+    const sources: Source[] = [1, 2, 3, 4].map((num) => {
         return {
             url: `http://${HOST}:${port}/${pathName}?a=${num}`,
             payload: JSON.stringify(mockData),

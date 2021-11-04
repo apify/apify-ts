@@ -103,6 +103,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
      * You can tweak those to fine-tune browser management.
      */
+    // TODO: this interface doesn't include the hooks
     browserPoolOptions?: BrowserPoolOptions;
 
     /**

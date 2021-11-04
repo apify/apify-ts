@@ -1,9 +1,9 @@
 import sinon from 'sinon';
-import { Statistics } from '../../packages/apify/src/crawlers/statistics';
+import { Statistics } from 'apify/src/crawlers/statistics';
+import Apify from 'apify/src';
+import { events } from 'apify/src/events';
+import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import Apify from '../../packages/apify/src';
-import { events } from '../../packages/apify/src/events';
-import { ACTOR_EVENT_NAMES_EX } from '../../packages/apify/src/constants';
 
 describe('Statistics', () => {
     const getPerMinute = (jobCount, totalTickMillis) => {
@@ -43,11 +43,13 @@ describe('Statistics', () => {
         // needs to go first for predictability
         test('should increment id by each new consecutive instance', () => {
             expect(stats.id).toEqual(0);
+            // @ts-expect-error Accessing private prop
             expect(Statistics.id).toEqual(1);
             expect(stats.persistStateKey).toEqual('SDK_CRAWLER_STATISTICS_0');
             const [n1, n2] = [new Statistics(), new Statistics()];
             expect(n1.id).toEqual(1);
             expect(n2.id).toEqual(2);
+            // @ts-expect-error Accessing private prop
             expect(Statistics.id).toEqual(3);
         });
 

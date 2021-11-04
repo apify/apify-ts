@@ -1,4 +1,4 @@
-import { diffCookies } from '../../packages/apify/src/crawlers/crawler_utils';
+import { diffCookies } from 'apify/src/crawlers/crawler_utils';
 
 const cookie1 = 'test_cookie=1';
 const cookie2 = 'new_test_cookie=2';

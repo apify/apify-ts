@@ -18,7 +18,7 @@ import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
 import { Hook } from './browser_crawler';
 
-export interface CrawlingContext {
+export interface CrawlingContext extends Record<PropertyKey, unknown> {
     id: string;
     /**
      *   The original {@link Request} object.
