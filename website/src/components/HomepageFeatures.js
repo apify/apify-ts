@@ -4,17 +4,18 @@ import styles from './HomepageFeatures.module.css';
 
 const FeatureList = [
   {
-    title: 'Easy to Use',
-    Svg: require('../../static/img/cloud_icon.svg').default,
+    title: 'Runs on JavaScript',
+    Svg: require('../../static/img/javascript_logo.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+          <b>JavaScript</b> is the language of the web. Apify SDK builds on popular tools like <a href='https://www.npmjs.com/package/playwright'>playwright</a>,
+          <a href='https://www.npmjs.com/package/puppeteer'>puppeteer</a> and <a href='https://www.npmjs.com/package/cheerio'>cheerio</a>,
+          to deliver <b>large-scale high-performance</b> web scraping and crawling of any website.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Automates any web workflow',
     Svg: require('../../static/img/cloud_icon.svg').default,
     description: (
       <>
@@ -24,12 +25,12 @@ const FeatureList = [
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Works on any system',
     Svg: require('../../static/img/cloud_icon.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+          Apify SDK can be used <b>stand-alone</b> on your own systems or it can run as a <b>serverless microservice on the Apify Platform</b>.
+          <a href='https://my.apify.com/actors'>Get started with Apify Platform</a>
       </>
     ),
   },
