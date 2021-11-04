@@ -8,10 +8,10 @@ import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import Apify from '../../packages/apify/src';
-import * as utils from '../../packages/apify/src/utils';
+import Apify from 'apify/src';
+import * as utils from 'apify/src/utils';
 
-import { PlaywrightLauncher } from '../../packages/apify/src/browser_launchers/playwright_launcher';
+import { PlaywrightLauncher } from 'apify/src/browser_launchers/playwright_launcher';
 
 let prevEnvHeadless;
 let proxyServer;
@@ -190,6 +190,7 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
+            // TODO: see why this is missing
             // @ts-expect-error Interface for launch options is missing
             expect(plugin.launchOptions.executablePath).toEqual(target);
         });
@@ -201,6 +202,7 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
+            // TODO: see why this is missing
             // @ts-expect-error Interface for launch options is missing
             expect(plugin.launchOptions.executablePath).toBe(utils.getTypicalChromeExecutablePath());
         });
@@ -216,6 +218,7 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
+            // TODO: see why this is missing
             // @ts-expect-error Interface for launch options is missing
             expect(plugin.launchOptions.executablePath).toEqual(newPath);
         });
@@ -241,6 +244,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         try {
             browser = await Apify.launchPlaywright({
+                // TODO: see why useIncognitoPages is missing for PlaywrightLaunchContext
                 // @ts-expect-error Property does not exist for PlaywrightLaunchContext?
                 useIncognitoPages: true,
                 launchOptions: { headless: true },
@@ -259,6 +263,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         try {
             browser = await Apify.launchPlaywright({
+                // TODO: see why useIncognitoPages is missing for PlaywrightLaunchContext
                 // @ts-expect-error Property does not exist for PlaywrightLaunchContext?
                 useIncognitoPages: false,
                 launchOptions: { headless: true },
@@ -279,6 +284,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         try {
             browser = await Apify.launchPlaywright({
+                // TODO: see why useIncognitoPages is missing for PlaywrightLaunchContext
                 // @ts-expect-error Property does not exist for PlaywrightLaunchContext?
                 useIncognitoPages: false,
                 userDataDir,

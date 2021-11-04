@@ -8,10 +8,10 @@ import cheerio from 'cheerio';
 import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
 import { IncomingMessage } from 'http';
-import Apify from '../packages/apify/src';
-import * as utils from '../packages/apify/src/utils';
-import log from '../packages/apify/src/utils_log';
-import * as requestUtils from '../packages/apify/src/utils_request';
+import Apify from 'apify/src';
+import * as utils from 'apify/src/utils';
+import log from 'apify/src/utils_log';
+import * as requestUtils from 'apify/src/utils_request';
 import * as htmlToTextData from './data/html_to_text_test_data';
 
 describe('utils.newClient()', () => {

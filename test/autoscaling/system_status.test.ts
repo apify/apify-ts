@@ -1,6 +1,6 @@
 import log from 'apify/src/utils_log';
-import { SystemStatus } from '../../packages/apify/src/autoscaling/system_status';
-import { Snapshotter } from '../../packages/apify/src/autoscaling/snapshotter';
+import { SystemStatus } from 'apify/src/autoscaling/system_status';
+import { Snapshotter } from 'apify/src/autoscaling/snapshotter';
 
 describe('SystemStatus', () => {
     let logLevel;
@@ -14,16 +14,7 @@ describe('SystemStatus', () => {
     });
 
     class MockSnapshotter {
-        memSnapshots: any[];
-        loopSnapshots: any[];
-        cpuSnapshots: any[];
-        clientSnapshots: any[];
-        constructor(memSnapshots: any[], loopSnapshots: any[], cpuSnapshots: any[], clientSnapshots: any[]) {
-            this.memSnapshots = memSnapshots;
-            this.loopSnapshots = loopSnapshots;
-            this.cpuSnapshots = cpuSnapshots;
-            this.clientSnapshots = clientSnapshots;
-        }
+        constructor(readonly memSnapshots: any[], readonly loopSnapshots: any[], readonly cpuSnapshots: any[], readonly clientSnapshots: any[]) {}
 
         getMemorySample(offset: number) {
             return this.memSnapshots.slice(-offset);

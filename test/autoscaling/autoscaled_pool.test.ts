@@ -1,8 +1,8 @@
 /* eslint-disable dot-notation */
 import _ from 'underscore';
-import log from '../../packages/apify/src/utils_log';
-import { sleep } from '../../packages/apify/src/utils';
-import { AutoscaledPool } from '../../packages/apify/src/autoscaling/autoscaled_pool';
+import log from 'apify/src/utils_log';
+import { sleep } from 'apify/src/utils';
+import { AutoscaledPool } from 'apify/src/autoscaling/autoscaled_pool';
 
 /* eslint-disable no-underscore-dangle */
 
@@ -198,6 +198,7 @@ describe('AutoscaledPool', () => {
             // Should scale because we bumped up current concurrency.
             // @ts-expect-error Overwriting readonly private prop
             pool._currentConcurrency = Math.floor(pool.desiredConcurrency * pool.desiredConcurrencyRatio);
+            // @ts-expect-error Accessing private prop
             let newConcurrency = pool.desiredConcurrency + Math.ceil(pool.desiredConcurrency * pool.scaleUpStepRatio);
             // @ts-expect-error Calling private method
             pool._autoscale(cb);
@@ -205,6 +206,7 @@ describe('AutoscaledPool', () => {
 
             // Should scale down.
             systemStatus.okLately = false;
+            // @ts-expect-error Accessing private prop
             newConcurrency = pool.desiredConcurrency - Math.ceil(pool.desiredConcurrency * pool.scaleDownStepRatio);
             // @ts-expect-error Calling private method
             pool._autoscale(cb);
