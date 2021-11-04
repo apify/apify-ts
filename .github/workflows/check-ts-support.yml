@@ -19,7 +19,7 @@ jobs:
                     registry-url: https://registry.npmjs.org/
             -   name: Check TS support
                 run: |
-                    npm install             # install SDK deps
+                    npm install --force     # install SDK deps
                     yarn link               # link the local version of SDK
                     cd ts-check             # go to the TS skeleton project directory
                     yarn                    # install its deps
