@@ -103,37 +103,37 @@ app.get('/headers', (req, res) => {
     res.status(200).json({ headers: req.headers });
 });
 
-app.get('/invalidContentType', (req, res) => {
+app.get('/invalidContentType', (_req, res) => {
     res.send({ some: 'json' });
 });
 
-app.post('/jsonError', (req, res) => {
+app.post('/jsonError', (_req, res) => {
     res
         .status(500)
         .json({ message: 'CUSTOM_ERROR' });
 });
 
-app.get('/mirror', (req, res) => {
+app.get('/mirror', (_req, res) => {
     res.send('<html><head><title>Title</title></head><body>DATA</body></html>');
 });
 
-app.get('/html-type', (req, res) => {
+app.get('/html-type', (_req, res) => {
     res.type('html').send(responseSamples.html);
 });
 
-app.get('/json-type', (req, res) => {
+app.get('/json-type', (_req, res) => {
     res.json(responseSamples.json);
 });
-app.get('/xml-type', (req, res) => {
+app.get('/xml-type', (_req, res) => {
     res.type('application/xml');
     res.send(responseSamples.xml);
 });
-app.get('/image-type', (req, res) => {
+app.get('/image-type', (_req, res) => {
     res.type('image/png');
     res.send(responseSamples.image);
 });
 
-app.get('/timeout', async (req, res) => {
+app.get('/timeout', async (_req, res) => {
     await sleep(32000);
     res.type('html').send('<div>TEST</div>');
 });
@@ -960,7 +960,7 @@ describe('CheerioCrawler', () => {
                 handlePageFunction: async ({ json }) => {
                     responses.push(json);
                 },
-                preNavigationHooks: [(context, options) => {
+                preNavigationHooks: [(_context, options) => {
                     requestAsBrowserOptions.push(options);
                 }],
             });
