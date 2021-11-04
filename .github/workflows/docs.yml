@@ -36,7 +36,7 @@ jobs:
                     # install website deps
                     npm install --force
                     # add examples
-                    node tools/build_docs.js
+                    npm run generate
                     # build and deploy the docs
                     npm run deploy
                 env:
