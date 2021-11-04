@@ -446,7 +446,8 @@ describe('BasicCrawler', () => {
 
             await basicCrawler.run();
 
-            expect(processed.includes(request0, processed.indexOf(request1))).toBe(true);
+            // TODO: see why the request1 was passed as a second parameter to includes
+            expect(processed.includes(request0)).toBe(true);
 
             mock.verify();
             sinon.restore();
