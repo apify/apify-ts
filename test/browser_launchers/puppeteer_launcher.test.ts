@@ -9,7 +9,7 @@ import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
-import Apify from 'apify/src';
+import Apify, { Dictionary } from 'apify/src';
 import * as utils from 'apify/src/utils';
 import { startExpressAppPromise } from '../_helper';
 
@@ -245,7 +245,7 @@ describe('Apify.launchPuppeteer()', () => {
     });
 
     test('launcher option works with type object', async () => {
-        const someProps: Record<string, unknown> = { foo: 'bar' };
+        const someProps: Dictionary = { foo: 'bar' };
         // Make it circular for extra security.
         someProps.props = someProps;
         let browser;
