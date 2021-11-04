@@ -12,7 +12,7 @@ import Apify from '../packages/apify/src';
 import * as utils from '../packages/apify/src/utils';
 import log from '../packages/apify/src/utils_log';
 import * as requestUtils from '../packages/apify/src/utils_request';
-import htmlToTextData from './data/html_to_text_test_data';
+import * as htmlToTextData from './data/html_to_text_test_data';
 
 describe('utils.newClient()', () => {
     test('reads environment variables correctly', () => {
