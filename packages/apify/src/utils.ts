@@ -401,7 +401,7 @@ export function isAtHome(): boolean {
  * ```
  * @param millis Period of time to sleep, in milliseconds. If not a positive number, the returned promise resolves immediately.
  */
-export function sleep(millis: number): Promise<void> {
+export function sleep(millis?: number): Promise<void> {
     return new Promise((res) => setTimeout(res, millis));
 }
 
@@ -434,7 +434,7 @@ async function downloadListOfUrls(options: { url: string; encoding?: BufferEncod
  * @param options.string
  * @param [options.urlRegExp=Apify.utils.URL_NO_COMMAS_REGEX]
  */
-function extractUrls(options: { string: string; urlRegExp: RegExp }): string[] {
+function extractUrls(options: { string: string; urlRegExp?: RegExp }): string[] {
     ow(options, ow.object.exactShape({
         string: ow.string,
         urlRegExp: ow.optional.regExp,

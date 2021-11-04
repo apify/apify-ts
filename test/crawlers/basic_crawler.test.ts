@@ -1,13 +1,13 @@
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
-import log from '../../packages/apify/src/utils_log';
-import Apify from '../../packages/apify/src';
-import * as keyValueStore from '../../packages/apify/src/storages/key_value_store';
-import { RequestQueue } from '../../packages/apify/src/storages/request_queue';
-import { events } from '../../packages/apify/src/events';
+import log from 'apify/src/utils_log';
+import Apify from 'apify/src';
+import * as keyValueStore from 'apify/src/storages/key_value_store';
+import { QueueOperationInfo, RequestQueue } from 'apify/src/storages/request_queue';
+import { events } from 'apify/src/events';
+import * as utils from 'apify/src/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import * as utils from '../../packages/apify/src/utils';
 
 describe('BasicCrawler', () => {
     let logLevel;
@@ -100,6 +100,7 @@ describe('BasicCrawler', () => {
         mock.verify();
 
         // clean up
+        // @ts-expect-error Accessing private method
         await basicCrawler.autoscaledPool._destroy(); // eslint-disable-line no-underscore-dangle
     });
 
@@ -169,7 +170,7 @@ describe('BasicCrawler', () => {
         };
 
         let handleFailedRequestFunctionCalls = 0;
-        const handleFailedRequestFunction = () => {
+        const handleFailedRequestFunction = async () => {
             handleFailedRequestFunctionCalls++;
         };
 
@@ -248,7 +249,7 @@ describe('BasicCrawler', () => {
     test('should require at least one of RequestQueue and RequestList', () => {
         const requestList = new Apify.RequestList({ sources: [] });
         const requestQueue = new RequestQueue({ id: 'xxx', client: utils.apifyClient });
-        const handleRequestFunction = () => {};
+        const handleRequestFunction = async () => {};
 
         expect(() => new Apify.BasicCrawler({ handleRequestFunction })).toThrowError();
         expect(() => new Apify.BasicCrawler({ handleRequestFunction, requestList })).not.toThrowError();
@@ -304,8 +305,11 @@ describe('BasicCrawler', () => {
             .withArgs(new Apify.Request(sources[2]), { forefront: true })
             .returns(Promise.resolve({ requestId: 'id-2' }));
 
+        // @ts-expect-error Using private prop
         const request0 = new Apify.Request({ id: 'id-0', ...sources[0] });
+        // @ts-expect-error Using private prop
         const request1 = new Apify.Request({ id: 'id-1', ...sources[1] });
+        // @ts-expect-error Using private prop
         const request2 = new Apify.Request({ id: 'id-2', ...sources[2] });
 
         // 1st try
@@ -390,9 +394,10 @@ describe('BasicCrawler', () => {
 
             const crawler = new Apify.BasicCrawler({
                 requestQueue,
-                handleRequestFunction: () => {},
+                handleRequestFunction: async () => {},
             });
 
+            // @ts-expect-error Accessing private prop
             expect(await crawler._isTaskReadyFunction()).toBe(false); // eslint-disable-line no-underscore-dangle
         },
     );
@@ -421,6 +426,7 @@ describe('BasicCrawler', () => {
             });
 
             // Speed up the test
+            // @ts-expect-error Accessing private prop
             basicCrawler.autoscaledPoolOptions.maybeRunIntervalSecs = 0.05;
 
             const request0 = new Apify.Request({ url: 'http://example.com/0' });
@@ -440,7 +446,7 @@ describe('BasicCrawler', () => {
 
             await basicCrawler.run();
 
-            expect(processed.includes(request0, request1)).toBe(true);
+            expect(processed.includes(request0, processed.indexOf(request1))).toBe(true);
 
             mock.verify();
             sinon.restore();
@@ -466,7 +472,7 @@ describe('BasicCrawler', () => {
         };
 
         let handleFailedRequestFunctionCalls = 0;
-        const handleFailedRequestFunction = () => {
+        const handleFailedRequestFunction = async () => {
             handleFailedRequestFunctionCalls++;
         };
 
@@ -503,11 +509,13 @@ describe('BasicCrawler', () => {
         const requestQueue = new RequestQueue({ id: 'id', client: utils.apifyClient });
         requestQueue.isEmpty = async () => false;
         requestQueue.isFinished = async () => false;
+        // @ts-expect-error Using private prop
         requestQueue.fetchNextRequest = async () => (new Apify.Request({ id: 'id', url: 'http://example.com' }));
+        // @ts-expect-error Overriding the method for testing purposes
         requestQueue.markRequestHandled = async () => {};
-        let stub = sinon
+        const requestQueueStub = sinon
             .stub(requestQueue, 'handledCount')
-            .returns(33);
+            .returns(Promise.resolve(33));
 
         let count = 0;
         let crawler = new Apify.BasicCrawler({
@@ -521,7 +529,7 @@ describe('BasicCrawler', () => {
         });
 
         await crawler.run();
-        sinon.assert.called(stub);
+        sinon.assert.called(requestQueueStub);
         expect(count).toBe(7);
         sinon.restore();
 
@@ -529,7 +537,7 @@ describe('BasicCrawler', () => {
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
         let requestList = new Apify.RequestList({ sources });
         await requestList.initialize();
-        stub = sinon
+        const requestListStub = sinon
             .stub(requestList, 'handledCount')
             .returns(33);
 
@@ -545,7 +553,7 @@ describe('BasicCrawler', () => {
         });
 
         await crawler.run();
-        sinon.assert.called(stub);
+        sinon.assert.called(requestListStub);
         expect(count).toBe(7);
         sinon.restore();
 
@@ -557,11 +565,11 @@ describe('BasicCrawler', () => {
 
         const queueStub = sinon
             .stub(requestQueue, 'handledCount')
-            .returns(33);
+            .returns(Promise.resolve(33));
 
         const addRequestStub = sinon
             .stub(requestQueue, 'addRequest')
-            .returns(Promise.resolve());
+            .returns(Promise.resolve() as unknown as Promise<QueueOperationInfo>);
 
         count = 0;
         crawler = new Apify.BasicCrawler({
@@ -594,7 +602,9 @@ describe('BasicCrawler', () => {
             handleRequestTimeoutSecs: 0.01,
             maxRequestRetries: 1,
             handleRequestFunction: () => utils.sleep(1000),
-            handleFailedRequestFunction: ({ request }) => results.push(request),
+            handleFailedRequestFunction: async ({ request }) => {
+                results.push(request);
+            },
         });
 
         await crawler.run();
@@ -614,10 +624,13 @@ describe('BasicCrawler', () => {
             handleRequestTimeoutSecs: Infinity,
             maxRequestRetries: 1,
             handleRequestFunction: () => utils.sleep(1000),
-            handleFailedRequestFunction: ({ request }) => results.push(request),
+            handleFailedRequestFunction: async ({ request }) => {
+                results.push(request);
+            },
         });
 
         const maxSignedInteger = 2 ** 31 - 1;
+        // @ts-expect-error Accessing private prop
         expect(crawler.handleRequestTimeoutMillis).toBe(maxSignedInteger);
     });
 
@@ -641,7 +654,9 @@ describe('BasicCrawler', () => {
                     expect(session.constructor.name).toEqual('Session');
                     expect(session.id).toBeDefined();
                 },
-                handleFailedRequestFunction: ({ request }) => results.push(request),
+                handleFailedRequestFunction: async ({ request }) => {
+                    results.push(request);
+                },
             });
 
             await crawler.run();
@@ -664,7 +679,7 @@ describe('BasicCrawler', () => {
                     persistStateKey: 'POOL',
                 },
                 handleRequestFunction: async () => {},
-                handleFailedRequestFunction: () => {},
+                handleFailedRequestFunction: async () => {},
             });
             await crawler.run();
 
@@ -686,9 +701,10 @@ describe('BasicCrawler', () => {
                     maxPoolSize: 10,
                 },
                 handleRequestFunction: async () => {},
-                handleFailedRequestFunction: () => {},
+                handleFailedRequestFunction: async () => {},
             });
 
+            // @ts-expect-error Accessing private prop
             crawler._loadHandledRequestCount = () => { // eslint-disable-line
                 expect(crawler.sessionPool).toBeDefined();
                 expect(events.listenerCount(ACTOR_EVENT_NAMES.PERSIST_STATE)).toEqual(1);
@@ -720,7 +736,9 @@ describe('BasicCrawler', () => {
                 requestList,
                 minConcurrency: 4,
                 async handleRequestFunction(crawlingContext) {
+                    // @ts-expect-error Accessing private prop
                     mainContexts[counter] = crawler.crawlingContexts.get(crawlingContext.id);
+                    // @ts-expect-error Accessing private prop
                     otherContexts[counter] = Array.from(crawler.crawlingContexts).map(([, v]) => v);
                     counter++;
                     if (counter === 4) finish();
@@ -732,6 +750,7 @@ describe('BasicCrawler', () => {
             expect(counter).toBe(4);
             expect(mainContexts).toHaveLength(4);
             expect(otherContexts).toHaveLength(4);
+            // @ts-expect-error Accessing private prop
             expect(crawler.crawlingContexts.size).toBe(0);
             mainContexts.forEach((ctx, idx) => {
                 expect(typeof ctx.id).toBe('string');

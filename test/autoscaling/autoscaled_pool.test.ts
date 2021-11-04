@@ -1,7 +1,8 @@
+/* eslint-disable dot-notation */
 import _ from 'underscore';
-import log from '../../packages/apify/src/utils_log';
-import { sleep } from '../../packages/apify/src/utils';
-import { AutoscaledPool } from '../../packages/apify/src/autoscaling/autoscaled_pool';
+import log from 'apify/src/utils_log';
+import { sleep } from 'apify/src/utils';
+import { AutoscaledPool } from 'apify/src/autoscaling/autoscaled_pool';
 
 /* eslint-disable no-underscore-dangle */
 
@@ -127,7 +128,12 @@ describe('AutoscaledPool', () => {
 
     describe('should scale correctly', () => {
         class MockSystemStatus {
-            constructor(okNow, okLately) {
+            okNow: boolean;
+            okLately: boolean;
+            getCurrentStatus: () => { isSystemIdle: boolean; };
+            getHistoricalStatus: () => { isSystemIdle: boolean; };
+
+            constructor(okNow: boolean, okLately: boolean) {
                 this.okNow = okNow;
                 this.okLately = okLately;
                 this.getCurrentStatus = () => ({ isSystemIdle: this.okNow });
@@ -135,8 +141,8 @@ describe('AutoscaledPool', () => {
             }
         }
 
-        let pool;
-        let systemStatus;
+        let pool: AutoscaledPool;
+        let systemStatus: MockSystemStatus;
         const cb = () => {};
         beforeEach(() => {
             systemStatus = new MockSystemStatus(true, true);
@@ -147,26 +153,34 @@ describe('AutoscaledPool', () => {
                 isFinishedFunction: async () => false,
                 isTaskReadyFunction: async () => true,
             });
+            // @ts-expect-error Mock
             pool.systemStatus = systemStatus;
         });
 
         test('works with low values', () => {
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toBe(2);
 
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toBe(2); // because currentConcurrency is not high enough;
 
+            // @ts-expect-error Overwriting readonly private prop
             pool._currentConcurrency = 2;
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toBe(3);
 
             systemStatus.okNow = false; // this should have no effect
+            // @ts-expect-error Overwriting readonly private prop
             pool._currentConcurrency = 3;
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toBe(4);
 
             systemStatus.okLately = false;
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toBe(3);
         });
@@ -174,20 +188,27 @@ describe('AutoscaledPool', () => {
         test('works with high values', () => {
             // Should not scale because current concurrency is too low.
             pool.desiredConcurrency = 50;
+            // @ts-expect-error Overwriting readonly private prop
             pool._currentConcurrency = Math.floor(pool.desiredConcurrency * pool.desiredConcurrencyRatio) - 1;
             systemStatus.okLately = true;
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toBe(50);
 
             // Should scale because we bumped up current concurrency.
+            // @ts-expect-error Overwriting readonly private prop
             pool._currentConcurrency = Math.floor(pool.desiredConcurrency * pool.desiredConcurrencyRatio);
+            // @ts-expect-error Accessing private prop
             let newConcurrency = pool.desiredConcurrency + Math.ceil(pool.desiredConcurrency * pool.scaleUpStepRatio);
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toEqual(newConcurrency);
 
             // Should scale down.
             systemStatus.okLately = false;
+            // @ts-expect-error Accessing private prop
             newConcurrency = pool.desiredConcurrency - Math.ceil(pool.desiredConcurrency * pool.scaleDownStepRatio);
+            // @ts-expect-error Calling private method
             pool._autoscale(cb);
             expect(pool.desiredConcurrency).toEqual(newConcurrency);
         });
@@ -196,14 +217,19 @@ describe('AutoscaledPool', () => {
             let limit = 5;
             let concurrencyLog = [];
             let count = 0;
+            // @ts-expect-error Overwriting readonly private prop
             pool.systemStatus.okNow = false;
+            // @ts-expect-error Overwriting readonly private prop
             pool.runTaskFunction = async () => {
                 await sleep(10);
                 count++;
             };
+            // @ts-expect-error Overwriting readonly private prop
             pool.isFinishedFunction = async () => count >= limit;
+            // @ts-expect-error Overwriting readonly private prop
             pool.isTaskReadyFunction = async () => count < limit;
             pool.desiredConcurrency = 10;
+            // @ts-expect-error Overwriting readonly private prop
             pool._currentConcurrency = pool.currentConcurrency;
 
             Object.defineProperty(pool, 'currentConcurrency', {
@@ -324,6 +350,8 @@ describe('AutoscaledPool', () => {
             isFinishedFunction: isFinished,
             isTaskReadyFunction: async () => !await isFinished(),
         });
+
+        // @ts-expect-error Overwriting readonly private prop
         pool.maybeRunIntervalMillis = 5;
 
         await pool.run();
@@ -351,6 +379,7 @@ describe('AutoscaledPool', () => {
             isFinishedFunction: async () => isFinished,
             isTaskReadyFunction: async () => !isFinished && isTaskReady,
         });
+        // @ts-expect-error Overwriting readonly private prop
         pool.maybeRunIntervalMillis = 1;
         await pool.run();
 
@@ -368,6 +397,7 @@ describe('AutoscaledPool', () => {
             isTaskReadyFunction: () => Promise.resolve(true),
             loggingIntervalSecs: null,
         });
+        // @ts-expect-error Calling private method
         pool._autoscale(() => {});
         expect(pool.desiredConcurrency).toBe(2);
     });
@@ -384,8 +414,8 @@ describe('AutoscaledPool', () => {
                     return null;
                 }
             },
-            isFinishedFunction: () => { finished = true; },
-            isTaskReadyFunction: () => !aborted,
+            isFinishedFunction: async () => { finished = true; return true; },
+            isTaskReadyFunction: async () => !aborted,
         });
         await pool.run();
         expect(finished).toBe(false);

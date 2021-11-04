@@ -4,7 +4,7 @@
 // We're keeping this text as a JS string, because git and other
 // tools do magic with line endings and it can break tests.
 // E.g. LF -> CRLF on Win or auto-trimming of lines in editors.
-exports.text = 'Let\'s start with a simple text. \n' +
+export const text = 'Let\'s start with a simple text. \n' +
     'The ships hung in the sky, much the way that bricks don\'t. \n' +
     'These aren\'t the Droids you\'re looking for\n' +
     'I\'m sorry, Dave. I\'m afraid I can\'t do that.\n' +
@@ -25,7 +25,7 @@ exports.text = 'Let\'s start with a simple text. \n' +
     'The Greatest Science Fiction Quotes Of All Time \n' +
     'Don\'t know, I don\'t know such stuff. I just do eyes, ju-, ju-, just eyes... just genetic design, just eyes. You Nexus, huh? I design your eyes.'
 
-exports.html = `<html>
+export const html = `<html>
 <head>
     <title>Title SHOULD NOT be converted</title>
 
