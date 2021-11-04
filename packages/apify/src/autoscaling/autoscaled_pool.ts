@@ -168,16 +168,16 @@ export class AutoscaledPool {
     private readonly log: Log;
 
     // Configurable properties.
-    public readonly desiredConcurrencyRatio: number;
-    public readonly scaleUpStepRatio: number;
-    public readonly scaleDownStepRatio: number;
-    public readonly maybeRunIntervalMillis: number;
-    public readonly loggingIntervalMillis: number;
-    public readonly autoscaleIntervalMillis: number;
-    public readonly taskTimeoutMillis: number;
-    public readonly runTaskFunction: () => Promise<unknown>;
-    public readonly isFinishedFunction: () => Promise<boolean>;
-    public readonly isTaskReadyFunction: () => Promise<boolean>;
+    private readonly desiredConcurrencyRatio: number;
+    private readonly scaleUpStepRatio: number;
+    private readonly scaleDownStepRatio: number;
+    private readonly maybeRunIntervalMillis: number;
+    private readonly loggingIntervalMillis: number;
+    private readonly autoscaleIntervalMillis: number;
+    private readonly taskTimeoutMillis: number;
+    private readonly runTaskFunction: () => Promise<unknown>;
+    private readonly isFinishedFunction: () => Promise<boolean>;
+    private readonly isTaskReadyFunction: () => Promise<boolean>;
 
     // Internal properties.
     private _minConcurrency: number;
