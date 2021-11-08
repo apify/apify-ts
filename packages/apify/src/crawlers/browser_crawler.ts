@@ -345,7 +345,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
             }
 
             await addTimeoutToPromise(
-                Promise.resolve().then(() => this.handlePageFunction(crawlingContext)),
+                Promise.resolve(this.handlePageFunction(crawlingContext)),
                 this.handlePageTimeoutMillis,
                 `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
             );

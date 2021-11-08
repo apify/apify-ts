@@ -652,7 +652,7 @@ export class CheerioCrawler extends BasicCrawler {
         });
 
         return addTimeoutToPromise(
-            Promise.resolve().then(() => this.userProvidedHandler(crawlingContext)),
+            Promise.resolve(this.userProvidedHandler(crawlingContext)),
             this.handlePageTimeoutMillis,
             `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
         );
