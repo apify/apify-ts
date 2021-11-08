@@ -7,8 +7,6 @@ describe('enqueueLinksByClickingElements()', () => {
     let page;
 
     beforeAll(async () => {
-        // TODO: see why headless is missing in launchOptions
-        // @ts-expect-error Headless is not defined in launchOptions
         browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
     });
 

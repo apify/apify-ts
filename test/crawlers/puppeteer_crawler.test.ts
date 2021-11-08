@@ -174,8 +174,6 @@ describe('PuppeteerCrawler', () => {
             launchContext: {
                 useChrome: true,
                 launchOptions: {
-                    // TODO: headless is not defined
-                    // @ts-expect-error
                     headless: true,
                 },
             },
@@ -200,8 +198,6 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            // TODO: headless is not defined
-            // @ts-expect-error
             launchContext: opts,
             handlePageFunction: async ({ page }) => {
                 loadedUserAgent = await page.evaluate(() => window.navigator.userAgent);
