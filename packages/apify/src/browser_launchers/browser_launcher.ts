@@ -41,13 +41,13 @@ export interface BrowserLaunchContext<TOptions> {
  * Abstract class for creating browser launchers, such as `PlaywrightLauncher` and `PuppeteerLauncher`.
  * @ignore
  */
-export abstract class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> {
+export abstract class BrowserLauncher<Plugin extends BrowserPlugin, T extends Constructor<Plugin> = Constructor<Plugin> & BrowserPlugin> {
     launcher: T;
     proxyUrl?: string;
     useChrome?: boolean;
     launchOptions: Record<string, any>;
     otherLaunchContextProps: Record<string, any>;
-    Plugin?: Constructor<T> & BrowserPlugin; // to be provided by child classes;
+    Plugin?: T; // to be provided by child classes;
     userAgent?: string;
     stealth?: boolean;
     stealthOptions: StealthOptions;

@@ -58,7 +58,6 @@ export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOpti
  * `PlaywrightLauncher` is based on the `BrowserLauncher`. It launches `playwright` browser instance.
  * @ignore
  */
-// @ts-ignore BrowserPlugin from SDK is not compatible with the one from BrowserPool
 export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,

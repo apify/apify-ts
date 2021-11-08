@@ -1,14 +1,5 @@
-export abstract class BrowserPlugin {
-    constructor(
-        readonly launcher: unknown,
-        readonly context: Record<string, unknown>,
-    ) { }
+export interface BrowserPlugin {
+    createLaunchContext(): any;
 
-    async createLaunchContext(): Promise<any> {
-        // ...
-    }
-
-    async launch(_context: Record<string, unknown>): Promise<any> {
-        // ...
-    }
+    launch(...args: unknown[]): Promise<any>;
 }
