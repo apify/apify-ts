@@ -14,7 +14,7 @@ const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
  */
 const enqueueLinksPseudoUrlCache = new Map();
 
-export type PseudoUrlInput = string | RegExp | { purl: string | RegExp };
+export type PseudoUrlInput = string | RegExp | PseudoUrl | { purl: string | RegExp };
 
 /**
  * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function.

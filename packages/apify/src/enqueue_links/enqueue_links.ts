@@ -22,7 +22,7 @@ export interface EnqueueLinksOptions {
      * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
      * Either `page` or `$` option must be provided.
      */
-    page: PuppeteerPage | PlaywrightPage;
+    page?: PuppeteerPage | PlaywrightPage;
 
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
     limit?: number;
@@ -56,7 +56,7 @@ export interface EnqueueLinksOptions {
      * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    pseudoUrls?: Record<string, unknown>[] | string[] | null;
+    pseudoUrls?: Record<string, unknown>[] | PseudoUrl[] | RegExp[] | string[] | null;
 
     /**
      * Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used

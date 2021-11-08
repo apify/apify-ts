@@ -1,12 +1,14 @@
-import Apify from '../../packages/apify/src';
-import { RequestQueue } from '../../packages/apify/src/storages/request_queue';
-import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from '../../packages/apify/src/enqueue_links/click_elements';
+import Apify from 'apify/src';
+import { RequestQueue } from 'apify/src/storages/request_queue';
+import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from 'apify/src/enqueue_links/click_elements';
 
 describe('enqueueLinksByClickingElements()', () => {
     let browser;
     let page;
 
     beforeAll(async () => {
+        // TODO: see why headless is missing in launchOptions
+        // @ts-expect-error Headless is not defined in launchOptions
         browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
     });
 
@@ -63,6 +65,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
             await page.setContent(html);
             await clickElements(page, 'div');
+            // @ts-expect-error Custom property
             const wasClicked = await page.evaluate(() => window.clicked);
             expect(wasClicked).toBe(true);
         });
@@ -77,6 +80,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
             await page.setContent(html);
             await clickElements(page, 'div');
+            // @ts-expect-error Custom property
             const wasClicked = await page.evaluate(() => window.clicked);
             expect(wasClicked).toBe(true);
         });
@@ -97,6 +101,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
             await page.setContent(html);
             await clickElements(page, 'header, div, p, footer');
+            // @ts-expect-error Custom property
             const clickedElements = await page.evaluate(() => window.clickedElements);
             expect(clickedElements).toEqual(['HEADER', 'DIV', 'P', 'FOOTER']);
         });
@@ -111,6 +116,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
             await page.setContent(html);
             await clickElements(page, 'div');
+            // @ts-expect-error Custom property
             const wasClicked = await page.evaluate(() => window.clicked);
             expect(wasClicked).toBe(true);
         });
@@ -132,6 +138,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
             await page.setContent(html);
             await clickElements(page, 'header, div, main, footer');
+            // @ts-expect-error Custom property
             const clickedElements = await page.evaluate(() => window.clickedElements);
             expect(clickedElements).toEqual(['HEADER', 'DIV', 'MAIN', 'FOOTER']);
         });
@@ -288,7 +295,7 @@ describe('enqueueLinksByClickingElements()', () => {
 </html>
         `;
             await page.setContent(html);
-            const callCounts = await new Promise((resolve) => {
+            const callCounts = await new Promise<{ create: number; destroy: number; }>((resolve) => {
                 let spawnedTarget;
                 const counts = {
                     create: 0,
