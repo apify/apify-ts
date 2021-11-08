@@ -301,7 +301,7 @@ export interface PostResponseInputs {
     /**
      * stream
      */
-    response: IncomingMessage | Readable;
+    response?: IncomingMessage;
 
     /**
      * Original instance fo the {Request} object. Must be modified in-place.

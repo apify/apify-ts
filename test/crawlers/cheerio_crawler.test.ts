@@ -305,7 +305,7 @@ describe('CheerioCrawler', () => {
             prepareRequestFunction: () => {
             },
             postResponseFunction: ({ response }) => {
-                (response as IncomingMessage).headers['content-type'] = 'application/json; charset=utf-8'; // text/html is set
+                response.headers['content-type'] = 'application/json; charset=utf-8'; // text/html is set
             },
             handlePageFunction: ({ contentType }) => {
                 const { type } = contentType;
