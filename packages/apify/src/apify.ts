@@ -166,7 +166,7 @@ export class Apify {
             clearInterval(intervalId);
         }
 
-        return undefined as never;
+        return Promise.resolve();
     }
 
     /**
