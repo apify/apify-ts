@@ -2,13 +2,12 @@ import {
     ENV_VARS,
 } from '@apify/consts';
 import { apifyClient } from 'apify/src/utils';
-import {
+import Apify, {
     Dictionary,
     KeyValueStore,
     maybeStringify,
 } from 'apify';
 import { StorageManager } from 'apify/src/storages/storage_manager';
-import Apify from 'apify';
 
 jest.mock('../../packages/apify/src/storages/storage_manager');
 
@@ -43,8 +42,6 @@ describe('KeyValueStore remote', () => {
         const store = new KeyValueStore({
             id: 'some-id-1',
             client: apifyClient,
-            // TODO: is isLocal mandatory or not
-            isLocal: false,
         });
 
         // Record definition
@@ -110,8 +107,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'some-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             // @ts-expect-error JS-side validation
@@ -128,8 +123,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'some-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             // @ts-expect-error JS-side validation
@@ -186,8 +179,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             const INVALID_CHARACTERS = '?|\\/"*<>%:';
@@ -217,8 +208,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             const mockSetRecord = jest
@@ -240,8 +229,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             const record = { foo: 'bar' };
@@ -266,8 +253,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             const mockSetRecord = jest
@@ -289,8 +274,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             const mockSetRecord = jest
@@ -317,8 +300,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             expect(store.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
@@ -372,8 +353,6 @@ describe('KeyValueStore remote', () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
                 client: apifyClient,
-                // TODO: is isLocal mandatory or not
-                isLocal: false,
             });
 
             // @ts-expect-error Accessing private property

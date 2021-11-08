@@ -43,8 +43,6 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
                 stealth: true,
                 useChrome: true,
                 launchOptions: {
-                    // TODO: figure out why headless is missing
-                    // @ts-expect-error Headless is missing from launch options
                     headless: true,
                 },
             },
@@ -66,8 +64,6 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
                 stealth: true,
                 useChrome: true,
                 launchOptions: {
-                    // TODO: figure out why headless is missing
-                    // @ts-expect-error Headless is missing from launch options
                     headless: true,
                 },
             });

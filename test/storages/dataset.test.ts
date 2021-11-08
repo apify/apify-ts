@@ -300,7 +300,6 @@ describe('dataset', () => {
             const { dataset, restoreAndVerify } = getRemoteDataset();
 
             const result = await dataset.map((item, index) => {
-                // @ts-expect-error item is unknown, casting needed
                 return { index, bar: 'xxx', ...item };
             }, {
                 limit: 2,
@@ -320,7 +319,6 @@ describe('dataset', () => {
             const { dataset, restoreAndVerify } = getRemoteDataset();
 
             const result = await dataset.map((item, index) => {
-                // @ts-expect-error item is unknown, casting needed
                 const res = { index, bar: 'xxx', ...item };
                 return Promise.resolve(res);
             }, {
@@ -341,9 +339,7 @@ describe('dataset', () => {
             const { dataset, restoreAndVerify } = getRemoteDataset();
 
             const result = await dataset.reduce((memo, item, index) => {
-                // @ts-expect-error item is unknown, casting needed
                 item.index = index;
-                // @ts-expect-error item is unknown, casting needed
                 item.bar = 'xxx';
 
                 return memo.concat(item);
@@ -365,9 +361,7 @@ describe('dataset', () => {
             const { dataset, restoreAndVerify } = getRemoteDataset();
 
             const result = await dataset.reduce((memo, item, index) => {
-                // @ts-expect-error item is unknown, casting needed
                 item.index = index;
-                // @ts-expect-error item is unknown, casting needed
                 item.bar = 'xxx';
 
                 return Promise.resolve(memo.concat(item));
@@ -419,7 +413,6 @@ describe('dataset', () => {
 
             const result = await dataset.reduce((memo, item, index) => {
                 calledForIndexes.push(index);
-                // @ts-expect-error item is unknown, casting needed
                 return Promise.resolve(memo.foo > item.foo ? memo : item);
             }, undefined, {
                 limit: 2,

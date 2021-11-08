@@ -81,11 +81,10 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
             launchOptions: {
                 ...launchOptions,
                 executablePath: getDefaultExecutablePath(launchContext),
-            } as any, // TODO maybe list executablePath in options?
+            }, // TODO maybe list executablePath in options?
             launcher,
         });
 
-        // @ts-ignore BrowserPlugin from SDK is not compatible with the one from BrowserPool
         this.Plugin = PlaywrightPlugin;
     }
 }

@@ -301,7 +301,7 @@ export class Dataset {
         const { items, total, limit, offset } = await this.getData(options);
 
         for (const item of items) {
-            await iteratee(item, index++);
+            await iteratee(item as Dictionary, index++);
         }
 
         const newOffset = offset + limit;
@@ -499,7 +499,7 @@ export interface DatasetConsumer {
      * @param item Current {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: unknown, index: number): Awaitable<void>;
+    (item: Dictionary, index: number): Awaitable<void>;
 
 }
 
@@ -513,7 +513,7 @@ export interface DatasetMapper {
      * @param item Currect {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: unknown, index: number): Awaitable<Dictionary>;
+    (item: Dictionary, index: number): Awaitable<Dictionary>;
 
 }
 
@@ -524,10 +524,10 @@ export interface DatasetReducer<T> {
 
     /**
      * @param memo Previous state of the reduction.
-     * @param item Currect {@link Dataset} entry being processed.
+     * @param item Current {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (memo: T, item: unknown, index: number): Awaitable<T>;
+    (memo: T, item: Dictionary, index: number): Awaitable<T>;
 
 }
 

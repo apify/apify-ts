@@ -138,10 +138,9 @@ describe('SessionPool - testing session pool', () => {
         const cookies = [
             { name: 'cookie1', value: 'my-cookie' },
             { name: 'cookie2', value: 'your-cookie' },
-        ] as never[];
+        ];
 
         const newSession = await sessionPool.getSession();
-        // TODO: we need to make the types more relaxed, since cookies don't need EVERY property set
         newSession.setPuppeteerCookies(cookies, url);
 
         const state = sessionPool.getState();

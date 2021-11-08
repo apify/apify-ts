@@ -1,7 +1,5 @@
 import ow from 'ow';
-import type { BrowserController } from 'browser-pool/dist/abstract-classes/browser-controller';
-import { BrowserPool, BrowserPoolOptions } from 'browser-pool';
-import { LaunchContext } from 'browser-pool/dist/launch-context'; // TODO this should be exported
+import { BrowserController, BrowserPool, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { EVENT_SESSION_RETIRED } from '../session_pool/events';
 import { addTimeoutToPromise } from '../utils';
@@ -462,9 +460,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
             };
 
             this.sessionPool.on(EVENT_SESSION_RETIRED, listener);
-            // TODO: use enum from browser-pool once https://github.com/apify/browser-pool/pull/59 is merged
-            // @ts-expect-error
-            browserController.on('browserClosed', () => this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener));
+            browserController.on(BROWSER_CONTROLLER_EVENTS.BROWSER_CLOSED, () => this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener));
         }
     }
 

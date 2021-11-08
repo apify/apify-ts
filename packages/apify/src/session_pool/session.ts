@@ -1,7 +1,6 @@
 import { cryptoRandomObjectId } from '@apify/utilities';
 import ow from 'ow';
-// TODO: migrate to exported variant
-import { Cookie as BrowserPoolCookie } from 'browser-pool/dist/abstract-classes/browser-controller';
+import { Cookie as BrowserPoolCookie } from 'browser-pool';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { IncomingMessage } from 'http';
 import { HTTPResponse, Protocol } from 'puppeteer';
