@@ -1,14 +1,11 @@
-import { SessionPool, openSessionPool } from 'apify';
-import Apify from 'apify';
-import { events } from 'apify';
+import Apify, { SessionPool, openSessionPool, events, Session } from 'apify';
 import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
-import { Session } from 'apify';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import { Log } from 'apify/src/utils_log';
+import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('SessionPool - testing session pool', () => {
-    let sessionPool;
-    let localStorageEmulator;
+    let sessionPool: SessionPool;
+    let localStorageEmulator: LocalStorageDirEmulator;
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();
@@ -33,6 +30,7 @@ describe('SessionPool - testing session pool', () => {
         expect(sessionPool.maxPoolSize).toBeDefined();
         expect(sessionPool.sessionOptions).toBeDefined();
         expect(sessionPool.persistStateKey).toBeDefined();
+        // @ts-expect-error Accessing private property
         expect(sessionPool.createSessionFunction).toEqual(sessionPool._defaultCreateSessionFunction); // eslint-disable-line
     });
 
@@ -47,7 +45,7 @@ describe('SessionPool - testing session pool', () => {
             persistStateKeyValueStoreId: 'TEST',
             persistStateKey: 'SESSION_POOL_STATE2',
 
-            createSessionFunction: () => ({}),
+            createSessionFunction: () => ({} as never),
 
         };
         sessionPool = new SessionPool(opts);
@@ -73,7 +71,7 @@ describe('SessionPool - testing session pool', () => {
             persistStateKeyValueStoreId: 'TEST',
             persistStateKey: 'SESSION_POOL_STATE2',
 
-            createSessionFunction: () => ({}),
+            createSessionFunction: () => ({} as never),
 
         };
         sessionPool = await openSessionPool(opts);
@@ -92,8 +90,11 @@ describe('SessionPool - testing session pool', () => {
             const session = await sessionPool.getSession();
             expect(sessionPool.sessions.length).toBe(1);
             expect(session.id).toBeDefined();
+            // @ts-expect-error Accessing private property
             expect(session.maxAgeSecs).toEqual(sessionPool.sessionOptions.maxAgeSecs);
-            expect(session.maxAgeSecs).toEqual(sessionPool.sessionOptions.maxAgeSecs);
+            // @ts-expect-error Accessing private property
+            expect(session.maxUsageCount).toEqual(sessionPool.sessionOptions.maxUsageCount);
+            // @ts-expect-error Accessing private property
             expect(session.sessionPool).toEqual(sessionPool);
         });
 
@@ -102,8 +103,10 @@ describe('SessionPool - testing session pool', () => {
             await sessionPool.getSession();
             await sessionPool.getSession();
             let isCalled = false;
+            // @ts-expect-error Accessing private property
             const oldPick = sessionPool._pickSession; //eslint-disable-line
 
+            // @ts-expect-error Overriding private property
             sessionPool._pickSession = () => { //eslint-disable-line
                 isCalled = true;
                 return oldPick.bind(sessionPool)();
@@ -121,6 +124,7 @@ describe('SessionPool - testing session pool', () => {
             const session = await sessionPool.getSession();
             expect(sessionPool.sessions[0].id === session.id).toBe(true);
 
+            // @ts-expect-error Overriding private property
             session.errorScore += session.maxErrorScore;
             await sessionPool.getSession();
 
@@ -134,9 +138,10 @@ describe('SessionPool - testing session pool', () => {
         const cookies = [
             { name: 'cookie1', value: 'my-cookie' },
             { name: 'cookie2', value: 'your-cookie' },
-        ];
+        ] as never[];
 
         const newSession = await sessionPool.getSession();
+        // TODO: we need to make the types more relaxed, since cookies don't need EVERY property set
         newSession.setPuppeteerCookies(cookies, url);
 
         const state = sessionPool.getState();
@@ -158,7 +163,12 @@ describe('SessionPool - testing session pool', () => {
                 expect(value).toEqual(sessionPool[key]);
             }
         });
+        // TODO: type kvStore getValue
+        // @ts-expect-error Missing types
         expect(sessionPoolSaved.sessions.length).toEqual(sessionPool.sessions.length);
+
+        // TODO: type kvStore getValue
+        // @ts-expect-error Missing types
         sessionPoolSaved.sessions.forEach((session, index) => {
             Object.entries(session).forEach(([key, value]) => {
                 if (sessionPool.sessions[index][key] instanceof Date) {
@@ -189,6 +199,7 @@ describe('SessionPool - testing session pool', () => {
     });
 
     test('should create session', async () => {
+        // @ts-expect-error Accessing private property
         await sessionPool._createSession(); // eslint-disable-line
         expect(sessionPool.sessions.length).toBe(1);
         expect(sessionPool.sessions[0].id).toBeDefined();
@@ -213,7 +224,7 @@ describe('SessionPool - testing session pool', () => {
 
             events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
 
-            await new Promise((resolve) => {
+            await new Promise<void>((resolve) => {
                 const interval = setInterval(async () => {
                     const state = await sessionPool.keyValueStore.getValue(sessionPool.persistStateKey);
                     if (state) {
@@ -234,6 +245,7 @@ describe('SessionPool - testing session pool', () => {
         await sessionPool.getSession();
 
         const session = sessionPool.sessions[0];
+        // @ts-expect-error Overriding private property
         session.errorScore += session.maxErrorScore;
         const { id: retiredSessionId } = session;
 
@@ -248,6 +260,7 @@ describe('SessionPool - testing session pool', () => {
             const session = await sessionPool.getSession();
 
             if (i % 2 === 0) {
+                // @ts-expect-error Overriding private property
                 session.errorScore += session.maxErrorScore;
                 invalidSessionsCount += 1;
             }
@@ -272,6 +285,7 @@ describe('SessionPool - testing session pool', () => {
 
         const recreatedSession = await loadedSessionPool.getSession();
 
+        // @ts-expect-error Accessing private property
         expect(recreatedSession.maxUsageCount).toEqual(66);
     });
 
@@ -369,6 +383,7 @@ describe('SessionPool - testing session pool', () => {
         for (let i = 0; i < 10; i++) {
             await sessionPool.addSession({ id: `session_${i}` });
             const session = await sessionPool.getSession(`session_${i}`);
+            // @ts-expect-error Overriding private property
             session.errorScore += session.maxErrorScore;
         }
 

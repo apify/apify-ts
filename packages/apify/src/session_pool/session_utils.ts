@@ -1,9 +1,10 @@
 import { IncomingMessage } from 'http';
 import { HTTPResponse } from 'puppeteer';
 import { Cookie } from 'tough-cookie';
+import { Dictionary } from '../typedefs';
 import { CookieParseError } from './errors';
 
-export function getCookiesFromResponse(response: IncomingMessage | HTTPResponse): Cookie[] {
+export function getCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]> }): Cookie[] {
     const headers = typeof response.headers === 'function' ? response.headers() : response.headers;
     const cookieHeader = headers['set-cookie'] || '';
 

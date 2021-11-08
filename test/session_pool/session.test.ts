@@ -1,10 +1,10 @@
-import { Session } from '../../packages/apify/src/session_pool/session';
-import { SessionPool } from '../../packages/apify/src/session_pool/session_pool';
-import { ProxyConfiguration } from '../../packages/apify/src/proxy_configuration';
-import { EVENT_SESSION_RETIRED } from '../../packages/apify/src/session_pool/events';
-import { STATUS_CODES_BLOCKED } from '../../packages/apify/src/constants';
+import { Session } from 'apify/src/session_pool/session';
+import { SessionPool } from 'apify/src/session_pool/session_pool';
+import { ProxyConfiguration } from 'apify/src/proxy_configuration';
+import { EVENT_SESSION_RETIRED } from 'apify/src/session_pool/events';
+import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
 
-import Apify from '../../packages/apify/src';
+import Apify from 'apify/src';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool;
@@ -29,7 +29,8 @@ describe('Session - testing session behaviour ', () => {
     test('should throw error when param sessionPool is not EventEmitter instance', () => {
         let err;
         try {
-                const session = new Session({ sessionPool: {} }); // eslint-disable-line
+            // @ts-expect-error JS-side validation
+            new Session({ sessionPool: {} }); // eslint-disable-line
         } catch (e) {
             err = e;
         }
@@ -241,7 +242,7 @@ describe('Session - testing session behaviour ', () => {
 
             const newCookie = 'ABCD=1231231213; Domain=example.com; Secure';
 
-            newSession.setCookiesFromResponse({ headers: { 'set-cookie': newCookie }, url });
+            newSession.setCookiesFromResponse({ headers: { 'set-cookie': [newCookie] }, url });
             cookies = newSession.getCookieString(url);
             expect(cookies).toEqual('CSRF=e8b667; id=a3fWa; ABCD=1231231213');
         });
@@ -260,8 +261,12 @@ describe('Session - testing session behaviour ', () => {
 
         const old = newSession.getState();
 
+        // @ts-expect-error Overriding string -> Date
         old.createdAt = new Date(old.createdAt);
+        // @ts-expect-error Overriding string -> Date
         old.expiresAt = new Date(old.expiresAt);
+
+        // @ts-expect-error string -> Date for createdAt has been overridden
         const reinitializedSession = new Session({ sessionPool, ...old });
         expect(reinitializedSession.getCookieString(url)).toEqual('CSRF=e8b667; id=a3fWa');
     });

@@ -289,7 +289,7 @@ export class Session {
      *
      * It then parses and saves the cookies from the `set-cookie` header, if available.
      */
-    setCookiesFromResponse(response: IncomingMessage | HTTPResponse) {
+    setCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]> }) {
         try {
             const cookies = getCookiesFromResponse(response).filter((c) => c);
             // @ts-ignore probably a mistake, as `HTTPResponse.url` is a method, not a string
