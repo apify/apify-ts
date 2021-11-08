@@ -25,7 +25,7 @@ export type PuppeteerHandlePage = (context: CrawlingContext & BrowserCrawlingCon
     crawler: PuppeteerCrawler;
 }) => Promise<void>;
 
-export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions {
+export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction'> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
