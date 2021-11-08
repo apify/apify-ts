@@ -20,6 +20,7 @@ jobs:
             -   name: Check TS support
                 run: |
                     npm install             # install SDK deps
+                    npm run build           # Builds the SDK
                     yarn link               # link the local version of SDK
                     cd ts-check             # go to the TS skeleton project directory
                     yarn                    # install its deps
