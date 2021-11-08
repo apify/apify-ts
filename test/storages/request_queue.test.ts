@@ -1,12 +1,12 @@
-import Apify from '../../packages/apify/src';
-import { apifyClient } from '../../packages/apify/src/utils';
+import Apify from 'apify/src';
+import { apifyClient } from 'apify/src/utils';
 import {
     RequestQueue,
     QUERY_HEAD_MIN_LENGTH,
     API_PROCESSED_REQUESTS_DELAY_MILLIS,
     STORAGE_CONSISTENCY_DELAY_MILLIS,
-} from '../../packages/apify/src/storages/request_queue';
-import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
+} from 'apify/src/storages/request_queue';
+import { StorageManager } from 'apify/src/storages/storage_manager';
 
 jest.mock('../../packages/apify/src/storages/storage_manager');
 
@@ -27,6 +27,7 @@ describe('RequestQueue remote', () => {
         expect(StorageManager).toHaveBeenCalledTimes(1);
         // Jest gives you access to newly created instances of the class.
         // Here we grab the StorageManager instance openRequestQueue created.
+        // @ts-expect-error Mocked manager, see line 20-23
         const mockStorageManagerInstance = StorageManager.mock.instances[0];
         // And here we get a reference to the specific instance's function mock.
         const mockOpenStorage = mockStorageManagerInstance.openStorage;
@@ -37,6 +38,7 @@ describe('RequestQueue remote', () => {
 
     test('should work', async () => {
         const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        // @ts-expect-error Accessing private property
         expect(typeof queue.client.clientKey).toBe('string');
         const firstResolveValue = {
             requestId: 'a',
@@ -57,6 +59,7 @@ describe('RequestQueue remote', () => {
                 id: 'a',
             },
         });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(mockAddRequest).toHaveBeenCalledTimes(1);
         expect(mockAddRequest).toHaveBeenCalledWith(requestA, { forefront: false });
@@ -72,6 +75,7 @@ describe('RequestQueue remote', () => {
                 id: 'a',
             },
         });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
 
         const requestB = new Apify.Request({ url: 'http://example.com/b' });
@@ -85,6 +89,7 @@ describe('RequestQueue remote', () => {
         await queue.addRequest(requestB, { forefront: true });
         expect(mockAddRequest).toHaveBeenCalledTimes(2);
         expect(mockAddRequest).toHaveBeenLastCalledWith(requestB, { forefront: true });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(2);
         expect(queue.inProgressCount()).toBe(0);
 
@@ -96,6 +101,7 @@ describe('RequestQueue remote', () => {
         expect(mockGetRequest).toHaveBeenCalledTimes(1);
         expect(mockGetRequest).toHaveBeenLastCalledWith('b');
         expect(requestBFromQueue).toEqual({ ...requestB, id: 'b' });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(queue.inProgressCount()).toBe(1);
 
@@ -123,25 +129,30 @@ describe('RequestQueue remote', () => {
             requestId: 'b',
             wasAlreadyHandled: false,
             wasAlreadyPresent: true,
+            // TODO: request is not defined in the types
+            // @ts-expect-error
             request: requestBFromQueue,
         });
 
         await queue.reclaimRequest(requestBFromQueue, { forefront: true });
         expect(mockUpdateRequest).toHaveBeenCalledTimes(1);
         expect(mockUpdateRequest).toHaveBeenLastCalledWith(requestBFromQueue, { forefront: true });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(queue.inProgressCount()).toBe(1);
         await Apify.utils.sleep(STORAGE_CONSISTENCY_DELAY_MILLIS + 10);
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(2);
         expect(queue.inProgressCount()).toBe(0);
 
         // Fetch again.
-        mockGetRequest.mockResolvedValueOnce(requestBFromQueue);
+        mockGetRequest.mockResolvedValueOnce(requestBFromQueue as never);
 
         const requestBFromQueue2 = await queue.fetchNextRequest();
         expect(mockGetRequest).toHaveBeenCalledTimes(3);
         expect(mockGetRequest).toHaveBeenLastCalledWith('b');
         expect(requestBFromQueue2).toEqual(requestBFromQueue);
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(queue.inProgressCount()).toBe(1);
 
@@ -150,16 +161,20 @@ describe('RequestQueue remote', () => {
             requestId: 'b',
             wasAlreadyHandled: false,
             wasAlreadyPresent: true,
+            // TODO: request is not defined in the types
+            // @ts-expect-error
             request: requestBFromQueue,
         });
 
         await queue.markRequestHandled(requestBFromQueue);
         expect(mockUpdateRequest).toHaveBeenCalledTimes(2);
         expect(mockUpdateRequest).toHaveBeenLastCalledWith(requestBFromQueue);
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(queue.inProgressCount()).toBe(0);
 
         // Emulate there are no cached items in queue
+        // @ts-expect-error Accessing private property
         queue.queueHeadDict.clear();
 
         // Query queue head.
@@ -169,7 +184,7 @@ describe('RequestQueue remote', () => {
                 { id: 'a', uniqueKey: 'aaa' },
                 { id: 'c', uniqueKey: 'ccc' },
             ],
-        });
+        } as never);
         mockGetRequest.mockResolvedValueOnce({ ...requestA, id: 'a' });
 
         const requestAFromQueue = await queue.fetchNextRequest();
@@ -178,6 +193,7 @@ describe('RequestQueue remote', () => {
         expect(mockListHead).toHaveBeenCalledTimes(1);
         expect(mockListHead).toHaveBeenLastCalledWith({ limit: QUERY_HEAD_MIN_LENGTH });
         expect(requestAFromQueue).toEqual({ ...requestA, id: 'a' });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(queue.inProgressCount()).toBe(1);
 
@@ -271,7 +287,7 @@ describe('RequestQueue remote', () => {
             items: [
                 { id: 'a', uniqueKey: 'aaa' },
             ],
-        });
+        } as never);
 
         expect(await queue.isEmpty()).toBe(false);
         expect(listHeadMock).toHaveBeenCalledTimes(1);
@@ -313,6 +329,7 @@ describe('RequestQueue remote', () => {
         await queue.addRequest(requestA, { forefront: true });
         expect(addRequestMock).toHaveBeenCalledTimes(1);
         expect(addRequestMock).toHaveBeenLastCalledWith(requestA, { forefront: true });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
 
         // Try to get requestA which is not available yet.
@@ -338,7 +355,7 @@ describe('RequestQueue remote', () => {
             items: [
                 { id: 'a', uniqueKey: 'aaa' },
             ],
-        });
+        } as never);
 
         const fetchedRequest2 = await queue.fetchNextRequest();
         expect(getRequestMock).toHaveBeenCalledTimes(2);
@@ -367,7 +384,7 @@ describe('RequestQueue remote', () => {
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
         listHeadMock.mockResolvedValueOnce({
             items: [],
-        });
+        } as never);
 
         await queue.addRequest(requestA, { forefront: true });
         expect(addRequestMock).toHaveBeenCalledTimes(1);
@@ -400,7 +417,7 @@ describe('RequestQueue remote', () => {
         const getMock = jest.spyOn(queue.client, 'get');
         getMock.mockResolvedValueOnce({
             handledRequestCount: 33,
-        });
+        } as never);
         const count = await queue.handledCount();
         expect(count).toBe(33);
         expect(getMock).toHaveBeenCalledTimes(1);
@@ -414,13 +431,13 @@ describe('RequestQueue remote', () => {
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
         listHeadMock.mockResolvedValueOnce({
             limit: 5,
-            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS * 0.75),
+            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS * 0.75).toISOString(),
             items: [],
             hadMultipleClients: true,
         });
         listHeadMock.mockResolvedValueOnce({
             limit: 5,
-            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS),
+            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS).toISOString(),
             items: [],
             hadMultipleClients: true,
         });
@@ -451,6 +468,7 @@ describe('RequestQueue remote', () => {
         await queue.addRequest(requestA, { forefront: true });
         await queue.addRequest(requestB, { forefront: true });
 
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(2);
         expect(queue.inProgressCount()).toBe(0);
         expect(queue.assumedTotalCount).toBe(2);
@@ -480,6 +498,7 @@ describe('RequestQueue remote', () => {
         expect(getRequestMock).toHaveBeenCalledTimes(2);
         expect(getRequestMock).toHaveBeenLastCalledWith('a');
 
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(0);
         expect(queue.inProgressCount()).toBe(2);
         expect(queue.assumedTotalCount).toBe(2);
@@ -502,11 +521,13 @@ describe('RequestQueue remote', () => {
         await queue.reclaimRequest(requestAWithId, { forefront: true });
         expect(updateRequestMock).toHaveBeenCalledTimes(2);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestAWithId, { forefront: true });
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(0);
         expect(queue.inProgressCount()).toBe(1);
         expect(queue.assumedTotalCount).toBe(2);
         expect(queue.assumedHandledCount).toBe(1);
         await Apify.utils.sleep(STORAGE_CONSISTENCY_DELAY_MILLIS + 10);
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
         expect(queue.inProgressCount()).toBe(0);
         expect(queue.assumedTotalCount).toBe(2);
@@ -524,6 +545,7 @@ describe('RequestQueue remote', () => {
         expect(getRequestMock).toHaveBeenCalledTimes(3);
         expect(getRequestMock).toHaveBeenLastCalledWith('a');
 
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(0);
         expect(queue.inProgressCount()).toBe(1);
         expect(queue.assumedTotalCount).toBe(2);
@@ -540,6 +562,7 @@ describe('RequestQueue remote', () => {
         expect(updateRequestMock).toHaveBeenCalledTimes(3);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestAWithId);
 
+        // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(0);
         expect(queue.inProgressCount()).toBe(0);
         expect(queue.assumedTotalCount).toBe(2);
@@ -549,7 +572,7 @@ describe('RequestQueue remote', () => {
         // it will finish immediately.
         listHeadMock.mockResolvedValueOnce({
             limit: 5,
-            queueModifiedAt: new Date(),
+            queueModifiedAt: new Date().toISOString(),
             items: [],
             hadMultipleClients: false,
         });
@@ -566,12 +589,14 @@ describe('RequestQueue remote', () => {
             id: 'WkzbQMuFYuamGv3YF',
             name: 'my-queue',
             userId: 'wRsJZtadYvn4mBZmm',
-            createdAt: new Date('2015-12-12T07:34:14.202Z'),
-            modifiedAt: new Date('2015-12-13T08:36:13.202Z'),
-            accessedAt: new Date('2015-12-14T08:36:13.202Z'),
+            createdAt: new Date('2015-12-12T07:34:14.202Z').toISOString(),
+            modifiedAt: new Date('2015-12-13T08:36:13.202Z').toISOString(),
+            accessedAt: new Date('2015-12-14T08:36:13.202Z').toISOString(),
             totalRequestCount: 0,
             handledRequestCount: 0,
             pendingRequestCount: 0,
+            stats: {},
+            hadMultipleClients: false,
         };
 
         const getMock = jest
@@ -603,6 +628,8 @@ describe('RequestQueue remote', () => {
             .spyOn(queue.client, 'getRequest')
             .mockResolvedValueOnce({
                 url,
+                // TODO: loadedUrl does not exist on the return type
+                // @ts-expect-error
                 loadedUrl: null,
                 errorMessages: null,
                 handledAt: null,

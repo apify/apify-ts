@@ -63,7 +63,7 @@ const requestOptionalPredicates = {
  */
 export class Request {
     /** Request ID */
-    id: string;
+    id?: string;
 
     /** URL of the web page to crawl. */
     url: string;
@@ -309,5 +309,8 @@ export interface RequestOptions {
      * @default false
      */
     useExtendedUniqueKey?: boolean;
+
+    // TODO: do we want to document this
+    id?: string;
 
 }

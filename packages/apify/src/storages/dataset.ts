@@ -7,7 +7,7 @@ import { StorageManager } from './storage_manager';
 import log from '../utils_log';
 
 import { Configuration } from '../configuration';
-import { Dictionary } from '../typedefs';
+import { Dictionary, Awaitable } from '../typedefs';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;
@@ -355,7 +355,7 @@ export class Dataset {
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @return {Promise<object>}
      */
-    reduce(iteratee: DatasetReducer, memo: Dictionary, options: Dictionary) {
+    reduce<T>(iteratee: DatasetReducer<T>, memo: T, options: Dictionary) {
         let currentMemo = memo;
 
         const wrappedFunc = (item, index) => {
@@ -499,7 +499,7 @@ export interface DatasetConsumer {
      * @param item Current {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: unknown, index: number): object;
+    (item: unknown, index: number): Awaitable<void>;
 
 }
 
@@ -513,21 +513,21 @@ export interface DatasetMapper {
      * @param item Currect {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: unknown, index: number): Dictionary;
+    (item: unknown, index: number): Awaitable<Dictionary>;
 
 }
 
 /**
  * User-function used in the `Dataset.reduce()` API.
  */
-export interface DatasetReducer {
+export interface DatasetReducer<T> {
 
     /**
      * @param memo Previous state of the reduction.
      * @param item Currect {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (memo: unknown, item: unknown, index: number): unknown;
+    (memo: T, item: unknown, index: number): Awaitable<T>;
 
 }
 
@@ -535,5 +535,5 @@ export interface DatasetOptions {
     id: string;
     name?: string;
     client: ApifyClient | ApifyStorageLocal;
-    isLocal: boolean;
+    isLocal?: boolean;
 }
