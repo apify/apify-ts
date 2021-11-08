@@ -305,11 +305,8 @@ describe('BasicCrawler', () => {
             .withArgs(new Apify.Request(sources[2]), { forefront: true })
             .returns(Promise.resolve({ requestId: 'id-2' }));
 
-        // @ts-expect-error Using private prop
         const request0 = new Apify.Request({ id: 'id-0', ...sources[0] });
-        // @ts-expect-error Using private prop
         const request1 = new Apify.Request({ id: 'id-1', ...sources[1] });
-        // @ts-expect-error Using private prop
         const request2 = new Apify.Request({ id: 'id-2', ...sources[2] });
 
         // 1st try
@@ -510,7 +507,7 @@ describe('BasicCrawler', () => {
         const requestQueue = new RequestQueue({ id: 'id', client: utils.apifyClient });
         requestQueue.isEmpty = async () => false;
         requestQueue.isFinished = async () => false;
-        // @ts-expect-error Using private prop
+
         requestQueue.fetchNextRequest = async () => (new Apify.Request({ id: 'id', url: 'http://example.com' }));
         // @ts-expect-error Overriding the method for testing purposes
         requestQueue.markRequestHandled = async () => {};
