@@ -35,6 +35,8 @@ jobs:
                     cd website
                     # install website deps
                     npm install --force
+                    # add examples
+                    npm run generate
                     # build and deploy the docs
                     npm run deploy
                 env:

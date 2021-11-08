@@ -13,6 +13,28 @@
             "guides/type-script-actor",
             "guides/docker-images",
             "guides/migration-to-v1"
+        ],
+        "Examples": [
+            "examples/accept-user-input",
+            "examples/add-data-to-dataset",
+            "examples/basic-crawler",
+            "examples/call-actor",
+            "examples/capture-screenshot",
+            "examples/cheerio-crawler",
+            "examples/crawl-all-links",
+            "examples/crawl-multiple-urls",
+            "examples/crawl-relative-links",
+            "examples/crawl-single-url",
+            "examples/crawl-sitemap",
+            "examples/crawl-some-links",
+            "examples/forms",
+            "examples/map-and-reduce",
+            "examples/playwright-crawler",
+            "examples/puppeteer-crawler",
+            "examples/puppeteer-recursive-crawl",
+            "examples/puppeteer-with-proxy",
+            "examples/synchronous-run",
+            "examples/use-stealth-mode"
         ]
     }
 }
