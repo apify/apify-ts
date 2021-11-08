@@ -1,6 +1,8 @@
 import ow from 'ow';
-// @ts-ignore BrowserController is not exported?
-import { BrowserPool, BrowserController, BrowserPoolOptions } from 'browser-pool';
+// TODO: export abstract classes
+// @ts-expect-error BrowserController is not exported?
+import type { BrowserController } from 'browser-pool';
+import { BrowserPool, BrowserPoolOptions } from 'browser-pool';
 import { LaunchContext } from 'browser-pool/dist/launch-context'; // TODO this should be exported
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { EVENT_SESSION_RETIRED } from '../session_pool/events';
