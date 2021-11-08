@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import { BrowserPool, PuppeteerPlugin } from 'browser-pool';
 import puppeteer from 'puppeteer';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext } from 'apify/src';
+import Apify, { BrowserCrawlingContext } from 'apify';
 import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
 import * as utilsRequest from 'apify/src/utils_request';
 import { Request } from 'apify/src/request';

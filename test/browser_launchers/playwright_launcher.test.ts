@@ -8,7 +8,7 @@ import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import Apify from 'apify/src';
+import Apify from 'apify';
 import * as utils from 'apify/src/utils';
 
 import { PlaywrightLauncher } from 'apify/src/browser_launchers/playwright_launcher';

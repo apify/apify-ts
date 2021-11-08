@@ -1,4 +1,4 @@
-import Apify from 'apify/src';
+import Apify from 'apify';
 import { apifyClient } from 'apify/src/utils';
 import {
     RequestQueue,

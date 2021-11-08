@@ -1,7 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import playwright from 'playwright';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext, PlaywrightHandlePageFunction } from 'apify/src';
+import Apify, { BrowserCrawlingContext, PlaywrightHandlePageFunction } from 'apify';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {
@@ -60,7 +60,7 @@ describe('PlaywrightCrawler', () => {
                 minConcurrency: 1,
                 maxConcurrency: 1,
                 handlePageFunction,
-                handleFailedRequestFunction: async ({ request }) => {
+                handleFailedRequestFunction: ({ request }) => {
                     failed.push(request);
                 },
             });
@@ -86,9 +86,9 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: async () => {
+            handlePageFunction: () => {
             },
-            preNavigationHooks: [async (_context, gotoOptions) => {
+            preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
             // TODO: gotoTimeoutSecs does not exist in PlaywrightCrawlerOptions
@@ -106,7 +106,7 @@ describe('PlaywrightCrawler', () => {
     });
     test('should support custom gotoFunction', async () => {
         const functions = {
-            handlePageFunction: async () => { },
+            handlePageFunction: () => { },
             gotoFunction: ({ page, request }: BrowserCrawlingContext, options) => {
                 // TODO: figure out if we can make page present in types
                 // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
@@ -138,9 +138,9 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: async () => {
+            handlePageFunction: () => {
             },
-            preNavigationHooks: [async (_context, gotoOptions) => {
+            preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
             navigationTimeoutSecs: timeoutSecs,

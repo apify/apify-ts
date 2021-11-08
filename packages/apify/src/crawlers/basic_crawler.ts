@@ -17,6 +17,7 @@ import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
 import { Hook } from './browser_crawler';
+import { Awaitable } from '../typedefs';
 
 export interface CrawlingContext extends Record<PropertyKey, unknown> {
     id: string;
@@ -696,7 +697,7 @@ export class BasicCrawler {
     }
 }
 
-export type HandleRequest = (inputs: HandleRequestInputs) => Promise<void>;
+export type HandleRequest = (inputs: HandleRequestInputs) => Awaitable<void>;
 
 export interface HandleRequestInputs {
     /**
@@ -712,7 +713,7 @@ export interface HandleRequestInputs {
     crawler?: BasicCrawler;
 }
 
-export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Promise<void>;
+export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
 
 export interface HandleFailedRequestInput {
     /** The Error thrown by `handleRequestFunction`. */

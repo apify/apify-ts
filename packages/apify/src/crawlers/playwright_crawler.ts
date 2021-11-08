@@ -9,6 +9,7 @@ import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
 import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 import { gotoExtended } from '../playwright_utils';
+import { Awaitable } from '../typedefs';
 
 export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
@@ -145,7 +146,7 @@ export interface PlaywrightHandlePageFunctionParam {
     crawler: PlaywrightCrawler;
 }
 
-export type PlaywrightHandlePageFunction = (context: PlaywrightHandlePageFunctionParam & BrowserCrawlingContext & CrawlingContext) => Promise<void>;
+export type PlaywrightHandlePageFunction = (context: PlaywrightHandlePageFunctionParam & BrowserCrawlingContext & CrawlingContext) => Awaitable<void>;
 
 /**
  * Provides a simple framework for parallel crawling of web pages

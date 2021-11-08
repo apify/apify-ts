@@ -1,4 +1,4 @@
-import Apify from 'apify/src';
+import Apify from 'apify';
 import { RequestQueue } from 'apify/src/storages/request_queue';
 import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from 'apify/src/enqueue_links/click_elements';
 

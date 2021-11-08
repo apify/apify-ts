@@ -5,7 +5,7 @@ import { ApifyClient } from 'apify-client';
 import {
     Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore,
     StorageManager, ProxyConfiguration, SessionPool, WebhookOptions,
-} from 'apify/src';
+} from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
 const { log, sleep } = utils;

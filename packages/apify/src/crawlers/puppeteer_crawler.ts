@@ -9,6 +9,7 @@ import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } f
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
+import { Awaitable } from '../typedefs';
 
 export interface PuppeteerCrawlContext extends BrowserCrawlingContext, CrawlingContext {
     page: Page;
@@ -25,7 +26,7 @@ export interface PuppeteerHandlePageFunctionParam {
 export type PuppeteerHandlePage = (context: CrawlingContext & BrowserCrawlingContext & {
     page: Page;
     crawler: PuppeteerCrawler;
-}) => Promise<void>;
+}) => Awaitable<void>;
 
 export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**

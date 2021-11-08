@@ -1,5 +1,5 @@
 import cheerio from 'cheerio';
-import Apify from 'apify/src';
+import Apify from 'apify';
 import { apifyClient } from 'apify/src/utils';
 import { enqueueLinks } from 'apify/src/enqueue_links/enqueue_links';
 import { RequestQueue } from 'apify/src/storages/request_queue';

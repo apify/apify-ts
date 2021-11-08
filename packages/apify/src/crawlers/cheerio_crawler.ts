@@ -23,6 +23,7 @@ import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
 import { validators } from '../validators';
 import { BrowserHandlePageFunction, GotoFunction, Hook } from './browser_crawler';
+import { Awaitable } from '../typedefs';
 
 /**
  * Default mime types, which CheerioScraper supports.
@@ -347,7 +348,7 @@ export interface CheerioHandlePageInputs extends CrawlingContext {
 }
 
 export type CheerioCrawlingContext = CheerioHandlePageInputs; // alias for better discoverability
-export type CheerioHandlePage = (inputs: CheerioHandlePageInputs) => Promise<void>;
+export type CheerioHandlePage = (inputs: CheerioHandlePageInputs) => Awaitable<void>;
 
 /**
  * Provides a framework for the parallel crawling of web pages using plain HTTP requests and
@@ -651,7 +652,7 @@ export class CheerioCrawler extends BasicCrawler {
         });
 
         return addTimeoutToPromise(
-            this.userProvidedHandler(crawlingContext),
+            Promise.resolve().then(() => this.userProvidedHandler(crawlingContext)),
             this.handlePageTimeoutMillis,
             `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
         );

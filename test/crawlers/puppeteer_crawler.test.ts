@@ -1,7 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext, PuppeteerCookie, PuppeteerHandlePage } from 'apify/src';
+import Apify, { BrowserCrawlingContext, PuppeteerCookie, PuppeteerHandlePage } from 'apify';
 import * as utils from 'apify/src/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
@@ -58,7 +58,7 @@ describe('PuppeteerCrawler', () => {
             minConcurrency: 1,
             maxConcurrency: 1,
             handlePageFunction,
-            handleFailedRequestFunction: async ({ request }) => {
+            handleFailedRequestFunction: ({ request }) => {
                 failed.push(request);
             },
         });
@@ -83,8 +83,8 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: async () => {},
-            preNavigationHooks: [async (_context, gotoOptions) => {
+            handlePageFunction: () => {},
+            preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
             // TODO: gotoTimeoutSecs does not exist in PuppeteerCrawlerOptions
@@ -133,8 +133,8 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: async () => {},
-            preNavigationHooks: [async (_context, gotoOptions) => {
+            handlePageFunction: () => {},
+            preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
             navigationTimeoutSecs: timeoutSecs,
@@ -156,7 +156,7 @@ describe('PuppeteerCrawler', () => {
                 launchContext: {
                     proxyUrl: 'http://localhost@1234',
                 },
-                handlePageFunction: async () => {},
+                handlePageFunction: () => {},
             });
         } catch (e) {
             expect(e.message).toMatch('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.');
@@ -179,7 +179,7 @@ describe('PuppeteerCrawler', () => {
                     headless: true,
                 },
             },
-            handlePageFunction: async () => {},
+            handlePageFunction: () => {},
         });
 
         expect(spy.calledOnce).toBe(true);

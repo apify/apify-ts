@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import { Statistics } from 'apify/src/crawlers/statistics';
-import Apify from 'apify/src';
+import Apify from 'apify';
 import { events } from 'apify/src/events';
 import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';

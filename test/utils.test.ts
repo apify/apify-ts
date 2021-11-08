@@ -8,7 +8,7 @@ import cheerio from 'cheerio';
 import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
 import { IncomingMessage } from 'http';
-import Apify from 'apify/src';
+import Apify from 'apify';
 import * as utils from 'apify/src/utils';
 import log from 'apify/src/utils_log';
 import * as requestUtils from 'apify/src/utils_request';

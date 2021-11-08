@@ -9,7 +9,7 @@ import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
-import Apify, { Dictionary } from 'apify/src';
+import Apify, { Dictionary } from 'apify';
 import * as utils from 'apify/src/utils';
 import { startExpressAppPromise } from '../_helper';
 

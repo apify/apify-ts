@@ -4,7 +4,7 @@ import os from 'os';
 import sinon from 'sinon';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import log from 'apify/src/utils_log';
-import Apify from 'apify/src';
+import Apify from 'apify';
 import { events } from 'apify/src/events';
 import { Snapshotter } from 'apify/src/autoscaling/snapshotter';
 import * as utils from 'apify/src/utils';

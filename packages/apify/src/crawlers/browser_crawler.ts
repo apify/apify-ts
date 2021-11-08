@@ -17,6 +17,7 @@ import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
+import { Awaitable } from '../typedefs';
 
 export interface BrowserCrawlingContext extends CrawlingContext {
     browserController: BrowserController;
@@ -25,10 +26,10 @@ export interface BrowserCrawlingContext extends CrawlingContext {
 export type Hook<
     T extends CrawlingContext = CrawlingContext,
     GoToOptions extends Record<string, any> = Record<string, any>
-> = (crawlingContext: T, gotoOptions: GoToOptions) => void | Promise<void>;
+> = (crawlingContext: T, gotoOptions: GoToOptions) => Awaitable<void>;
 export type BrowserHook = Hook<BrowserCrawlingContext>;
-export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Promise<void>;
-export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Promise<any>;
+export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Awaitable<void>;
+export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Awaitable<any>;
 
 export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
@@ -346,7 +347,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
             }
 
             await addTimeoutToPromise(
-                this.handlePageFunction(crawlingContext),
+                Promise.resolve().then(() => this.handlePageFunction(crawlingContext)),
                 this.handlePageTimeoutMillis,
                 `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
             );

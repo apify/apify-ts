@@ -8,7 +8,7 @@ import {
     maybeStringify,
 } from 'apify';
 import { StorageManager } from 'apify/src/storages/storage_manager';
-import Apify from 'apify/src';
+import Apify from 'apify';
 
 jest.mock('../../packages/apify/src/storages/storage_manager');
 

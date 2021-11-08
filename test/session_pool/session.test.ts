@@ -4,7 +4,7 @@ import { ProxyConfiguration } from 'apify/src/proxy_configuration';
 import { EVENT_SESSION_RETIRED } from 'apify/src/session_pool/events';
 import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
 
-import Apify from 'apify/src';
+import Apify from 'apify';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool;
@@ -242,7 +242,7 @@ describe('Session - testing session behaviour ', () => {
 
             const newCookie = 'ABCD=1231231213; Domain=example.com; Secure';
 
-            newSession.setCookiesFromResponse({ headers: { 'set-cookie': [newCookie] }, url });
+            newSession.setCookiesFromResponse({ headers: { 'set-cookie': newCookie }, url });
             cookies = newSession.getCookieString(url);
             expect(cookies).toEqual('CSRF=e8b667; id=a3fWa; ABCD=1231231213');
         });
