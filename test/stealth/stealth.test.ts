@@ -3,7 +3,7 @@
 import scanner from 'fpscanner';
 import path from 'path';
 
-import Apify from '../../packages/apify/src';
+import Apify from 'apify';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 const fingerPrintPath = require.resolve('fpcollect/dist/fpCollect.min.js');
@@ -13,7 +13,8 @@ const testUrl = `file://${pathToHTML}`;
 const getFingerPrint = async (page) => {
     await Apify.utils.puppeteer.injectFile(page, fingerPrintPath);
 
-    return page.evaluate(() => fpCollect.generateFingerprint()); // eslint-disable-line
+    // @ts-expect-error Evaluated method
+    return page.evaluate(() => fpCollect.generateFingerprint());
 };
 
 // we can speed up the test to make the requests to the local static html
@@ -128,7 +129,8 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
         test('it should mock window.chrome to plain object', async () => {
             await page.goto(testUrl);
             const { hasChrome } = await getFingerPrint(page);
-            const chrome = await page.evaluate(() => window.chrome); //eslint-disable-line
+            // @ts-expect-error Exported property
+            const chrome = await page.evaluate(() => window.chrome);
             expect(chrome).toBeInstanceOf(Object);
             expect(chrome.runtime).toEqual({}); // eslint-disable-line
             expect(hasChrome).toBe(true);
@@ -150,11 +152,14 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
                 const { document } = window; //eslint-disable-line
                 const body = document.querySelector('body');
                 const iframe = document.createElement('iframe');
+
+                // @ts-expect-error Custom function
                 iframe.contentWindow.mySuperFunction = () => returnValue;
                 body.appendChild(iframe);
             }, testFuncReturnValue);
             const realReturn = await page.evaluate(
-                () => document.querySelector('iframe').contentWindow.mySuperFunction(), //eslint-disable-line
+                // @ts-expect-error Calling custom function
+                () => document.querySelector('iframe').contentWindow.mySuperFunction(),
             );
             expect(realReturn).toEqual(testFuncReturnValue);
         });
@@ -170,6 +175,8 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
             await page.goto(testUrl);
             const fingerPrint = await getFingerPrint(page);
             const testedFingerprint = scanner.analyseFingerprint(fingerPrint);
+            // TODO: if this is our module, type it
+            // @ts-expect-error testedFingerprint is not typed
             const failedChecks = Object.values(testedFingerprint).filter((val) => val.consistent < 3);
 
             // webdriver check is failing due to the outdated fp analyzer

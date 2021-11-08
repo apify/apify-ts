@@ -9,7 +9,7 @@ import _ from 'underscore';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
-import Apify, { Dictionary } from 'apify/src';
+import Apify, { Dictionary } from 'apify';
 import * as utils from 'apify/src/utils';
 import { startExpressAppPromise } from '../_helper';
 
@@ -158,8 +158,6 @@ describe('Apify.launchPuppeteer()', () => {
         process.env[ENV_VARS.HEADLESS] = '0';
 
         return Apify.launchPuppeteer({
-            // TODO: see why headless is missing in PuppeteerLaunchOptions
-            // @ts-expect-error PuppeteerLaunchOptions missing headless
             launchOptions: { headless: true },
             proxyUrl: `http://username:password@127.0.0.1:${proxyPort}`,
         })
@@ -191,8 +189,6 @@ describe('Apify.launchPuppeteer()', () => {
             launchOptions: { headless: true },
         };
 
-        // TODO: see why headless is missing in PuppeteerLaunchOptions
-        // @ts-expect-error PuppeteerLaunchOptions missing headless
         return Apify.launchPuppeteer(opts)
             .then((result) => {
                 browser = result;
@@ -223,8 +219,6 @@ describe('Apify.launchPuppeteer()', () => {
         };
 
         try {
-            // TODO: see why headless is missing in PuppeteerLaunchOptions
-            // @ts-expect-error Headless errors
             browser = await Apify.launchPuppeteer(opts);
             const page = await browser.newPage();
 
@@ -261,8 +255,6 @@ describe('Apify.launchPuppeteer()', () => {
                     },
                     someProps,
                 },
-                // TODO: see why headless is missing in PuppeteerLaunchOptions
-                // @ts-expect-error PuppeteerLaunchOptions missing headless
                 launchOptions: { headless: true },
             });
         } finally {
@@ -275,8 +267,6 @@ describe('Apify.launchPuppeteer()', () => {
         try {
             browser = await Apify.launchPuppeteer({
                 useIncognitoPages: true,
-                // TODO: see why headless is missing in PuppeteerLaunchOptions
-                // @ts-expect-error PuppeteerLaunchOptions missing headless
                 launchOptions: { headless: true },
             });
             const page1 = await browser.newPage();
@@ -294,8 +284,6 @@ describe('Apify.launchPuppeteer()', () => {
         try {
             browser = await Apify.launchPuppeteer({
                 useIncognitoPages: false,
-                // TODO: see why headless is missing in PuppeteerLaunchOptions
-                // @ts-expect-error PuppeteerLaunchOptions missing headless
                 launchOptions: { headless: true },
             });
             const page1 = await browser.newPage();
@@ -316,8 +304,6 @@ describe('Apify.launchPuppeteer()', () => {
             browser = await Apify.launchPuppeteer({
                 useIncognitoPages: false,
                 launchOptions: {
-                    // TODO: see why userDataDir and headless are missing in PuppeteerLaunchOptions
-                    // @ts-expect-error PuppeteerLaunchOptions missing userDataDir
                     userDataDir,
                     headless: true,
                 },

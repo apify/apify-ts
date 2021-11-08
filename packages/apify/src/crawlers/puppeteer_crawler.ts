@@ -5,15 +5,18 @@ import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
 import { CrawlingContext, HandleFailedRequest } from './basic_crawler';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } from './browser_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
+import { Awaitable } from '../typedefs';
 
-export type PuppeteerHook = (crawlingContext: {
+export interface PuppeteerCrawlContext extends BrowserCrawlingContext, CrawlingContext {
     page: Page;
     crawler: PuppeteerCrawler;
-} & BrowserCrawlingContext & CrawlingContext, gotoOptions: Record<string, any>) => Promise<void>;
+}
+
+export type PuppeteerHook = Hook<PuppeteerCrawlContext>;
 
 export interface PuppeteerHandlePageFunctionParam {
     page: Page;
@@ -23,9 +26,9 @@ export interface PuppeteerHandlePageFunctionParam {
 export type PuppeteerHandlePage = (context: CrawlingContext & BrowserCrawlingContext & {
     page: Page;
     crawler: PuppeteerCrawler;
-}) => Promise<void>;
+}) => Awaitable<void>;
 
-export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions {
+export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:

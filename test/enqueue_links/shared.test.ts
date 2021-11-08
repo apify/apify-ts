@@ -1,5 +1,5 @@
-import { PseudoUrl } from '../../packages/apify/src/pseudo_url';
-import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from '../../packages/apify/src/enqueue_links/shared';
+import { PseudoUrl } from 'apify/src/pseudo_url';
+import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from 'apify/src/enqueue_links/shared';
 
 describe('Enqueue links shared functions', () => {
     describe('constructPseudoUrlInstances()', () => {
@@ -65,9 +65,9 @@ describe('Enqueue links shared functions', () => {
                 },
             };
 
-            const requests = Array(5).fill(null).map((_, i) => i);
+            const requests = Array(5).fill(null).map((_, i) => i as never);
 
-            const finished = addRequestsToQueueInBatches(requests, fakeRequestQueue, 2);
+            const finished = addRequestsToQueueInBatches(requests, fakeRequestQueue as never, 2);
 
             // With batch size 2, two requests will be dispatched synchronously before the async function
             // returns and thus the following push should place 1000 on the third place in the array.

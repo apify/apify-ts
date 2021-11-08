@@ -31,23 +31,39 @@ export interface BrowserLaunchContext<TOptions> {
     useChrome?: boolean;
 
     /**
-     * By default this function uses require("playwright").chromium`.
-     * If you want to use a different browser you can pass it by this property as `require("playwright").firefox
+     * By default this function uses `require("playwright").chromium`.
+     * If you want to use a different browser you can pass it by this property as `require("playwright").firefox`
      */
     launcher?: any;
+
+    // TODO: this needs proper documentation strings
+    /**
+     * If the browser should use incognito pages
+     */
+    useIncognitoPages?: boolean;
+
+    // TODO: this needs proper documentation strings
+    /**
+     * Where browsers should store their data
+     */
+    userDataDir?: string;
 }
 
 /**
  * Abstract class for creating browser launchers, such as `PlaywrightLauncher` and `PuppeteerLauncher`.
  * @ignore
  */
-export abstract class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> {
+export abstract class BrowserLauncher<
+    Plugin extends BrowserPlugin,
+    T extends Constructor<Plugin> = Constructor<Plugin>,
+    LaunchOptions = Partial<Parameters<Plugin['launch']>[0]>
+> {
     launcher: T;
     proxyUrl?: string;
     useChrome?: boolean;
     launchOptions: Record<string, any>;
     otherLaunchContextProps: Record<string, any>;
-    Plugin?: Constructor<T> & BrowserPlugin; // to be provided by child classes;
+    Plugin?: T; // to be provided by child classes;
     userAgent?: string;
     stealth?: boolean;
     stealthOptions: StealthOptions;
@@ -79,7 +95,7 @@ export abstract class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> 
     /**
      * All `BrowserLauncher` parameters are passed via an launchContext object.
      */
-    constructor(launchContext: BrowserLaunchContext<T>) {
+    constructor(launchContext: BrowserLaunchContext<LaunchOptions>) {
         const {
             launcher,
             proxyUrl,
@@ -101,7 +117,7 @@ export abstract class BrowserLauncher<T extends Constructor<T> & BrowserPlugin> 
     /**
      * @ignore
      */
-    createBrowserPlugin(): BrowserPlugin {
+    createBrowserPlugin(): Plugin {
         return new this.Plugin!(this.launcher, {
             proxyUrl: this.proxyUrl,
             launchOptions: this.createLaunchOptions(),

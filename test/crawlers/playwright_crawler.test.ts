@@ -1,7 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import playwright from 'playwright';
-import log from '../../packages/apify/src/utils_log';
-import Apify from '../../packages/apify/src';
+import log from 'apify/src/utils_log';
+import Apify, { BrowserCrawlingContext, PlaywrightHandlePageFunction } from 'apify';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {
@@ -21,7 +21,7 @@ describe('PlaywrightCrawler', () => {
         const storageDir = await localStorageEmulator.init();
         Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
         const sources = ['http://example.com/'];
-        requestList = await Apify.openRequestList(`sources-${Math.random * 10000}`, sources);
+        requestList = await Apify.openRequestList(`sources-${Math.random() * 10000}`, sources);
     });
     afterAll(async () => {
         log.setLevel(logLevel);
@@ -44,7 +44,9 @@ describe('PlaywrightCrawler', () => {
             const processed = [];
             const failed = [];
             const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
-            const handlePageFunction = async ({ page, request, response }) => {
+            const handlePageFunction = async ({ page, request, response }: Parameters<PlaywrightHandlePageFunction>[0]) => {
+                // TODO: wrong type for response
+                // @ts-expect-error
                 expect(await response.status()).toBe(200);
                 request.userData.title = await page.title();
                 processed.push(request);
@@ -58,7 +60,9 @@ describe('PlaywrightCrawler', () => {
                 minConcurrency: 1,
                 maxConcurrency: 1,
                 handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => failed.push(request),
+                handleFailedRequestFunction: ({ request }) => {
+                    failed.push(request);
+                },
             });
 
             await requestListLarge.initialize();
@@ -82,14 +86,17 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: async () => {
+            handlePageFunction: () => {
             },
-            preNavigationHooks: [(context, gotoOptions) => {
+            preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
+            // TODO: gotoTimeoutSecs does not exist in PlaywrightCrawlerOptions
+            // @ts-expect-error
             gotoTimeoutSecs: timeoutSecs,
         });
 
+        // @ts-expect-error Accessing private prop
         expect(playwrightCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
         await playwrightCrawler.run();
 
@@ -100,7 +107,9 @@ describe('PlaywrightCrawler', () => {
     test('should support custom gotoFunction', async () => {
         const functions = {
             handlePageFunction: () => { },
-            gotoFunction: ({ page, request }, options) => {
+            gotoFunction: ({ page, request }: BrowserCrawlingContext, options) => {
+                // TODO: figure out if we can make page present in types
+                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
                 return page.goto(request.url, options);
             },
         };
@@ -114,6 +123,7 @@ describe('PlaywrightCrawler', () => {
             gotoFunction: functions.gotoFunction,
         });
 
+        // @ts-expect-error Accessing private method
         expect(playwrightCrawler.gotoFunction).toEqual(functions.gotoFunction);
         await playwrightCrawler.run();
 
@@ -128,14 +138,15 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: async () => {
+            handlePageFunction: () => {
             },
-            preNavigationHooks: [(context, gotoOptions) => {
+            preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
             navigationTimeoutSecs: timeoutSecs,
         });
 
+        // @ts-expect-error Accessing private prop
         expect(playwrightCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
         await playwrightCrawler.run();
 

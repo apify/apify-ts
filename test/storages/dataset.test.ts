@@ -2,14 +2,14 @@ import {
     ENV_VARS,
     MAX_PAYLOAD_SIZE_BYTES,
 } from '@apify/consts';
-import { apifyClient } from '../../packages/apify/src/utils';
+import { apifyClient } from 'apify/src/utils';
 import {
     Dataset,
     checkAndSerialize,
     chunkBySize,
-} from '../../packages/apify/src/storages/dataset';
-import Apify from '../../packages/apify/src';
-import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
+} from 'apify/src/storages/dataset';
+import Apify, { Dictionary } from 'apify';
+import { StorageManager } from 'apify/src/storages/storage_manager';
 
 jest.mock('../../packages/apify/src/storages/storage_manager');
 
@@ -34,6 +34,7 @@ describe('dataset', () => {
             expect(StorageManager).toHaveBeenCalledTimes(1);
             // Jest gives you access to newly created instances of the class.
             // Here we grab the StorageManager instance openRequestQueue created.
+            // @ts-expect-error Mocked manager, see line 27-30
             const mockStorageManagerInstance = StorageManager.mock.instances[0];
             // And here we get a reference to the specific instance's function mock.
             const mockOpenStorage = mockStorageManagerInstance.openStorage;
@@ -172,6 +173,8 @@ describe('dataset', () => {
                 limit: 2,
                 total: 1000,
                 offset: 3,
+                count: 2,
+                desc: false,
             };
 
             const mockListItems = jest.spyOn(dataset.client, 'listItems');
@@ -204,11 +207,13 @@ describe('dataset', () => {
                 id: 'WkzbQMuFYuamGv3YF',
                 name: 'd7b9MDYsbtX5L7XAj',
                 userId: 'wRsJZtadYvn4mBZmm',
-                createdAt: new Date('2015-12-12T07:34:14.202Z'),
-                modifiedAt: new Date('2015-12-13T08:36:13.202Z'),
-                accessedAt: new Date('2015-12-14T08:36:13.202Z'),
+                createdAt: new Date('2015-12-12T07:34:14.202Z').toISOString(),
+                modifiedAt: new Date('2015-12-13T08:36:13.202Z').toISOString(),
+                accessedAt: new Date('2015-12-14T08:36:13.202Z').toISOString(),
                 itemCount: 14,
                 cleanItemCount: 10,
+                stats: {},
+                fields: [],
             };
 
             const mockGetDataset = jest.spyOn(dataset.client, 'get');
@@ -233,6 +238,8 @@ describe('dataset', () => {
                 limit: 2,
                 total: 4,
                 offset: 0,
+                count: 2,
+                desc: false,
             };
 
             const secondResolve = {
@@ -243,6 +250,8 @@ describe('dataset', () => {
                 limit: 2,
                 total: 4,
                 offset: 2,
+                count: 2,
+                desc: false,
             };
 
             const mockListItems = jest.spyOn(dataset.client, 'listItems');
@@ -385,6 +394,8 @@ describe('dataset', () => {
                 limit: 2,
                 total: 4,
                 offset: 0,
+                count: 2,
+                desc: false,
             });
             mockListItems.mockResolvedValueOnce({
                 items: [
@@ -394,6 +405,8 @@ describe('dataset', () => {
                 limit: 2,
                 total: 4,
                 offset: 2,
+                count: 2,
+                desc: true,
             });
 
             const calledForIndexes = [];
@@ -439,6 +452,7 @@ describe('dataset', () => {
                 id: 'some-id',
                 client: apifyClient,
             });
+            // @ts-expect-error JS-side validation
             await expect(dataset.pushData()).rejects.toThrow('Expected `data` to be of type `object` but received type `undefined`');
             await expect(dataset.pushData('')).rejects.toThrow('Expected `data` to be of type `object` but received type `string`');
             await expect(dataset.pushData(123)).rejects.toThrow('Expected `data` to be of type `object` but received type `number`');
@@ -446,7 +460,7 @@ describe('dataset', () => {
             await expect(dataset.pushData(false)).rejects.toThrow('Expected `data` to be of type `object` but received type `boolean`');
             await expect(dataset.pushData(() => {})).rejects.toThrow('Data item is not an object. You can push only objects into a dataset.');
 
-            const circularObj = {};
+            const circularObj = {} as Dictionary;
             circularObj.xxx = circularObj;
             const jsonErrMsg = 'Converting circular structure to JSON';
             await expect(dataset.pushData(circularObj)).rejects.toThrow(jsonErrMsg);
@@ -466,7 +480,7 @@ describe('dataset', () => {
             expect(() => checkAndSerialize(obj, 5)).toThrowError(Error);
             expect(() => checkAndSerialize(obj, 5, 7)).toThrowError(Error);
             // Bad JSON
-            const bad = {};
+            const bad = {} as Dictionary;
             bad.bad = bad;
             expect(() => checkAndSerialize(bad, 100)).toThrowError(Error);
             // Bad data

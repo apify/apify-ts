@@ -1,5 +1,6 @@
 import { cryptoRandomObjectId } from '@apify/utilities';
 import ow from 'ow';
+import { Cookie as BrowserPoolCookie } from 'browser-pool';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { IncomingMessage } from 'http';
 import { HTTPResponse, Protocol } from 'puppeteer';
@@ -11,7 +12,7 @@ import defaultLog from '../utils_log';
 import { SessionPool } from './session_pool';
 import { Dictionary } from '../typedefs';
 
-export type PuppeteerCookie = Protocol.Network.Cookie;
+export type PuppeteerCookie = Protocol.Network.Cookie | BrowserPoolCookie;
 
 // CONSTANTS
 const DEFAULT_SESSION_MAX_AGE_SECS = 3000;
@@ -289,7 +290,7 @@ export class Session {
      *
      * It then parses and saves the cookies from the `set-cookie` header, if available.
      */
-    setCookiesFromResponse(response: IncomingMessage | HTTPResponse) {
+    setCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]> }) {
         try {
             const cookies = getCookiesFromResponse(response).filter((c) => c);
             // @ts-ignore probably a mistake, as `HTTPResponse.url` is a method, not a string
@@ -344,7 +345,7 @@ export class Session {
      */
     protected _puppeteerCookieToTough(puppeteerCookie: PuppeteerCookie): Cookie {
         const isExpiresValid = puppeteerCookie.expires && typeof puppeteerCookie.expires === 'number' && puppeteerCookie.expires > 0;
-        const expires = isExpiresValid ? new Date(puppeteerCookie.expires * 1000) : this._getDefaultCookieExpirationDate(this.maxAgeSecs);
+        const expires = isExpiresValid ? new Date(puppeteerCookie.expires! * 1000) : this._getDefaultCookieExpirationDate(this.maxAgeSecs);
         const domain = typeof puppeteerCookie.domain === 'string' && puppeteerCookie.domain.startsWith('.')
             ? puppeteerCookie.domain.slice(1)
             : puppeteerCookie.domain;

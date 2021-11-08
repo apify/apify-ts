@@ -1,13 +1,13 @@
 import {
     ENV_VARS,
 } from '@apify/consts';
-import { apifyClient } from '../../packages/apify/src/utils';
-import {
+import { apifyClient } from 'apify/src/utils';
+import Apify, {
+    Dictionary,
     KeyValueStore,
     maybeStringify,
 } from 'apify';
-import { StorageManager } from '../../packages/apify/src/storages/storage_manager';
-import Apify from '../../packages/apify/src';
+import { StorageManager } from 'apify/src/storages/storage_manager';
 
 jest.mock('../../packages/apify/src/storages/storage_manager');
 
@@ -29,6 +29,7 @@ describe('KeyValueStore remote', () => {
         expect(StorageManager).toHaveBeenCalledTimes(1);
         // Jest gives you access to newly created instances of the class.
         // Here we grab the StorageManager instance openRequestQueue created.
+        // @ts-expect-error Mocked manager, see line 22-25
         const mockStorageManagerInstance = StorageManager.mock.instances[0];
         // And here we get a reference to the specific instance's function mock.
         const mockOpenStorage = mockStorageManagerInstance.openStorage;
@@ -49,6 +50,7 @@ describe('KeyValueStore remote', () => {
 
         // Set record
         const mockSetRecord = jest
+            // @ts-expect-error Accessing private property
             .spyOn(store.client, 'setRecord')
             .mockResolvedValueOnce(null);
 
@@ -63,6 +65,7 @@ describe('KeyValueStore remote', () => {
 
         // Get Record
         const mockGetRecord = jest
+            // @ts-expect-error Accessing private property
             .spyOn(store.client, 'getRecord')
             .mockResolvedValueOnce({
                 key: 'key-1',
@@ -78,6 +81,7 @@ describe('KeyValueStore remote', () => {
 
         // Delete Record
         const mockDeleteRecord = jest
+            // @ts-expect-error Accessing private property
             .spyOn(store.client, 'deleteRecord')
             .mockResolvedValueOnce(null);
 
@@ -88,6 +92,7 @@ describe('KeyValueStore remote', () => {
 
         // Drop store
         const mockDelete = jest
+            // @ts-expect-error Accessing private property
             .spyOn(store.client, 'delete')
             .mockResolvedValueOnce(undefined);
 
@@ -104,7 +109,9 @@ describe('KeyValueStore remote', () => {
                 client: apifyClient,
             });
 
+            // @ts-expect-error JS-side validation
             await expect(store.getValue()).rejects.toThrow('Expected argument to be of type `string` but received type `undefined`');
+            // @ts-expect-error JS-side validation
             await expect(store.getValue({})).rejects.toThrow('Expected argument to be of type `string` but received type `Object`');
             await expect(store.getValue(null)).rejects.toThrow('Expected argument to be of type `string` but received type `null`');
             await expect(store.getValue('')).rejects.toThrow('Expected string to not be empty');
@@ -117,11 +124,15 @@ describe('KeyValueStore remote', () => {
                 id: 'some-id-1',
                 client: apifyClient,
             });
+
+            // @ts-expect-error JS-side validation
             await expect(store.setValue()).rejects.toThrow('Expected `key` to be of type `string` but received type `undefined`');
             await expect(store.setValue('', null)).rejects.toThrow('Expected string `key` to not be empty');
             await expect(store.setValue('', 'some value')).rejects.toThrow('Expected string `key` to not be empty');
+            // @ts-expect-error JS-side validation
             await expect(store.setValue({}, 'some value'))
                 .rejects.toThrow('Expected `key` to be of type `string` but received type `Object`');
+            // @ts-expect-error JS-side validation
             await expect(store.setValue(123, 'some value'))
                 .rejects.toThrow('Expected `key` to be of type `string` but received type `number`');
 
@@ -137,13 +148,14 @@ describe('KeyValueStore remote', () => {
             await expect(store.setValue('key', {}, true))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `boolean`');
 
-            const circularObj = {};
+            const circularObj = {} as Dictionary;
             circularObj.xxx = circularObj;
             const circularErrMsg = 'The "value" parameter cannot be stringified to JSON: Converting circular structure to JSON';
             const undefinedErrMsg = 'The "value" parameter was stringified to JSON and returned undefined. '
                 + 'Make sure you\'re not trying to stringify an undefined value.';
             await expect(store.setValue('key', circularObj)).rejects.toThrow(circularErrMsg);
             await expect(store.setValue('key', undefined)).rejects.toThrow(undefinedErrMsg);
+            // @ts-expect-error JS-side validation
             await expect(store.setValue('key')).rejects.toThrow(undefinedErrMsg);
 
             const contTypeRedundantErrMsg = 'Expected property string `contentType` to not be empty in object';
@@ -168,6 +180,7 @@ describe('KeyValueStore remote', () => {
                 id: 'my-store-id',
                 client: apifyClient,
             });
+
             const INVALID_CHARACTERS = '?|\\/"*<>%:';
             let counter = 0;
 
@@ -198,6 +211,7 @@ describe('KeyValueStore remote', () => {
             });
 
             const mockSetRecord = jest
+                // @ts-expect-error Accessing private property
                 .spyOn(store.client, 'setRecord')
                 .mockResolvedValueOnce(null);
 
@@ -216,10 +230,12 @@ describe('KeyValueStore remote', () => {
                 id: 'my-store-id-1',
                 client: apifyClient,
             });
+
             const record = { foo: 'bar' };
             const recordStr = JSON.stringify(record, null, 2);
 
             const mockSetRecord = jest
+                // @ts-expect-error Accessing private property
                 .spyOn(store.client, 'setRecord')
                 .mockResolvedValueOnce(null);
 
@@ -240,6 +256,7 @@ describe('KeyValueStore remote', () => {
             });
 
             const mockSetRecord = jest
+                // @ts-expect-error Accessing private property
                 .spyOn(store.client, 'setRecord')
                 .mockResolvedValueOnce(null);
 
@@ -260,6 +277,7 @@ describe('KeyValueStore remote', () => {
             });
 
             const mockSetRecord = jest
+                // @ts-expect-error Accessing private property
                 .spyOn(store.client, 'setRecord')
                 .mockResolvedValueOnce(null);
 
@@ -297,7 +315,7 @@ describe('KeyValueStore remote', () => {
             expect(maybeStringify('xxx', { contentType: undefined })).toBe('"xxx"');
             expect(maybeStringify('xxx', { contentType: 'something' })).toBe('xxx');
 
-            const obj = {};
+            const obj = {} as Dictionary;
             obj.self = obj;
             expect(() => maybeStringify(obj, { contentType: null })).toThrowError(
                 'The "value" parameter cannot be stringified to JSON: Converting circular structure to JSON',
@@ -306,7 +324,7 @@ describe('KeyValueStore remote', () => {
     });
 
     describe('getFileNameRegexp()', () => {
-        const getFileNameRegexp = (key) => {
+        const getFileNameRegexp = (key: string) => {
             const safeKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             return new RegExp(`^${safeKey}\\.[a-z0-9]+$`);
         };
@@ -337,6 +355,7 @@ describe('KeyValueStore remote', () => {
                 client: apifyClient,
             });
 
+            // @ts-expect-error Accessing private property
             const mockListKeys = jest.spyOn(store.client, 'listKeys');
             mockListKeys.mockResolvedValueOnce({
                 isTruncated: true,
@@ -345,6 +364,8 @@ describe('KeyValueStore remote', () => {
                     { key: 'key1', size: 1 },
                     { key: 'key2', size: 2 },
                 ],
+                count: 2,
+                limit: 2,
             });
 
             mockListKeys.mockResolvedValueOnce({
@@ -354,12 +375,16 @@ describe('KeyValueStore remote', () => {
                     { key: 'key3', size: 3 },
                     { key: 'key4', size: 4 },
                 ],
+                count: 1,
+                limit: 2,
             });
 
             mockListKeys.mockResolvedValueOnce({
                 isTruncated: false,
                 nextExclusiveStartKey: null,
                 items: [{ key: 'key5', size: 5 }],
+                count: 1,
+                limit: 1,
             });
 
             const results = [];

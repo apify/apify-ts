@@ -120,7 +120,7 @@ export class Apify {
      * @param userFunc User function to be executed. If it returns a promise,
      * the promise will be awaited. The user function is called with no arguments.
      */
-    main(userFunc: UserFunc): void | Promise<void> {
+    main(userFunc: UserFunc): Promise<void> {
         if (!userFunc || typeof (userFunc) !== 'function') {
             // eslint-disable-next-line max-len
             throw new Error(`Apify.main() accepts a single parameter that must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
@@ -165,6 +165,8 @@ export class Apify {
             stopEvents();
             clearInterval(intervalId);
         }
+
+        return Promise.resolve();
     }
 
     /**

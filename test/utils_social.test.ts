@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import Apify from 'apify/src';
+import Apify from 'apify';
 
 const { social } = Apify.utils;
 

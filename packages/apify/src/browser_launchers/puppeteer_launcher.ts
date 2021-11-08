@@ -6,6 +6,7 @@ import { isAtHome } from '../utils';
 import { DEFAULT_USER_AGENT } from '../constants';
 import { applyStealthToBrowser, StealthOptions } from '../stealth/stealth';
 import { BrowserPlugin } from './browser_plugin';
+import { Constructor } from '../typedefs';
 
 const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
     width: 1366,
@@ -37,7 +38,7 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<LaunchOptio
     /**
      *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-puppeteerlaunchoptions)
      */
-    launchOptions?: LaunchOptions;
+    launchOptions?: PuppeteerPlugin['launchOptions'];
 
     /**
      * URL to a HTTP proxy server. It must define the port number,
@@ -91,7 +92,6 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<LaunchOptio
  * `PuppeteerLauncher` is based on the `BrowserLauncher`. It launches `puppeteer` browser instance.
  * @ignore
  */
-// @ts-ignore browser plugins not compatible
 export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,
@@ -118,7 +118,8 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
         super({
             ...browserLauncherOptions,
             launcher,
-        } as any); // TODO we could type it as `BrowserLaunchContext<LaunchOptions>` probably, but it fails (maybe again plugin incompatibility)
+        });
+
         this.userAgent = userAgent;
         this.stealth = stealth;
         this.stealthOptions = {
@@ -126,8 +127,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
             ...stealthOptions,
         };
 
-        // TODO should not be needed, caused by incompatible plugin interfaces
-        this.Plugin = PuppeteerPlugin as typeof PuppeteerPlugin & BrowserPlugin;
+        this.Plugin = PuppeteerPlugin;
     }
 
     override async launch() {

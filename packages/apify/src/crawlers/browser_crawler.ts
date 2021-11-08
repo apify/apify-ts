@@ -1,7 +1,5 @@
 import ow from 'ow';
-// @ts-ignore BrowserController is not exported?
-import { BrowserPool, BrowserController, BrowserPoolOptions } from 'browser-pool';
-import { LaunchContext } from 'browser-pool/dist/launch-context'; // TODO this should be exported
+import { BrowserController, BrowserPool, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { EVENT_SESSION_RETIRED } from '../session_pool/events';
 import { addTimeoutToPromise } from '../utils';
@@ -16,15 +14,20 @@ import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
+import { Session } from '../session_pool/session';
+import { Awaitable } from '../typedefs';
 
 export interface BrowserCrawlingContext extends CrawlingContext {
     browserController: BrowserController;
 }
 
-export type Hook<T extends CrawlingContext = CrawlingContext> = (crawlingContext: T, gotoOptions: Record<string, any>) => void | Promise<void>;
+export type Hook<
+    T extends CrawlingContext = CrawlingContext,
+    GoToOptions extends Record<string, any> = Record<string, any>
+> = (crawlingContext: T, gotoOptions: GoToOptions) => Awaitable<void>;
 export type BrowserHook = Hook<BrowserCrawlingContext>;
-export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Promise<void>;
-export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Promise<any>;
+export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Awaitable<void>;
+export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Awaitable<any>;
 
 export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
@@ -103,6 +106,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
      * You can tweak those to fine-tune browser management.
      */
+    // TODO: this interface doesn't include the hooks
     browserPoolOptions?: BrowserPoolOptions;
 
     /**
@@ -341,7 +345,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
             }
 
             await addTimeoutToPromise(
-                this.handlePageFunction(crawlingContext),
+                Promise.resolve(this.handlePageFunction(crawlingContext)),
                 this.handlePageTimeoutMillis,
                 `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
             );
@@ -448,15 +452,15 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
 
     protected _maybeAddSessionRetiredListener(_pageId: string, browserController: BrowserController): void {
         if (this.sessionPool) {
-            const listener = (session) => {
+            const listener = (session: Session) => {
                 const { launchContext } = browserController;
-                if (session.id === launchContext.session.id) {
+                if (session.id === (launchContext.session as Session).id) {
                     this.browserPool.retireBrowserController(browserController);
                 }
             };
 
             this.sessionPool.on(EVENT_SESSION_RETIRED, listener);
-            browserController.on('browserClosed', () => this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener));
+            browserController.on(BROWSER_CONTROLLER_EVENTS.BROWSER_CLOSED, () => this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener));
         }
     }
 

@@ -1,4 +1,4 @@
-import Apify from 'apify/src';
+import Apify from 'apify';
 
 describe('Apify.PseudoUrl', () => {
     test('matches() should work', () => {

@@ -1,5 +1,5 @@
 import { Cookie } from 'tough-cookie';
-import { getCookiesFromResponse } from '../../packages/apify/src/session_pool/session_utils';
+import { getCookiesFromResponse } from 'apify/src/session_pool/session_utils';
 
 describe('getCookiesFromResponse ', () => {
     test('should parse cookies if set-cookie is array', () => {

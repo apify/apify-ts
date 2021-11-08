@@ -20,7 +20,10 @@ jobs:
             -   name: Check TS support
                 run: |
                     npm install --force     # install SDK deps
+                    npm run build           # Builds the SDK
+                    cd packages/apify       # Go in the Apify module
                     yarn link               # link the local version of SDK
+                    cd ../../               # cd out of the module
                     cd ts-check             # go to the TS skeleton project directory
                     yarn                    # install its deps
                     yarn link apify         # link local SDK version to the skeleton project

@@ -362,8 +362,7 @@ describe('Apify.utils.puppeteer', () => {
 
             let browser;
             beforeAll(async () => {
-                // TODO headless is not a known option?
-                browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } as any });
+                browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
             });
             afterAll(async () => {
                 await browser.close();

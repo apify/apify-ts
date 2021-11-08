@@ -120,7 +120,7 @@ export class KeyValueStore {
     constructor(options: KeyValueStoreOptions, readonly config = Configuration.getGlobalConfig()) {
         this.id = options.id;
         this.name = options.name;
-        this.isLocal = options.isLocal;
+        this.isLocal = options.isLocal ?? false;
         this.client = options.client.keyValueStore(this.id) as KeyValueStoreClient;
     }
 
@@ -497,5 +497,5 @@ export interface KeyValueStoreOptions {
     id: string;
     name?: string;
     client: ApifyClient | ApifyStorageLocal;
-    isLocal: boolean;
+    isLocal?: boolean;
 }

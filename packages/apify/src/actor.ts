@@ -7,7 +7,7 @@ import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
 import { addCharsetToContentType, apifyClient, isAtHome, logSystemInfo, newClient, printOutdatedSdkWarning, sleep, snakeCaseToCamelCase } from './utils';
 import { maybeStringify } from './storages/key_value_store';
-import { ActorRun, Dictionary } from './typedefs';
+import { ActorRun, Awaitable, Dictionary } from './typedefs';
 import { ApifyCallError } from './errors';
 import { MetamorphOptions } from './apify';
 
@@ -115,7 +115,7 @@ export function getEnv(): ApifyEnv {
     return envVars;
 }
 
-export type UserFunc = () => Promise<void>;
+export type UserFunc = () => Awaitable<void>;
 
 /**
  * Runs the main user function that performs the job of the actor
