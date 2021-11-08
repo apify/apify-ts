@@ -38,10 +38,11 @@
         "build"
     ],
     "scripts": {
-        "build": "npm run clean && npm run compile && npm run copy",
+        "build": "npm run clean && npm run compile && npm run copy && npm run fixApifyExport",
         "clean": "rimraf ./dist",
         "compile": "tsc -p tsconfig.build.json",
-        "copy": "ts-node -T ../../scripts/copy.ts"
+        "copy": "ts-node -T ../../scripts/copy.ts",
+        "fixApifyExport": "ts-node -T ../../scripts/temp_fix_apify_exports.ts"
     },
     "publishConfig": {
         "access": "public"
