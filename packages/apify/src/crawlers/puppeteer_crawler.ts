@@ -5,15 +5,17 @@ import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
 import { CrawlingContext, HandleFailedRequest } from './basic_crawler';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } from './browser_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 
-export type PuppeteerHook = (crawlingContext: {
+export interface PuppeteerCrawlContext extends BrowserCrawlingContext, CrawlingContext {
     page: Page;
     crawler: PuppeteerCrawler;
-} & BrowserCrawlingContext & CrawlingContext, gotoOptions: Record<string, any>) => Promise<void>;
+}
+
+export type PuppeteerHook = Hook<PuppeteerCrawlContext>;
 
 export interface PuppeteerHandlePageFunctionParam {
     page: Page;

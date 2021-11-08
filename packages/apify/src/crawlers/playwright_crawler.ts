@@ -2,7 +2,7 @@ import ow from 'ow';
 import { LaunchOptions, Page } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext } from './browser_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } from './browser_crawler';
 import { HandleFailedRequest, CrawlingContext } from './basic_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
@@ -133,10 +133,12 @@ export interface PlaywrightGotoOptions {
     referer?: string;
 }
 
-export type PlaywrightHook = (crawlingContext: {
+export interface PlaywrightCrawlContext extends BrowserCrawlingContext, CrawlingContext {
     page: Page;
     crawler: PlaywrightCrawler;
-} & BrowserCrawlingContext & CrawlingContext, gotoOptions: PlaywrightGotoOptions) => Promise<void>;
+}
+
+export type PlaywrightHook = Hook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
 
 export interface PlaywrightHandlePageFunctionParam {
     page: Page;

@@ -23,7 +23,10 @@ export interface BrowserCrawlingContext extends CrawlingContext {
     browserController: BrowserController;
 }
 
-export type Hook<T extends CrawlingContext = CrawlingContext> = (crawlingContext: T, gotoOptions: Record<string, any>) => void | Promise<void>;
+export type Hook<
+    T extends CrawlingContext = CrawlingContext,
+    GoToOptions extends Record<string, any> = Record<string, any>
+> = (crawlingContext: T, gotoOptions: GoToOptions) => void | Promise<void>;
 export type BrowserHook = Hook<BrowserCrawlingContext>;
 export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Promise<void>;
 export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Promise<any>;
