@@ -1,7 +1,5 @@
 import ow from 'ow';
-// TODO: export abstract classes
-// @ts-expect-error BrowserController is not exported?
-import type { BrowserController } from 'browser-pool';
+import type { BrowserController } from 'browser-pool/dist/abstract-classes/browser-controller';
 import { BrowserPool, BrowserPoolOptions } from 'browser-pool';
 import { LaunchContext } from 'browser-pool/dist/launch-context'; // TODO this should be exported
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
@@ -18,6 +16,7 @@ import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
+import { Session } from '../session_pool/session';
 
 export interface BrowserCrawlingContext extends CrawlingContext {
     browserController: BrowserController;
@@ -454,14 +453,16 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
 
     protected _maybeAddSessionRetiredListener(_pageId: string, browserController: BrowserController): void {
         if (this.sessionPool) {
-            const listener = (session) => {
+            const listener = (session: Session) => {
                 const { launchContext } = browserController;
-                if (session.id === launchContext.session.id) {
+                if (session.id === (launchContext.session as Session).id) {
                     this.browserPool.retireBrowserController(browserController);
                 }
             };
 
             this.sessionPool.on(EVENT_SESSION_RETIRED, listener);
+            // TODO: use enum from browser-pool once https://github.com/apify/browser-pool/pull/59 is merged
+            // @ts-expect-error
             browserController.on('browserClosed', () => this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener));
         }
     }

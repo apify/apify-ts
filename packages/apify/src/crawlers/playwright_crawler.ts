@@ -10,7 +10,7 @@ import { Request } from '../request';
 import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 import { gotoExtended } from '../playwright_utils';
 
-export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction'> {
+export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
      *   Function that is called to process each request.
      *   It is passed an object with the following fields:
