@@ -568,6 +568,8 @@ export class AutoscaledPool {
     /**
      * Scales the pool up by increasing
      * the desired concurrency by the scaleUpStepRatio.
+     *
+     * @param systemStatus for logging
      * @internal
      */
     protected _scaleUp(systemStatus: SystemInfo) {
@@ -583,6 +585,8 @@ export class AutoscaledPool {
     /**
      * Scales the pool down by decreasing
      * the desired concurrency by the scaleDownStepRatio.
+     * *
+     * @param systemStatus for logging
      * @internal
      */
     protected _scaleDown(systemStatus: SystemInfo) {

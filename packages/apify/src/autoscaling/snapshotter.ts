@@ -138,6 +138,9 @@ export class Snapshotter {
 
     lastLoggedCriticalMemoryOverloadAt: Date | null = null;
 
+    /**
+     * @param [options] All `Snapshotter` configuration options.
+     */
     constructor(options: SnapshotterOptions = {}) {
         ow(options, ow.object.exactShape({
             eventLoopSnapshotIntervalSecs: ow.optional.number,
@@ -369,8 +372,10 @@ export class Snapshotter {
      * using the Apify platform `systemInfo` event.
      * @internal
      */
-    protected _snapshotCpuOnPlatform(systemInfo: any) { // TODO: should be SystemInfo, not any
+    protected _snapshotCpuOnPlatform(systemInfo: SystemInfo) {
+        // @ts-ignore // TODO Figure out 'property does not exist'
         const { cpuCurrentUsage, isCpuOverloaded } = systemInfo;
+        // @ts-ignore // TODO Figure out 'property does not exist'
         const createdAt = (new Date(systemInfo.createdAt));
         this._pruneSnapshots(this.cpuSnapshots, createdAt);
 
