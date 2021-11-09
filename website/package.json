@@ -1,7 +1,7 @@
 {
     "scripts": {
         "examples": "docusaurus-examples",
-        "start": "rimraf .docusaurus && docusaurus start",
+        "start": "rimraf .docusaurus && npm run generate && docusaurus start",
         "build": "rimraf .docusaurus && docusaurus build",
         "publish-gh-pages": "docusaurus-publish",
         "write-translations": "docusaurus write-translations",
@@ -31,8 +31,9 @@
     "dependencies": {
         "@docusaurus/core": "2.0.0-beta.9",
         "@docusaurus/preset-classic": "2.0.0-beta.9",
-        "docusaurus-plugin-typedoc-api": "^1.6.0",
         "clsx": "^1.1.1",
+        "docusaurus-plugin-typedoc-api": "^1.6.0",
+        "raw-loader": "^4.0.2",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "unist-util-visit": "^4.1.0"
