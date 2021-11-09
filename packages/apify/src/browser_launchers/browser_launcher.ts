@@ -151,28 +151,15 @@ export abstract class BrowserLauncher<
         return launchOptions;
     }
 
-    /**
-     * @returns {boolean}
-     * @private
-     */
-    _getDefaultHeadlessOption() {
+    protected _getDefaultHeadlessOption(): boolean {
         return process.env[ENV_VARS.HEADLESS] === '1' && process.env[ENV_VARS.XVFB] !== '1';
     }
 
-    /**
-    * @returns {string}
-    * @private
-    */
-    _getChromeExecutablePath() {
+    protected _getChromeExecutablePath(): string {
         return process.env[ENV_VARS.CHROME_EXECUTABLE_PATH] || getTypicalChromeExecutablePath();
     }
 
-    /**
-     *
-     * @param {string} proxyUrl
-     * @private
-     */
-    _validateProxyUrlProtocol(proxyUrl) {
+    protected _validateProxyUrlProtocol(proxyUrl: string | undefined): void {
         if (!proxyUrl) return;
 
         if (!/^(http|https|socks4|socks5)/i.test(proxyUrl)) {

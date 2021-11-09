@@ -138,9 +138,6 @@ export class Snapshotter {
 
     lastLoggedCriticalMemoryOverloadAt: Date | null = null;
 
-    /**
-     * @param [options] All `Snapshotter` configuration options.
-     */
     constructor(options: SnapshotterOptions = {}) {
         ow(options, ow.object.exactShape({
             eventLoopSnapshotIntervalSecs: ow.optional.number,
@@ -188,9 +185,8 @@ export class Snapshotter {
 
     /**
      * Starts capturing snapshots at configured intervals.
-     * @return {Promise<void>}
      */
-    async start() {
+    async start(): Promise<void> {
         await this._ensureCorrectMaxMemory();
 
         // Start snapshotting.
@@ -343,12 +339,9 @@ export class Snapshotter {
 
     /**
      * Creates a snapshot of current event loop delay.
-     * @param {Function} intervalCallback
-     * @ignore
-     * @protected
      * @internal
      */
-    _snapshotEventLoop(intervalCallback) {
+    protected _snapshotEventLoop(intervalCallback: () => unknown) {
         const now = new Date();
         this._pruneSnapshots(this.eventLoopSnapshots, now);
 
@@ -374,12 +367,9 @@ export class Snapshotter {
     /**
      * Creates a snapshot of current CPU usage
      * using the Apify platform `systemInfo` event.
-     * @param {Object} systemInfo
-     * @ignore
-     * @protected
      * @internal
      */
-    _snapshotCpuOnPlatform(systemInfo) {
+    protected _snapshotCpuOnPlatform(systemInfo: any) { // TODO: should be SystemInfo, not any
         const { cpuCurrentUsage, isCpuOverloaded } = systemInfo;
         const createdAt = (new Date(systemInfo.createdAt));
         this._pruneSnapshots(this.cpuSnapshots, createdAt);
@@ -395,7 +385,7 @@ export class Snapshotter {
      * Creates a snapshot of current CPU usage using OS provided metrics.
      * @internal
      */
-    protected _snapshotCpuOnLocal(intervalCallback: () => unknown) {
+    protected _snapshotCpuOnLocal(intervalCallback: () => unknown): void {
         const now = new Date();
         this._pruneSnapshots(this.eventLoopSnapshots, now);
 
@@ -444,13 +434,9 @@ export class Snapshotter {
      * earlier errors may just be caused by a random spike in
      * number of requests and do not necessarily signify API
      * overloading.
-     *
-     * @param intervalCallback
-     * @ignore
-     * @protected
      * @internal
      */
-    _snapshotClient(intervalCallback) {
+    protected _snapshotClient(intervalCallback: () => unknown) {
         const now = new Date();
         this._pruneSnapshots(this.clientSnapshots, now);
 
@@ -477,15 +463,13 @@ export class Snapshotter {
     /**
      * Removes snapshots that are older than the snapshotHistorySecs option
      * from the array (destructively - in place).
-     * @param {Array<*>} snapshots
-     * @param {Date} now
      * @internal
      */
-    protected _pruneSnapshots(snapshots, now: Date) {
+    protected _pruneSnapshots(snapshots: MemorySnapshot[] | CpuSnapshot[] | EventLoopSnapshot[] | ClientSnapshot[], now: Date) {
         let oldCount = 0;
         for (let i = 0; i < snapshots.length; i++) {
             const { createdAt } = snapshots[i];
-            if (now.getTime() - createdAt > this.snapshotHistoryMillis) oldCount++;
+            if (now.getTime() - new Date(createdAt).getTime() > this.snapshotHistoryMillis) oldCount++;
             else break;
         }
         snapshots.splice(0, oldCount);
