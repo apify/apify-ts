@@ -443,7 +443,7 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
 export async function setValue<T>(key: string, value: T, options?: unknown): Promise<void> {
     const store = await openKeyValueStore();
 
-    // @ts-expect-error options need to be typed
+    // @ts-ignore options need to be typed
     return store.setValue(key, value, options);
 }
 
