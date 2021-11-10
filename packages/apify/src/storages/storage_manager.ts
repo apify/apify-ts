@@ -33,7 +33,7 @@ export class StorageManager<T> {
         StorageConstructor: Constructor<T>,
         private readonly config = Configuration.getGlobalConfig(),
     ) {
-        this.StorageConstructor = StorageConstructor as unknown as Constructor<T>;
+        this.StorageConstructor = StorageConstructor;
         this.name = this.StorageConstructor.name;
         this.cache = cacheContainer.openCache(this.name, MAX_OPENED_STORAGES);
     }

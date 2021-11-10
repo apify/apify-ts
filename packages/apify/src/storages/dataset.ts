@@ -67,7 +67,7 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
 
         if (bytes <= limitBytes && (bytes + 2) > limitBytes) {
             // Handle cases where wrapping with [] would fail, but solo object is fine.
-            // @ts-ignore TODO what is this exactly doing? chunks is a mix of `string` and `string[]`?
+            // @ts-expect-error TODO what is this exactly doing? chunks is a mix of `string` and `string[]`?
             chunks.push(payload);
             lastChunkBytes = bytes;
         } else if (lastChunkBytes + bytes <= limitBytes) {
@@ -132,7 +132,7 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
  * ```
  * @category Result Stores
  */
-export class Dataset {
+export class Dataset<Data extends Dictionary = Dictionary> {
     id: string;
     name?: string;
     isLocal?: boolean;
@@ -174,15 +174,13 @@ export class Dataset {
      * @param data Object or array of objects containing data to be stored in the default dataset.
      *   The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
-    async pushData(data: unknown): Promise<void> {
+    async pushData(data: Data | Data[]): Promise<void> {
         ow(data, 'data', ow.object);
-        // eslint-disable-next-line no-return-await
-        const dispatch = async (payload) => await this.client.pushItems(payload);
+        const dispatch = (payload: string) => this.client.pushItems(payload);
         const limit = MAX_PAYLOAD_SIZE_BYTES - Math.ceil(MAX_PAYLOAD_SIZE_BYTES * SAFETY_BUFFER_PERCENT);
 
         // Handle singular Objects
         if (!Array.isArray(data)) {
-            // @ts-ignore
             const payload = checkAndSerialize(data, limit);
             return dispatch(payload);
         }
@@ -227,9 +225,10 @@ export class Dataset {
      *   If `true` then the function doesn't return empty items.
      *   Note that in this case the returned number of items might be lower than limit parameter and pagination must be done using the `limit` value.
      */
-    async getData<T = unknown>(options = {}): Promise<DatasetContent<T>> {
+    async getData(options = {}): Promise<DatasetContent<Data>> {
         try {
-            // @ts-ignore
+            // TODO: in apify_client, DatasetClient#listItems needs to take in a generic for the return type
+            // @ts-expect-error
             return await this.client.listItems(options);
         } catch (e) {
             if (e.message.includes('Cannot create a string longer than')) {
@@ -262,8 +261,7 @@ export class Dataset {
      * }
      * ```
      */
-    async getInfo<T extends Dictionary = Dictionary>(): Promise<T> {
-        // @ts-ignore
+    async getInfo() {
         return this.client.get();
     }
 
@@ -290,18 +288,16 @@ export class Dataset {
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @param {number} [index=0] Specifies the initial index number passed to the `iteratee` function.
      */
-    async forEach(iteratee: DatasetConsumer, options: Dictionary = {}, index = 0): Promise<void> {
-        // @ts-ignore
+    async forEach(iteratee: DatasetConsumer<Data>, options: Dictionary = {}, index = 0): Promise<void> {
+        // TODO: type the options object properly
         if (!options.offset) options.offset = 0;
-        // @ts-ignore
         if (options.format && options.format !== 'json') throw new Error('Dataset.forEach/map/reduce() support only a "json" format.');
-        // @ts-ignore
         if (!options.limit) options.limit = DATASET_ITERATORS_DEFAULT_LIMIT;
 
         const { items, total, limit, offset } = await this.getData(options);
 
         for (const item of items) {
-            await iteratee(item as Dictionary, index++);
+            await iteratee(item, index++);
         }
 
         const newOffset = offset + limit;
@@ -324,8 +320,8 @@ export class Dataset {
      * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      */
-    async map(iteratee: DatasetMapper, options: Dictionary = {}): Promise<Dictionary[]> {
-        const result: Dictionary[] = [];
+    async map<R>(iteratee: DatasetMapper<Data, R>, options: Dictionary = {}): Promise<R[]> {
+        const result: R[] = [];
 
         await this.forEach(async (item, index) => {
             const res = await iteratee(item, index);
@@ -355,7 +351,7 @@ export class Dataset {
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @return {Promise<object>}
      */
-    reduce<T>(iteratee: DatasetReducer<T>, memo: T, options: Dictionary) {
+    reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: Dictionary) {
         let currentMemo = memo;
 
         const wrappedFunc = (item, index) => {
@@ -404,15 +400,16 @@ export class Dataset {
      *   environment variable is set. This way it is possible to combine local and cloud storage.
      * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
      */
-    static async open(datasetIdOrName?: string | null, options: Dictionary = {}): Promise<Dataset> {
+    static async open<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: Dictionary = {}): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        // @ts-ignore TODO type options parameter
-        const manager = new StorageManager(Dataset, options.config);
+        // TODO: type options parameter
+        // @ts-expect-error
+        const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
         return manager.openStorage(datasetIdOrName, options);
     }
 }
@@ -437,8 +434,8 @@ export class Dataset {
  * @returns {Promise<Dataset>}
  * @deprecated use `Dataset.open()` instead
  */
-export async function openDataset(datasetIdOrName?: string | null, options: Dictionary = {}) {
-    return Dataset.open(datasetIdOrName, options);
+export function openDataset<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: Dictionary = {}) {
+    return Dataset.open<Data>(datasetIdOrName, options);
 }
 
 /**
@@ -464,10 +461,8 @@ export async function openDataset(datasetIdOrName?: string | null, options: Dict
  * @param {object} item Object or array of objects containing data to be stored in the default dataset.
  * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
  */
-export async function pushData(item): Promise<void> {
-    // @ts-ignore
+export async function pushData(item: Dictionary | Dictionary[]): Promise<void> {
     const dataset = await openDataset();
-    // @ts-ignore
     return dataset.pushData(item);
 }
 
@@ -488,46 +483,49 @@ export interface DatasetContent<T = unknown> {
     /** Maximum number of dataset entries requested. */
     limit: number;
 
+    /** If the results are returned in a descending order */
+    desc: boolean;
+
 }
 
 /**
  * User-function used in the `Dataset.forEach()` API.
  */
-export interface DatasetConsumer {
+export interface DatasetConsumer<Data> {
 
     /**
      * @param item Current {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: Dictionary, index: number): Awaitable<void>;
+    (item: Data, index: number): Awaitable<void>;
 
 }
 
 /**
  * User-function used in the `Dataset.map()` API.
  */
-export interface DatasetMapper {
+export interface DatasetMapper<Data, R> {
 
     /**
      * User-function used in the `Dataset.map()` API.
-     * @param item Currect {@link Dataset} entry being processed.
+     * @param item Current {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (item: Dictionary, index: number): Awaitable<Dictionary>;
+    (item: Data, index: number): Awaitable<R>;
 
 }
 
 /**
  * User-function used in the `Dataset.reduce()` API.
  */
-export interface DatasetReducer<T> {
+export interface DatasetReducer<T, Data> {
 
     /**
      * @param memo Previous state of the reduction.
      * @param item Current {@link Dataset} entry being processed.
      * @param index Position of current {Dataset} entry.
      */
-    (memo: T, item: Dictionary, index: number): Awaitable<T>;
+    (memo: T, item: Data, index: number): Awaitable<T>;
 
 }
 
