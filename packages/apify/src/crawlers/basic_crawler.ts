@@ -39,6 +39,13 @@ export interface CrawlingContext extends Record<PropertyKey, unknown> {
     response?: IncomingMessage;
 }
 
+export interface HandleFailedRequestInput extends CrawlingContext {
+    /**
+     *   The Error thrown by `handleRequestFunction`.
+     */
+    error: Error;
+}
+
 /**
  * Since there's no set number of seconds before the container is terminated after
  * a migration event, we need some reasonable number to use for RequestList persistence.
@@ -445,11 +452,7 @@ export class BasicCrawler {
         await this._loadHandledRequestCount();
     }
 
-    /**
-     * @param {CrawlingContext} crawlingContext
-     * @return {Promise<void>}
-     */
-    protected async _handleRequestFunction(crawlingContext) { // eslint-disable-line no-unused-vars
+    protected async _handleRequestFunction(crawlingContext: CrawlingContext): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
@@ -612,13 +615,8 @@ export class BasicCrawler {
 
     /**
      * Handles errors thrown by user provided handleRequestFunction()
-     * @param {Error} error
-     * @param {object} crawlingContext
-     * @param {Request} crawlingContext.request
-     * @param {(RequestList|RequestQueue)} source
-     * @return {Promise<void>}
      */
-    protected async _requestFunctionErrorHandler(error, crawlingContext, source) {
+    protected async _requestFunctionErrorHandler(error: Error, crawlingContext: CrawlingContext, source: RequestList | RequestQueue): Promise<void> {
         const { request } = crawlingContext;
         request.pushErrorMessage(error);
 
@@ -639,17 +637,11 @@ export class BasicCrawler {
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.url);
             crawlingContext.error = error;
-            await this._handleFailedRequestFunction(crawlingContext); // This function prints an error message.
+            await this._handleFailedRequestFunction(crawlingContext as HandleFailedRequestInput); // This function prints an error message.
         }
     }
 
-    /**
-     * @param {object} crawlingContext
-     * @param {Error} crawlingContext.error
-     * @param {Request} crawlingContext.request
-     * @return {Promise<void>}
-     */
-    protected async _handleFailedRequestFunction(crawlingContext) {
+    protected async _handleFailedRequestFunction(crawlingContext: HandleFailedRequestInput): Promise<void> {
         if (this.failedContextHandler) {
             await this.failedContextHandler(crawlingContext);
         } else {
@@ -714,12 +706,3 @@ export interface HandleRequestInputs {
 }
 
 export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
-
-export interface HandleFailedRequestInput {
-    /** The Error thrown by `handleRequestFunction`. */
-    error: Error;
-    /** The original {Request} object. */
-    request: Request;
-    session: Session;
-    proxyInfo: ProxyInfo;
-}
