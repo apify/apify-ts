@@ -17,17 +17,20 @@ import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
 import { Awaitable } from '../typedefs';
 
-export interface BrowserCrawlingContext extends CrawlingContext {
+export interface BrowserCrawlingContext<Page = unknown> extends CrawlingContext {
     browserController: BrowserController;
+    page: Page;
 }
 
-export type Hook<
-    T extends CrawlingContext = CrawlingContext,
+export type BrowserHook<
+    Context = BrowserCrawlingContext,
     GoToOptions extends Record<string, any> = Record<string, any>
-> = (crawlingContext: T, gotoOptions: GoToOptions) => Awaitable<void>;
-export type BrowserHook = Hook<BrowserCrawlingContext>;
-export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Awaitable<void>;
-export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Awaitable<any>;
+> = (crawlingContext: Context, gotoOptions: GoToOptions) => Awaitable<void>;
+export type BrowserHandlePageFunction<Context = BrowserCrawlingContext> = (context: Context) => Awaitable<void>;
+export type GotoFunction<
+    Context = BrowserCrawlingContext,
+    GoToOptions extends Record<string, any> = Record<string, any>
+> = (context: Context, gotoOptions: GoToOptions) => Awaitable<any>;
 
 export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**

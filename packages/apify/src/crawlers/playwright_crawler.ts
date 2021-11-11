@@ -2,7 +2,7 @@ import ow from 'ow';
 import { LaunchOptions, Page } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } from './browser_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
 import { HandleFailedRequest, CrawlingContext } from './basic_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
@@ -11,7 +11,7 @@ import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled
 import { gotoExtended } from '../playwright_utils';
 import { Awaitable } from '../typedefs';
 
-export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
+export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions {
     /**
      *   Function that is called to process each request.
      *   It is passed an object with the following fields:
@@ -134,19 +134,17 @@ export interface PlaywrightGotoOptions {
     referer?: string;
 }
 
-export interface PlaywrightCrawlContext extends BrowserCrawlingContext, CrawlingContext {
-    page: Page;
+export interface PlaywrightCrawlContext extends BrowserCrawlingContext<Page> {
     crawler: PlaywrightCrawler;
 }
 
-export type PlaywrightHook = Hook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
+export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
 
-export interface PlaywrightHandlePageFunctionParam {
-    page: Page;
+export interface PlaywrightHandlePageFunctionParam extends BrowserCrawlingContext<Page> {
     crawler: PlaywrightCrawler;
 }
 
-export type PlaywrightHandlePageFunction = (context: PlaywrightHandlePageFunctionParam & BrowserCrawlingContext & CrawlingContext) => Awaitable<void>;
+export type PlaywrightHandlePageFunction = BrowserHandlePageFunction<PlaywrightHandlePageFunctionParam>;
 
 /**
  * Provides a simple framework for parallel crawling of web pages
@@ -236,7 +234,6 @@ export class PlaywrightCrawler extends BrowserCrawler<LaunchOptions> {
         const playwrightLauncher = new PlaywrightLauncher(launchContext);
 
         browserPoolOptions.browserPlugins = [
-            // @ts-ignore plugin types are not working properly, we probably need extension (or type casting)
             playwrightLauncher.createBrowserPlugin(),
         ];
 

@@ -16,7 +16,7 @@ import { Request } from '../request';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
-import { Hook } from './browser_crawler';
+import { BrowserHook } from './browser_crawler';
 import { Awaitable } from '../typedefs';
 
 export interface CrawlingContext extends Record<PropertyKey, unknown> {
@@ -678,7 +678,8 @@ export class BasicCrawler {
         }
     }
 
-    protected async _executeHooks(hooks: Hook[], ...args: Parameters<Hook>) {
+    // eslint-disable-next-line space-before-function-paren -- looks like a rule colliding with TS
+    protected async _executeHooks<Hooks extends (...args: unknown[]) => Awaitable<void>>(hooks: Hooks[], ...args: Parameters<Hooks>) {
         if (Array.isArray(hooks) && hooks.length) {
             for (const hook of hooks) {
                 await hook(...args);
