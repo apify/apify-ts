@@ -338,7 +338,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
  * @ignore
  */
 export function getFirstKey<K extends PropertyKey>(dict: Record<K, unknown>): K | undefined {
-    for (const key in dict) { // eslint-disable-line guard-for-in, no-restricted-syntax
+    for (const key in dict) { // eslint-disable-line
         return key;
     }
 

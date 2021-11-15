@@ -62,7 +62,7 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,
         launcher: ow.optional.object,
-    }
+    };
 
     /**
      * All `PlaywrightLauncher` parameters are passed via this launchContext object.

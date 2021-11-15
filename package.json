@@ -56,7 +56,7 @@
         "build-readme:old": "node ./tools/build_readme.js"
     },
     "devDependencies": {
-        "@apify/eslint-config-ts": "^0.1.4",
+        "@apify/eslint-config-ts": "^0.2.1",
         "@apify/tsconfig": "^0.1.0",
         "@babel/cli": "^7.14.8",
         "@babel/core": "^7.14.8",
@@ -85,7 +85,7 @@
         "body-parser": "^1.19.0",
         "commitlint": "^13.2.1",
         "csv-parse": "^4.16.0",
-        "eslint": "^7.31.0",
+        "eslint": "^8.2.0",
         "express": "^4.17.1",
         "fpcollect": "^1.0.4",
         "fpscanner": "^0.1.5",
