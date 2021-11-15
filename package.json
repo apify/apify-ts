@@ -56,7 +56,7 @@
         "build-readme:old": "node ./tools/build_readme.js"
     },
     "devDependencies": {
-        "@apify/eslint-config-ts": "^0.2.1",
+        "@apify/eslint-config-ts": "^0.2.3",
         "@apify/tsconfig": "^0.1.0",
         "@babel/cli": "^7.14.8",
         "@babel/core": "^7.14.8",
