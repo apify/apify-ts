@@ -7,7 +7,6 @@ module.exports = {
     testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
     transform: {
         '^.+\\.ts$': 'ts-jest',
-        '^.+\\.js$': 'babel-jest',
     },
     collectCoverageFrom: [
         '<rootDir>/packages/*/src/**/*.[jt]s',

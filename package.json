@@ -58,12 +58,6 @@
     "devDependencies": {
         "@apify/eslint-config-ts": "^0.2.3",
         "@apify/tsconfig": "^0.1.0",
-        "@babel/cli": "^7.14.8",
-        "@babel/core": "^7.14.8",
-        "@babel/eslint-parser": "^7.14.7",
-        "@babel/plugin-syntax-class-properties": "^7.12.13",
-        "@babel/preset-env": "^7.14.8",
-        "@babel/register": "^7.14.5",
         "@commitlint/config-conventional": "^13.1.0",
         "@types/content-type": "^1.1.5",
         "@types/domhandler": "^2.4.2",
