@@ -11,7 +11,7 @@ import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled
 import { gotoExtended } from '../playwright_utils';
 import { Awaitable } from '../typedefs';
 
-export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions {
+export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction'> {
     /**
      *   Function that is called to process each request.
      *   It is passed an object with the following fields:
