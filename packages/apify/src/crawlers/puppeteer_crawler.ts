@@ -23,7 +23,7 @@ export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext
 
 export type PuppeteerHandlePage = BrowserHandlePageFunction<PuppeteerHandlePageFunctionParam>;
 
-export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction'> {
+export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
