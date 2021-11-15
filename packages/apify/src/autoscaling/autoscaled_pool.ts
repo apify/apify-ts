@@ -585,7 +585,7 @@ export class AutoscaledPool {
     /**
      * Scales the pool down by decreasing
      * the desired concurrency by the scaleDownStepRatio.
-     * *
+     *
      * @param systemStatus for logging
      * @internal
      */
