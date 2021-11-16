@@ -487,7 +487,7 @@ export class CheerioCrawler extends BasicCrawler {
 
         preNavigationHooks: ow.optional.array,
         postNavigationHooks: ow.optional.array,
-    }
+    };
 
     /**
      * All `CheerioCrawler` parameters are passed via an options object.

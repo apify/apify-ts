@@ -12,7 +12,7 @@ export class ApifyCallError extends Error {
     override name = APIFY_CALL_ERROR_NAME;
 
     /** Object representing the failed actor run. */
-    readonly run: Partial<ActorRun>
+    readonly run: Partial<ActorRun>;
 
     /**
      * @param run Object representing the failed actor run.

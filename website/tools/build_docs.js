@@ -22,11 +22,16 @@ async function buildExamples(exampleLinks) {
     const examples = [];
     for (const example of exampleLinks) {
         const fileContent = await got(example.download_url).text();
-        console.log(`Rendering example ${example.name}`);
-        const markdown = prettier.format(fileContent, prettierConfig);
-        fs.writeFileSync(example.name, markdown);
-        const exampleName = example.name.split('.')[0];
-        examples.push(`examples/${exampleName.replace(/_/g, '-')}`);
+        if (example.name.endsWith('.mdx')) {
+            console.log(`Rendering example ${example.name}`);
+            const markdown = prettier.format(fileContent, prettierConfig);
+            fs.writeFileSync(example.name, markdown);
+            const exampleName = example.name.split('.')[0];
+            examples.push(`examples/${exampleName.replace(/_/g, '-')}`);
+        } else {
+            console.log(`Saving file ${example.name}`);
+            fs.writeFileSync(example.name, fileContent);
+        }
     }
     return examples;
 }

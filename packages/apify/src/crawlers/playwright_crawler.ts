@@ -215,7 +215,7 @@ export class PlaywrightCrawler extends BrowserCrawler<LaunchOptions> {
         browserPoolOptions: ow.optional.object,
         launcher: ow.optional.object,
         launchContext: ow.optional.object,
-    }
+    };
 
     /**
      * All `PlaywrightCrawler` parameters are passed via an options object.

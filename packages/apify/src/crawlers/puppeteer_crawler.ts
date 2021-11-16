@@ -193,7 +193,7 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
         launchContext: ow.optional.object,
-    }
+    };
 
     /**
      * All `PuppeteerCrawler` parameters are passed via an options object.

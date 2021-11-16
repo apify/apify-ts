@@ -74,7 +74,7 @@ export abstract class BrowserLauncher<
         useIncognitoPages: ow.optional.boolean,
         userDataDir: ow.optional.string,
         launchOptions: ow.optional.object,
-    }
+    };
 
     static requireLauncherOrThrow<T>(launcher: string, apifyImageName: string): T {
         try {

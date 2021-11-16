@@ -99,7 +99,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
         userAgent: ow.optional.string,
         stealth: ow.optional.boolean,
         stealthOptions: ow.optional.object,
-    }
+    };
 
     /**
      * All `PuppeteerLauncher` parameters are passed via an launchContext object.
