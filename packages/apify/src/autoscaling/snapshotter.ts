@@ -344,7 +344,7 @@ export class Snapshotter {
      * Creates a snapshot of current event loop delay.
      * @internal
      */
-    protected _snapshotEventLoop(intervalCallback: () => unknown) {
+    _snapshotEventLoop(intervalCallback: () => unknown) { // TODO: check whether it should be public or protected
         const now = new Date();
         this._pruneSnapshots(this.eventLoopSnapshots, now);
 
@@ -441,7 +441,7 @@ export class Snapshotter {
      * overloading.
      * @internal
      */
-    protected _snapshotClient(intervalCallback: () => unknown) {
+    _snapshotClient(intervalCallback: () => unknown) { // TODO: check whether it should be public or protected
         const now = new Date();
         this._pruneSnapshots(this.clientSnapshots, now);
 
