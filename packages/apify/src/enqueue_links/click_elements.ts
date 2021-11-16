@@ -1,6 +1,6 @@
 import ow from 'ow';
 import { URL } from 'url';
-import { Page, HTTPRequest as PuppeteerRequest, Target, Frame } from 'puppeteer';
+import { Page, HTTPRequest as PuppeteerRequest, Target, Frame, PageEventObject } from 'puppeteer';
 import log from '../utils_log';
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue'; // eslint-disable-line import/named,no-unused-vars
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../puppeteer_request_interception';
@@ -179,17 +179,23 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     return addRequestsToQueueInBatches(requests, requestQueue);
 }
 
+interface WaitForPageIdleOptions {
+    page: Page;
+    waitForPageIdleMillis?: number;
+    maxWaitForPageIdleMillis?: number;
+}
+
+interface ClickElementsAndInterceptNavigationRequestsOptions extends WaitForPageIdleOptions {
+    selector: string;
+}
+
 /**
  * Clicks all elements of given page matching given selector.
  * Catches and intercepts all initiated navigation requests and opened pages.
  * Returns a list of all target URLs.
+ * @ignore
  */
-export async function clickElementsAndInterceptNavigationRequests(options: {
-    page: Page;
-    selector: string;
-    waitForPageIdleMillis?: number;
-    maxWaitForPageIdleMillis?: number;
-}): Promise<Dictionary[]> {
+export async function clickElementsAndInterceptNavigationRequests(options: ClickElementsAndInterceptNavigationRequestsOptions): Promise<Dictionary[]> {
     const {
         page,
         selector,
@@ -223,6 +229,9 @@ export async function clickElementsAndInterceptNavigationRequests(options: {
     return serializedRequests.map((r) => JSON.parse(r));
 }
 
+/**
+ * @ignore
+ */
 function createInterceptRequestHandler(page: Page, requests: Set<string>): (req: PuppeteerRequest) => Promise<void> {
     return async function onInterceptedRequest(req) {
         if (!isTopFrameNavigationRequest(page, req)) return req.continue();
@@ -242,11 +251,17 @@ function createInterceptRequestHandler(page: Page, requests: Set<string>): (req:
     };
 }
 
+/**
+ * @ignore
+ */
 function isTopFrameNavigationRequest(page: Page, req: PuppeteerRequest): boolean {
     return req.isNavigationRequest()
         && req.frame() === page.mainFrame();
 }
 
+/**
+ * @ignore
+ */
 function createTargetCreatedHandler(page: Page, requests: Set<string>): (target: Target) => Promise<void> {
     return async function onTargetCreated(target) {
         if (!isTargetRelevant(page, target)) return;
@@ -257,8 +272,7 @@ function createTargetCreatedHandler(page: Page, requests: Set<string>): (target:
         // possible errors like target closed.
         try {
             const createdPage = await target.page();
-            // @ts-ignore TODO: Object is possibly 'null'. Using @ts-expect-error fails the test
-            await createdPage.close();
+            await createdPage!.close();
         } catch (err) {
             log.debug('enqueueLinksByClickingElements: Could not close spawned page.', { error: err.stack });
         }
@@ -383,11 +397,7 @@ function updateElementCssToEnableMouseClick(el: Element, zIndex: number): void {
  * when there's only a single element to click.
  * @ignore
  */
-async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdleMillis }: {
-    page: Page;
-    waitForPageIdleMillis?: number;
-    maxWaitForPageIdleMillis?: number;
-}): Promise<void> {
+async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdleMillis }: WaitForPageIdleOptions): Promise<void> {
     return new Promise<void>((resolve) => {
         let timeout;
         let maxTimeout;
@@ -421,8 +431,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         timeout = activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on('request', activityHandler);
         page.on('framenavigated', activityHandler);
-        // @ts-expect-error TODO: Argument of type '"targetcreated"' is not assignable to parameter of type 'keyof PageEventObject'.
-        page.on('targetcreated', newTabTracker);
+        page.on('targetcreated' as keyof PageEventObject, newTabTracker);
     });
 }
 

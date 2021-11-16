@@ -13,6 +13,21 @@ export interface SystemInfo {
     cpuInfo: ClientInfo;
     clientInfo: ClientInfo;
     memCurrentBytes?: number;
+    /**
+     * Platform only property
+     * @internal
+     */
+    cpuCurrentUsage?: number;
+    /**
+     * Platform only property
+     * @internal
+     */
+    isCpuOverloaded?: boolean;
+    /**
+     * Platform only property
+     * @internal
+     */
+    createdAt?: Date;
 }
 
 export interface SystemStatusOptions {

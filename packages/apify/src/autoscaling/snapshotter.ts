@@ -373,16 +373,14 @@ export class Snapshotter {
      * @internal
      */
     protected _snapshotCpuOnPlatform(systemInfo: SystemInfo) {
-        // @ts-expect-error // TODO Figure out 'property does not exist'
         const { cpuCurrentUsage, isCpuOverloaded } = systemInfo;
-        // @ts-expect-error // TODO Figure out 'property does not exist'
-        const createdAt = (new Date(systemInfo.createdAt));
+        const createdAt = (new Date(systemInfo.createdAt!));
         this._pruneSnapshots(this.cpuSnapshots, createdAt);
 
         this.cpuSnapshots.push({
             createdAt,
-            isOverloaded: isCpuOverloaded,
-            usedRatio: Math.ceil(cpuCurrentUsage / 100),
+            isOverloaded: isCpuOverloaded!,
+            usedRatio: Math.ceil(cpuCurrentUsage! / 100),
         });
     }
 
