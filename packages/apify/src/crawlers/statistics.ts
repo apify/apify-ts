@@ -130,7 +130,7 @@ export class Statistics {
      * Mark job as finished and sets the state
      * @ignore
      */
-    finishJob(id: number|string) {
+    finishJob(id: number | string) {
         const job = this.requestsInProgress.get(id);
         if (!job) return;
         const jobDurationMillis = job.finish();
@@ -146,7 +146,7 @@ export class Statistics {
      * Mark job as failed and sets the state
      * @ignore
      */
-    failJob(id: number|string) {
+    failJob(id: number | string) {
         const job = this.requestsInProgress.get(id);
         if (!job) return;
         this.state.requestTotalFailedDurationMillis += job.finish();

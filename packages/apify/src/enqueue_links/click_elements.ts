@@ -10,6 +10,7 @@ import {
     addRequestsToQueueInBatches,
     createRequestOptions,
     RequestTransform,
+    PseudoUrlInput,
 } from './shared';
 import { Dictionary } from '../typedefs';
 
@@ -17,81 +18,81 @@ const STARTING_Z_INDEX = 2147400000;
 
 export interface EnqueueLinksByClickingElementsOptions {
     /**
-     *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+     * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
      */
-    page: Page,
+    page: Page;
 
     /**
-     *   A request queue to which the URLs will be enqueued.
+     * A request queue to which the URLs will be enqueued.
      */
-    requestQueue: RequestQueue,
+    requestQueue: RequestQueue;
 
     /**
-     *   A CSS selector matching elements to be clicked on. Unlike in {@link utils.enqueueLinks}, there is no default
-     *   value. This is to prevent suboptimal use of this function by using it too broadly.
+     * A CSS selector matching elements to be clicked on. Unlike in {@link utils.enqueueLinks}, there is no default
+     * value. This is to prevent suboptimal use of this function by using it too broadly.
      */
-    selector: string,
+    selector: string;
 
     /**
-     *   An array of {@link PseudoUrl}s matching the URLs to be enqueued,
-     *   or an array of strings or RegExps or plain Objects from which the {@link PseudoUrl}s can be constructed.
+     * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
+     * or an array of strings or RegExps or plain Objects from which the {@link PseudoUrl}s can be constructed.
      *
-     *   The plain objects must include at least the `purl` property, which holds the pseudo-URL string or RegExp.
-     *   All remaining keys will be used as the `requestTemplate` argument of the {@link PseudoUrl} constructor,
-     *   which lets you specify special properties for the enqueued {@link Request} objects.
+     * The plain objects must include at least the `purl` property, which holds the pseudo-URL string or RegExp.
+     * All remaining keys will be used as the `requestTemplate` argument of the {@link PseudoUrl} constructor,
+     * which lets you specify special properties for the enqueued {@link Request} objects.
      *
-     *   If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
-     *   enqueues all links found on the page.
+     * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
+     * enqueues all links found on the page.
      */
-    pseudoUrls?: string|RegExp|Record<string, unknown>[],
+    pseudoUrls?: PseudoUrlInput[];
 
     /**
-     *   Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used
-     *   to remove it or modify its contents such as `userData`, `payload` or, most importantly `uniqueKey`. This is useful
-     *   when you need to enqueue multiple `Requests` to the queue that share the same URL, but differ in methods or payloads,
-     *   or to dynamically update or create `userData`.
+     * Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used
+     * to remove it or modify its contents such as `userData`, `payload` or, most importantly `uniqueKey`. This is useful
+     * when you need to enqueue multiple `Requests` to the queue that share the same URL, but differ in methods or payloads,
+     * or to dynamically update or create `userData`.
      *
-     *   For example: by adding `useExtendedUniqueKey: true` to the `request` object, `uniqueKey` will be computed from
-     *   a combination of `url`, `method` and `payload` which enables crawling of websites that navigate using form submits
-     *   (POST requests).
+     * For example: by adding `useExtendedUniqueKey: true` to the `request` object, `uniqueKey` will be computed from
+     * a combination of `url`, `method` and `payload` which enables crawling of websites that navigate using form submits
+     * (POST requests).
      *
-     *   **Example:**
-     *   ```javascript
-     *   {
-     *       transformRequestFunction: (request) => {
-     *           request.userData.foo = 'bar';
-     *           request.useExtendedUniqueKey = true;
-     *           return request;
-     *       }
-     *   }
-     *   ```
+     * **Example:**
+     * ```javascript
+     * {
+     *     transformRequestFunction: (request) => {
+     *         request.userData.foo = 'bar';
+     *         request.useExtendedUniqueKey = true;
+     *         return request;
+     *     }
+     * }
+     * ```
      */
-    transformRequestFunction?: RequestTransform,
+    transformRequestFunction?: RequestTransform;
 
     /**
-     *   Clicking in the page triggers various asynchronous operations that lead to new URLs being shown
-     *   by the browser. It could be a simple JavaScript redirect or opening of a new tab in the browser.
-     *   These events often happen only some time after the actual click. Requests typically take milliseconds
-     *   while new tabs open in hundreds of milliseconds.
+     * Clicking in the page triggers various asynchronous operations that lead to new URLs being shown
+     * by the browser. It could be a simple JavaScript redirect or opening of a new tab in the browser.
+     * These events often happen only some time after the actual click. Requests typically take milliseconds
+     * while new tabs open in hundreds of milliseconds.
      *
-     *   To be able to capture all those events, the `enqueueLinksByClickingElements()` function repeatedly waits
-     *   for the `waitForPageIdleSecs`. By repeatedly we mean that whenever a relevant event is triggered, the timer
-     *   is restarted. As long as new events keep coming, the function will not return, unless
-     *   the below `maxWaitForPageIdleSecs` timeout is reached.
+     * To be able to capture all those events, the `enqueueLinksByClickingElements()` function repeatedly waits
+     * for the `waitForPageIdleSecs`. By repeatedly we mean that whenever a relevant event is triggered, the timer
+     * is restarted. As long as new events keep coming, the function will not return, unless
+     * the below `maxWaitForPageIdleSecs` timeout is reached.
      *
-     *   You may want to reduce this for example when you're sure that your clicks do not open new tabs,
-     *   or increase when you're not getting all the expected URLs.
-     *   @default 1
+     * You may want to reduce this for example when you're sure that your clicks do not open new tabs,
+     * or increase when you're not getting all the expected URLs.
+     * @default 1
      */
-    waitForPageIdleSecs?: number,
+    waitForPageIdleSecs?: number;
 
     /**
-     *   This is the maximum period for which the function will keep tracking events, even if more events keep coming.
-     *   Its purpose is to prevent a deadlock in the page by periodic events, often unrelated to the clicking itself.
-     *   See `waitForPageIdleSecs` above for an explanation.
-     *   @default 5
+     * This is the maximum period for which the function will keep tracking events, even if more events keep coming.
+     * Its purpose is to prevent a deadlock in the page by periodic events, often unrelated to the clicking itself.
+     * See `waitForPageIdleSecs` above for an explanation.
+     * @default 5
      */
-    maxWaitForPageIdleSecs?: number,
+    maxWaitForPageIdleSecs?: number;
 }
 
 /**
@@ -222,9 +223,8 @@ export async function clickElementsAndInterceptNavigationRequests(options: {
     return serializedRequests.map((r) => JSON.parse(r));
 }
 
-function createInterceptRequestHandler(page: Page, requests: Set<string>): (req: PuppeteerRequest) => Promise<unknown> | undefined {
-    // @ts-ignore // TODO: Not all code paths return a value.
-    return function onInterceptedRequest(req) {
+function createInterceptRequestHandler(page: Page, requests: Set<string>): (req: PuppeteerRequest) => Promise<void> {
+    return async function onInterceptedRequest(req) {
         if (!isTopFrameNavigationRequest(page, req)) return req.continue();
         const url = req.url();
         requests.add(JSON.stringify({
@@ -247,7 +247,7 @@ function isTopFrameNavigationRequest(page: Page, req: PuppeteerRequest): boolean
         && req.frame() === page.mainFrame();
 }
 
-function createTargetCreatedHandler(page: Page, requests: Set<string>): (target: Target) => Promise<unknown>| undefined {
+function createTargetCreatedHandler(page: Page, requests: Set<string>): (target: Target) => Promise<void> {
     return async function onTargetCreated(target) {
         if (!isTargetRelevant(page, target)) return;
         const url = target.url();
@@ -257,7 +257,7 @@ function createTargetCreatedHandler(page: Page, requests: Set<string>): (target:
         // possible errors like target closed.
         try {
             const createdPage = await target.page();
-            // @ts-ignore TODO: Object is possibly 'null'.
+            // @ts-expect-error TODO: Object is possibly 'null'.
             await createdPage.close();
         } catch (err) {
             log.debug('enqueueLinksByClickingElements: Could not close spawned page.', { error: err.stack });
@@ -350,22 +350,22 @@ export async function clickElements(page: Page, selector: string): Promise<void>
  * This is an in browser function!
  */
 function updateElementCssToEnableMouseClick(el: Element, zIndex: number): void {
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.visibility = 'visible';
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.display = 'block';
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.position = 'fixed';
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.zIndex = zIndex;
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.left = 0;
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.top = 0;
     const boundingRect = el.getBoundingClientRect();
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     if (!boundingRect.height) el.style.height = '10px';
-    // @ts-ignore Property does not exist on type 'Element'.
+    // @ts-expect-error Property does not exist on type 'Element'.
     if (!boundingRect.width) el.style.width = '10px';
 }
 
@@ -421,7 +421,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         timeout = activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on('request', activityHandler);
         page.on('framenavigated', activityHandler);
-        // @ts-ignore TODO: Argument of type '"targetcreated"' is not assignable to parameter of type 'keyof PageEventObject'.
+        // @ts-expect-error TODO: Argument of type '"targetcreated"' is not assignable to parameter of type 'keyof PageEventObject'.
         page.on('targetcreated', newTabTracker);
     });
 }

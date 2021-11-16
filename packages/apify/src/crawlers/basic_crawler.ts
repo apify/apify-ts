@@ -22,26 +22,26 @@ import { Awaitable } from '../typedefs';
 export interface CrawlingContext extends Record<PropertyKey, unknown> {
     id: string;
     /**
-     *   The original {@link Request} object.
+     * The original {@link Request} object.
      */
     request: Request;
     session: Session;
 
     /**
-     *   An object with information about currently used proxy by the crawler
-     *   and configured by the {@link ProxyConfiguration} class.
+     * An object with information about currently used proxy by the crawler
+     * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
 
     /**
-     *   An instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object,
+     * An instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object,
      */
     response?: IncomingMessage;
 }
 
 export interface HandleFailedRequestInput extends CrawlingContext {
     /**
-     *   The Error thrown by `handleRequestFunction`.
+     * The Error thrown by `handleRequestFunction`.
      */
     error: Error;
 }
@@ -456,8 +456,6 @@ export class BasicCrawler {
         await this.userProvidedHandler(crawlingContext);
     }
 
-    /**
-     */
     protected async _pauseOnMigration() {
         if (this.autoscaledPool) {
             // if run wasn't called, this is going to crash
@@ -498,7 +496,6 @@ export class BasicCrawler {
     /**
      * Fetches request from either RequestList or RequestQueue. If request comes from a RequestList
      * and RequestQueue is present then enqueues it to the queue first.
-     *
      */
     protected async _fetchNextRequest() {
         if (!this.requestList) return this.requestQueue!.fetchNextRequest();
@@ -525,7 +522,6 @@ export class BasicCrawler {
     /**
      * Wrapper around handleRequestFunction that fetches requests from RequestList/RequestQueue
      * then retries them in a case of an error, etc.
-     *
      */
     protected async _runTaskFunction() {
         const source = this.requestQueue || this.requestList!;
@@ -586,7 +582,6 @@ export class BasicCrawler {
 
     /**
      * Returns true if either RequestList or RequestQueue have a request ready for processing.
-     *
      */
     protected async _isTaskReadyFunction() {
         // First check RequestList, since it's only in memory.
@@ -599,7 +594,6 @@ export class BasicCrawler {
 
     /**
      * Returns true if both RequestList and RequestQueue have all requests finished.
-     *
      */
     protected async _defaultIsFinishedFunction() {
         const [

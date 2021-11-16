@@ -197,7 +197,7 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
 
     /**
      * All `PuppeteerCrawler` parameters are passed via an options object.
-     * @todo we need Partial here due to the emtpy object, probably not wanted
+     * @todo we need Partial here due to the empty object, probably not wanted
      */
     constructor(options: Partial<PuppeteerCrawlerOptions> = {}) {
         ow(options, 'PuppeteerCrawlerOptions', ow.object.exactShape(PuppeteerCrawler.optionsShape));

@@ -7,7 +7,7 @@ import { StealthOptions } from '../stealth/stealth';
 
 export interface BrowserLaunchContext<TOptions> {
     /**
-     * `Options passed to the browser launcher function. Options are based on underlying library.
+     * `Options` passed to the browser launcher function. Options are based on underlying library.
      */
     launchOptions?: TOptions;
 

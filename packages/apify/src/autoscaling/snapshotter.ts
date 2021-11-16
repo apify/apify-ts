@@ -344,7 +344,7 @@ export class Snapshotter {
      * Creates a snapshot of current event loop delay.
      * @internal
      */
-    _snapshotEventLoop(intervalCallback: () => unknown) { // TODO: check whether it should be public or protected
+    protected _snapshotEventLoop(intervalCallback: () => unknown) {
         const now = new Date();
         this._pruneSnapshots(this.eventLoopSnapshots, now);
 
@@ -373,9 +373,9 @@ export class Snapshotter {
      * @internal
      */
     protected _snapshotCpuOnPlatform(systemInfo: SystemInfo) {
-        // @ts-ignore // TODO Figure out 'property does not exist'
+        // @ts-expect-error // TODO Figure out 'property does not exist'
         const { cpuCurrentUsage, isCpuOverloaded } = systemInfo;
-        // @ts-ignore // TODO Figure out 'property does not exist'
+        // @ts-expect-error // TODO Figure out 'property does not exist'
         const createdAt = (new Date(systemInfo.createdAt));
         this._pruneSnapshots(this.cpuSnapshots, createdAt);
 
@@ -441,7 +441,7 @@ export class Snapshotter {
      * overloading.
      * @internal
      */
-    _snapshotClient(intervalCallback: () => unknown) { // TODO: check whether it should be public or protected
+    protected _snapshotClient(intervalCallback: () => unknown) {
         const now = new Date();
         this._pruneSnapshots(this.clientSnapshots, now);
 
