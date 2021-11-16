@@ -24,12 +24,12 @@ export interface BrowserCrawlingContext<Page = unknown> extends CrawlingContext 
 
 export type BrowserHook<
     Context = BrowserCrawlingContext,
-    GoToOptions extends Dictionary = Dictionary
+    GoToOptions extends Record<PropertyKey, any> = Dictionary
 > = (crawlingContext: Context, gotoOptions: GoToOptions) => Awaitable<void>;
 export type BrowserHandlePageFunction<Context = BrowserCrawlingContext> = (context: Context) => Awaitable<void>;
 export type GotoFunction<
     Context = BrowserCrawlingContext,
-    GoToOptions extends Dictionary = Dictionary
+    GoToOptions extends Record<PropertyKey, any> = Dictionary
 > = (context: Context, gotoOptions: GoToOptions) => Awaitable<any>;
 
 export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {

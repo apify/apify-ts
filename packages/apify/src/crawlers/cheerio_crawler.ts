@@ -295,7 +295,7 @@ export interface PrepareRequestInputs {
 }
 
 export type PrepareRequest = (inputs: PrepareRequestInputs) => Awaitable<void>;
-export type CheerioHook = BrowserHook<CheerioCrawlingContext>;
+export type CheerioHook = BrowserHook<CheerioCrawlingContext, RequestAsBrowserOptions>;
 
 export interface PostResponseInputs {
     /**
