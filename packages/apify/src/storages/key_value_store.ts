@@ -109,9 +109,13 @@ export const maybeStringify = (value, options) => {
  */
 export class KeyValueStore {
     readonly id: string;
+
     readonly name?: string;
+
     readonly isLocal: boolean;
+
     private client: KeyValueStoreClient;
+
     private log = log.child({ prefix: 'KeyValueStore' }); // TODO looks like this can be removed?
 
     /**
@@ -209,13 +213,13 @@ export class KeyValueStore {
      * @param {string} [options.contentType]
      *   Specifies a custom MIME content type of the record.
      */
-    async setValue<T>(key: string, value: T | null, options = {}): Promise<void> {
+    // TODO: type options
+    async setValue<T>(key: string, value: T | null, options: Dictionary = {}): Promise<void> {
         ow(key, 'key', ow.string.nonEmpty);
         ow(key, ow.string.validate((k) => ({
             validator: ow.isValid(k, ow.string.matches(KEY_VALUE_STORE_KEY_REGEX)),
             message: 'The "key" argument must be at most 256 characters long and only contain the following characters: a-zA-Z0-9!-_.\'()',
         })));
-        // @ts-expect-error options need to be typed
         if (options.contentType && !ow.isValid(value, ow.any(ow.string, ow.buffer))) {
             throw new ArgumentError('The "value" parameter must be a String or Buffer when "options.contentType" is specified.', this.setValue);
         }
@@ -287,7 +291,8 @@ export class KeyValueStore {
      * @param {string} [options.exclusiveStartKey] All keys up to this one (including) are skipped from the result.
      * @return {Promise<void>}
      */
-    async forEachKey(iteratee: KeyConsumer, options = {}) {
+    // TODO: type options
+    async forEachKey(iteratee: KeyConsumer, options: Dictionary<string | undefined> = {}) {
         return this._forEachKey(iteratee, options);
     }
 
@@ -298,8 +303,7 @@ export class KeyValueStore {
      * @return {Promise<Promise<void> | undefined>}
      * @private
      */
-    private async _forEachKey(iteratee: KeyConsumer, options = {}, index = 0): Promise<void> {
-        // @ts-ignore
+    private async _forEachKey(iteratee: KeyConsumer, options: Dictionary<string | undefined> = {}, index = 0): Promise<void> {
         const { exclusiveStartKey } = options;
         ow(iteratee, ow.function);
         ow(options, ow.object.exactShape({

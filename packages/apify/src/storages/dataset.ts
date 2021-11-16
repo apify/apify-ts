@@ -1,8 +1,9 @@
 import ow from 'ow';
 import _ from 'underscore';
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
-import { ApifyClient, DatasetClient } from 'apify-client';
+import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
+import type { PaginatedList } from 'apify-client/dist/utils'; // TODO: export this from the client
 import { StorageManager } from './storage_manager';
 import log from '../utils_log';
 
@@ -134,9 +135,13 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
  */
 export class Dataset<Data extends Dictionary = Dictionary> {
     id: string;
+
     name?: string;
+
     isLocal?: boolean;
+
     client: DatasetClient;
+
     log = log.child({ prefix: 'Dataset' });
 
     /**
@@ -146,8 +151,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
         this.id = options.id;
         this.name = options.name;
         this.isLocal = options.isLocal;
-        // @ts-ignore we should probably use `implements` in the local storage class to make them compatible
-        this.client = options.client.dataset(this.id);
+        this.client = options.client.dataset(this.id) as DatasetClient;
     }
 
     /**
@@ -225,7 +229,8 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      *   If `true` then the function doesn't return empty items.
      *   Note that in this case the returned number of items might be lower than limit parameter and pagination must be done using the `limit` value.
      */
-    async getData(options = {}): Promise<DatasetContent<Data>> {
+    // TODO: type options
+    async getData(options: Dictionary = {}): Promise<PaginatedList<Data>> {
         try {
             // TODO: in apify_client, DatasetClient#listItems needs to take in a generic for the return type
             // @ts-expect-error
@@ -261,7 +266,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * }
      * ```
      */
-    async getInfo() {
+    async getInfo(): Promise<ClientDataset | undefined> {
         return this.client.get();
     }
 
@@ -288,6 +293,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @param {number} [index=0] Specifies the initial index number passed to the `iteratee` function.
      */
+    // TODO: type options
     async forEach(iteratee: DatasetConsumer<Data>, options: Dictionary = {}, index = 0): Promise<void> {
         // TODO: type the options object properly
         if (!options.offset) options.offset = 0;
@@ -351,7 +357,8 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
      * @return {Promise<object>}
      */
-    reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: Dictionary) {
+    // TODO: type options
+    reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: Dictionary = {}) {
         let currentMemo = memo;
 
         const wrappedFunc = (item, index) => {
@@ -464,28 +471,6 @@ export function openDataset<Data extends Dictionary = Dictionary>(datasetIdOrNam
 export async function pushData(item: Dictionary | Dictionary[]): Promise<void> {
     const dataset = await openDataset();
     return dataset.pushData(item);
-}
-
-export interface DatasetContent<T = unknown> {
-
-    /** Dataset entries based on chosen format parameter. */
-    items: T[];
-
-    /** Total count of entries in the dataset. */
-    total: number;
-
-    /** Position of the first returned entry in the dataset. */
-    offset: number;
-
-    /** Count of dataset entries returned in this set. */
-    count: number;
-
-    /** Maximum number of dataset entries requested. */
-    limit: number;
-
-    /** If the results are returned in a descending order */
-    desc: boolean;
-
 }
 
 /**
