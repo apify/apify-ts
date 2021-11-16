@@ -449,7 +449,7 @@ export class BasicCrawler {
      * @param {CrawlingContext} crawlingContext
      * @return {Promise<void>}
      */
-    protected async _handleRequestFunction(crawlingContext) { // eslint-disable-line no-unused-vars
+    protected async _handleRequestFunction(crawlingContext) {
         await this.userProvidedHandler(crawlingContext);
     }
 
@@ -678,8 +678,7 @@ export class BasicCrawler {
         }
     }
 
-    // eslint-disable-next-line space-before-function-paren -- looks like a rule colliding with TS
-    protected async _executeHooks<Hooks extends (...args: unknown[]) => Awaitable<void>>(hooks: Hooks[], ...args: Parameters<Hooks>) {
+    protected async _executeHooks<HookLike extends (...args: unknown[]) => Awaitable<void>>(hooks: HookLike[], ...args: Parameters<HookLike>) {
         if (Array.isArray(hooks) && hooks.length) {
             for (const hook of hooks) {
                 await hook(...args);
