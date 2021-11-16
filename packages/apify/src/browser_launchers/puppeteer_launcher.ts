@@ -85,7 +85,7 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<LaunchOptio
      * Using this configuration, you can disable some of the hiding tricks.
      * For these settings to take effect `stealth` must be set to true
      */
-    stealthOptions?: StealthOptions
+    stealthOptions?: StealthOptions;
 }
 
 /**

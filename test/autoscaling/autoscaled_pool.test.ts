@@ -130,8 +130,8 @@ describe('AutoscaledPool', () => {
         class MockSystemStatus {
             okNow: boolean;
             okLately: boolean;
-            getCurrentStatus: () => { isSystemIdle: boolean; };
-            getHistoricalStatus: () => { isSystemIdle: boolean; };
+            getCurrentStatus: () => { isSystemIdle: boolean };
+            getHistoricalStatus: () => { isSystemIdle: boolean };
 
             constructor(okNow: boolean, okLately: boolean) {
                 this.okNow = okNow;

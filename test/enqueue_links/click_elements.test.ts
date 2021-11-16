@@ -293,7 +293,7 @@ describe('enqueueLinksByClickingElements()', () => {
 </html>
         `;
             await page.setContent(html);
-            const callCounts = await new Promise<{ create: number; destroy: number; }>((resolve) => {
+            const callCounts = await new Promise<{ create: number; destroy: number }>((resolve) => {
                 let spawnedTarget;
                 const counts = {
                     create: 0,

@@ -7,7 +7,7 @@ import { weightedAvg } from '../utils';
  */
 export interface SystemInfo {
     /** If true, system is being overloaded. */
-    isSystemIdle: boolean
+    isSystemIdle: boolean;
     memInfo: ClientInfo;
     eventLoopInfo: ClientInfo;
     cpuInfo: ClientInfo;

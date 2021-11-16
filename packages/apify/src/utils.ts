@@ -593,7 +593,7 @@ export function printOutdatedSdkWarning() {
  * @param response HTTP response object
  * @ignore
  */
-export function parseContentTypeFromResponse(response: IncomingMessage): { type: string, charset: BufferEncoding } {
+export function parseContentTypeFromResponse(response: IncomingMessage): { type: string; charset: BufferEncoding } {
     ow(response, ow.object.partialShape({
         url: ow.string.url,
         headers: ow.object,
