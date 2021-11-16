@@ -141,10 +141,13 @@ describe('KeyValueStore remote', () => {
             await expect(store.setValue('key', 12345, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
             await expect(store.setValue('key', () => {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
 
+            // @ts-expect-error JS-side validation
             await expect(store.setValue('key', {}, 123))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `number`');
+            // @ts-expect-error JS-side validation
             await expect(store.setValue('key', {}, 'bla/bla'))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `string`');
+            // @ts-expect-error JS-side validation
             await expect(store.setValue('key', {}, true))
                 .rejects.toThrow('Expected argument to be of type `object` but received type `boolean`');
 
