@@ -109,13 +109,9 @@ export const maybeStringify = (value, options) => {
  */
 export class KeyValueStore {
     readonly id: string;
-
     readonly name?: string;
-
     readonly isLocal: boolean;
-
     private client: KeyValueStoreClient;
-
     private log = log.child({ prefix: 'KeyValueStore' }); // TODO looks like this can be removed?
 
     /**

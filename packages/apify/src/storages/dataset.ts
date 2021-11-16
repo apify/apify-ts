@@ -135,13 +135,9 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
  */
 export class Dataset<Data extends Dictionary = Dictionary> {
     id: string;
-
     name?: string;
-
     isLocal?: boolean;
-
     client: DatasetClient;
-
     log = log.child({ prefix: 'Dataset' });
 
     /**
