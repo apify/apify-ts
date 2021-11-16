@@ -185,10 +185,10 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
  * Returns a list of all target URLs.
  */
 export async function clickElementsAndInterceptNavigationRequests(options: {
-    page: Page,
-    selector: string,
-    waitForPageIdleMillis?: number,
-    maxWaitForPageIdleMillis?: number,
+    page: Page;
+    selector: string;
+    waitForPageIdleMillis?: number;
+    maxWaitForPageIdleMillis?: number;
 }): Promise<Dictionary[]> {
     const {
         page,
@@ -257,7 +257,7 @@ function createTargetCreatedHandler(page: Page, requests: Set<string>): (target:
         // possible errors like target closed.
         try {
             const createdPage = await target.page();
-            // @ts-expect-error TODO: Object is possibly 'null'.
+            // @ts-ignore TODO: Object is possibly 'null'. Using @ts-expect-error fails the test
             await createdPage.close();
         } catch (err) {
             log.debug('enqueueLinksByClickingElements: Could not close spawned page.', { error: err.stack });
@@ -384,9 +384,9 @@ function updateElementCssToEnableMouseClick(el: Element, zIndex: number): void {
  * @ignore
  */
 async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdleMillis }: {
-    page: Page,
-    waitForPageIdleMillis?: number,
-    maxWaitForPageIdleMillis?: number,
+    page: Page;
+    waitForPageIdleMillis?: number;
+    maxWaitForPageIdleMillis?: number;
 }): Promise<void> {
     return new Promise<void>((resolve) => {
         let timeout;
