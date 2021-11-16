@@ -91,8 +91,6 @@ describe('PlaywrightCrawler', () => {
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
-            // TODO: gotoTimeoutSecs does not exist in PlaywrightCrawlerOptions
-            // @ts-expect-error
             gotoTimeoutSecs: timeoutSecs,
         });
 

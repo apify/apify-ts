@@ -87,8 +87,6 @@ describe('PuppeteerCrawler', () => {
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
-            // TODO: gotoTimeoutSecs does not exist in PuppeteerCrawlerOptions
-            // @ts-expect-error
             gotoTimeoutSecs: timeoutSecs,
         });
 
@@ -223,8 +221,6 @@ describe('PuppeteerCrawler', () => {
         const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             useSessionPool: true,
-            // TODO: persistCookiesPerSession is missing
-            // @ts-expect-error
             persistCookiesPerSession: true,
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {
