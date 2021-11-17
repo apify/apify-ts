@@ -229,6 +229,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     async getData(options: Dictionary = {}): Promise<PaginatedList<Data>> {
         try {
             // TODO: in apify_client, DatasetClient#listItems needs to take in a generic for the return type
+            // See https://github.com/apify/apify-client-js/pull/214
             // @ts-expect-error
             return await this.client.listItems(options);
         } catch (e) {
