@@ -128,11 +128,9 @@ export class Statistics {
 
     /**
      * Mark job as finished and sets the state
-     *
-     * @param {number|string} id
      * @ignore
      */
-    finishJob(id) {
+    finishJob(id: number | string) {
         const job = this.requestsInProgress.get(id);
         if (!job) return;
         const jobDurationMillis = job.finish();
@@ -146,11 +144,9 @@ export class Statistics {
 
     /**
      * Mark job as failed and sets the state
-     *
-     * @param {number|string} id
      * @ignore
      */
-    failJob(id) {
+    failJob(id: number | string) {
         const job = this.requestsInProgress.get(id);
         if (!job) return;
         this.state.requestTotalFailedDurationMillis += job.finish();
@@ -217,13 +213,7 @@ export class Statistics {
         await this.persistState();
     }
 
-    /**
-     * @param {Job} job
-     * @ignore
-     * @protected
-     * @internal
-     */
-    _saveRetryCountForJob(job) {
+    protected _saveRetryCountForJob(job: Job) {
         const retryCount = job.retryCount();
         if (retryCount > 0) this.state.requestsRetries++;
         this.requestRetryHistogram[retryCount] = this.requestRetryHistogram[retryCount]

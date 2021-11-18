@@ -13,6 +13,21 @@ export interface SystemInfo {
     cpuInfo: ClientInfo;
     clientInfo: ClientInfo;
     memCurrentBytes?: number;
+    /**
+     * Platform only property
+     * @internal
+     */
+    cpuCurrentUsage?: number;
+    /**
+     * Platform only property
+     * @internal
+     */
+    isCpuOverloaded?: boolean;
+    /**
+     * Platform only property
+     * @internal
+     */
+    createdAt?: Date;
 }
 
 export interface SystemStatusOptions {
@@ -215,9 +230,6 @@ export class SystemStatus {
     /**
      * Returns an object with sample information and an isOverloaded property
      * set to true if at least the ratio of snapshots in the sample are overloaded.
-     *
-     * @param {Array<*>} sample
-     * @param {number} ratio
      */
     protected _isSampleOverloaded<T extends { createdAt: Date; isOverloaded: boolean }>(sample: T[], ratio: number): ClientInfo {
         const weights: number[] = [];

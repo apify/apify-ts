@@ -15,19 +15,22 @@ import { RequestQueue } from '../storages/request_queue';
 import { Request } from '../request';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
-import { Awaitable } from '../typedefs';
+import { Awaitable, Dictionary } from '../typedefs';
 
-export interface BrowserCrawlingContext extends CrawlingContext {
+export interface BrowserCrawlingContext<Page = unknown, Response = unknown> extends CrawlingContext<Response> {
     browserController: BrowserController;
+    page: Page;
 }
 
-export type Hook<
-    T extends CrawlingContext = CrawlingContext,
-    GoToOptions extends Record<string, any> = Record<string, any>
-> = (crawlingContext: T, gotoOptions: GoToOptions) => Awaitable<void>;
-export type BrowserHook = Hook<BrowserCrawlingContext>;
-export type BrowserHandlePageFunction = (context: BrowserCrawlingContext) => Awaitable<void>;
-export type GotoFunction = (context: BrowserCrawlingContext, gotoOptions: Record<string, any>) => Awaitable<any>;
+export type BrowserHook<
+    Context = BrowserCrawlingContext,
+    GoToOptions extends Record<PropertyKey, any> = Dictionary
+> = (crawlingContext: Context, gotoOptions: GoToOptions) => Awaitable<void>;
+export type BrowserHandlePageFunction<Context = BrowserCrawlingContext> = (context: Context) => Awaitable<void>;
+export type GotoFunction<
+    Context = BrowserCrawlingContext,
+    GoToOptions extends Record<PropertyKey, any> = Dictionary
+> = (context: Context, gotoOptions: GoToOptions) => Awaitable<any>;
 
 export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
@@ -158,6 +161,17 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
      */
     handleRequestTimeoutSecs?: number;
+
+    /**
+     * @deprecated Use `navigationTimeoutSecs` instead
+     */
+    gotoTimeoutSecs?: number;
+
+    /**
+     * If cookies should be persisted between sessions.
+     * This can only be used when `useSessionPool` is set to `true`.
+     */
+    persistCookiesPerSession?: boolean;
 }
 
 /**
@@ -357,7 +371,6 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     }
 
     protected _enhanceCrawlingContextWithPageInfo(crawlingContext: BrowserCrawlingContext, page: unknown): void {
-        // @ts-ignore page should be part of the context interface
         crawlingContext.page = page;
 
         // This switch is because the crawlingContexts are created on per request basis.
@@ -397,7 +410,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         }
     }
 
-    protected async _navigationHandler(crawlingContext: BrowserCrawlingContext, gotoOptions: Record<string, unknown>) {
+    protected async _navigationHandler(crawlingContext: BrowserCrawlingContext, gotoOptions: Dictionary) {
         if (!this.gotoFunction) {
             // @TODO: although it is optional in the validation,
             //   because when you make automation library specific you can override this handler.
@@ -407,7 +420,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     }
 
     /**
-     * Should be overriden in case of different automation library that does not support this response API.
+     * Should be overridden in case of different automation library that does not support this response API.
      * @todo: This can be also done as a postNavigation hook except the loadedUrl marking.
      */
     protected async _responseHandler(crawlingContext: BrowserCrawlingContext): Promise<void> {

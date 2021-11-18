@@ -22,7 +22,7 @@ import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
 import { validators } from '../validators';
-import { BrowserHandlePageFunction, GotoFunction, Hook } from './browser_crawler';
+import { BrowserHandlePageFunction, GotoFunction, BrowserHook } from './browser_crawler';
 import { Awaitable } from '../typedefs';
 
 /**
@@ -220,7 +220,7 @@ export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * ]
      * ```
      */
-    preNavigationHooks?: Hook[];
+    preNavigationHooks?: CheerioHook[];
 
     /**
      * Async functions that are sequentially evaluated after the navigation. Good for checking if the navigation was successful.
@@ -234,7 +234,7 @@ export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * ]
      * ```
      */
-    postNavigationHooks?: Hook[];
+    postNavigationHooks?: CheerioHook[];
 
     /**
      * An array of [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
@@ -294,8 +294,8 @@ export interface PrepareRequestInputs {
     crawler?: CheerioCrawler;
 }
 
-export type PrepareRequest = (inputs: PrepareRequestInputs) => (void | Promise<void>);
-export type CheerioHook = Hook<CheerioCrawlingContext>;
+export type PrepareRequest = (inputs: PrepareRequestInputs) => Awaitable<void>;
+export type CheerioHook = BrowserHook<CheerioCrawlingContext, RequestAsBrowserOptions>;
 
 export interface PostResponseInputs {
     /**
@@ -326,22 +326,23 @@ export type CheerioRoot = ReturnType<typeof load>;
 
 export interface CheerioHandlePageInputs extends CrawlingContext {
     /**
-     *  The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
+     * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
     $: CheerioRoot;
 
     /**
-     *  The request body of the web page.
+     * The request body of the web page.
      */
     body: (string | Buffer);
 
+    // TODO: maybe consider making this `unknown` instead to force casting for TS users
     /**
-     *  The parsed object from JSON string if the response contains the content type application/json.
+     * The parsed object from JSON string if the response contains the content type application/json.
      */
     json: any;
 
     /**
-     *  Parsed `Content-Type header: { type, encoding }`.
+     * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler;
@@ -457,8 +458,8 @@ export class CheerioCrawler extends BasicCrawler {
     protected navigationTimeoutMillis: number;
     protected gotoFunction: GotoFunction;
     protected defaultGotoOptions: { timeout: number };
-    protected preNavigationHooks: Hook[];
-    protected postNavigationHooks: Hook[];
+    protected preNavigationHooks: CheerioHook[];
+    protected postNavigationHooks: CheerioHook[];
     protected persistCookiesPerSession: boolean;
     protected requestTimeoutMillis: number;
     protected ignoreSslErrors: boolean;
@@ -672,9 +673,8 @@ export class CheerioCrawler extends BasicCrawler {
 
         const { request, session } = crawlingContext;
         const cookieSnapshot = request.headers?.Cookie ?? request.headers?.cookie;
-        // TODO crawling context vs browser crawling context?
-        await this._executeHooks(this.preNavigationHooks, crawlingContext as any, requestAsBrowserOptions);
-        const proxyUrl = crawlingContext.proxyInfo && crawlingContext.proxyInfo.url;
+        await this._executeHooks(this.preNavigationHooks, crawlingContext, requestAsBrowserOptions);
+        const proxyUrl = crawlingContext.proxyInfo?.url;
         this._mergeRequestCookieDiff(request, cookieSnapshot!, requestAsBrowserOptions);
 
         crawlingContext.response = await addTimeoutToPromise(
@@ -683,7 +683,6 @@ export class CheerioCrawler extends BasicCrawler {
             `request timed out after ${this.requestTimeoutMillis / 1000} seconds.`,
         );
 
-        // TODO crawling context vs browser crawling context?
         await this._executeHooks(this.postNavigationHooks, crawlingContext, requestAsBrowserOptions);
 
         if (this.postResponseFunction) {
@@ -716,14 +715,8 @@ export class CheerioCrawler extends BasicCrawler {
      * Function to make the HTTP request. It performs optimizations
      * on the request such as only downloading the request body if the
      * received content type matches text/html, application/xml, application/xhtml+xml.
-     *
-     * @param {object} options
-     * @param {Request} options.request
-     * @param {Session} options.session
-     * @param {string} options.proxyUrl
-     * @param {RequestAsBrowserOptions} options.requestAsBrowserOptions
      */
-    protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }): Promise<IncomingMessage> {
+    protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
         const opts = this._getRequestOptions(request, session, proxyUrl, requestAsBrowserOptions);
         let responseWithStream;
 
@@ -878,7 +871,6 @@ export class CheerioCrawler extends BasicCrawler {
 
     /**
      * Checks and extends supported mime types
-     * @param {Array<(string|Object)>} additionalMimeTypes
      */
     protected _extendSupportedMimeTypes(additionalMimeTypes: (string | RequestLike | ResponseLike)[]) {
         additionalMimeTypes.forEach((mimeType) => {
@@ -925,4 +917,11 @@ export class CheerioCrawler extends BasicCrawler {
                     + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);
         }
     }
+}
+
+interface RequestFunctionOptions {
+    request: Request;
+    session: Session;
+    proxyUrl?: string;
+    requestAsBrowserOptions: RequestAsBrowserOptions;
 }

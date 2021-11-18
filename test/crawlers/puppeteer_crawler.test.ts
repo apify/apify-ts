@@ -1,7 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext, PuppeteerCookie, PuppeteerHandlePage } from 'apify';
+import Apify, { BrowserCrawlingContext, PuppeteerCookie, PuppeteerHandlePage, PuppeteerHandlePageFunctionParam } from 'apify';
 import * as utils from 'apify/src/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
@@ -45,10 +45,7 @@ describe('PuppeteerCrawler', () => {
         const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
         const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
             await page.waitForSelector('title');
-
-            // TODO: response is typed as IncomingMessage
-            // @ts-expect-error
-            expect(await response.status()).toBe(200);
+            expect(response.status()).toBe(200);
             request.userData.title = await page.title();
             processed.push(request);
         };
@@ -87,8 +84,6 @@ describe('PuppeteerCrawler', () => {
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
-            // TODO: gotoTimeoutSecs does not exist in PuppeteerCrawlerOptions
-            // @ts-expect-error
             gotoTimeoutSecs: timeoutSecs,
         });
 
@@ -102,15 +97,13 @@ describe('PuppeteerCrawler', () => {
     test('should support custom gotoFunction', async () => {
         const functions = {
             handlePageFunction: async () => {},
-            gotoFunction: ({ page, request }: BrowserCrawlingContext, options) => {
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
+            gotoFunction: ({ page, request }: PuppeteerHandlePageFunctionParam, options) => {
                 return page.goto(request.url, options);
             },
         };
         jest.spyOn(functions, 'gotoFunction');
         jest.spyOn(functions, 'handlePageFunction');
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({ //eslint-disable-line
+        const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -129,7 +122,7 @@ describe('PuppeteerCrawler', () => {
     test('should override goto timeout with navigationTimeoutSecs ', async () => {
         const timeoutSecs = 10;
         let options;
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({ //eslint-disable-line
+        const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -225,8 +218,6 @@ describe('PuppeteerCrawler', () => {
         const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             useSessionPool: true,
-            // TODO: persistCookiesPerSession is missing
-            // @ts-expect-error
             persistCookiesPerSession: true,
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {

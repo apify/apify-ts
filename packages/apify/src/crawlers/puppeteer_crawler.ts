@@ -1,32 +1,27 @@
 import ow from 'ow';
 import { BrowserPoolOptions } from 'browser-pool';
-import { LaunchOptions, Page } from 'puppeteer';
+import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
-import { CrawlingContext, HandleFailedRequest } from './basic_crawler';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } from './browser_crawler';
+import { HandleFailedRequest } from './basic_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 import { Awaitable } from '../typedefs';
 
-export interface PuppeteerCrawlContext extends BrowserCrawlingContext, CrawlingContext {
-    page: Page;
+export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page, HTTPResponse> {
     crawler: PuppeteerCrawler;
 }
 
-export type PuppeteerHook = Hook<PuppeteerCrawlContext>;
+export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext>;
 
-export interface PuppeteerHandlePageFunctionParam {
-    page: Page;
+export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext<Page, HTTPResponse> {
     crawler: PuppeteerCrawler;
 }
 
-export type PuppeteerHandlePage = (context: CrawlingContext & BrowserCrawlingContext & {
-    page: Page;
-    crawler: PuppeteerCrawler;
-}) => Awaitable<void>;
+export type PuppeteerHandlePage = BrowserHandlePageFunction<PuppeteerHandlePageFunctionParam>;
 
 export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
@@ -197,7 +192,7 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
 
     /**
      * All `PuppeteerCrawler` parameters are passed via an options object.
-     * @todo we need Partial here due to the emtpy object, probably not wanted
+     * @todo we need Partial here due to the empty object, probably not wanted
      */
     constructor(options: Partial<PuppeteerCrawlerOptions> = {}) {
         ow(options, 'PuppeteerCrawlerOptions', ow.object.exactShape(PuppeteerCrawler.optionsShape));

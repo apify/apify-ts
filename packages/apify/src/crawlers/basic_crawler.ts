@@ -16,27 +16,35 @@ import { Request } from '../request';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
-import { Hook } from './browser_crawler';
+import { BrowserHook } from './browser_crawler';
 import { Awaitable } from '../typedefs';
 
-export interface CrawlingContext extends Record<PropertyKey, unknown> {
+export interface CrawlingContext<Response = IncomingMessage> extends Record<PropertyKey, unknown> {
     id: string;
     /**
-     *   The original {@link Request} object.
+     * The original {@link Request} object.
      */
     request: Request;
     session: Session;
 
     /**
-     *   An object with information about currently used proxy by the crawler
-     *   and configured by the {@link ProxyConfiguration} class.
+     * An object with information about currently used proxy by the crawler
+     * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
 
     /**
-     *   An instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object,
+     * The response returned by the crawler.
+     * For basic crawlers, this is an instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object.
      */
-    response?: IncomingMessage;
+    response?: Response;
+}
+
+export interface HandleFailedRequestInput extends CrawlingContext {
+    /**
+     * The Error thrown by `handleRequestFunction`.
+     */
+    error: Error;
 }
 
 /**
@@ -445,16 +453,10 @@ export class BasicCrawler {
         await this._loadHandledRequestCount();
     }
 
-    /**
-     * @param {CrawlingContext} crawlingContext
-     * @return {Promise<void>}
-     */
-    protected async _handleRequestFunction(crawlingContext) { // eslint-disable-line no-unused-vars
+    protected async _handleRequestFunction(crawlingContext: HandleRequestInputs): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
-    /**
-     */
     protected async _pauseOnMigration() {
         if (this.autoscaledPool) {
             // if run wasn't called, this is going to crash
@@ -495,7 +497,6 @@ export class BasicCrawler {
     /**
      * Fetches request from either RequestList or RequestQueue. If request comes from a RequestList
      * and RequestQueue is present then enqueues it to the queue first.
-     *
      */
     protected async _fetchNextRequest() {
         if (!this.requestList) return this.requestQueue!.fetchNextRequest();
@@ -522,7 +523,6 @@ export class BasicCrawler {
     /**
      * Wrapper around handleRequestFunction that fetches requests from RequestList/RequestQueue
      * then retries them in a case of an error, etc.
-     *
      */
     protected async _runTaskFunction() {
         const source = this.requestQueue || this.requestList!;
@@ -583,7 +583,6 @@ export class BasicCrawler {
 
     /**
      * Returns true if either RequestList or RequestQueue have a request ready for processing.
-     *
      */
     protected async _isTaskReadyFunction() {
         // First check RequestList, since it's only in memory.
@@ -596,7 +595,6 @@ export class BasicCrawler {
 
     /**
      * Returns true if both RequestList and RequestQueue have all requests finished.
-     *
      */
     protected async _defaultIsFinishedFunction() {
         const [
@@ -612,13 +610,8 @@ export class BasicCrawler {
 
     /**
      * Handles errors thrown by user provided handleRequestFunction()
-     * @param {Error} error
-     * @param {object} crawlingContext
-     * @param {Request} crawlingContext.request
-     * @param {(RequestList|RequestQueue)} source
-     * @return {Promise<void>}
      */
-    protected async _requestFunctionErrorHandler(error, crawlingContext, source) {
+    protected async _requestFunctionErrorHandler(error: Error, crawlingContext: CrawlingContext, source: RequestList | RequestQueue): Promise<void> {
         const { request } = crawlingContext;
         request.pushErrorMessage(error);
 
@@ -639,17 +632,11 @@ export class BasicCrawler {
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.url);
             crawlingContext.error = error;
-            await this._handleFailedRequestFunction(crawlingContext); // This function prints an error message.
+            await this._handleFailedRequestFunction(crawlingContext as HandleFailedRequestInput); // This function prints an error message.
         }
     }
 
-    /**
-     * @param {object} crawlingContext
-     * @param {Error} crawlingContext.error
-     * @param {Request} crawlingContext.request
-     * @return {Promise<void>}
-     */
-    protected async _handleFailedRequestFunction(crawlingContext) {
+    protected async _handleFailedRequestFunction(crawlingContext: HandleFailedRequestInput): Promise<void> {
         if (this.failedContextHandler) {
             await this.failedContextHandler(crawlingContext);
         } else {
@@ -678,7 +665,7 @@ export class BasicCrawler {
         }
     }
 
-    protected async _executeHooks(hooks: Hook[], ...args: Parameters<Hook>) {
+    protected async _executeHooks<HookLike extends (...args: unknown[]) => Awaitable<void>>(hooks: HookLike[], ...args: Parameters<HookLike>) {
         if (Array.isArray(hooks) && hooks.length) {
             for (const hook of hooks) {
                 await hook(...args);
@@ -714,12 +701,3 @@ export interface HandleRequestInputs {
 }
 
 export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
-
-export interface HandleFailedRequestInput {
-    /** The Error thrown by `handleRequestFunction`. */
-    error: Error;
-    /** The original {Request} object. */
-    request: Request;
-    session: Session;
-    proxyInfo: ProxyInfo;
-}

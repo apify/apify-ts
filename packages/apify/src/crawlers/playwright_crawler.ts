@@ -1,8 +1,8 @@
 import ow from 'ow';
-import { LaunchOptions, Page } from 'playwright';
+import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, Hook } from './browser_crawler';
+import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
 import { HandleFailedRequest, CrawlingContext } from './basic_crawler';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
@@ -13,8 +13,8 @@ import { Awaitable } from '../typedefs';
 
 export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
-     *   Function that is called to process each request.
-     *   It is passed an object with the following fields:
+     * Function that is called to process each request.
+     * It is passed an object with the following fields:
      *
      * ```
      * {
@@ -28,24 +28,24 @@ export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'h
      * }
      * ```
      *
-     *   `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     *   `page` is an instance of the `Playwright`
-     *   [`Page`](https://playwright.dev/docs/api/class-page)
-     *   `browserController` is an instance of the
-     *   [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     *   `response` is an instance of the `Playwright`
-     *   [`Response`](https://playwright.dev/docs/api/class-response),
-     *   which is the main resource response as returned by `page.goto(request.url)`.
-     *   The function must return a promise, which is then awaited by the crawler.
+     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * `page` is an instance of the `Playwright`
+     * [`Page`](https://playwright.dev/docs/api/class-page)
+     * `browserController` is an instance of the
+     * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
+     * `response` is an instance of the `Playwright`
+     * [`Response`](https://playwright.dev/docs/api/class-response),
+     * which is the main resource response as returned by `page.goto(request.url)`.
+     * The function must return a promise, which is then awaited by the crawler.
      *
-     *   If the function throws an exception, the crawler will try to re-crawl the
-     *   request later, up to `option.maxRequestRetries` times.
-     *   If all the retries fail, the crawler calls the function
-     *   provided to the `handleFailedRequestFunction` parameter.
-     *   To make this work, you should **always**
-     *   let your function throw exceptions rather than catch them.
-     *   The exceptions are logged to the request using the
-     *   {@link Request.pushErrorMessage} function.
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: PlaywrightHandlePageFunction;
 
@@ -134,19 +134,17 @@ export interface PlaywrightGotoOptions {
     referer?: string;
 }
 
-export interface PlaywrightCrawlContext extends BrowserCrawlingContext, CrawlingContext {
-    page: Page;
+export interface PlaywrightCrawlContext extends BrowserCrawlingContext<Page, Response> {
     crawler: PlaywrightCrawler;
 }
 
-export type PlaywrightHook = Hook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
+export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
 
-export interface PlaywrightHandlePageFunctionParam {
-    page: Page;
+export interface PlaywrightHandlePageFunctionParam extends BrowserCrawlingContext<Page, Response> {
     crawler: PlaywrightCrawler;
 }
 
-export type PlaywrightHandlePageFunction = (context: PlaywrightHandlePageFunctionParam & BrowserCrawlingContext & CrawlingContext) => Awaitable<void>;
+export type PlaywrightHandlePageFunction = BrowserHandlePageFunction<PlaywrightHandlePageFunctionParam>;
 
 /**
  * Provides a simple framework for parallel crawling of web pages
@@ -236,7 +234,6 @@ export class PlaywrightCrawler extends BrowserCrawler<LaunchOptions> {
         const playwrightLauncher = new PlaywrightLauncher(launchContext);
 
         browserPoolOptions.browserPlugins = [
-            // @ts-ignore plugin types are not working properly, we probably need extension (or type casting)
             playwrightLauncher.createBrowserPlugin(),
         ];
 
