@@ -323,7 +323,7 @@ async function preventHistoryNavigation(page: Page): Promise<unknown> {
             replaceState(...args) {
                 this.stateHistory.push(args);
             },
-        };
+        } as typeof window.history;
     });
 }
 
