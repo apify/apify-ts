@@ -453,7 +453,7 @@ export class BasicCrawler {
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestFunction(crawlingContext: CrawlingContext): Promise<void> {
+    protected async _handleRequestFunction(crawlingContext: HandleRequestInputs): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
