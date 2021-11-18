@@ -16,10 +16,10 @@ import { Request } from '../request';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
-import { Hook } from './browser_crawler';
+import { BrowserHook } from './browser_crawler';
 import { Awaitable } from '../typedefs';
 
-export interface CrawlingContext extends Record<PropertyKey, unknown> {
+export interface CrawlingContext<Response = IncomingMessage> extends Record<PropertyKey, unknown> {
     id: string;
     /**
      * The original {@link Request} object.
@@ -34,9 +34,10 @@ export interface CrawlingContext extends Record<PropertyKey, unknown> {
     proxyInfo?: ProxyInfo;
 
     /**
-     * An instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object,
+     * The response returned by the crawler.
+     * For basic crawlers, this is an instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object.
      */
-    response?: IncomingMessage;
+    response?: Response;
 }
 
 export interface HandleFailedRequestInput extends CrawlingContext {
@@ -452,7 +453,7 @@ export class BasicCrawler {
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestFunction(crawlingContext: CrawlingContext): Promise<void> {
+    protected async _handleRequestFunction(crawlingContext: HandleRequestInputs): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
@@ -664,7 +665,7 @@ export class BasicCrawler {
         }
     }
 
-    protected async _executeHooks(hooks: Hook[], ...args: Parameters<Hook>) {
+    protected async _executeHooks<HookLike extends (...args: unknown[]) => Awaitable<void>>(hooks: HookLike[], ...args: Parameters<HookLike>) {
         if (Array.isArray(hooks) && hooks.length) {
             for (const hook of hooks) {
                 await hook(...args);

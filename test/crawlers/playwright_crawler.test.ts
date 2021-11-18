@@ -1,7 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import playwright from 'playwright';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext, PlaywrightHandlePageFunction } from 'apify';
+import Apify, { BrowserCrawlingContext, PlaywrightHandlePageFunction, PlaywrightHandlePageFunctionParam } from 'apify';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {
@@ -45,9 +45,7 @@ describe('PlaywrightCrawler', () => {
             const failed = [];
             const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
             const handlePageFunction = async ({ page, request, response }: Parameters<PlaywrightHandlePageFunction>[0]) => {
-                // TODO: wrong type for response
-                // @ts-expect-error
-                expect(await response.status()).toBe(200);
+                expect(response.status()).toBe(200);
                 request.userData.title = await page.title();
                 processed.push(request);
             };
@@ -91,8 +89,6 @@ describe('PlaywrightCrawler', () => {
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
-            // TODO: gotoTimeoutSecs does not exist in PlaywrightCrawlerOptions
-            // @ts-expect-error
             gotoTimeoutSecs: timeoutSecs,
         });
 
@@ -107,9 +103,7 @@ describe('PlaywrightCrawler', () => {
     test('should support custom gotoFunction', async () => {
         const functions = {
             handlePageFunction: () => { },
-            gotoFunction: ({ page, request }: BrowserCrawlingContext, options) => {
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
+            gotoFunction: ({ page, request }: PlaywrightHandlePageFunctionParam, options) => {
                 return page.goto(request.url, options);
             },
         };
@@ -134,7 +128,7 @@ describe('PlaywrightCrawler', () => {
     test('should override goto timeout with navigationTimeoutSecs', async () => {
         const timeoutSecs = 10;
         let options;
-        const playwrightCrawler = new Apify.PlaywrightCrawler({ //eslint-disable-line
+        const playwrightCrawler = new Apify.PlaywrightCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,

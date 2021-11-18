@@ -1,5 +1,5 @@
 /** @ignore */
-export type Dictionary<T = unknown> = Record<string, T>;
+export type Dictionary<T = unknown> = Record<PropertyKey, T>;
 
 /** @ignore */
 export type Constructor<T = unknown> = new (...args: unknown[]) => T;

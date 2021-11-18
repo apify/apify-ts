@@ -367,8 +367,6 @@ describe('BrowserCrawler', () => {
                 browserPlugins: [puppeteerPlugin],
             },
             useSessionPool: true,
-            // TODO: figure out why persistCookiesPerSession is missing
-            // @ts-expect-error persistCookiesPerSession is missing in BrowserCrawlerOptions
             persistCookiesPerSession: false,
             sessionPoolOptions: {
                 sessionOptions: {
@@ -405,8 +403,6 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            // TODO: figure out why persistCookiesPerSession is missing
-            // @ts-expect-error persistCookiesPerSession is missing in BrowserCrawlerOptions
             persistCookiesPerSession: true,
             handlePageFunction: async ({ session, request }) => {
                 loadedCookies.push(session.getCookieString(request.url));
@@ -459,8 +455,6 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            // TODO: figure out why persistCookiesPerSession is missing
-            // @ts-expect-error persistCookiesPerSession is missing in BrowserCrawlerOptions
             persistCookiesPerSession: false,
             maxRequestRetries: 0,
             handlePageFunction: async () => {
@@ -504,8 +498,6 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            // TODO: figure out why persistCookiesPerSession is missing
-            // @ts-expect-error persistCookiesPerSession is missing in BrowserCrawlerOptions
             persistCookiesPerSession: false,
             maxRequestRetries: 0,
             handlePageFunction: async () => {
