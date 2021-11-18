@@ -1,6 +1,6 @@
 import ow from 'ow';
 import { BrowserPoolOptions } from 'browser-pool';
-import { LaunchOptions, Page } from 'puppeteer';
+import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
@@ -11,13 +11,13 @@ import { RequestQueue } from '../storages/request_queue';
 import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 import { Awaitable } from '../typedefs';
 
-export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page> {
+export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page, HTTPResponse> {
     crawler: PuppeteerCrawler;
 }
 
 export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext>;
 
-export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext<Page> {
+export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext<Page, HTTPResponse> {
     crawler: PuppeteerCrawler;
 }
 

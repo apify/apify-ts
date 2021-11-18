@@ -19,24 +19,25 @@ import { Session } from '../session_pool/session';
 import { BrowserHook } from './browser_crawler';
 import { Awaitable } from '../typedefs';
 
-export interface CrawlingContext extends Record<PropertyKey, unknown> {
+export interface CrawlingContext<Response = IncomingMessage> extends Record<PropertyKey, unknown> {
     id: string;
     /**
-     *   The original {@link Request} object.
+     * The original {@link Request} object.
      */
     request: Request;
     session: Session;
 
     /**
-     *   An object with information about currently used proxy by the crawler
-     *   and configured by the {@link ProxyConfiguration} class.
+     * An object with information about currently used proxy by the crawler
+     * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
 
     /**
-     *   An instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object,
+     * The response returned by the crawler.
+     * For basic crawlers, this is an instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object.
      */
-    response?: IncomingMessage;
+    response?: Response;
 }
 
 /**

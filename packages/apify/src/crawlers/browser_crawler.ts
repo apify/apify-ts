@@ -17,7 +17,7 @@ import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
 import { Awaitable, Dictionary } from '../typedefs';
 
-export interface BrowserCrawlingContext<Page = unknown> extends CrawlingContext {
+export interface BrowserCrawlingContext<Page = unknown, Response = unknown> extends CrawlingContext<Response> {
     browserController: BrowserController;
     page: Page;
 }

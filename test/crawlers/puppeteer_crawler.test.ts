@@ -45,10 +45,7 @@ describe('PuppeteerCrawler', () => {
         const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
         const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
             await page.waitForSelector('title');
-
-            // TODO: response is typed as IncomingMessage
-            // @ts-expect-error
-            expect(await response.status()).toBe(200);
+            expect(response.status()).toBe(200);
             request.userData.title = await page.title();
             processed.push(request);
         };
