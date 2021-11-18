@@ -191,14 +191,19 @@ describe('Snapshotter', () => {
         try {
             const noop = () => {};
             const snapshotter = new Snapshotter({ maxBlockedMillis: 5, eventLoopSnapshotIntervalSecs: 0 });
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotEventLoop(noop);
             clock.tick(1);
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotEventLoop(noop);
             clock.tick(2);
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotEventLoop(noop);
             clock.tick(7);
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotEventLoop(noop);
             clock.tick(3);
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotEventLoop(noop);
             const loopSnapshots = snapshotter.getEventLoopSample();
 
@@ -292,12 +297,16 @@ describe('Snapshotter', () => {
             utils.apifyClient.stats.rateLimitErrors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
             const snapshotter = new Snapshotter({ maxClientErrors: 1 });
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotClient(noop);
             utils.apifyClient.stats.rateLimitErrors = [1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotClient(noop);
             utils.apifyClient.stats.rateLimitErrors = [10, 5, 2, 0, 0, 0, 0, 0, 0, 0];
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotClient(noop);
             utils.apifyClient.stats.rateLimitErrors = [100, 24, 4, 2, 0, 0, 0, 0, 0, 0];
+            // @ts-expect-error Calling protected method
             snapshotter._snapshotClient(noop);
 
             const clientSnapshots = snapshotter.getClientSample();

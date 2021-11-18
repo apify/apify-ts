@@ -326,22 +326,22 @@ export type CheerioRoot = ReturnType<typeof load>;
 
 export interface CheerioHandlePageInputs extends CrawlingContext {
     /**
-     *  The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
+     * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
     $: CheerioRoot;
 
     /**
-     *  The request body of the web page.
+     * The request body of the web page.
      */
     body: (string | Buffer);
 
     /**
-     *  The parsed object from JSON string if the response contains the content type application/json.
+     * The parsed object from JSON string if the response contains the content type application/json.
      */
     json: any;
 
     /**
-     *  Parsed `Content-Type header: { type, encoding }`.
+     * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler;
@@ -716,14 +716,8 @@ export class CheerioCrawler extends BasicCrawler {
      * Function to make the HTTP request. It performs optimizations
      * on the request such as only downloading the request body if the
      * received content type matches text/html, application/xml, application/xhtml+xml.
-     *
-     * @param {object} options
-     * @param {Request} options.request
-     * @param {Session} options.session
-     * @param {string} options.proxyUrl
-     * @param {RequestAsBrowserOptions} options.requestAsBrowserOptions
      */
-    protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }): Promise<IncomingMessage> {
+    protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
         const opts = this._getRequestOptions(request, session, proxyUrl, requestAsBrowserOptions);
         let responseWithStream;
 
@@ -878,7 +872,6 @@ export class CheerioCrawler extends BasicCrawler {
 
     /**
      * Checks and extends supported mime types
-     * @param {Array<(string|Object)>} additionalMimeTypes
      */
     protected _extendSupportedMimeTypes(additionalMimeTypes: (string | RequestLike | ResponseLike)[]) {
         additionalMimeTypes.forEach((mimeType) => {
@@ -925,4 +918,11 @@ export class CheerioCrawler extends BasicCrawler {
                     + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);
         }
     }
+}
+
+interface RequestFunctionOptions {
+    request: Request;
+    session: Session;
+    proxyUrl?: string;
+    requestAsBrowserOptions: RequestAsBrowserOptions;
 }
