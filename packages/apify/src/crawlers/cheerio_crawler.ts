@@ -40,7 +40,7 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
+export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
@@ -101,7 +101,7 @@ export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: CheerioHandlePage;
+    handlePageFunction: CheerioHandlePage<JSONData>;
 
     /**
      * > This option is deprecated, use `preNavigationHooks` instead.
@@ -220,7 +220,7 @@ export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * ]
      * ```
      */
-    preNavigationHooks?: CheerioHook[];
+    preNavigationHooks?: CheerioHook<JSONData>[];
 
     /**
      * Async functions that are sequentially evaluated after the navigation. Good for checking if the navigation was successful.
@@ -234,7 +234,7 @@ export interface CheerioCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * ]
      * ```
      */
-    postNavigationHooks?: CheerioHook[];
+    postNavigationHooks?: CheerioHook<JSONData>[];
 
     /**
      * An array of [MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
@@ -295,7 +295,7 @@ export interface PrepareRequestInputs {
 }
 
 export type PrepareRequest = (inputs: PrepareRequestInputs) => Awaitable<void>;
-export type CheerioHook = BrowserHook<CheerioCrawlingContext, RequestAsBrowserOptions>;
+export type CheerioHook<JSONData = unknown> = BrowserHook<CheerioCrawlingContext<JSONData>, RequestAsBrowserOptions>;
 
 export interface PostResponseInputs {
     /**
@@ -321,10 +321,10 @@ export interface PostResponseInputs {
     crawler: CheerioCrawler;
 }
 
-export type PostResponse = (inputs: PostResponseInputs) => (void | Promise<void>);
+export type PostResponse = (inputs: PostResponseInputs) => Awaitable<void>;
 export type CheerioRoot = ReturnType<typeof load>;
 
-export interface CheerioHandlePageInputs extends CrawlingContext {
+export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingContext {
     /**
      * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
@@ -335,11 +335,10 @@ export interface CheerioHandlePageInputs extends CrawlingContext {
      */
     body: (string | Buffer);
 
-    // TODO: maybe consider making this `unknown` instead to force casting for TS users
     /**
      * The parsed object from JSON string if the response contains the content type application/json.
      */
-    json: any;
+    json: JSONData;
 
     /**
      * Parsed `Content-Type header: { type, encoding }`.
@@ -348,8 +347,8 @@ export interface CheerioHandlePageInputs extends CrawlingContext {
     crawler: CheerioCrawler;
 }
 
-export type CheerioCrawlingContext = CheerioHandlePageInputs; // alias for better discoverability
-export type CheerioHandlePage = (inputs: CheerioHandlePageInputs) => Awaitable<void>;
+export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
+export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageInputs<JSONData>) => Awaitable<void>;
 
 /**
  * Provides a framework for the parallel crawling of web pages using plain HTTP requests and
@@ -445,7 +444,7 @@ export type CheerioHandlePage = (inputs: CheerioHandlePageInputs) => Awaitable<v
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler extends BasicCrawler {
+export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -493,7 +492,7 @@ export class CheerioCrawler extends BasicCrawler {
     /**
      * All `CheerioCrawler` parameters are passed via an options object.
      */
-    constructor(options: CheerioCrawlerOptions) {
+    constructor(options: CheerioCrawlerOptions<JSONData>) {
         ow(options, 'CheerioCrawlerOptions', ow.object.exactShape(CheerioCrawler.optionsShape));
 
         const {
@@ -553,7 +552,7 @@ export class CheerioCrawler extends BasicCrawler {
         ];
 
         if (this.useSessionPool) {
-            this.persistCookiesPerSession = persistCookiesPerSession !== undefined ? persistCookiesPerSession : true;
+            this.persistCookiesPerSession = persistCookiesPerSession ?? true;
         } else {
             this.persistCookiesPerSession = false;
         }
