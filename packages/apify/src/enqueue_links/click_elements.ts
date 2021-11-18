@@ -368,8 +368,8 @@ function updateElementCssToEnableMouseClick(el: HTMLElement, zIndex: number): vo
     el.style.display = 'block';
     el.style.position = 'fixed';
     el.style.zIndex = String(zIndex);
-    el.style.left = String(0);
-    el.style.top = String(0);
+    el.style.left = '0';
+    el.style.top = '0';
     const boundingRect = el.getBoundingClientRect();
     if (!boundingRect.height) el.style.height = '10px';
     if (!boundingRect.width) el.style.width = '10px';
