@@ -137,7 +137,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     id: string;
     name?: string;
     isLocal?: boolean;
-    client: DatasetClient;
+    client: DatasetClient<Data>;
     log = log.child({ prefix: 'Dataset' });
 
     /**
@@ -147,7 +147,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
         this.id = options.id;
         this.name = options.name;
         this.isLocal = options.isLocal;
-        this.client = options.client.dataset(this.id) as DatasetClient;
+        this.client = options.client.dataset(this.id) as DatasetClient<Data>;
     }
 
     /**
@@ -228,9 +228,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     // TODO: type options
     async getData(options: Dictionary = {}): Promise<PaginatedList<Data>> {
         try {
-            // TODO: in apify_client, DatasetClient#listItems needs to take in a generic for the return type
-            // See https://github.com/apify/apify-client-js/pull/214
-            // @ts-expect-error
             return await this.client.listItems(options);
         } catch (e) {
             if (e.message.includes('Cannot create a string longer than')) {
