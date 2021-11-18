@@ -8,7 +8,7 @@ import { StorageManager } from './storage_manager';
 import log from '../utils_log';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';
-import { Dictionary } from '../typedefs';
+import { Awaitable, Dictionary } from '../typedefs';
 
 export type KeyValueStoreValueTypes = Record<string, unknown> | null | Buffer | string;
 
@@ -161,7 +161,7 @@ export class KeyValueStore {
         //   to enforce the representation of value
         const record = await this.client.getRecord(key);
 
-        return record ? record.value : null;
+        return record?.value ?? null;
     }
 
     /**
@@ -209,13 +209,13 @@ export class KeyValueStore {
      * @param {string} [options.contentType]
      *   Specifies a custom MIME content type of the record.
      */
-    async setValue<T>(key: string, value: T | null, options = {}): Promise<void> {
+    // TODO: type options
+    async setValue<T>(key: string, value: T | null, options: Dictionary = {}): Promise<void> {
         ow(key, 'key', ow.string.nonEmpty);
         ow(key, ow.string.validate((k) => ({
             validator: ow.isValid(k, ow.string.matches(KEY_VALUE_STORE_KEY_REGEX)),
             message: 'The "key" argument must be at most 256 characters long and only contain the following characters: a-zA-Z0-9!-_.\'()',
         })));
-        // @ts-ignore
         if (options.contentType && !ow.isValid(value, ow.any(ow.string, ow.buffer))) {
             throw new ArgumentError('The "value" parameter must be a String or Buffer when "options.contentType" is specified.', this.setValue);
         }
@@ -287,7 +287,8 @@ export class KeyValueStore {
      * @param {string} [options.exclusiveStartKey] All keys up to this one (including) are skipped from the result.
      * @return {Promise<void>}
      */
-    async forEachKey(iteratee, options = {}) {
+    // TODO: type options
+    async forEachKey(iteratee: KeyConsumer, options: Dictionary<string | undefined> = {}) {
         return this._forEachKey(iteratee, options);
     }
 
@@ -298,8 +299,7 @@ export class KeyValueStore {
      * @return {Promise<Promise<void> | undefined>}
      * @private
      */
-    async _forEachKey(iteratee, options = {}, index = 0) {
-        // @ts-ignore
+    private async _forEachKey(iteratee: KeyConsumer, options: Dictionary<string | undefined> = {}, index = 0): Promise<void> {
         const { exclusiveStartKey } = options;
         ow(iteratee, ow.function);
         ow(options, ow.object.exactShape({
@@ -405,7 +405,6 @@ export async function openKeyValueStore(storeIdOrName?: string | null, options: 
 export async function getValue<T extends Dictionary | string | Buffer>(key: string): Promise<T | null> {
     const store = await openKeyValueStore();
 
-    // @ts-ignore
     return store.getValue(key);
 }
 
@@ -444,7 +443,7 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
 export async function setValue<T>(key: string, value: T, options?: unknown): Promise<void> {
     const store = await openKeyValueStore();
 
-    // @ts-ignore
+    // @ts-ignore options need to be typed
     return store.setValue(key, value, options);
 }
 
@@ -490,7 +489,7 @@ export interface KeyConsumer {
      * @param info Information about the current {@link KeyValueStore} entry.
      * @param info.size Size of the value associated with the current key in bytes.
      */
-    (key: string, index: number, info: { size: number }): unknown;
+    (key: string, index: number, info: { size: number }): Awaitable<void>;
 }
 
 export interface KeyValueStoreOptions {
