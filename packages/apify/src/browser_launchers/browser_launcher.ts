@@ -159,7 +159,7 @@ export abstract class BrowserLauncher<
         return process.env[ENV_VARS.CHROME_EXECUTABLE_PATH] || getTypicalChromeExecutablePath();
     }
 
-    protected _validateProxyUrlProtocol(proxyUrl: string | undefined): void {
+    protected _validateProxyUrlProtocol(proxyUrl?: string): void {
         if (!proxyUrl) return;
 
         if (!/^(http|https|socks4|socks5)/i.test(proxyUrl)) {

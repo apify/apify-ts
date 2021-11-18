@@ -363,23 +363,15 @@ export async function clickElements(page: Page, selector: string): Promise<void>
 /**
  * This is an in browser function!
  */
-function updateElementCssToEnableMouseClick(el: Element, zIndex: number): void {
-    // @ts-expect-error Property does not exist on type 'Element'.
+function updateElementCssToEnableMouseClick(el: HTMLElement, zIndex: number): void {
     el.style.visibility = 'visible';
-    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.display = 'block';
-    // @ts-expect-error Property does not exist on type 'Element'.
     el.style.position = 'fixed';
-    // @ts-expect-error Property does not exist on type 'Element'.
-    el.style.zIndex = zIndex;
-    // @ts-expect-error Property does not exist on type 'Element'.
-    el.style.left = 0;
-    // @ts-expect-error Property does not exist on type 'Element'.
-    el.style.top = 0;
+    el.style.zIndex = String(zIndex);
+    el.style.left = String(0);
+    el.style.top = String(0);
     const boundingRect = el.getBoundingClientRect();
-    // @ts-expect-error Property does not exist on type 'Element'.
     if (!boundingRect.height) el.style.height = '10px';
-    // @ts-expect-error Property does not exist on type 'Element'.
     if (!boundingRect.width) el.style.width = '10px';
 }
 

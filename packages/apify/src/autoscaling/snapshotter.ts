@@ -374,7 +374,7 @@ export class Snapshotter {
      */
     protected _snapshotCpuOnPlatform(systemInfo: SystemInfo) {
         const { cpuCurrentUsage, isCpuOverloaded } = systemInfo;
-        const createdAt = (new Date(systemInfo.createdAt!));
+        const createdAt = new Date(systemInfo.createdAt!);
         this._pruneSnapshots(this.cpuSnapshots, createdAt);
 
         this.cpuSnapshots.push({
