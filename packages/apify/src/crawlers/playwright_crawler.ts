@@ -13,8 +13,8 @@ import { Awaitable } from '../typedefs';
 
 export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
-     *   Function that is called to process each request.
-     *   It is passed an object with the following fields:
+     * Function that is called to process each request.
+     * It is passed an object with the following fields:
      *
      * ```
      * {
@@ -28,24 +28,24 @@ export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'h
      * }
      * ```
      *
-     *   `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     *   `page` is an instance of the `Playwright`
-     *   [`Page`](https://playwright.dev/docs/api/class-page)
-     *   `browserController` is an instance of the
-     *   [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     *   `response` is an instance of the `Playwright`
-     *   [`Response`](https://playwright.dev/docs/api/class-response),
-     *   which is the main resource response as returned by `page.goto(request.url)`.
-     *   The function must return a promise, which is then awaited by the crawler.
+     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * `page` is an instance of the `Playwright`
+     * [`Page`](https://playwright.dev/docs/api/class-page)
+     * `browserController` is an instance of the
+     * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
+     * `response` is an instance of the `Playwright`
+     * [`Response`](https://playwright.dev/docs/api/class-response),
+     * which is the main resource response as returned by `page.goto(request.url)`.
+     * The function must return a promise, which is then awaited by the crawler.
      *
-     *   If the function throws an exception, the crawler will try to re-crawl the
-     *   request later, up to `option.maxRequestRetries` times.
-     *   If all the retries fail, the crawler calls the function
-     *   provided to the `handleFailedRequestFunction` parameter.
-     *   To make this work, you should **always**
-     *   let your function throw exceptions rather than catch them.
-     *   The exceptions are logged to the request using the
-     *   {@link Request.pushErrorMessage} function.
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
      */
     handlePageFunction: PlaywrightHandlePageFunction;
 
