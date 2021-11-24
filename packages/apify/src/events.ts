@@ -95,7 +95,7 @@ export function initializeEvents(config = Configuration.getGlobalConfig()) {
         if (!message) return;
 
         try {
-            const { name, data } = JSON.parse(message as string);
+            const { name, data } = JSON.parse(String(message));
 
             events.emit(name, data);
 

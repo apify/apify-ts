@@ -4,6 +4,7 @@ import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
 import { BrowserPool, PuppeteerPlugin } from 'browser-pool';
+import { OperatingSystemsName } from 'browser-pool/dist/fingerprinting/types';
 import puppeteer from 'puppeteer';
 import log from 'apify/src/utils_log';
 import Apify, { BrowserCrawlingContext } from 'apify';
@@ -30,14 +31,17 @@ describe('BrowserCrawler', () => {
         log.setLevel(log.LEVELS.ERROR);
         localStorageEmulator = new LocalStorageDirEmulator();
     });
+
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
         Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
         puppeteerPlugin = new PuppeteerPlugin(puppeteer);
     });
+
     afterEach(() => {
         puppeteerPlugin = null;
     });
+
     afterAll(async () => {
         log.setLevel(logLevel);
         process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
@@ -608,6 +612,39 @@ describe('BrowserCrawler', () => {
         await Apify.utils.sleep(5000);
         expect(browserCrawler.sessionPool.listeners(EVENT_SESSION_RETIRED)).toHaveLength(0);
         await browserCrawler.browserPool.destroy();
+    });
+
+    test('should allow using fingerprints from browser pool', async () => {
+        const requestList = new Apify.RequestList({
+            sources: [
+                { url: 'http://example.com/?q=1' },
+            ],
+        });
+        const browserCrawler = new BrowserCrawlerTest({
+            browserPoolOptions: {
+                browserPlugins: [puppeteerPlugin],
+                useFingerprints: true,
+                fingerprintsOptions: {
+                    fingerprintGeneratorOptions: {
+                        operatingSystems: [OperatingSystemsName.windows],
+                    },
+                },
+            },
+            requestList,
+            useSessionPool: false,
+            gotoFunction: async ({ page, request }) => {
+                // @ts-expect-error TODO: page is unknown because using direct browser crawler with puppeteer
+                return page.goto(request.url);
+            },
+            handlePageFunction: async ({ browserController }) => {
+                expect(browserController.launchContext.fingerprint).toBeDefined();
+            },
+
+        });
+        await requestList.initialize();
+
+        await browserCrawler.run();
+        expect.hasAssertions();
     });
 
     describe('proxy', () => {
