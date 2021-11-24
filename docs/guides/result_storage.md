@@ -14,10 +14,10 @@ code changes are needed.
 
 **Related links**
 
--   [Apify platform storage documentation](https://docs.apify.com/storage)
--   [View storage in Apify app](https://my.apify.com/storage)
--   [Key-value stores API reference](https://apify.com/docs/api/v2#/reference/key-value-stores)
--   [Datasets API reference](https://docs.apify.com/api/v2#/reference/datasets)
+- [Apify platform storage documentation](https://docs.apify.com/storage)
+- [View storage in Apify Console](https://console.apify.com/storage)
+- [Key-value stores API reference](https://apify.com/docs/api/v2#/reference/key-value-stores)
+- [Datasets API reference](https://docs.apify.com/api/v2#/reference/datasets)
 
 ## Key-value store
 
@@ -76,7 +76,7 @@ records to it but you cannot modify or remove existing records.
 
 When the dataset is stored on the [Apify platform](../guides/apify-platform), you can export its data to the following formats: HTML,
 JSON, CSV, Excel, XML and RSS. The datasets are displayed on the actor run details page and in the
-[Storage](https://my.apify.com/storage) section in the Apify app. The actual data is exported using the
+[Storage](https://console.apify.com/storage) section in the Apify Console. The actual data is exported using the
 [Get dataset items](https://apify.com/docs/api/v2#/reference/datasets/item-collection/get-items) Apify API endpoint. This
 way you can easily share crawling results.
 

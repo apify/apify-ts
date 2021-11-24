@@ -7,7 +7,7 @@ import styles from './index.module.css';
 import HomepageFeatures from '../components/HomepageFeatures';
 
 function HomepageHeader() {
-    const {siteConfig} = useDocusaurusContext();
+    const { siteConfig } = useDocusaurusContext();
     return (
         <header className={clsx('hero hero--primary', styles.heroBanner)}>
             <div className="container">
@@ -26,7 +26,7 @@ function HomepageHeader() {
 }
 
 export default function Home() {
-    const {siteConfig} = useDocusaurusContext();
+    const { siteConfig } = useDocusaurusContext();
     return (
         <Layout
             title={`Hello from ${siteConfig.title}`}
@@ -38,8 +38,6 @@ export default function Home() {
         </Layout>
     );
 }
-
-
 
 /* eslint-disable max-classes-per-file */
 // /**
@@ -212,7 +210,7 @@ export default function Home() {
 //             {
 //                 content:
 //                     'Apify SDK can be used **stand-alone** on your own systems or it can run as a **serverless microservice on the Apify Platform**. ' +
-//                     '[Get started with Apify Platform](https://my.apify.com/actors)',
+//                     '[Get started with Apify Platform](https://console.apify.com/actors)',
 //                 image: imgUrl('cloud_icon.svg'),
 //                 imageAlign: 'top',
 //                 title: 'Works on any system',
@@ -245,7 +243,7 @@ export default function Home() {
 //             {
 //                 content:
 //                     'All the crawlers are automatically **scaled** based on available system resources using the [`AutoscaledPool`](docs/api/autoscaled-pool) class. ' +
-//                     'When you run your code on the [Apify Platform](https://my.apify.com/actors), you can also take advantage of a [pool of proxies](https://apify.com/proxy) to avoid detection. ' +
+//                     'When you run your code on the [Apify Platform](https://console.apify.com/actors), you can also take advantage of a [pool of proxies](https://apify.com/proxy) to avoid detection. ' +
 //                     'For data storage, you can use the [`Dataset`](docs/api/dataset), [`KeyValueStore`](docs/api/key-value-store) and [`RequestQueue`](docs/api/request-queue) classes.',
 //                 image: imgUrl('source_code.png'),
 //                 imageAlign: 'left',
