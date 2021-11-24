@@ -24,3 +24,4 @@ docs/examples
 .history
 .docusaurus
 tsconfig.tsbuildinfo
+apify_storage
