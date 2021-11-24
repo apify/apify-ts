@@ -5,7 +5,7 @@ import Apify, { BrowserCrawlingContext, ProxyConfiguration, PuppeteerCookie, Pup
 import * as utils from 'apify/src/utils';
 import { createServer } from 'http';
 import { promisify } from 'util';
-import { createProxyServer } from 'test/create-proxy-server';
+import { createProxyServer } from '../create-proxy-server';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PuppeteerCrawler', () => {
