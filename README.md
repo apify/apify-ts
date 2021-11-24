@@ -24,10 +24,10 @@ Thanks to tools like [Playwright](https://github.com/microsoft/playwright), [Pup
 [Cheerio](https://www.npmjs.com/package/cheerio), it is easy to write Node.js code to extract data from web pages. But
 eventually things will get complicated. For example, when you try to:
 
--   Perform a deep crawl of an entire website using a persistent queue of URLs.
--   Run your scraping code on a list of 100k URLs in a CSV file, without losing any data when your code crashes.
--   Rotate proxies to hide your browser origin and keep user-like sessions.
--   Disable browser fingerprinting protections used by websites.
+- Perform a deep crawl of an entire website using a persistent queue of URLs.
+- Run your scraping code on a list of 100k URLs in a CSV file, without losing any data when your code crashes.
+- Rotate proxies to hide your browser origin and keep user-like sessions.
+- Disable browser fingerprinting protections used by websites.
 
 Python has [Scrapy](https://scrapy.org/) for these tasks, but there was no such library for **JavaScript, the language of
 the web**. The use of JavaScript is natural, since the same language is used to write the scripts as well as the data extraction code running in a
@@ -92,6 +92,7 @@ If you want to learn more, proceed to the [Getting Started](https://sdk.apify.co
 tutorial that will take you step by step through creating your first scraper.
 
 ### Local stand-alone usage
+
 Apify SDK requires [Node.js](https://nodejs.org/en/) 15.10 or later.
 Add Apify SDK to any Node.js project by running:
 
@@ -185,7 +186,7 @@ Your script will be uploaded to the Apify platform and built there so that it ca
 ### Usage on the Apify platform
 
 You can also develop your web scraping project in an online code editor directly on the [Apify platform](https://sdk.apify.com/docs/guides/apify-platform).
-You'll need to have an Apify Account. Go to [Actors](https://my.apify.com/actors), page in the app, click <i>Create new</i>
+You'll need to have an Apify Account. Go to [Actors](https://console.apify.com/actors), page in the Apify Console, click <i>Create new</i>
 and then go to the <i>Source</i> tab and start writing your code or paste one of the examples from the Examples section.
 
 For more information, view the [Apify actors quick start guide](https://docs.apify.com/actor/quick-start).

@@ -31,7 +31,7 @@ const FeatureList = [
         description: (
             <>
                 Apify SDK can be used <b>stand-alone</b> on your own systems or it can run as a <b>serverless microservice on the Apify Platform</b>.
-                <a href={'https://my.apify.com/actors'}>Get started with Apify Platform</a>
+                <a href={'https://console.apify.com/actors'}>Get started with Apify Platform</a>
             </>
         ),
     },

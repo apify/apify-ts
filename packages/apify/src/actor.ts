@@ -382,7 +382,7 @@ export async function call(actId: string, input?: Dictionary | string, options: 
     }
 
     if (isRunUnsuccessful(run.status)) {
-        const message = `The actor ${actId} invoked by Apify.call() did not succeed. For details, see https://my.apify.com/view/runs/${run.id}`;
+        const message = `The actor ${actId} invoked by Apify.call() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
         throw new ApifyCallError(run, message);
     }
 
@@ -539,7 +539,7 @@ export async function callTask(taskId: string, input?: Dictionary | string, opti
 
     if (isRunUnsuccessful(run.status)) {
         // TODO It should be callTask in the message, but I'm keeping it this way not to introduce a breaking change.
-        const message = `The actor task ${taskId} invoked by Apify.call() did not succeed. For details, see https://my.apify.com/view/runs/${run.id}`;
+        const message = `The actor task ${taskId} invoked by Apify.call() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
         throw new ApifyCallError(run, message);
     }
 

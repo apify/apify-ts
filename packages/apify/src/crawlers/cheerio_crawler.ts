@@ -177,7 +177,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
 
     /**
      * If set, `CheerioCrawler` will be configured for all connections to use
-     * [Apify Proxy](https://my.apify.com/proxy) or your own Proxy URLs provided and rotated according to the configuration.
+     * [Apify Proxy](https://console.apify.com/proxy) or your own Proxy URLs provided and rotated according to the configuration.
      * For more information, see the [documentation](https://docs.apify.com/proxy).
      */
     proxyConfiguration?: ProxyConfiguration;
