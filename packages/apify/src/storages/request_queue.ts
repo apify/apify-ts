@@ -88,6 +88,18 @@ export interface QueueOperationInfo {
 
 }
 
+interface RequestQueueOperationOptions {
+    /**
+     * If set to `true`:
+     *   - while adding the request to the queue: the request will be added to the foremost position in the queue.
+     *   - while reclaiming the request: the request will be placed to the beginning of the queue, so that it's returned
+     *   in the next call to {@link RequestQueue.fetchNextRequest}.
+     * By default, it's put to the end of the queue.
+     * @default false
+     */
+    forefront?: boolean;
+}
+
 /**
  * Represents a queue of URLs to crawl, which is used for deep crawling of websites
  * where you start with several URLs and then recursively
@@ -208,10 +220,9 @@ export class RequestQueue {
      *
      * @param requestLike {@link Request} object or vanilla object with request data.
      * Note that the function sets the `uniqueKey` and `id` fields to the passed Request.
-     * @param [options]
-     * @param {boolean} [options.forefront=false] If `true`, the request will be added to the foremost position in the queue.
+     * @param [options] Request queue operation options.
      */
-    async addRequest(requestLike: Request | RequestOptions, options: Dictionary = {}): Promise<QueueOperationInfo> {
+    async addRequest(requestLike: Request | RequestOptions, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo> {
         ow(requestLike, ow.object.partialShape({
             url: ow.string,
             id: ow.undefined,
@@ -365,11 +376,8 @@ export class RequestQueue {
      * {@link RequestQueue.fetchNextRequest}
      * function as handled after successful processing.
      * Handled requests will never again be returned by the `fetchNextRequest` function.
-     *
-     * @param {Request} request
-     * @return {Promise<QueueOperationInfo>}
      */
-    async markRequestHandled(request) {
+    async markRequestHandled(request: Request): Promise<QueueOperationInfo> {
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -397,24 +405,18 @@ export class RequestQueue {
         // @ts-ignore
         queueOperationInfo.request = request;
 
+        // @ts-expect-error Property 'request' is missing in type 'RequestQueueClientAddRequestResult'
+        // but required in type 'QueueOperationInfo'. // TODO
         return queueOperationInfo;
     }
 
     /**
-     * Reclaims a failed request back to the queue, so that it can be returned for processed later again
+     * Reclaims a failed request back to the queue, so that it can be returned for processing later again
      * by another call to {@link RequestQueue.fetchNextRequest}.
      * The request record in the queue is updated using the provided `request` parameter.
      * For example, this lets you store the number of retries or error messages for the request.
-     *
-     * @param {Request} request
-     * @param {object} [options]
-     * @param {boolean} [options.forefront=false]
-     * If `true` then the request it placed to the beginning of the queue, so that it's returned
-     * in the next call to {@link RequestQueue.fetchNextRequest}.
-     * By default, it's put to the end of the queue.
-     * @return {Promise<QueueOperationInfo>}
      */
-    async reclaimRequest(request, options = {}) {
+    async reclaimRequest(request: Request, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo> {
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -451,6 +453,8 @@ export class RequestQueue {
             this._maybeAddRequestToQueueHead(request.id, forefront);
         }, STORAGE_CONSISTENCY_DELAY_MILLIS);
 
+        // @ts-expect-error Property 'request' is missing in type 'RequestQueueClientAddRequestResult'
+        // but required in type 'QueueOperationInfo'. // TODO
         return queueOperationInfo;
     }
 
@@ -470,10 +474,8 @@ export class RequestQueue {
      * Due to the nature of distributed storage used by the queue,
      * the function might occasionally return a false negative,
      * but it will never return a false positive.
-     *
-     * @returns {Promise<boolean>}
      */
-    async isFinished() {
+    async isFinished(): Promise<boolean> {
         if (this.queueHeadDict.length() > 0 || this.inProgressCount() > 0) return false;
 
         const isHeadConsistent = await this._ensureHeadIsNonEmpty(true);
@@ -482,15 +484,10 @@ export class RequestQueue {
 
     /**
      * Caches information about request to beware of unneeded addRequest() calls.
-     * @param {string} cacheKey
-     * @param {object} queueOperationInfo
-     * @param {string} queueOperationInfo.requestId
-     * @param {boolean} queueOperationInfo.wasAlreadyHandled
      * @ignore
-     * @protected
      * @internal
      */
-    _cacheRequest(cacheKey, queueOperationInfo) {
+    protected _cacheRequest(cacheKey: string, queueOperationInfo: QueueOperationInfoOptions): void {
         this.requestsCache.add(cacheKey, {
             id: queueOperationInfo.requestId,
             isHandled: queueOperationInfo.wasAlreadyHandled,
@@ -500,21 +497,21 @@ export class RequestQueue {
     /**
      * We always request more items than is in progress to ensure that something falls into head.
      *
-     * @param {boolean} [ensureConsistency=false] If true then query for queue head is retried until queueModifiedAt
+     * @param [ensureConsistency] If true then query for queue head is retried until queueModifiedAt
      *   is older than queryStartedAt by at least API_PROCESSED_REQUESTS_DELAY_MILLIS to ensure that queue
      *   head is consistent.
-     * @param {number} [limit] How many queue head items will be fetched.
-     * @param {number} [iteration] Used when this function is called recursively to limit the recursion.
+     * @default false
+     * @param [limit] How many queue head items will be fetched.
+     * @param [iteration] Used when this function is called recursively to limit the recursion.
      * @return {Promise<boolean>} Indicates if queue head is consistent (true) or inconsistent (false).
      * @ignore
-     * @protected
      * @internal
      */
-    async _ensureHeadIsNonEmpty(
+    protected async _ensureHeadIsNonEmpty(
         ensureConsistency = false,
         limit = Math.max(this.inProgressCount() * QUERY_HEAD_BUFFER, QUERY_HEAD_MIN_LENGTH),
         iteration = 0,
-    ) {
+    ): Promise<boolean> {
         // If is nonempty resolve immediately.
         if (this.queueHeadDict.length() > 0) return true;
 
@@ -596,7 +593,7 @@ export class RequestQueue {
      * Adds a request straight to the queueHeadDict, to improve performance.
      * @private
      */
-    _maybeAddRequestToQueueHead(requestId, forefront) {
+    _maybeAddRequestToQueueHead(requestId: string, forefront: boolean): void {
         if (forefront) {
             this.queueHeadDict.add(requestId, requestId, true);
         } else if (this.assumedTotalCount < QUERY_HEAD_MIN_LENGTH) {
@@ -607,10 +604,8 @@ export class RequestQueue {
     /**
      * Removes the queue either from the Apify Cloud storage or from the local database,
      * depending on the mode of operation.
-     *
-     * @return {Promise<void>}
      */
-    async drop() {
+    async drop(): Promise<void> {
         await this.client.delete();
         const manager = new StorageManager(RequestQueue);
         manager.closeStorage(this);
@@ -624,10 +619,8 @@ export class RequestQueue {
      * ```javascript
      * const { handledRequestCount } = await queue.getInfo();
      * ```
-     *
-     * @return {Promise<number>}
      */
-    async handledCount() {
+    async handledCount(): Promise<number> {
         // NOTE: We keep this function for compatibility with RequestList.handledCount()
         const { handledRequestCount } = await this.getInfo();
         return handledRequestCount;
@@ -676,9 +669,10 @@ export class RequestQueue {
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
      * @param [options]
-     * @param [options.forceCloud=false]
+     * @param [options.forceCloud]
      *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
      *   environment variable is set. This way it is possible to combine local and cloud storage.
+     * @default false
      */
     static async open(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
@@ -705,9 +699,10 @@ export class RequestQueue {
  *   ID or name of the request queue to be opened. If `null` or `undefined`,
  *   the function returns the default request queue associated with the actor run.
  * @param [options]
- * @param [options.forceCloud=false]
+ * @param [options.forceCloud]
  *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
  *   environment variable is set. This way it is possible to combine local and cloud storage.
+ * @default false
  * @deprecated use `RequestQueue.open()` instead
  */
 export async function openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
@@ -719,4 +714,9 @@ export interface RequestQueueOptions {
     name?: string;
     isLocal?: boolean;
     client: ApifyClient | ApifyStorageLocal;
+}
+
+export interface QueueOperationInfoOptions {
+    requestId: string;
+    wasAlreadyHandled: boolean;
 }

@@ -221,9 +221,9 @@ export class SessionPool extends EventEmitter {
      * Adds a new session to the session pool. The pool automatically creates sessions up to the maximum size of the pool,
      * but this allows you to add more sessions once the max pool size is reached.
      * This also allows you to add session with overridden session options (e.g. with specific session id).
-     * @param [options] - The configuration options for the session being added to the session pool.
+     * @param [options] The configuration options for the session being added to the session pool.
      */
-    async addSession(options: Session | SessionOptions = {}) {
+    async addSession(options: Session | SessionOptions = {}): Promise<void> {
         this._throwIfNotInitialized();
         const { id } = options;
         if (id) {
@@ -364,7 +364,7 @@ export class SessionPool extends EventEmitter {
      * Creates new session without any extra behavior.
      * @param sessionPool
      * @param [options]
-     * @param [options.sessionOptions] The configuration options for the session being created
+     * @param [options.sessionOptions] The configuration options for the session being created.
      * @return {Session} New session.
      * @internal
      */

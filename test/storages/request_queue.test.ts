@@ -1,5 +1,6 @@
 import Apify from 'apify';
 import { apifyClient } from 'apify/src/utils';
+import { Request as ApifyRequest } from 'apify/src/request';
 import {
     RequestQueue,
     QUERY_HEAD_MIN_LENGTH,
@@ -512,13 +513,13 @@ describe('RequestQueue remote', () => {
         const updateRequestMock = jest.spyOn(queue.client, 'updateRequest');
         updateRequestMock.mockResolvedValueOnce({ requestId: 'b', wasAlreadyHandled: false, wasAlreadyPresent: true });
 
-        await queue.markRequestHandled(requestBWithId);
+        await queue.markRequestHandled(requestBWithId as ApifyRequest);
         expect(updateRequestMock).toHaveBeenCalledTimes(1);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestBWithId);
 
         updateRequestMock.mockResolvedValueOnce({ requestId: 'a', wasAlreadyHandled: false, wasAlreadyPresent: true });
 
-        await queue.reclaimRequest(requestAWithId, { forefront: true });
+        await queue.reclaimRequest(requestAWithId as ApifyRequest, { forefront: true });
         expect(updateRequestMock).toHaveBeenCalledTimes(2);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestAWithId, { forefront: true });
         // @ts-expect-error Accessing private property
@@ -558,7 +559,7 @@ describe('RequestQueue remote', () => {
         // Mark handled.
         updateRequestMock.mockResolvedValueOnce({ requestId: 'a', wasAlreadyHandled: false, wasAlreadyPresent: true });
 
-        await queue.markRequestHandled(requestAWithId);
+        await queue.markRequestHandled(requestAWithId as ApifyRequest);
         expect(updateRequestMock).toHaveBeenCalledTimes(3);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestAWithId);
 

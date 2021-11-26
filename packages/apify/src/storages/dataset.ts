@@ -4,7 +4,7 @@ import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
 import type { PaginatedList } from 'apify-client/dist/utils'; // TODO: export this from the client
-import { StorageManager } from './storage_manager';
+import { StorageManager, StorageManagerOptions } from './storage_manager';
 import log from '../utils_log';
 
 import { Configuration } from '../configuration';
@@ -83,6 +83,81 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
 
     // Stringify array chunks.
     return chunks.map((chunk) => (typeof chunk === 'string' ? chunk : `[${chunk.join(',')}]`));
+}
+
+export interface DatasetDataOptions {
+    /**
+     * Number of array elements that should be skipped at the start.
+     * @default 0
+     */
+    offset?: number;
+
+    /**
+     * Maximum number of array elements to return.
+     * @default 250000
+     */
+    limit?: number;
+
+    /**
+     * If `true` then the objects are sorted by `createdAt` in descending order.
+     * Otherwise they are sorted in ascending order.
+     * @default false
+     */
+    desc?: boolean;
+
+    /**
+     * An array of field names that will be included in the result. If omitted, all fields are included in the results.
+     */
+    fields?: string[];
+
+    /**
+     * Specifies a name of the field in the result objects that will be used to unwind the resulting objects.
+     * By default, the results are returned as they are.
+     */
+    unwind?: string;
+
+    /**
+     * If `true` then the function returns only non-empty items and skips hidden fields (i.e. fields starting with `#` character).
+     * Note that the `clean` parameter is a shortcut for `skipHidden: true` and `skipEmpty: true` options.
+     * @default false
+     */
+    clean?: boolean;
+
+    /**
+     * If `true` then the function doesn't return hidden fields (fields starting with "#" character).
+     * @default false
+     */
+    skipHidden?: boolean;
+
+    /**
+     * If `true` then the function doesn't return empty items.
+     * Note that in this case the returned number of items might be lower than limit parameter and pagination must be done using the `limit` value.
+     * @default false
+     */
+    skipEmpty?: boolean;
+}
+
+interface DatasetIteratorOptions extends DatasetDataOptions {
+    /** @internal */
+    offset?: number;
+
+    /**
+     * @default 10000
+     * @internal
+     */
+    limit?: number;
+
+    /** @internal */
+    clean?: boolean;
+
+    /** @internal */
+    skipHidden?: boolean;
+
+    /** @internal */
+    skipEmpty?: boolean;
+
+    /** @internal */
+    format?: string;
 }
 
 /**
@@ -201,32 +276,8 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * If you need to get data in an unparsed format, use the {@link Apify.newClient} function to get a new
      * `apify-client` instance and call
      * [`datasetClient.downloadItems()`](https://github.com/apify/apify-client-js#DatasetClient+downloadItems)
-     *
-     * @param {Object} [options] All `getData()` parameters are passed
-     *   via an options object with the following keys:
-     * @param {number} [options.offset=0]
-     *   Number of array elements that should be skipped at the start.
-     * @param {number} [options.limit=250000]
-     *   Maximum number of array elements to return.
-     * @param {boolean} [options.desc=false]
-     *   If `true` then the objects are sorted by `createdAt` in descending order.
-     *   Otherwise they are sorted in ascending order.
-     * @param {string[]} [options.fields]
-     *   An array of field names that will be included in the result. If omitted, all fields are included in the results.
-     * @param {string} [options.unwind]
-     *   Specifies a name of the field in the result objects that will be used to unwind the resulting objects.
-     *   By default, the results are returned as they are.
-     * @param {boolean} [options.clean=false]
-     *   If `true` then the function returns only non-empty items and skips hidden fields (i.e. fields starting with `#` character).
-     *   Note that the `clean` parameter is a shortcut for `skipHidden: true` and `skipEmpty: true` options.
-     * @param {boolean} [options.skipHidden=false]
-     *   If `true` then the function doesn't return hidden fields (fields starting with "#" character).
-     * @param {boolean} [options.skipEmpty=false]
-     *   If `true` then the function doesn't return empty items.
-     *   Note that in this case the returned number of items might be lower than limit parameter and pagination must be done using the `limit` value.
      */
-    // TODO: type options
-    async getData(options: Dictionary = {}): Promise<PaginatedList<Data>> {
+    async getData(options: DatasetDataOptions = {}): Promise<PaginatedList<Data>> {
         try {
             return await this.client.listItems(options);
         } catch (e) {
@@ -280,15 +331,11 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * ```
      *
      * @param iteratee A function that is called for every item in the dataset.
-     * @param [options] All `forEach()` parameters are passed
-     *   via an options object with the following keys:
-     * @param {boolean} [options.desc=false] If `true` then the objects are sorted by `createdAt` in descending order.
-     * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys.
-     * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
-     * @param {number} [index=0] Specifies the initial index number passed to the `iteratee` function.
+     * @param [options] All `forEach()` parameters.
+     * @param [index] Specifies the initial index number passed to the `iteratee` function.
+     * @default 0
      */
-    // TODO: type options
-    async forEach(iteratee: DatasetConsumer<Data>, options: Dictionary = {}, index = 0): Promise<void> {
+    async forEach(iteratee: DatasetConsumer<Data>, options: DatasetIteratorOptions = {}, index = 0): Promise<void> {
         // TODO: type the options object properly
         if (!options.offset) options.offset = 0;
         if (options.format && options.format !== 'json') throw new Error('Dataset.forEach/map/reduce() support only a "json" format.');
@@ -314,13 +361,9 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * If `iteratee` returns a `Promise` then it's awaited before a next call.
      *
      * @param iteratee
-     * @param [options] All `map()` parameters are passed
-     *   via an options object with the following keys:
-     * @param {boolean} [options.desc=false] If `true` then the objects are sorted by createdAt in descending order.
-     * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys
-     * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
+     * @param [options] All `map()` parameters.
      */
-    async map<R>(iteratee: DatasetMapper<Data, R>, options: Dictionary = {}): Promise<R[]> {
+    async map<R>(iteratee: DatasetMapper<Data, R>, options: DatasetIteratorOptions = {}): Promise<R[]> {
         const result: R[] = [];
 
         await this.forEach(async (item, index) => {
@@ -344,15 +387,9 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      *
      * @param iteratee
      * @param memo Initial state of the reduction.
-     * @param [options] All `reduce()` parameters are passed
-     *   via an options object with the following keys:
-     * @param {boolean} [options.desc=false] If `true` then the objects are sorted by createdAt in descending order.
-     * @param {string[]} [options.fields] If provided then returned objects will only contain specified keys
-     * @param {string} [options.unwind] If provided then objects will be unwound based on provided field.
-     * @return {Promise<object>}
+     * @param [options] All `reduce()` parameters.
      */
-    // TODO: type options
-    reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: Dictionary = {}) {
+    reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: DatasetIteratorOptions = {}): Promise<T> {
         let currentMemo = memo;
 
         const wrappedFunc = (item, index) => {
@@ -395,21 +432,15 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * @param [datasetIdOrName]
      *   ID or name of the dataset to be opened. If `null` or `undefined`,
      *   the function returns the default dataset associated with the actor run.
-     * @param [options]
-     * @param [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
-     * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
+     * @param [options] Storage manager options.
      */
-    static async open<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: Dictionary = {}): Promise<Dataset<Data>> {
+    static async open<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        // TODO: type options parameter
-        // @ts-expect-error
         const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
         return manager.openStorage(datasetIdOrName, options);
     }
@@ -427,15 +458,10 @@ export class Dataset<Data extends Dictionary = Dictionary> {
  * @param [datasetIdOrName]
  *   ID or name of the dataset to be opened. If `null` or `undefined`,
  *   the function returns the default dataset associated with the actor run.
- * @param [options]
- * @param [options.forceCloud=false]
- *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
- *   environment variable is set. This way it is possible to combine local and cloud storage.
- * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
- * @returns {Promise<Dataset>}
+ * @param [options] Storage manager options.
  * @deprecated use `Dataset.open()` instead
  */
-export function openDataset<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: Dictionary = {}) {
+export function openDataset<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<Dataset> {
     return Dataset.open<Data>(datasetIdOrName, options);
 }
 

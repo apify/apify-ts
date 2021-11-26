@@ -4,7 +4,7 @@ import ow, { ArgumentError } from 'ow';
 import { ApifyClient } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
 import { KeyValueStoreClient } from '@apify/storage-local/dist/resource_clients/key_value_store';
-import { StorageManager } from './storage_manager';
+import { StorageManager, StorageManagerOptions } from './storage_manager';
 import log from '../utils_log';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';
@@ -205,18 +205,15 @@ export class KeyValueStore {
      *    - If no `options.contentType` is specified, `value` can be any JavaScript object and it will be stringified to JSON.
      *    - If `options.contentType` is set, `value` is taken as is and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
      *   For any other value an error will be thrown.
-     * @param {object} [options]
-     * @param {string} [options.contentType]
-     *   Specifies a custom MIME content type of the record.
+     * @param [options] Record options.
      */
-    // TODO: type options
-    async setValue<T>(key: string, value: T | null, options: Dictionary = {}): Promise<void> {
+    async setValue<T>(key: string, value: T | null, options: RecordOptions = {}): Promise<void> {
         ow(key, 'key', ow.string.nonEmpty);
         ow(key, ow.string.validate((k) => ({
             validator: ow.isValid(k, ow.string.matches(KEY_VALUE_STORE_KEY_REGEX)),
             message: 'The "key" argument must be at most 256 characters long and only contain the following characters: a-zA-Z0-9!-_.\'()',
         })));
-        if (options.contentType && !ow.isValid(value, ow.any(ow.string, ow.buffer))) {
+        if (options!.contentType && !ow.isValid(value, ow.any(ow.string, ow.buffer))) {
             throw new ArgumentError('The "value" parameter must be a String or Buffer when "options.contentType" is specified.', this.setValue);
         }
         ow(options, ow.object.exactShape({
@@ -243,10 +240,8 @@ export class KeyValueStore {
     /**
      * Removes the key-value store either from the Apify cloud storage or from the local directory,
      * depending on the mode of operation.
-     *
-     * @return {Promise<void>}
      */
-    async drop() {
+    async drop(): Promise<void> {
         await this.client.delete();
         const manager = new StorageManager(KeyValueStore, this.config);
         manager.closeStorage(this);
@@ -255,11 +250,8 @@ export class KeyValueStore {
     /**
      * Returns a URL for the given key that may be used to publicly
      * access the value in the remote key-value store.
-     *
-     * @param {string} key
-     * @return {string}
      */
-    getPublicUrl(key) {
+    getPublicUrl(key: string): string {
         return `${APIFY_API_BASE_URL}/key-value-stores/${this.id}/records/${key}`;
     }
 
@@ -281,26 +273,16 @@ export class KeyValueStore {
      * });
      * ```
      *
-     * @param {KeyConsumer} iteratee A function that is called for every key in the key-value store.
-     * @param {object} [options] All `forEachKey()` parameters are passed
-     *   via an options object with the following keys:
-     * @param {string} [options.exclusiveStartKey] All keys up to this one (including) are skipped from the result.
-     * @return {Promise<void>}
+     * @param iteratee A function that is called for every key in the key-value store.
+     * @param [options] All `forEachKey()` parameters.
      */
-    // TODO: type options
-    async forEachKey(iteratee: KeyConsumer, options: Dictionary<string | undefined> = {}) {
+    async forEachKey(iteratee: KeyConsumer, options: KeyValueStoreIteratorOptions = {}): Promise<void> {
         return this._forEachKey(iteratee, options);
     }
 
-    /**
-     * @param {KeyConsumer} iteratee
-     * @param {Record<string, any>} [options]
-     * @param {number} [index=0]
-     * @return {Promise<Promise<void> | undefined>}
-     * @private
-     */
-    private async _forEachKey(iteratee: KeyConsumer, options: Dictionary<string | undefined> = {}, index = 0): Promise<void> {
-        const { exclusiveStartKey } = options;
+    /** @private */
+    private async _forEachKey(iteratee: KeyConsumer, options: KeyValueStoreIteratorOptions = {}, index = 0): Promise<void> {
+        const { exclusiveStartKey } = options!;
         ow(iteratee, ow.function);
         ow(options, ow.object.exactShape({
             exclusiveStartKey: ow.optional.string,
@@ -325,16 +307,12 @@ export class KeyValueStore {
      *
      * For more details and code examples, see the {@link KeyValueStore} class.
      *
-     * @param {string} [storeIdOrName]
+     * @param [storeIdOrName]
      *   ID or name of the key-value store to be opened. If `null` or `undefined`,
      *   the function returns the default key-value store associated with the actor run.
-     * @param {object} [options]
-     * @param {boolean} [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
-     * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
+     * @param [options] Storage manager options.
      */
-    static async open(storeIdOrName?: string | null, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
+    static async open(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -344,11 +322,6 @@ export class KeyValueStore {
         const manager = new StorageManager(KeyValueStore, options.config);
         return manager.openStorage(storeIdOrName, options);
     }
-}
-
-export interface OpenKeyValueStoreOptions {
-    forceCloud?: boolean;
-    config?: Configuration;
 }
 
 /**
@@ -363,14 +336,10 @@ export interface OpenKeyValueStoreOptions {
  * @param [storeIdOrName]
  *   ID or name of the key-value store to be opened. If `null` or `undefined`,
  *   the function returns the default key-value store associated with the actor run.
- * @param [options]
- * @param {boolean} [options.forceCloud=false]
- *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
- *   environment variable is set. This way it is possible to combine local and cloud storage.
- * @param {Configuration} [options.config] SDK configuration instance, defaults to the static register
+ * @param [options] Storage manager options.
  * @deprecated use `KeyValueStore.open()` instead
  */
-export async function openKeyValueStore(storeIdOrName?: string | null, options: OpenKeyValueStoreOptions = {}): Promise<KeyValueStore> {
+export async function openKeyValueStore(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
     return KeyValueStore.open(storeIdOrName, options);
 }
 
@@ -436,11 +405,9 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
  *    - If no `options.contentType` is specified, `value` can be any JavaScript object and it will be stringified to JSON.
  *    - If `options.contentType` is set, `value` is taken as is and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
  *   For any other value an error will be thrown.
- * @param [options]
- * @param {string} [options.contentType]
- *   Specifies a custom MIME content type of the record.
+ * @param [options] Record options.
  */
-export async function setValue<T>(key: string, value: T, options?: unknown): Promise<void> {
+export async function setValue<T>(key: string, value: T, options: RecordOptions = {}): Promise<void> {
     const store = await openKeyValueStore();
 
     // @ts-ignore options need to be typed
@@ -497,4 +464,18 @@ export interface KeyValueStoreOptions {
     name?: string;
     client: ApifyClient | ApifyStorageLocal;
     isLocal?: boolean;
+}
+
+interface RecordOptions {
+    /**
+     * Specifies a custom MIME content type of the record.
+     */
+    contentType?: string;
+}
+
+interface KeyValueStoreIteratorOptions {
+    /**
+     * All keys up to this one (including) are skipped from the result.
+     */
+    exclusiveStartKey?: string;
 }

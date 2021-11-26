@@ -90,10 +90,10 @@ function generateEvaluationDebugMessage() {
 }
 /**
  * Logs the stealth errors in browser to the node stdout.
- * @param {Page} page - puppeteer page instance
- * @param {string} evaluationDebugMessage - debug message
+ * @param page puppeteer page instance
+ * @param evaluationDebugMessage debug message
  */
-function addStealthDebugToPage(page, evaluationDebugMessage) {
+function addStealthDebugToPage(page: Page, evaluationDebugMessage: string): void {
     let warningLogged = false;
     let counter = 1;
     page.on('console', (msg) => {

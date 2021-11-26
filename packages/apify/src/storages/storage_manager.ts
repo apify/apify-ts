@@ -131,3 +131,17 @@ export class StorageManager<T> {
         }
     }
 }
+
+export interface StorageManagerOptions {
+    /**
+     * If set to `true` then the cloud storage is used even if the `APIFY_LOCAL_STORAGE_DIR`
+     * environment variable is set. This way it is possible to combine local and cloud storage.
+     * @default false
+     */
+    forceCloud?: boolean;
+
+    /**
+     * SDK configuration instance, defaults to the static register.
+     */
+    config?: Configuration;
+}

@@ -271,11 +271,11 @@ export class Session {
      * that the target website is blocking us. This function helps to do this conveniently
      * by retiring the session when such code is received. Optionally the default status
      * codes can be extended in the second parameter.
-     * @param statusCode {number} - HTTP status code
-     * @param [blockedStatusCodes] {number[]} - Custom HTTP status codes that means blocking on particular website.
+     * @param statusCode HTTP status code.
+     * @param [blockedStatusCodes] Custom HTTP status codes that means blocking on particular website.
      * @return {boolean} whether the session was retired.
      */
-    retireOnBlockedStatusCodes(statusCode, blockedStatusCodes = []) {
+    retireOnBlockedStatusCodes(statusCode: number, blockedStatusCodes: number[] = []): boolean {
         const isBlocked = STATUS_CODES_BLOCKED.concat(blockedStatusCodes).includes(statusCode);
         if (isBlocked) {
             this.retire();
@@ -340,7 +340,7 @@ export class Session {
 
     /**
      * Transforms puppeteer cookie to tough-cookie.
-     * @param puppeteerCookie Cookie from puppeteer `page.cookies method.
+     * @param puppeteerCookie Cookie from puppeteer `page.cookies` method.
      * @internal
      */
     protected _puppeteerCookieToTough(puppeteerCookie: PuppeteerCookie): Cookie {
