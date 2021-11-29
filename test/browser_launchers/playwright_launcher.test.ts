@@ -171,7 +171,7 @@ describe('Apify.launchPlaywright()', () => {
             spy.restore();
             if (browser) await browser.close();
         }
-    });
+    }, 60e3);
 
     describe('Default browser path', () => {
         const target = 'test';
@@ -201,7 +201,7 @@ describe('Apify.launchPlaywright()', () => {
             const plugin = launcher.createBrowserPlugin();
 
             expect(plugin.launchOptions.executablePath).toBe(utils.getTypicalChromeExecutablePath());
-        });
+        }, 60e3);
 
         test('allows to be overridden', () => {
             const newPath = 'newPath';

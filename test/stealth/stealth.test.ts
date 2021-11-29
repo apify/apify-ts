@@ -53,11 +53,12 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
             },
         });
         await crawler.run();
-    });
+    }, 60e3);
 
     describe('work in launchPuppeteer', () => {
         let browser;
         let page;
+        jest.setTimeout(60e3);
 
         beforeEach(async () => {
             browser = await Apify.launchPuppeteer({
