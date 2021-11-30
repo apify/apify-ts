@@ -213,7 +213,7 @@ export class KeyValueStore {
             validator: ow.isValid(k, ow.string.matches(KEY_VALUE_STORE_KEY_REGEX)),
             message: 'The "key" argument must be at most 256 characters long and only contain the following characters: a-zA-Z0-9!-_.\'()',
         })));
-        if (options!.contentType && !ow.isValid(value, ow.any(ow.string, ow.buffer))) {
+        if (options.contentType && !ow.isValid(value, ow.any(ow.string, ow.buffer))) {
             throw new ArgumentError('The "value" parameter must be a String or Buffer when "options.contentType" is specified.', this.setValue);
         }
         ow(options, ow.object.exactShape({
@@ -280,9 +280,8 @@ export class KeyValueStore {
         return this._forEachKey(iteratee, options);
     }
 
-    /** @private */
     private async _forEachKey(iteratee: KeyConsumer, options: KeyValueStoreIteratorOptions = {}, index = 0): Promise<void> {
-        const { exclusiveStartKey } = options!;
+        const { exclusiveStartKey } = options;
         ow(iteratee, ow.function);
         ow(options, ow.object.exactShape({
             exclusiveStartKey: ow.optional.string,
@@ -410,7 +409,6 @@ export async function getValue<T extends Dictionary | string | Buffer>(key: stri
 export async function setValue<T>(key: string, value: T, options: RecordOptions = {}): Promise<void> {
     const store = await openKeyValueStore();
 
-    // @ts-ignore options need to be typed
     return store.setValue(key, value, options);
 }
 
@@ -466,14 +464,14 @@ export interface KeyValueStoreOptions {
     isLocal?: boolean;
 }
 
-interface RecordOptions {
+export interface RecordOptions {
     /**
      * Specifies a custom MIME content type of the record.
      */
     contentType?: string;
 }
 
-interface KeyValueStoreIteratorOptions {
+export interface KeyValueStoreIteratorOptions {
     /**
      * All keys up to this one (including) are skipped from the result.
      */

@@ -137,7 +137,7 @@ export interface DatasetDataOptions {
     skipEmpty?: boolean;
 }
 
-interface DatasetIteratorOptions extends DatasetDataOptions {
+export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset' | 'limit' | 'clean' | 'skipHidden' | 'skipEmpty'> {
     /** @internal */
     offset?: number;
 

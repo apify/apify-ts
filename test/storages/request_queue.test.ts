@@ -1,6 +1,5 @@
 import Apify from 'apify';
 import { apifyClient } from 'apify/src/utils';
-import { Request as ApifyRequest } from 'apify/src/request';
 import {
     RequestQueue,
     QUERY_HEAD_MIN_LENGTH,
@@ -459,9 +458,9 @@ describe('RequestQueue remote', () => {
 
         // Add some requests.
         const requestA = new Apify.Request({ url: 'http://example.com/a' });
-        const requestAWithId = { ...requestA, id: 'a' };
+        const requestAWithId = { ...requestA, id: 'a' } as Apify.Request;
         const requestB = new Apify.Request({ url: 'http://example.com/b' });
-        const requestBWithId = { ...requestB, id: 'b' };
+        const requestBWithId = { ...requestB, id: 'b' } as Apify.Request;
         const addRequestMock = jest.spyOn(queue.client, 'addRequest');
         addRequestMock.mockResolvedValueOnce({ requestId: 'a', wasAlreadyHandled: false, wasAlreadyPresent: false });
         addRequestMock.mockResolvedValueOnce({ requestId: 'b', wasAlreadyHandled: false, wasAlreadyPresent: false });
@@ -513,13 +512,13 @@ describe('RequestQueue remote', () => {
         const updateRequestMock = jest.spyOn(queue.client, 'updateRequest');
         updateRequestMock.mockResolvedValueOnce({ requestId: 'b', wasAlreadyHandled: false, wasAlreadyPresent: true });
 
-        await queue.markRequestHandled(requestBWithId as ApifyRequest);
+        await queue.markRequestHandled(requestBWithId);
         expect(updateRequestMock).toHaveBeenCalledTimes(1);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestBWithId);
 
         updateRequestMock.mockResolvedValueOnce({ requestId: 'a', wasAlreadyHandled: false, wasAlreadyPresent: true });
 
-        await queue.reclaimRequest(requestAWithId as ApifyRequest, { forefront: true });
+        await queue.reclaimRequest(requestAWithId, { forefront: true });
         expect(updateRequestMock).toHaveBeenCalledTimes(2);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestAWithId, { forefront: true });
         // @ts-expect-error Accessing private property
@@ -539,6 +538,8 @@ describe('RequestQueue remote', () => {
         expect(listHeadMock).not.toHaveBeenCalled();
 
         // Fetch again.
+        // @ts-expect-error Argument of type 'Request' is not assignable to parameter of type
+        // 'RequestQueueClientGetRequestResult | Promise<RequestQueueClientGetRequestResult>'.
         getRequestMock.mockResolvedValueOnce(requestAWithId);
 
         const requestAFromQueue2 = await queue.fetchNextRequest();
@@ -559,7 +560,7 @@ describe('RequestQueue remote', () => {
         // Mark handled.
         updateRequestMock.mockResolvedValueOnce({ requestId: 'a', wasAlreadyHandled: false, wasAlreadyPresent: true });
 
-        await queue.markRequestHandled(requestAWithId as ApifyRequest);
+        await queue.markRequestHandled(requestAWithId);
         expect(updateRequestMock).toHaveBeenCalledTimes(3);
         expect(updateRequestMock).toHaveBeenLastCalledWith(requestAWithId);
 

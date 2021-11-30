@@ -88,7 +88,7 @@ export interface QueueOperationInfo {
 
 }
 
-interface RequestQueueOperationOptions {
+export interface RequestQueueOperationOptions {
     /**
      * If set to `true`:
      *   - while adding the request to the queue: the request will be added to the foremost position in the queue.
@@ -98,6 +98,15 @@ interface RequestQueueOperationOptions {
      * @default false
      */
     forefront?: boolean;
+}
+
+export interface OpenRequestQueueOptions {
+    /**
+     * If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
+     * environment variable is set. This way it is possible to combine local and cloud storage.
+     * @default false
+     */
+    forceCloud?: boolean;
 }
 
 /**
@@ -484,8 +493,6 @@ export class RequestQueue {
 
     /**
      * Caches information about request to beware of unneeded addRequest() calls.
-     * @ignore
-     * @internal
      */
     protected _cacheRequest(cacheKey: string, queueOperationInfo: QueueOperationInfoOptions): void {
         this.requestsCache.add(cacheKey, {
@@ -504,8 +511,6 @@ export class RequestQueue {
      * @param [limit] How many queue head items will be fetched.
      * @param [iteration] Used when this function is called recursively to limit the recursion.
      * @return {Promise<boolean>} Indicates if queue head is consistent (true) or inconsistent (false).
-     * @ignore
-     * @internal
      */
     protected async _ensureHeadIsNonEmpty(
         ensureConsistency = false,
@@ -591,9 +596,8 @@ export class RequestQueue {
 
     /**
      * Adds a request straight to the queueHeadDict, to improve performance.
-     * @private
      */
-    _maybeAddRequestToQueueHead(requestId: string, forefront: boolean): void {
+    private _maybeAddRequestToQueueHead(requestId: string, forefront: boolean): void {
         if (forefront) {
             this.queueHeadDict.add(requestId, requestId, true);
         } else if (this.assumedTotalCount < QUERY_HEAD_MIN_LENGTH) {
@@ -668,13 +672,10 @@ export class RequestQueue {
      * @param [queueIdOrName]
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
-     * @param [options]
-     * @param [options.forceCloud]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
+     * @param [options] Open Request Queue options.
      * @default false
      */
-    static async open(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
+    static async open(queueIdOrName?: string | null, options: OpenRequestQueueOptions = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -698,14 +699,10 @@ export class RequestQueue {
  * @param [queueIdOrName]
  *   ID or name of the request queue to be opened. If `null` or `undefined`,
  *   the function returns the default request queue associated with the actor run.
- * @param [options]
- * @param [options.forceCloud]
- *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
- *   environment variable is set. This way it is possible to combine local and cloud storage.
- * @default false
+ * @param [options] Open Request Queue options.
  * @deprecated use `RequestQueue.open()` instead
  */
-export async function openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
+export async function openRequestQueue(queueIdOrName?: string | null, options: OpenRequestQueueOptions = {}): Promise<RequestQueue> {
     return RequestQueue.open(queueIdOrName, options);
 }
 
