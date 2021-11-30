@@ -673,7 +673,6 @@ export class RequestQueue {
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
      * @param [options] Open Request Queue options.
-     * @default false
      */
     static async open(queueIdOrName?: string | null, options: OpenRequestQueueOptions = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
