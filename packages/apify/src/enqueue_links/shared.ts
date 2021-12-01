@@ -109,7 +109,7 @@ export async function addRequestsToQueueInBatches(requests: Request[], requestQu
 export interface RequestTransform {
     /**
      * @param original Request options to be modified.
-     * @return {RequestOptions} The modified request options to enqueue.
+     * @returns The modified request options to enqueue.
      */
     (original: RequestOptions): RequestOptions;
 }

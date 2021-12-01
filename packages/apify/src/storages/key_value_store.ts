@@ -364,7 +364,7 @@ export async function openKeyValueStore(storeIdOrName?: string | null, options: 
  *
  * @param key
  *   Unique record key.
- * @returns {Promise<Object<string, *>|string|Buffer|null>}
+ * @returns
  *   Returns a promise that resolves to an object, string
  *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
  *   on the MIME content type of the record, or `null`
@@ -434,7 +434,7 @@ export async function setValue<T>(key: string, value: T, options: RecordOptions 
  * For more information, see  {@link Apify.openKeyValueStore}
  * and {@link KeyValueStore.getValue}.
  *
- * @returns {T}
+ * @returns
  *   Returns a promise that resolves to an object, string
  *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
  *   on the MIME content type of the record, or `null`

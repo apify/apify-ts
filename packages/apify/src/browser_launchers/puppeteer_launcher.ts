@@ -208,7 +208,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
  * @param [launchContext]
  *   All `PuppeteerLauncher` parameters are passed via an launchContext object.
  *   If you want to pass custom `puppeteer.launch(options)` options you can use the `PuppeteerLaunchContext.launchOptions` property.
- * @returns {Promise<Browser>}
+ * @returns
  *   Promise that resolves to Puppeteer's `Browser` instance.
  */
 export async function launchPuppeteer(launchContext?: PuppeteerLaunchContext): Promise<Browser> {

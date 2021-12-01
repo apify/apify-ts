@@ -285,7 +285,7 @@ export class RequestQueue {
      * Gets the request from the queue specified by ID.
      *
      * @param id ID of the request.
-     * @return {Promise<Request | null>} Returns the request object, or `null` if it was not found.
+     * @returns Returns the request object, or `null` if it was not found.
      */
     async getRequest(id: string): Promise<Request | null> {
         ow(id, ow.string);
@@ -510,7 +510,7 @@ export class RequestQueue {
      * @default false
      * @param [limit] How many queue head items will be fetched.
      * @param [iteration] Used when this function is called recursively to limit the recursion.
-     * @return {Promise<boolean>} Indicates if queue head is consistent (true) or inconsistent (false).
+     * @returns Indicates if queue head is consistent (true) or inconsistent (false).
      */
     protected async _ensureHeadIsNonEmpty(
         ensureConsistency = false,

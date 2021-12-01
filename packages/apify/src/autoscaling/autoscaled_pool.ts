@@ -424,8 +424,6 @@ export class AutoscaledPool {
      * and this.isTaskReadyFunction() returns true.
      *
      * It doesn't allow multiple concurrent runs of this method.
-     *
-     * @internal
      */
     protected async _maybeRunTask(intervalCallback): Promise<void> {
         this.log.perf('Attempting to run a task.');
@@ -521,8 +519,6 @@ export class AutoscaledPool {
      * Gets called every autoScaleIntervalSecs and evaluates the current system status.
      * If the system IS NOT overloaded and the settings allow it, it scales up.
      * If the system IS overloaded and the settings allow it, it scales down.
-     *
-     * @internal
      */
     protected _autoscale(intervalCallback) {
         // Don't scale if paused.
@@ -570,9 +566,8 @@ export class AutoscaledPool {
      * the desired concurrency by the scaleUpStepRatio.
      *
      * @param systemStatus for logging
-     * @internal
      */
-    protected _scaleUp(systemStatus: SystemInfo) {
+    protected _scaleUp(systemStatus: SystemInfo): void {
         const step = Math.ceil(this._desiredConcurrency * this.scaleUpStepRatio);
         this._desiredConcurrency = Math.min(this._maxConcurrency, this._desiredConcurrency + step);
         this.log.debug('scaling up', {
@@ -587,9 +582,8 @@ export class AutoscaledPool {
      * the desired concurrency by the scaleDownStepRatio.
      *
      * @param systemStatus for logging
-     * @internal
      */
-    protected _scaleDown(systemStatus: SystemInfo) {
+    protected _scaleDown(systemStatus: SystemInfo): void {
         const step = Math.ceil(this._desiredConcurrency * this.scaleUpStepRatio);
         this._desiredConcurrency = Math.max(this._minConcurrency, this._desiredConcurrency - step);
         this.log.debug('scaling down', {
@@ -604,7 +598,6 @@ export class AutoscaledPool {
      * the pool and resolves the pool's promise returned by the run() method.
      *
      * It doesn't allow multiple concurrent runs of this method.
-     * @internal
      */
     protected async _maybeFinish(): Promise<void> {
         if (this.queryingIsFinished) return;
@@ -627,7 +620,6 @@ export class AutoscaledPool {
 
     /**
      * Cleans up resources.
-     * @internal
      */
     protected async _destroy(): Promise<void> {
         this.resolve = null;

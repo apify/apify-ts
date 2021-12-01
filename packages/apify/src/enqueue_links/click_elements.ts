@@ -134,7 +134,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  * });
  * ```
  *
- * @return {Promise<Array<QueueOperationInfo>>}
+ * @returns
  *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
  */
 export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<QueueOperationInfo[]> {

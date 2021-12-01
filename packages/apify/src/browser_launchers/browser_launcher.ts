@@ -127,7 +127,7 @@ export abstract class BrowserLauncher<
 
     /**
      * Launches a browser instance based on the plugin.
-     * @returns {Promise<unknown>} Browser instance.
+     * @returns Browser instance.
      */
     async launch(): Promise<unknown> {
         const plugin = this.createBrowserPlugin();
