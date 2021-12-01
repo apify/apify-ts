@@ -53,7 +53,7 @@ const alreadyWrapped = Symbol('alreadyWrapped');
  *  The main purpose of this function is to override newPage function and attach selected tricks.
  * @param browser puppeteer browser instance
  * @param options
- * @returns {Browser} Instance of Browser from puppeteer package
+ * @returns Instance of Browser from puppeteer package
  */
 export function applyStealthToBrowser(browser: Browser, options: StealthOptions): Browser {
     const modifiedBrowser = browser;
@@ -90,10 +90,10 @@ function generateEvaluationDebugMessage() {
 }
 /**
  * Logs the stealth errors in browser to the node stdout.
- * @param {Page} page - puppeteer page instance
- * @param {string} evaluationDebugMessage - debug message
+ * @param page puppeteer page instance
+ * @param evaluationDebugMessage debug message
  */
-function addStealthDebugToPage(page, evaluationDebugMessage) {
+function addStealthDebugToPage(page: Page, evaluationDebugMessage: string): void {
     let warningLogged = false;
     let counter = 1;
     page.on('console', (msg) => {

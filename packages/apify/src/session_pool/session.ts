@@ -170,11 +170,10 @@ export class Session {
     }
 
     /**
-     * indicates whether the session is blocked.
+     * Indicates whether the session is blocked.
      * Session is blocked once it reaches the `maxErrorScore`.
-     * @return {boolean}
      */
-    isBlocked() {
+    isBlocked(): boolean {
         return this.errorScore >= this.maxErrorScore;
     }
 
@@ -182,27 +181,24 @@ export class Session {
      * Indicates whether the session is expired.
      * Session expiration is determined by the `maxAgeSecs`.
      * Once the session is older than `createdAt + maxAgeSecs` the session is considered expired.
-     * @return {boolean}
      */
-    isExpired() {
+    isExpired(): boolean {
         return this.expiresAt <= new Date();
     }
 
     /**
      * Indicates whether the session is used maximum number of times.
      * Session maximum usage count can be changed by `maxUsageCount` parameter.
-     * @return {boolean}
      */
-    isMaxUsageCountReached() {
+    isMaxUsageCountReached(): boolean {
         return this.usageCount >= this.maxUsageCount;
     }
 
     /**
      * Indicates whether the session can be used for next requests.
      * Session is usable when it is not expired, not blocked and the maximum usage count has not be reached.
-     * @return {boolean}
      */
-    isUsable() {
+    isUsable(): boolean {
         return !this.isBlocked() && !this.isExpired() && !this.isMaxUsageCountReached();
     }
 
@@ -222,11 +218,13 @@ export class Session {
 
     /**
      * Gets session state for persistence in KeyValueStore.
-     * @return {SessionState} represents session internal state.
+     * @returns Represents session internal state.
      */
-    getState() {
+    getState(): SessionState {
         return {
             id: this.id,
+            // @ts-expect-error Type 'Serialized' is missing the following properties from type 'CookieJar':
+            // setCookie, setCookieSync, getCookies, getCookiesSync, and 11 more.
             cookieJar: this.cookieJar.toJSON(),
             userData: this.userData,
             maxErrorScore: this.maxErrorScore,
@@ -271,11 +269,11 @@ export class Session {
      * that the target website is blocking us. This function helps to do this conveniently
      * by retiring the session when such code is received. Optionally the default status
      * codes can be extended in the second parameter.
-     * @param statusCode {number} - HTTP status code
-     * @param [blockedStatusCodes] {number[]} - Custom HTTP status codes that means blocking on particular website.
-     * @return {boolean} whether the session was retired.
+     * @param statusCode HTTP status code.
+     * @param [blockedStatusCodes] Custom HTTP status codes that means blocking on particular website.
+     * @returns Whether the session was retired.
      */
-    retireOnBlockedStatusCodes(statusCode, blockedStatusCodes = []) {
+    retireOnBlockedStatusCodes(statusCode: number, blockedStatusCodes: number[] = []): boolean {
         const isBlocked = STATUS_CODES_BLOCKED.concat(blockedStatusCodes).includes(statusCode);
         if (isBlocked) {
             this.retire();
@@ -332,7 +330,7 @@ export class Session {
      * Returns cookies saved with the session in the typical
      * key1=value1; key2=value2 format, ready to be used in
      * a cookie header or elsewhere.
-     * @return {string} represents `Cookie` header.
+     * @returns Represents `Cookie` header.
      */
     getCookieString(url: string): string {
         return this.cookieJar.getCookieStringSync(url, {});
@@ -340,8 +338,7 @@ export class Session {
 
     /**
      * Transforms puppeteer cookie to tough-cookie.
-     * @param puppeteerCookie Cookie from puppeteer `page.cookies method.
-     * @internal
+     * @param puppeteerCookie Cookie from puppeteer `page.cookies` method.
      */
     protected _puppeteerCookieToTough(puppeteerCookie: PuppeteerCookie): Cookie {
         const isExpiresValid = puppeteerCookie.expires && typeof puppeteerCookie.expires === 'number' && puppeteerCookie.expires > 0;
@@ -364,8 +361,7 @@ export class Session {
     /**
      * Transforms tough-cookie to puppeteer cookie.
      * @param toughCookie Cookie from CookieJar
-     * @return {PuppeteerCookie} Cookie from Puppeteer
-     * @internal
+     * @return Cookie from Puppeteer
      */
     protected _toughCookieToPuppeteer(toughCookie: Cookie): PuppeteerCookie {
         return {
@@ -382,7 +378,6 @@ export class Session {
 
     /**
      * Sets cookies.
-     * @internal
      */
     protected _setCookies(cookies: Cookie[], url: string): void {
         const errorMessages: string[] = [];
@@ -404,8 +399,7 @@ export class Session {
     /**
      * Calculate cookie expiration date
      * @param maxAgeSecs
-     * @return {Date} calculated date by session max age seconds.
-     * @internal
+     * @returns Calculated date by session max age seconds.
      */
     protected _getDefaultCookieExpirationDate(maxAgeSecs: number): Date {
         return new Date(Date.now() + (maxAgeSecs * 1000));
@@ -413,7 +407,6 @@ export class Session {
 
     /**
      * Checks if session is not usable. if it is not retires the session.
-     * @internal
      */
     protected _maybeSelfRetire(): void {
         if (!this.isUsable()) {

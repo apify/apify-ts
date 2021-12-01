@@ -76,9 +76,6 @@ export class StorageManager<T> {
         }
     }
 
-    /**
-     * @internal
-     */
     protected _createCacheKey(idOrName: string, isLocal?: boolean): string {
         return isLocal
             ? `LOCAL:${idOrName}`
@@ -87,7 +84,6 @@ export class StorageManager<T> {
 
     /**
      * Helper function that first requests storage by ID and if storage doesn't exist then gets it by name.
-     * @internal
      */
     protected async _getOrCreateStorage(storageIdOrName: string, storageConstructorName: string, apiClient: ApifyClient | ApifyStorageLocal) {
         const {
@@ -103,9 +99,6 @@ export class StorageManager<T> {
         return storageCollectionClient.getOrCreate(storageIdOrName);
     }
 
-    /**
-     * @internal
-     */
     protected _getStorageClientFactories(client: ApifyClient | ApifyStorageLocal, storageConstructorName: string) {
         // Dataset => dataset
         const clientName = storageConstructorName[0].toLowerCase() + storageConstructorName.slice(1);
@@ -118,9 +111,6 @@ export class StorageManager<T> {
         };
     }
 
-    /**
-     * @internal
-     */
     protected _addStorageToCache(storage: { id: string; name?: string; isLocal?: boolean }): void {
         const idKey = this._createCacheKey(storage.id, storage.isLocal);
         this.cache.add(idKey, storage);
@@ -130,4 +120,18 @@ export class StorageManager<T> {
             this.cache.add(nameKey, storage);
         }
     }
+}
+
+export interface StorageManagerOptions {
+    /**
+     * If set to `true` then the cloud storage is used even if the `APIFY_LOCAL_STORAGE_DIR`
+     * environment variable is set. This way it is possible to combine local and cloud storage.
+     * @default false
+     */
+    forceCloud?: boolean;
+
+    /**
+     * SDK configuration instance, defaults to the static register.
+     */
+    config?: Configuration;
 }

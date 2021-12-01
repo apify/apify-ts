@@ -458,9 +458,9 @@ describe('RequestQueue remote', () => {
 
         // Add some requests.
         const requestA = new Apify.Request({ url: 'http://example.com/a' });
-        const requestAWithId = { ...requestA, id: 'a' };
+        const requestAWithId = { ...requestA, id: 'a' } as Apify.Request;
         const requestB = new Apify.Request({ url: 'http://example.com/b' });
-        const requestBWithId = { ...requestB, id: 'b' };
+        const requestBWithId = { ...requestB, id: 'b' } as Apify.Request;
         const addRequestMock = jest.spyOn(queue.client, 'addRequest');
         addRequestMock.mockResolvedValueOnce({ requestId: 'a', wasAlreadyHandled: false, wasAlreadyPresent: false });
         addRequestMock.mockResolvedValueOnce({ requestId: 'b', wasAlreadyHandled: false, wasAlreadyPresent: false });
@@ -538,6 +538,8 @@ describe('RequestQueue remote', () => {
         expect(listHeadMock).not.toHaveBeenCalled();
 
         // Fetch again.
+        // @ts-expect-error Argument of type 'Request' is not assignable to parameter of type
+        // 'RequestQueueClientGetRequestResult | Promise<RequestQueueClientGetRequestResult>'.
         getRequestMock.mockResolvedValueOnce(requestAWithId);
 
         const requestAFromQueue2 = await queue.fetchNextRequest();

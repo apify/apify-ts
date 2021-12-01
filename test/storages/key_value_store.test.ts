@@ -165,13 +165,17 @@ describe('KeyValueStore remote', () => {
             await expect(store.setValue('key', null, { contentType: 'image/png' }))
                 .rejects.toThrow('The "value" parameter must be a String or Buffer when "options.contentType" is specified.');
             await expect(store.setValue('key', null, { contentType: '' })).rejects.toThrow(contTypeRedundantErrMsg);
+            // @ts-expect-error Type '{}' is not assignable to type 'string'.
             await expect(store.setValue('key', null, { contentType: {} }))
                 .rejects.toThrow('The "value" parameter must be a String or Buffer when "options.contentType" is specified.');
 
+            // @ts-expect-error Type 'number' is not assignable to type 'string'.
             await expect(store.setValue('key', 'value', { contentType: 123 }))
                 .rejects.toThrow('Expected property `contentType` to be of type `string` but received type `number` in object');
+            // @ts-expect-error Type '{}' is not assignable to type 'string'.
             await expect(store.setValue('key', 'value', { contentType: {} }))
                 .rejects.toThrow('Expected property `contentType` to be of type `string` but received type `Object` in object');
+            // @ts-expect-error Type 'Date' is not assignable to type 'string'.
             await expect(store.setValue('key', 'value', { contentType: new Date() }))
                 .rejects.toThrow('Expected property `contentType` to be of type `string` but received type `Date` in object');
             await expect(store.setValue('key', 'value', { contentType: '' }))
