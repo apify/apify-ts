@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /** @ignore */
 export type Dictionary<T = unknown> = Record<PropertyKey, T>;
 
@@ -133,6 +134,10 @@ export interface ActorRun {
     output?: Dictionary | null;
 }
 
-export function entries<T extends Record<PropertyKey, unknown>>(obj: T) {
+export function entries<T extends {}>(obj: T) {
     return Object.entries(obj) as [keyof T, T[keyof T]][];
+}
+
+export function keys<T extends {}>(obj: T) {
+    return Object.keys(obj) as (keyof T)[];
 }
