@@ -1,5 +1,6 @@
 import { gotScraping } from 'got-scraping';
 import { IncomingMessage } from 'http';
+import { Duplex } from 'stream';
 import ow from 'ow';
 import log from './utils_log';
 
@@ -126,7 +127,7 @@ export type AbortFunction = (response: IncomingMessage) => boolean;
  *
  * @param options All `requestAsBrowser` configuration options.
  *
- * @return {Promise<RequestAsBrowserResult>} The result can be various objects, but it will always be like a
+ * @return The result can be various objects, but it will always be like a
  * [Node.js HTTP response stream](https://nodejs.org/api/http.html#http_class_http_incomingmessage)
  * with a 'body' property for the parsed response body, unless the 'stream' option is used.
  */
@@ -151,7 +152,7 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
     }));
 
     ow(options, 'RequestAsBrowserOptions', ow.object.validate((opts) => ({
-        validator: areBodyOptionsCompatible(opts),
+        validator: areBodyOptionsCompatible(opts as RequestAsBrowserOptions),
         message: (label) => `The 'payload', 'body', 'json' and 'form' options of ${label} are mutually exclusive.`,
     })));
 
@@ -220,7 +221,7 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
 
     // abortFunction must be handled separately for streams :(
     const duplexStream = gotScraping(gotScrapingOptions);
-
+    // @ts-expect-error Argument of type 'CancelableRequest<Response<string>>' is not assignable to parameter of type 'Duplex'.
     ensureRequestIsDispatched(duplexStream, gotScrapingOptions);
 
     return new Promise((resolve, reject) => {
@@ -242,7 +243,8 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
                     return reject(e);
                 }
 
-                addResponsePropertiesToStream(duplexStream, res);
+                // TODO: stream vs response interface?
+                addResponsePropertiesToStream(duplexStream as any, res);
 
                 // TODO stream vs response interface?
                 return resolve(duplexStream as any);
@@ -254,12 +256,11 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
  * `got` has a `body` option and 2 helpers, `json` and `form`, to provide specific bodies.
  * Those options are mutually exclusive. `requestAsBrowser` also supports `payload` as
  * an alias of `body`. It must be exclusive as well.
- * @param {RequestAsBrowserOptions} requestAsBrowserOptions
- * @return {boolean}
  * @internal
  * @ignore
  */
-function areBodyOptionsCompatible(requestAsBrowserOptions) {
+function areBodyOptionsCompatible(requestAsBrowserOptions: RequestAsBrowserOptions): boolean {
+    // @ts-expect-error Property does not exist on type 'RequestAsBrowserOptions' // TODO
     const { payload, json, body, form } = requestAsBrowserOptions;
     // A boolean is old requestAsBrowser interface and not a real "body"
     // See the normalizeJsonOption function.
@@ -278,8 +279,8 @@ function areBodyOptionsCompatible(requestAsBrowserOptions) {
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
  * @internal
- */
-function normalizePayloadOption(payload, gotScrapingOptions) {
+ */ // TODO GotScrapingOptions as interface?
+function normalizePayloadOption(payload: string | Buffer, gotScrapingOptions): void {
     if (payload !== undefined) gotScrapingOptions.body = payload;
 }
 
@@ -291,8 +292,8 @@ function normalizePayloadOption(payload, gotScrapingOptions) {
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
  * @internal
- */
-function normalizeJsonOption(json, gotScrapingOptions) {
+ */ // TODO GotScrapingOptions as interface?
+function normalizeJsonOption(json: boolean | Record<string, unknown>, gotScrapingOptions): void {
     // If it's a boolean, then it's the old requestAsBrowser API.
     // If it's true, it means the user expects a JSON response.
     const deprecationMessage = `"options.json" of type: Boolean is deprecated.`
@@ -317,8 +318,8 @@ function normalizeJsonOption(json, gotScrapingOptions) {
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
  * @internal
- */
-function ensureCorrectHttp2Headers(gotScrapingOptions) {
+ */ // TODO GotScrapingOptions as interface?
+function ensureCorrectHttp2Headers(gotScrapingOptions): void {
     if (gotScrapingOptions.http2 && gotScrapingOptions.headers) {
         gotScrapingOptions.headers = { ...gotScrapingOptions.headers };
 
@@ -340,8 +341,8 @@ function ensureCorrectHttp2Headers(gotScrapingOptions) {
  * @param {GotScrapingOptions} gotScrapingOptions
  * @ignore
  * @internal
- */
-function maybeAddAbortHook(abortFunction, gotScrapingOptions) {
+ */ // TODO GotScrapingOptions as interface?
+function maybeAddAbortHook(abortFunction: AbortFunction, gotScrapingOptions) {
     // Stream aborting must be handled on the response object because `got`
     // does not execute `afterResponse` hooks for streams :(
     if (gotScrapingOptions.isStream) return;
@@ -370,8 +371,8 @@ function maybeAddAbortHook(abortFunction, gotScrapingOptions) {
  * 'got' will not dispatch non-GET request stream until a body is provided.
  * @param {stream.Duplex} duplexStream
  * @param {GotScrapingOptions} gotScrapingOptions
- */
-function ensureRequestIsDispatched(duplexStream, gotScrapingOptions) {
+ */ // TODO GotScrapingOptions as interface?
+function ensureRequestIsDispatched(duplexStream: Duplex, gotScrapingOptions): void {
     const { method } = gotScrapingOptions;
     const bodyIsEmpty = gotScrapingOptions.body === undefined
         && gotScrapingOptions.json === undefined
@@ -383,11 +384,10 @@ function ensureRequestIsDispatched(duplexStream, gotScrapingOptions) {
 }
 
 /**
- * @param {RequestAsBrowserOptions} options
  * @ignore
  * @internal
  */
-function logDeprecatedOptions(options) {
+function logDeprecatedOptions(options: RequestAsBrowserOptions): void {
     const deprecatedOptions = [
         // 'json' is handled in the JSON handler, because it has a conflict of types
         ['languageCode', 'headerGeneratorOptions.locales'],
@@ -434,7 +434,7 @@ function logDeprecatedOptions(options) {
  * @ignore
  * @internal
  */
-function addResponsePropertiesToStream(stream, response) {
+function addResponsePropertiesToStream(stream: Duplex, response: IncomingMessage): Duplex {
     const properties = [
         'statusCode', 'statusMessage', 'headers',
         'complete', 'httpVersion', 'rawHeaders',
@@ -443,9 +443,11 @@ function addResponsePropertiesToStream(stream, response) {
     ];
 
     response.on('end', () => {
+        // @ts-expect-error Property 'rawTrailers' does not exist on type 'Duplex'.
         Object.assign(stream.rawTrailers, response.rawTrailers);
+        // @ts-expect-error Property 'trailers' does not exist on type 'Duplex'.
         Object.assign(stream.trailers, response.trailers);
-
+        // @ts-expect-error Property 'complete' does not exist on type 'Duplex'.
         stream.complete = response.complete;
     });
 

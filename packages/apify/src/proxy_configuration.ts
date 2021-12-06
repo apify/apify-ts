@@ -279,7 +279,7 @@ export class ProxyConfiguration {
      *  All the HTTP requests going through the proxy with the same session identifier
      *  will use the same target proxy server (i.e. the same IP address).
      *  The identifier must not be longer than 50 characters and include only the following: `0-9`, `a-z`, `A-Z`, `"."`, `"_"` and `"~"`.
-     * @return {ProxyInfo} represents information about used proxy and its configuration.
+     * @return Represents information about used proxy and its configuration.
      */
     newProxyInfo(sessionId?: string | number): ProxyInfo {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
@@ -310,7 +310,7 @@ export class ProxyConfiguration {
      *  All the HTTP requests going through the proxy with the same session identifier
      *  will use the same target proxy server (i.e. the same IP address).
      *  The identifier must not be longer than 50 characters and include only the following: `0-9`, `a-z`, `A-Z`, `"."`, `"_"` and `"~"`.
-     * @return {string} A string with a proxy URL, including authentication credentials and port number.
+     * @return A string with a proxy URL, including authentication credentials and port number.
      *  For example, `http://bob:password123@proxy.example.com:8000`
      */
     newUrl(sessionId?: string | number): string {

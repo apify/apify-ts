@@ -16,7 +16,7 @@
 
 import psTree from '@apify/ps-tree';
 import { execSync } from 'child_process';
-import { ApifyClient } from 'apify-client';
+import { ApifyClient, ApifyClientOptions } from 'apify-client';
 // @ts-ignore if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyClientVersion } from 'apify-client/package.json';
 import { ACT_JOB_TERMINAL_STATUSES, ENV_VARS } from '@apify/consts';
@@ -79,13 +79,8 @@ const psTreePromised = util.promisify(psTree);
  * NPM package, and it is automatically configured using the `APIFY_API_BASE_URL`, and `APIFY_TOKEN`
  * environment variables. You can override the token via the available options. That's useful
  * if you want to use the client as a different Apify user than the SDK internals are using.
- *
- * @param {object} [options]
- * @param {string} [options.token]
- * @param {string} [options.maxRetries]
- * @param {string} [options.minDelayBetweenRetriesMillis]
  */
-export function newClient(options = {}): ApifyClient {
+export function newClient(options: Omit<ApifyClientOptions, 'baseUrl' | 'requestInterceptors' | 'timeoutSecs'> = {}): ApifyClient {
     ow(options, ow.object.exactShape({
         baseUrl: ow.optional.string.url,
         token: ow.optional.string,
@@ -125,12 +120,9 @@ export const apifyClient = newClient();
 
 /**
  * Adds charset=utf-8 to given content type if this parameter is missing.
- *
- * @param {string} contentType
- * @returns {string}
  * @ignore
  */
-export const addCharsetToContentType = (contentType) => {
+export const addCharsetToContentType = (contentType: string): string => {
     if (!contentType) return contentType;
 
     const parsed = contentTypeParser.parse(contentType);
@@ -202,6 +194,40 @@ export interface MemoryInfo {
 
     /** Amount of memory used by child processes of the current Node.js process */
     childProcessesBytes: number;
+}
+
+export interface DownloadListOfUrlsOptions {
+    /**
+     * URL to the file
+     */
+    url: string;
+
+    /**
+     * The encoding of the file.
+     * @default 'utf8'
+     */
+    encoding?: BufferEncoding;
+
+    /**
+     * Custom regular expression to identify the URLs in the file to extract.
+     * The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
+     * @default Apify.utils.URL_NO_COMMAS_REGEX
+     */
+    urlRegExp?: RegExp;
+}
+
+// TODO add proper param description
+export interface ExtractUrlsOptions {
+    /**
+     * Arbitrary string
+     */
+    string: string;
+
+    /**
+     * Custom regular expression
+     * @default Apify.utils.URL_NO_COMMAS_REGEX
+     */
+    urlRegExp?: RegExp;
 }
 
 /**
@@ -334,7 +360,6 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
 
 /**
  * Helper function that returns the first key from plain object.
- *
  * @ignore
  */
 export function getFirstKey<K extends PropertyKey>(dict: Record<K, unknown>): K | undefined {
@@ -408,15 +433,8 @@ export function sleep(millis?: number): Promise<void> {
 /**
  * Returns a promise that resolves to an array of urls parsed from the resource available at the provided url.
  * Optionally, custom regular expression and encoding may be provided.
- *
- * @param options
- * @param options.url URL to the file
- * @param [options.encoding='utf8'] The encoding of the file.
- * @param [options.urlRegExp=URL_NO_COMMAS_REGEX]
- *   Custom regular expression to identify the URLs in the file to extract.
- *   The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
  */
-async function downloadListOfUrls(options: { url: string; encoding?: BufferEncoding; urlRegExp?: RegExp }): Promise<string[]> {
+async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Promise<string[]> {
     ow(options, ow.object.exactShape({
         url: ow.string.url,
         encoding: ow.optional.string,
@@ -430,11 +448,8 @@ async function downloadListOfUrls(options: { url: string; encoding?: BufferEncod
 
 /**
  * Collects all URLs in an arbitrary string to an array, optionally using a custom regular expression.
- * @param options
- * @param options.string
- * @param [options.urlRegExp=Apify.utils.URL_NO_COMMAS_REGEX]
  */
-function extractUrls(options: { string: string; urlRegExp?: RegExp }): string[] {
+function extractUrls(options: ExtractUrlsOptions): string[] {
     ow(options, ow.object.exactShape({
         string: ow.string,
         urlRegExp: ow.optional.regExp,
@@ -443,7 +458,7 @@ function extractUrls(options: { string: string; urlRegExp?: RegExp }): string[] 
     return string.match(urlRegExp) || [];
 }
 
-// NOTE: We skipping 'noscript' since it's content is evaluated as text, instead of HTML elements. That damages the results.
+// NOTE: We are skipping 'noscript' since it's content is evaluated as text, instead of HTML elements. That damages the results.
 const SKIP_TAGS_REGEX = /^(script|style|canvas|svg|noscript)$/i;
 const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|dl|div|fieldset|form|table|tr|select|option)$/i;
 
@@ -473,7 +488,7 @@ const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|
  * const text = htmlToText(cheerio.load(html, { decodeEntities: true }));
  * ```
  * @param html HTML text or parsed HTML represented using a [cheerio](https://www.npmjs.com/package/cheerio) function.
- * @return {string} Plain text
+ * @return Plain text
  */
 function htmlToText(html: string | CheerioRoot): string {
     if (!html) return '';
@@ -624,6 +639,32 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
     };
 }
 
+export interface WaitForRunToFinishOptions {
+    /**
+     * ID of the actor that started the run.
+     */
+    actorId: string;
+
+    /**
+     * ID of the run itself.
+     */
+    runId: string;
+
+    /**
+     * Maximum time to wait for the run to finish, in seconds.
+     * If the limit is reached, the returned promise is resolved to a run object that will have
+     * status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
+     */
+    waitSecs?: string;
+
+    /**
+     * You can supply an Apify token to override the default one
+     * that's used by the default ApifyClient instance.
+     * E.g. you can track other users' runs.
+     */
+    token?: string;
+}
+
 /**
  * Returns a promise that resolves with the finished Run object when the provided actor run finishes
  * or with the unfinished Run object when the `waitSecs` timeout lapses. The promise is NOT rejected
@@ -631,25 +672,11 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
  *
  * This is useful when you need to chain actor executions. Similar effect can be achieved
  * by using webhooks, so be sure to review which technique fits your use-case better.
- *
- * @param {object} options
- * @param {string} options.actorId
- *  ID of the actor that started the run.
- * @param {string} options.runId
- *  ID of the run itself.
- * @param {string} [options.waitSecs]
- *  Maximum time to wait for the run to finish, in seconds.
- *  If the limit is reached, the returned promise is resolved to a run object that will have
- *  status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
- * @param {string} [options.token]
- *  You can supply an Apify token to override the default one
- *  that's used by the default ApifyClient instance.
- *  E.g. you can track other users' runs.
  * @deprecated
  *  Please use the 'waitForFinish' functions of 'apify-client'.
  * @ignore
  */
-export async function waitForRunToFinish(options): Promise<ActorRun> {
+export async function waitForRunToFinish(options: WaitForRunToFinishOptions): Promise<ActorRun> {
     ow(options, ow.object.exactShape({
         actorId: ow.string,
         runId: ow.string,

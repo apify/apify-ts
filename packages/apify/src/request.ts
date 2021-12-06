@@ -186,12 +186,10 @@ export class Request {
      * inspection of the passed argument and attempts to extract as much information
      * as possible, since just throwing a bad type error makes any debugging rather difficult.
      *
-     * @param {(Error|string)} errorOrMessage Error object or error message to be stored in the request.
-     * @param {object} [options]
-     * @param {boolean} [options.omitStack=false] Only push the error message without stack trace when true.
+     * @param errorOrMessage Error object or error message to be stored in the request.
+     * @param [options]
      */
-    pushErrorMessage(errorOrMessage, options = {}) {
-        // @ts-ignore
+    pushErrorMessage(errorOrMessage: Error | Record<string, string> | string, options: PushErrorMessageOptions = {}): void {
         const { omitStack } = options;
         let message;
         const type = typeof errorOrMessage;
@@ -203,8 +201,8 @@ export class Request {
                     ? errorOrMessage.message
                     // .stack includes the message
                     : errorOrMessage.stack;
-            } else if (errorOrMessage.message) {
-                message = errorOrMessage.message; // eslint-disable-line prefer-destructuring
+            } else if ((errorOrMessage as Record<string, string>).message) {
+                message = (errorOrMessage as Record<string, string>).message;
             } else if (errorOrMessage.toString() !== '[object Object]') {
                 message = errorOrMessage.toString();
             } else {
@@ -223,9 +221,6 @@ export class Request {
         this.errorMessages.push(message);
     }
 
-    /**
-     * @internal
-     */
     protected _computeUniqueKey({ url, method, payload, keepUrlFragment, useExtendedUniqueKey }) {
         const normalizedMethod = method.toUpperCase();
         const normalizedUrl = normalizeUrl(url, keepUrlFragment) || url; // It returns null when url is invalid, causing weird errors.
@@ -313,4 +308,12 @@ export interface RequestOptions {
     // TODO: do we want to document this
     id?: string;
 
+}
+
+export interface PushErrorMessageOptions {
+    /**
+     * Only push the error message without stack trace when true.
+     * @default false
+     */
+    omitStack?: boolean;
 }

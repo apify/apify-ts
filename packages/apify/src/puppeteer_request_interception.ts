@@ -60,7 +60,7 @@ function browserifyHeaders(headers: Record<string, string>): Record<string, stri
  * @param interceptRequestHandlers An array of intercept request handlers.
  * @ignore
  */
-async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers: InterceptHandler[]) {
+async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers: InterceptHandler[]): Promise<void> {
     // If there are no intercept handlers, it means that request interception is not enabled (anymore)
     // and therefore .abort() .respond() and .continue() would throw and crash the process.
     if (!interceptRequestHandlers.length) return;
@@ -155,8 +155,7 @@ async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers
  * await page.goto('http://example.com');
  * ```
  *
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param handler Request interception handler.
  */
 export async function addInterceptRequestHandler(page: Page, handler: InterceptHandler): Promise<void> {
@@ -199,12 +198,10 @@ export async function addInterceptRequestHandler(page: Page, handler: InterceptH
 /**
  * Removes request interception handler for given page.
  *
- * @param {Page} page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
- * @param {InterceptHandler} handler Request interception handler.
- * @return {Promise<void>}
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param handler Request interception handler.
  */
-export const removeInterceptRequestHandler = async (page, handler) => {
+export const removeInterceptRequestHandler = async (page: Page, handler: InterceptHandler): Promise<void> => {
     ow(page, ow.object.hasKeys('goto', 'evaluate'));
     ow(handler, ow.function);
 
@@ -237,7 +234,7 @@ export const removeInterceptRequestHandler = async (page, handler) => {
     }
 };
 
-async function disableRequestInterception(page) {
+async function disableRequestInterception(page: Page): Promise<void> {
     await page.setRequestInterception(false);
     const requestHandler = pageInterceptRequestMasterHandlerMap.get(page);
     page.removeListener('request', requestHandler);

@@ -1,11 +1,11 @@
 import ow from 'ow';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import { ApifyClient } from 'apify-client';
+import { ApifyClient, ApifyClientOptions } from 'apify-client';
 import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun, ApifyEnv } from './actor';
 import { initializeEvents, stopEvents } from './events';
-import { StorageManager } from './storages/storage_manager';
+import { StorageManager, StorageManagerOptions } from './storages/storage_manager';
 import { Dataset } from './storages/dataset';
-import { KeyValueStore, maybeStringify } from './storages/key_value_store';
+import { KeyValueStore, RecordOptions, maybeStringify } from './storages/key_value_store';
 import { RequestList, RequestListOptions, REQUESTS_PERSISTENCE_KEY, STATE_PERSISTENCE_KEY } from './request_list';
 import { RequestQueue } from './storages/request_queue';
 import { SessionPool, SessionPoolOptions } from './session_pool/session_pool';
@@ -238,7 +238,7 @@ export class Apify {
         callActorOpts.token = token;
 
         if (input) {
-            callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType);
+            callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
             input = maybeStringify(input, callActorOpts);
         }
 
@@ -305,7 +305,7 @@ export class Apify {
      *  Input overrides for the actor task. If it is an object, it will be stringified to
      *  JSON and its content type set to `application/json; charset=utf-8`.
      *  Provided input will be merged with actor task input.
-     * @param {object} [options]
+     * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
     async callTask(taskId: string, input?: Dictionary | string, options: CallTaskOptions = {}): Promise<ActorRun> {
@@ -379,8 +379,8 @@ export class Apify {
      * @param [input]
      *  Input for the actor. If it is an object, it will be stringified to
      *  JSON and its content type set to `application/json; charset=utf-8`.
-     *  Otherwise the `options.contentType` parameter must be provided.
-     * @param {object} [options]
+     *  Otherwise, the `options.contentType` parameter must be provided.
+     * @param [options]
      */
     async metamorph(targetActorId: string, input?: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
         ow(targetActorId, ow.string);
@@ -402,7 +402,7 @@ export class Apify {
         if (!runId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} must be provided!`);
 
         if (input) {
-            metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType);
+            metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType!);
             input = maybeStringify(input, metamorphOpts);
         }
 
@@ -422,7 +422,7 @@ export class Apify {
      * In local environment, the function will print a warning and have no effect.
      *
      * @param options
-     * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
+     * @returns The return value is the Webhook object.
      * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
      */
     async addWebhook(options: WebhookOptions): Promise<WebhookRun | undefined> {
@@ -499,11 +499,8 @@ export class Apify {
      *   ID or name of the dataset to be opened. If `null` or `undefined`,
      *   the function returns the default dataset associated with the actor run.
      * @param [options]
-     * @param [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openDataset(datasetIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<Dataset> {
+    async openDataset(datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<Dataset> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -532,15 +529,14 @@ export class Apify {
      * For more information, see  {@link Apify.openKeyValueStore}
      * and  {@link KeyValueStore.getValue}.
      *
-     * @param {string} key
-     *   Unique record key.
-     * @returns {Promise<Object<string, *>|string|Buffer|null>}
+     * @param key Unique record key.
+     * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getValue(key) {
+    async getValue(key: string): Promise<Record<string, unknown> | string | Buffer | null> {
         const store = await this.openKeyValueStore();
         return store.getValue(key);
     }
@@ -565,19 +561,17 @@ export class Apify {
      * For more information, see  {@link Apify.openKeyValueStore}
      * and  {@link KeyValueStore.getValue}.
      *
-     * @param {string} key
+     * @param key
      *   Unique record key.
-     * @param {*} value
+     * @param value
      *   Record data, which can be one of the following values:
      *    - If `null`, the record in the key-value store is deleted.
-     *    - If no `options.contentType` is specified, `value` can be any JavaScript object and it will be stringified to JSON.
-     *    - If `options.contentType` is set, `value` is taken as is and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
+     *    - If no `options.contentType` is specified, `value` can be any JavaScript object, and it will be stringified to JSON.
+     *    - If `options.contentType` is set, `value` is taken as is, and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
      *   For any other value an error will be thrown.
-     * @param {object} [options]
-     * @param {string} [options.contentType]
-     *   Specifies a custom MIME content type of the record.
+     * @param [options]
      */
-    async setValue(key, value, options): Promise<void> {
+    async setValue(key: string, value: string | Record<string, unknown> | Buffer | null, options: RecordOptions): Promise<void> {
         const store = await this.openKeyValueStore();
         return store.setValue(key, value, options);
     }
@@ -604,13 +598,13 @@ export class Apify {
      * For more information, see  {@link Apify.openKeyValueStore}
      * and {@link KeyValueStore.getValue}.
      *
-     * @returns {Promise<Object<string, *>|string|Buffer|null>}
+     * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getInput() {
+    async getInput(): Promise<Record<string, unknown> | string | Buffer | null> {
         return this.getValue(this.config.get('inputKey'));
     }
 
@@ -627,11 +621,8 @@ export class Apify {
      *   ID or name of the key-value store to be opened. If `null` or `undefined`,
      *   the function returns the default key-value store associated with the actor run.
      * @param [options]
-     * @param [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openKeyValueStore(storeIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<KeyValueStore> {
+    async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -728,11 +719,8 @@ export class Apify {
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
      * @param [options]
-     * @param {boolean} [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
+    async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -823,26 +811,19 @@ export class Apify {
      * NPM package, and it is automatically configured using the `APIFY_API_BASE_URL`, and `APIFY_TOKEN`
      * environment variables. You can override the token via the available options. That's useful
      * if you want to use the client as a different Apify user than the SDK internals are using.
-     *
-     * @param {object} [options]
-     * @param {string} [options.token]
-     * @param {string} [options.maxRetries]
-     * @param {string} [options.minDelayBetweenRetriesMillis]
      */
-    newClient(options = {}): ApifyClient {
+    newClient(options: Omit<ApifyClientOptions, 'baseUrl' | 'requestInterceptors' | 'timeoutSecs'> = {}): ApifyClient {
         return this.config.createClient(options);
     }
 
     /**
      * Returns `true` when code is running on Apify platform and `false` otherwise (for example locally).
-     *
-     * @returns {boolean}
      */
-    isAtHome() {
+    isAtHome(): boolean {
         return !!this.config.get('isAtHome');
     }
 
-    get utils() {
+    get utils(): Record<string, unknown> {
         return {
             ...publicUtils,
             puppeteer: puppeteerUtils,
