@@ -1,14 +1,15 @@
 import { normalizeUrl } from '@apify/utilities';
-import crypto from 'crypto';
-import ow, { ArgumentError } from 'ow';
+import crypto, { BinaryLike } from 'crypto';
+import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
 import { AllowedHttpMethods } from 'apify-client/dist/resource_clients/request_queue';
 import defaultLog from './utils_log';
+import { keys } from './typedefs';
 
 // new properties on the Request object breaks serialization
 const log = defaultLog.child({ prefix: 'Request' });
 
-export function hashPayload(payload) {
+export function hashPayload(payload: BinaryLike) {
     return crypto
         .createHash('sha256')
         .update(payload)
@@ -122,11 +123,11 @@ export class Request {
         // This custom validation loop iterates only over existing
         // properties and speeds up the validation cca 3-fold.
         // See https://github.com/sindresorhus/ow/issues/193
-        Object.keys(options).forEach((prop) => {
-            const predicate = requestOptionalPredicates[prop];
+        keys(options).forEach((prop) => {
+            const predicate = requestOptionalPredicates[prop as keyof typeof requestOptionalPredicates];
             const value = options[prop];
             if (predicate) {
-                ow(value, `RequestOptions.${prop}`, predicate);
+                ow(value, `RequestOptions.${prop}`, predicate as BasePredicate);
                 // 'url' is checked above because it's not optional
             } else if (prop !== 'url') {
                 const msg = `Did not expect property \`${prop}\` to exist, got \`${value}\` in object \`RequestOptions\``;
@@ -190,8 +191,7 @@ export class Request {
      * @param {object} [options]
      * @param {boolean} [options.omitStack=false] Only push the error message without stack trace when true.
      */
-    pushErrorMessage(errorOrMessage, options = {}) {
-        // @ts-ignore
+    pushErrorMessage(errorOrMessage: Error | string, options: PushErrorMessageOptions = {}) {
         const { omitStack } = options;
         let message;
         const type = typeof errorOrMessage;
@@ -203,8 +203,8 @@ export class Request {
                     ? errorOrMessage.message
                     // .stack includes the message
                     : errorOrMessage.stack;
-            } else if (errorOrMessage.message) {
-                message = errorOrMessage.message; // eslint-disable-line prefer-destructuring
+            } else if (Reflect.has(Object(errorOrMessage), 'message')) {
+                message = Reflect.get(Object(errorOrMessage), 'message');
             } else if (errorOrMessage.toString() !== '[object Object]') {
                 message = errorOrMessage.toString();
             } else {
@@ -226,7 +226,7 @@ export class Request {
     /**
      * @internal
      */
-    protected _computeUniqueKey({ url, method, payload, keepUrlFragment, useExtendedUniqueKey }) {
+    protected _computeUniqueKey({ url, method, payload, keepUrlFragment, useExtendedUniqueKey }: ComputeUniqueKeyOptions) {
         const normalizedMethod = method.toUpperCase();
         const normalizedUrl = normalizeUrl(url, keepUrlFragment) || url; // It returns null when url is invalid, causing weird errors.
         if (!useExtendedUniqueKey) {
@@ -313,4 +313,16 @@ export interface RequestOptions {
     // TODO: do we want to document this
     id?: string;
 
+}
+
+export interface PushErrorMessageOptions {
+    omitStack?: boolean;
+}
+
+interface ComputeUniqueKeyOptions {
+    url: string;
+    method: AllowedHttpMethods;
+    payload?: string | Buffer;
+    keepUrlFragment?: boolean;
+    useExtendedUniqueKey?: boolean;
 }
