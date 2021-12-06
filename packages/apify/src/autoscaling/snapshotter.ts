@@ -131,10 +131,10 @@ export class Snapshotter {
     clientSnapshots: ClientSnapshot[] = [];
 
     // TODO add better types for better interval? :]
-    eventLoopInterval: any = null;
-    memoryInterval: any = null;
-    clientInterval: any = null;
-    cpuInterval: any = null;
+    eventLoopInterval: ReturnType<typeof betterSetInterval> = null!;
+    memoryInterval: ReturnType<typeof betterSetInterval> = null!;
+    clientInterval: ReturnType<typeof betterSetInterval> = null!;
+    cpuInterval: ReturnType<typeof betterSetInterval> = null!;
 
     lastLoggedCriticalMemoryOverloadAt: Date | null = null;
 
@@ -193,13 +193,17 @@ export class Snapshotter {
         await this._ensureCorrectMaxMemory();
 
         // Start snapshotting.
+        // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
         this.eventLoopInterval = betterSetInterval(this._snapshotEventLoop.bind(this), this.eventLoopSnapshotIntervalMillis);
+        // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
         this.clientInterval = betterSetInterval(this._snapshotClient.bind(this), this.clientSnapshotIntervalMillis);
         if (isAtHome()) {
             events.on(ACTOR_EVENT_NAMES.SYSTEM_INFO, this._snapshotCpuOnPlatform);
             events.on(ACTOR_EVENT_NAMES.SYSTEM_INFO, this._snapshotMemoryOnPlatform);
         } else {
+            // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
             this.cpuInterval = betterSetInterval(this._snapshotCpuOnLocal.bind(this), this.cpuSnapshotIntervalMillis);
+            // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
             this.memoryInterval = betterSetInterval(this._snapshotMemoryOnLocal.bind(this), this.memorySnapshotIntervalMillis);
         }
     }
@@ -310,7 +314,7 @@ export class Snapshotter {
 
             this.memorySnapshots.push(snapshot);
         } catch (err) {
-            this.log.exception(err, 'Memory snapshot failed.');
+            this.log.exception(err as Error, 'Memory snapshot failed.');
         } finally {
             intervalCallback();
         }
@@ -330,9 +334,9 @@ export class Snapshotter {
 
         if (isCriticalOverload) {
             const usedPercentage = Math.round((memCurrentBytes! / this.maxMemoryBytes!) * 100);
-            const toMb = (bytes) => Math.round(bytes / (1024 ** 2));
+            const toMb = (bytes: number) => Math.round(bytes / (1024 ** 2));
             this.log.warning('Memory is critically overloaded. '
-                + `Using ${toMb(memCurrentBytes)} MB of ${toMb(this.maxMemoryBytes)} MB (${usedPercentage}%). Consider increasing the actor memory.`);
+                + `Using ${toMb(memCurrentBytes!)} MB of ${toMb(this.maxMemoryBytes!)} MB (${usedPercentage}%). Consider increasing the actor memory.`);
             this.lastLoggedCriticalMemoryOverloadAt = now;
         }
     }
