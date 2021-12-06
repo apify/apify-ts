@@ -5,11 +5,11 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@apify/storage-local';
 import { ApifyClient, RequestQueueClient, RequestQueue as RequestQueueInfo } from 'apify-client';
 import ow from 'ow';
+import { entries } from '../typedefs';
 import { StorageManager } from './storage_manager';
 import { sleep } from '../utils';
 import log from '../utils_log';
 import { Request, RequestOptions } from '../request';
-import { Dictionary } from '../typedefs';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -296,9 +296,9 @@ export class RequestQueue {
         if (!requestOptions) return null;
 
         // TODO: compatibility fix for old/broken request queues with null Request props
-        const optionsWithoutNulls = Object.entries(requestOptions).reduce((opts, [key, value]) => {
+        const optionsWithoutNulls = entries(requestOptions).reduce((opts, [key, value]) => {
             if (value !== null) {
-                opts[key] = value;
+                opts[key] = value as any;
             }
             return opts;
         }, {} as RequestOptions);
@@ -611,7 +611,7 @@ export class RequestQueue {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(RequestQueue);
+        const manager = new StorageManager<RequestQueue>(RequestQueue as any);
         manager.closeStorage(this);
     }
 
@@ -679,7 +679,7 @@ export class RequestQueue {
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
-        const manager = new StorageManager(RequestQueue);
+        const manager = new StorageManager<RequestQueue>(RequestQueue as any);
         return manager.openStorage(queueIdOrName, options);
     }
 }

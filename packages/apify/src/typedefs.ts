@@ -132,3 +132,7 @@ export interface ActorRun {
      */
     output?: Dictionary | null;
 }
+
+export function entries<T extends Record<PropertyKey, unknown>>(obj: T) {
+    return Object.entries(obj) as [keyof T, T[keyof T]][];
+}
