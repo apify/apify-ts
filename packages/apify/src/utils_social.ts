@@ -205,6 +205,7 @@ const FACEBOOK_REGEX_STRING = `(?<!\\w)(?:http(?:s)?:\\/\\/)?(?:www.)?(?:faceboo
 const YOUTUBE_REGEX_STRING = '(?:https?:\\/\\/)?(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch|v|embed|user|c(?:hannel)?)(?:\\.php)?(?:\\?[^ ]*v=|\\/))([a-zA-Z0-9\\-_]+)';
 
 try {
+    // @ts-ignore Avoid several eslint no-new errors
     let tmp = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
     tmp = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
     tmp = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
@@ -218,7 +219,8 @@ try {
 } catch (e) {
     // Older versions of Node don't support negative lookbehind and lookahead expressions.
     // Show warning instead of failing.
-    if (e && e.message && e.message.includes('Invalid group')) {
+    const error = e as Error;
+    if (error?.message.includes('Invalid group')) {
         // eslint-disable-next-line max-len
         log.warning(`Your version of Node.js (${process.version}) doesn't support the regular expression syntax used by Apify.utils.social tools. The tools will not work. Please upgrade your Node.js to the latest version.`);
     } else {
@@ -313,8 +315,7 @@ export function parseHandlesFromHtml(html: string, data: Record<string, unknown>
     result.youtubes = html.match(YOUTUBE_REGEX_GLOBAL) || [];
 
     // Sort and deduplicate handles
-    // eslint-disable-next-line guard-for-in, no-restricted-syntax
-    for (const key in result) {
+    for (const key of Object.keys(result) as (keyof SocialHandles)[]) {
         result[key].sort();
         result[key] = _.uniq(result[key], true);
     }
