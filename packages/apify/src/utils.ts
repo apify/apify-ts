@@ -14,9 +14,10 @@
  * @module utils
  */
 
+// @ts-expect-error We need to add typings for @apify/ps-tree
 import psTree from '@apify/ps-tree';
 import { execSync } from 'child_process';
-import { ApifyClient } from 'apify-client';
+import { ActorRun, ApifyClient } from 'apify-client';
 // @ts-ignore if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyClientVersion } from 'apify-client/package.json';
 import { ACT_JOB_TERMINAL_STATUSES, ENV_VARS } from '@apify/consts';
@@ -40,7 +41,7 @@ import { version as apifyVersion } from '../package.json';
 import log from './utils_log';
 import { requestAsBrowser } from './utils_request';
 import { Request } from './request';
-import { ActorRun, Dictionary } from './typedefs';
+import { Dictionary } from './typedefs';
 import { CheerioRoot } from './crawlers/cheerio_crawler';
 
 const rimrafp = util.promisify(rimraf);
@@ -130,7 +131,7 @@ export const apifyClient = newClient();
  * @returns {string}
  * @ignore
  */
-export const addCharsetToContentType = (contentType) => {
+export const addCharsetToContentType = (contentType: string): string => {
     if (!contentType) return contentType;
 
     const parsed = contentTypeParser.parse(contentType);
@@ -142,8 +143,9 @@ export const addCharsetToContentType = (contentType) => {
     return contentTypeParser.format(parsed);
 };
 
-let isDockerPromiseCache;
-const createIsDockerPromise = () => {
+let isDockerPromiseCache: Promise<boolean>;
+
+const createIsDockerPromise = async () => {
     const promise1 = util
         .promisify(fs.stat)('/.dockerenv')
         .then(() => true)
@@ -154,9 +156,10 @@ const createIsDockerPromise = () => {
         .then((content) => content.indexOf('docker') !== -1)
         .catch(() => false);
 
-    return Promise
-        .all([promise1, promise2])
-        .then(([result1, result2]) => result1 || result2);
+    const [result1, result2] = await Promise
+        .all([promise1, promise2]);
+
+    return result1 || result2;
 };
 
 /**
@@ -176,7 +179,7 @@ export function isDocker(forceReset?: boolean): Promise<boolean> {
 export function weightedAvg(arrValues: number[], arrWeights: number[]): number {
     const result = arrValues.map((value, i) => {
         const weight = arrWeights[i];
-        const sum = value * weight; // eslint-disable-line no-shadow
+        const sum = value * weight;
 
         return [sum, weight];
     }).reduce((p, c) => [p[0] + c[0], p[1] + c[1]], [0, 0]);
@@ -244,6 +247,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
         // Query both root and child processes
         const processes = await psTreePromised(process.pid, true);
 
+        // @ts-expect-error TODO: fixed after typing psTree
         processes.forEach((rec) => {
             // Skip the 'ps' or 'wmic' commands used by ps-tree to query the processes
             if (rec.COMMAND === 'ps' || rec.COMMAND === 'WMIC.exe') {
@@ -277,7 +281,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
         const accessPromised = util.promisify(fs.access);
 
         // Check wheter cgroups V1 or V2 is used
-        let cgroupsVersion = 'V1';
+        let cgroupsVersion: keyof typeof MEMORY_FILE_PATHS.TOTAL = 'V1';
         try {
             // If this directory does not exists, assume docker is using cgroups V2
             await accessPromised('/sys/fs/cgroup/memory/', fs.constants.R_OK);
@@ -312,7 +316,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
             // log.deprecated logs a warning only once
             log.deprecated('Your environment is Docker, but your system does not support memory cgroups. '
                 + 'If you\'re running containers with limited memory, memory auto-scaling will not work properly.\n\n'
-                + `Cause: ${err.message}`);
+                + `Cause: ${(err as Error).message}`);
             totalBytes = os.totalmem();
             freeBytes = os.freemem();
             usedBytes = totalBytes - freeBytes;
@@ -490,6 +494,10 @@ function htmlToText(html: string | CheerioRoot): string {
     const $ = typeof html === 'function' ? html : cheerio.load(html, { decodeEntities: true });
     let text = '';
 
+    // TODO: the type for elems is very annoying to work with.
+    // The correct type is Node[] from cheerio but it needs a lot more casting in each branch, or alternatively,
+    // use the is* methods from domhandler (isText, isTag, isComment, etc.)
+    // @ts-expect-error
     const process = (elems) => {
         const len = elems ? elems.length : 0;
         for (let i = 0; i < len; i++) {
@@ -620,7 +628,7 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
 
     return {
         type: parsedContentType.type,
-        charset: parsedContentType.parameters.charset,
+        charset: parsedContentType.parameters.charset as BufferEncoding,
     };
 }
 
@@ -632,24 +640,11 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
  * This is useful when you need to chain actor executions. Similar effect can be achieved
  * by using webhooks, so be sure to review which technique fits your use-case better.
  *
- * @param {object} options
- * @param {string} options.actorId
- *  ID of the actor that started the run.
- * @param {string} options.runId
- *  ID of the run itself.
- * @param {string} [options.waitSecs]
- *  Maximum time to wait for the run to finish, in seconds.
- *  If the limit is reached, the returned promise is resolved to a run object that will have
- *  status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
- * @param {string} [options.token]
- *  You can supply an Apify token to override the default one
- *  that's used by the default ApifyClient instance.
- *  E.g. you can track other users' runs.
- * @deprecated
- *  Please use the 'waitForFinish' functions of 'apify-client'.
+ * @param options
+ * @deprecated Please use the 'waitForFinish' functions of 'apify-client'.
  * @ignore
  */
-export async function waitForRunToFinish(options): Promise<ActorRun> {
+export async function waitForRunToFinish(options: WaitForRunToFinishOptions): Promise<ActorRun> {
     ow(options, ow.object.exactShape({
         actorId: ow.string,
         runId: ow.string,
@@ -657,11 +652,12 @@ export async function waitForRunToFinish(options): Promise<ActorRun> {
     }));
 
     const {
+        // @ts-expect-error TODO: We don't need the actorId, we should remove it (or remove the entire function since its deprecated)
         actorId,
         runId,
         waitSecs,
     } = options;
-    let run;
+    let run: ActorRun;
 
     const startedAt = Date.now();
     const shouldRepeat = () => {
@@ -676,19 +672,41 @@ export async function waitForRunToFinish(options): Promise<ActorRun> {
             ? Math.round(waitSecs - (Date.now() - startedAt) / 1000)
             : 999999;
 
-        // @ts-ignore `run` method has only one argument?
-        run = await apifyClient.run(runId, actorId).waitForFinish({ waitSecs: waitForFinish });
+        run = await apifyClient.run(runId).waitForFinish({ waitSecs: waitForFinish });
 
         // It might take some time for database replicas to get up-to-date,
         // so getRun() might return null. Wait a little bit and try it again.
         if (!run) await sleep(250);
     }
 
-    if (!run) {
+    if (!run!) {
         throw new Error('Waiting for run to finish failed. Cannot fetch actor run details from the server.');
     }
 
     return run;
+}
+
+export interface WaitForRunToFinishOptions {
+    /**
+     * ID of the actor that started the run.
+     */
+    actorId: string;
+    /**
+     * ID of the run itself.
+     */
+    runId: string;
+    /**
+     * Maximum time to wait for the run to finish, in seconds.
+     * If the limit is reached, the returned promise is resolved to a run object that will have
+     * status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
+     */
+    waitSecs?: number;
+    /**
+     * You can supply an Apify token to override the default one
+     * that's used by the default ApifyClient instance.
+     * E.g. you can track other users' runs.
+     */
+    token?: string;
 }
 
 /**
