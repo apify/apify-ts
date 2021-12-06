@@ -5,7 +5,6 @@ import { ApifyClient } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
 import { KeyValueStoreClient } from '@apify/storage-local/dist/resource_clients/key_value_store';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
-import log from '../utils_log';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';
 import { Awaitable, Dictionary } from '../typedefs';
@@ -17,20 +16,21 @@ export type KeyValueStoreValueTypes = Record<string, unknown> | null | Buffer | 
  *
  * @ignore
  */
-export const maybeStringify = (value, options) => {
+export const maybeStringify = <T>(value: T, options: { contentType?: string }) => {
     // If contentType is missing, value will be stringified to JSON
     if (options.contentType === null || options.contentType === undefined) {
         options.contentType = 'application/json; charset=utf-8';
 
         try {
             // Format JSON to simplify debugging, the overheads with compression is negligible
-            value = jsonStringifyExtended(value, null, 2);
+            value = jsonStringifyExtended(value as Dictionary, null, 2) as unknown as T;
         } catch (e) {
+            const error = e as Error;
             // Give more meaningful error message
-            if (e.message && e.message.indexOf('Invalid string length') >= 0) {
-                e.message = 'Object is too large';
+            if (error.message?.indexOf('Invalid string length') >= 0) {
+                error.message = 'Object is too large';
             }
-            throw new Error(`The "value" parameter cannot be stringified to JSON: ${e.message}`);
+            throw new Error(`The "value" parameter cannot be stringified to JSON: ${error.message}`);
         }
 
         if (value === undefined) {
@@ -112,7 +112,6 @@ export class KeyValueStore {
     readonly name?: string;
     readonly isLocal: boolean;
     private client: KeyValueStoreClient;
-    private log = log.child({ prefix: 'KeyValueStore' }); // TODO looks like this can be removed?
 
     /**
      * @internal
@@ -243,7 +242,7 @@ export class KeyValueStore {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(KeyValueStore, this.config);
+        const manager = new StorageManager<KeyValueStore>(KeyValueStore as any, this.config);
         manager.closeStorage(this);
     }
 
@@ -318,7 +317,7 @@ export class KeyValueStore {
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        const manager = new StorageManager(KeyValueStore, options.config);
+        const manager = new StorageManager<KeyValueStore>(KeyValueStore as any, options.config);
         return manager.openStorage(storeIdOrName, options);
     }
 }
