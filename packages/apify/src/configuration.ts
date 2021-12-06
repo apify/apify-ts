@@ -192,7 +192,7 @@ export class Configuration {
 
     private _castEnvValue(key: keyof ConfigurationOptions, value: number | string | boolean) {
         if (Configuration.INTEGER_VARS.includes(key)) {
-            return +value as U;
+            return +value;
         }
 
         if (Configuration.BOOLEAN_VARS.includes(key)) {
