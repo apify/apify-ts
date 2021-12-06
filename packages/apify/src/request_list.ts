@@ -275,7 +275,7 @@ export class RequestList {
     private persistRequestsKey?: string;
     private initialState?: RequestListState;
     private keepDuplicateUrls: boolean;
-    private sources: (Source)[];
+    private sources: Source[];
     private sourcesFunction?: RequestListSourcesFunction;
 
     /**
@@ -384,8 +384,8 @@ export class RequestList {
 
             // @ts-ignore
             if (typeof source === 'object' && source.requestsFromUrl) {
-                const fetchedRequests = await this._fetchRequestsFromUrl(source);
-                await this._addFetchedRequests(source, fetchedRequests);
+                const fetchedRequests = await this._fetchRequestsFromUrl(source as InternalSource);
+                await this._addFetchedRequests(source as InternalSource, fetchedRequests);
             } else {
                 this._addRequest(source);
             }
@@ -402,7 +402,8 @@ export class RequestList {
                     const source = sourcesFromFunction.shift();
                     this._addRequest(source!);
                 }
-            } catch (err) {
+            } catch (e) {
+                const err = e as Error;
                 throw new Error(`Loading requests with sourcesFunction failed.\nCause: ${err.message}`);
             }
         }
@@ -423,7 +424,8 @@ export class RequestList {
         try {
             await setValue(this.persistStateKey, this.getState());
             this.isStatePersisted = true;
-        } catch (err) {
+        } catch (e) {
+            const err = e as Error;
             this.log.exception(err, 'Attempted to persist state, but failed.');
         }
     }
@@ -442,7 +444,7 @@ export class RequestList {
     /**
      * Restores RequestList state from a state object.
      */
-    protected _restoreState(state: RequestListState): void {
+    protected _restoreState(state?: RequestListState): void {
         // If there's no state it means we've not persisted any (yet).
         if (!state) return;
         // Restore previous state.
@@ -501,18 +503,18 @@ export class RequestList {
      * Attempts to load state and requests using the `RequestList` configuration
      * and returns a tuple of [state, requests] where each may be null if not loaded.
      */
-    protected async _loadStateAndPersistedRequests(): Promise<(RequestListState | Buffer | null)[]> {
-        let state;
-        let persistedRequests;
+    protected async _loadStateAndPersistedRequests(): Promise<[RequestListState, Buffer]> {
+        let state!: RequestListState;
+        let persistedRequests!: Buffer;
         if (this.initialState) {
             state = this.initialState;
             this.log.debug('Loaded state from options.state argument.');
         } else if (this.persistStateKey) {
-            state = getValue(this.persistStateKey);
+            state = (await getValue<RequestListState>(this.persistStateKey))!;
             if (state) this.log.debug('Loaded state from key value store using the persistStateKey.');
         }
         if (this.persistRequestsKey) {
-            persistedRequests = await getValue(this.persistRequestsKey);
+            persistedRequests = (await getValue(this.persistRequestsKey))!;
             if (persistedRequests) this.log.debug('Loaded requests from key value store using the persistRequestsKey.');
         }
         // Unwraps "state" promise if needed, otherwise no-op.
@@ -617,7 +619,7 @@ export class RequestList {
     /**
      * Adds all fetched requests from a URL from a remote resource.
      */
-    protected async _addFetchedRequests(source, fetchedRequests: (string | Request | RequestOptions)[]) {
+    protected async _addFetchedRequests(source: InternalSource, fetchedRequests: RequestOptions[]) {
         const { requestsFromUrl, regex } = source;
         const originalLength = this.requests.length;
 
@@ -639,8 +641,7 @@ export class RequestList {
     /**
      * Fetches URLs from requestsFromUrl and returns them in format of list of requests
      */
-    protected async _fetchRequestsFromUrl(source: Source): Promise<RequestOptions[]> {
-        // @ts-expect-error Property does not exist on type 'Source'. // TODO
+    protected async _fetchRequestsFromUrl(source: InternalSource): Promise<RequestOptions[]> {
         const { requestsFromUrl, regex, ...sharedOpts } = source;
         const { downloadListOfUrls } = publicUtils;
         const fixedRequestsFromUrl = this._ensureCorrectRemoteRequestListUrl(requestsFromUrl);
@@ -684,7 +685,7 @@ export class RequestList {
      * If the `source` parameter is a string or plain object and not an instance
      * of a `Request`, then the function creates a `Request` instance.
      */
-    protected _addRequest(source: Source): void {
+    protected _addRequest(source: string | Request | RequestOptions) {
         let request;
         const type = typeof source;
         if (type === 'string') {
@@ -697,9 +698,7 @@ export class RequestList {
             throw new Error(`Cannot create Request from type: ${type}`);
         }
 
-        // @ts-expect-error Property 'uniqueKey' does not exist on type 'string | RequestOptions | Request'.
-        // Property 'uniqueKey' does not exist on type 'string'.
-        const hasUniqueKey = !!source.uniqueKey;
+        const hasUniqueKey = Reflect.has(Object(source), 'uniqueKey');
 
         // Add index to uniqueKey if duplicates are to be kept
         if (this.keepDuplicateUrls && !hasUniqueKey) {
@@ -722,7 +721,7 @@ export class RequestList {
      * Helper function that validates unique key.
      * Throws an error if uniqueKey is not a non-empty string.
      */
-    protected _ensureUniqueKeyValid(uniqueKey?: string): void {
+    protected _ensureUniqueKeyValid(uniqueKey: string): void {
         if (typeof uniqueKey !== 'string' || !uniqueKey) {
             throw new Error('Request object\'s uniqueKey must be a non-empty string');
         }
@@ -923,5 +922,6 @@ export interface RequestListState {
 
 }
 
-export type Source = RequestOptions | Request | { requestsFromUrl: string } | { regex: RegExp } | string;
+export type Source = string | (RequestOptions & { requestsFromUrl: string; regex?: RegExp }) | Request;
+type InternalSource = { requestsFromUrl: string; regex?: RegExp };
 export type RequestListSourcesFunction = () => Promise<Source[]>;

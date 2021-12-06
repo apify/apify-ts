@@ -3,6 +3,7 @@ import { join } from 'path';
 import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@apify/storage-local';
 import { ApifyClient, ApifyClientOptions } from 'apify-client';
 import log from './utils_log';
+import { entries } from './typedefs';
 
 export interface ConfigurationOptions {
     token?: string;
@@ -123,7 +124,7 @@ export class Configuration {
     /**
      * Maps config keys to environment variables (e.g. `proxyPort` to `APIFY_PROXY_PORT`).
      */
-    private static ENV_MAP_REVERSED = Object.entries(Configuration.ENV_MAP).reduce((obj, [key, value]) => {
+    private static ENV_MAP_REVERSED = entries(Configuration.ENV_MAP).reduce((obj, [key, value]) => {
         obj[value] = key;
         return obj;
     }, {} as Record<string, string>);
@@ -143,8 +144,8 @@ export class Configuration {
         proxyPort: +LOCAL_ENV_VARS[ENV_VARS.PROXY_PORT],
         containerPort: +LOCAL_ENV_VARS[ENV_VARS.CONTAINER_PORT],
         containerUrl: LOCAL_ENV_VARS[ENV_VARS.CONTAINER_URL],
-        metamorphAfterSleepMillis: 300e3,
-        persistStateIntervalMillis: 60e3, // This value is mentioned in jsdoc in `events.js`, if you update it here, update it there too.
+        metamorphAfterSleepMillis: 300_000,
+        persistStateIntervalMillis: 60_000, // This value is mentioned in jsdoc in `events.js`, if you update it here, update it there too.
         localStorageEnableWalMode: true,
     };
 
@@ -156,7 +157,7 @@ export class Configuration {
      * Creates new `Configuration` instance with provided options. Env vars will have precedence over those.
      */
     constructor(options: ConfigurationOptions = {}) {
-        this.options = new Map(Object.entries(options)) as any;
+        this.options = new Map(entries(options));
 
         if (!this.get('localStorageDir') && !this.get('token')) {
             const dir = join(process.cwd(), './apify_storage');
@@ -177,7 +178,7 @@ export class Configuration {
         const envValue = process.env[envKey];
 
         if (envValue != null) {
-            return this._castEnvValue(key, envValue as ConfigurationOptions[T]) as U;
+            return this._castEnvValue(key, envValue) as U;
         }
 
         // check instance level options
@@ -186,17 +187,17 @@ export class Configuration {
         }
 
         // fallback to defaults
-        return (defaultValue ?? Configuration.DEFAULTS[key as string] ?? envValue) as U;
+        return (defaultValue ?? Configuration.DEFAULTS[key as keyof typeof Configuration.DEFAULTS] ?? envValue) as U;
     }
 
-    private _castEnvValue<T extends keyof ConfigurationOptions, U extends ConfigurationOptions[T]>(key: T, value: U): U {
+    private _castEnvValue(key: keyof ConfigurationOptions, value: number | string | boolean) {
         if (Configuration.INTEGER_VARS.includes(key)) {
             return +value as U;
         }
 
         if (Configuration.BOOLEAN_VARS.includes(key)) {
             // 0, false and empty string are considered falsy values
-            return !['0', 'false', ''].includes((value as string).toLowerCase()) as U;
+            return !['0', 'false', ''].includes(String(value).toLowerCase());
         }
 
         return value;
@@ -206,7 +207,7 @@ export class Configuration {
      * Sets value for given option. Only affects this `Configuration` instance, the value will not be propagated down to the env var.
      * To reset a value, we can omit the `value` argument or pass `undefined` there.
      */
-    set<T extends keyof ConfigurationOptions, U extends ConfigurationOptions[T]>(key: T, value?: U): void {
+    set(key: keyof ConfigurationOptions, value?: string | number | boolean): void {
         this.options.set(key, value);
     }
 
@@ -219,7 +220,7 @@ export class Configuration {
      * multiple instances, one for each variant of the options.
      * @internal
      */
-    getClient(options: Omit<ApifyClientOptions, 'requestInterceptors' | 'timeoutSecs'> = {}): ApifyClient {
+    getClient(options: CreateClientOptions = {}): ApifyClient {
         const baseUrl = options.baseUrl ?? this.get('apiBaseUrl');
         const token = options.token ?? this.get('token');
         const cacheKey = `${baseUrl}~${token}`;
@@ -259,7 +260,7 @@ export class Configuration {
      * Creates an instance of ApifyClient using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createClient(options: Omit<ApifyClientOptions, 'baseUrl' | 'requestInterceptors' | 'timeoutSecs'> = {}): ApifyClient {
+    createClient(options: CreateClientOptions = {}): ApifyClient {
         return new ApifyClient({
             baseUrl: this.get('apiBaseUrl'),
             token: this.get('token'),
@@ -296,4 +297,11 @@ export class Configuration {
 
         return Configuration.globalConfig;
     }
+}
+
+export interface CreateClientOptions {
+    token?: string;
+    maxRetries?: number;
+    minDelayBetweenRetriesMillis?: number;
+    baseUrl?: string;
 }

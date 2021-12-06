@@ -35,7 +35,8 @@ export function checkAndSerialize<T>(item: T, limitBytes: number, index?: number
     let payload;
     try {
         payload = JSON.stringify(item);
-    } catch (err) {
+    } catch (e) {
+        const err = e as Error;
         throw new Error(`Data item${s}is not serializable to JSON.\nCause: ${err.message}`);
     }
 
@@ -281,7 +282,8 @@ export class Dataset<Data extends Dictionary = Dictionary> {
         try {
             return await this.client.listItems(options);
         } catch (e) {
-            if (e.message.includes('Cannot create a string longer than')) {
+            const error = e as Error;
+            if (error.message.includes('Cannot create a string longer than')) {
                 throw new Error('dataset.getData(): The response is too large for parsing. You can fix this by lowering the "limit" option.');
             }
             throw e;
@@ -389,10 +391,10 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * @param memo Initial state of the reduction.
      * @param [options] All `reduce()` parameters.
      */
-    reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: DatasetIteratorOptions = {}): Promise<T> {
-        let currentMemo = memo;
+    async reduce<T>(iteratee: DatasetReducer<T, Data>, memo: T, options: DatasetIteratorOptions = {}): Promise<T> {
+        let currentMemo: T = memo;
 
-        const wrappedFunc = (item, index) => {
+        const wrappedFunc: DatasetConsumer<Data> = (item, index) => {
             return Promise
                 .resolve()
                 .then(() => {
@@ -401,13 +403,12 @@ export class Dataset<Data extends Dictionary = Dictionary> {
                         : iteratee(currentMemo, item, index);
                 })
                 .then((newMemo) => {
-                    currentMemo = newMemo;
+                    currentMemo = newMemo as T;
                 });
         };
 
-        return this
-            .forEach(wrappedFunc, options)
-            .then(() => currentMemo);
+        await this.forEach(wrappedFunc, options);
+        return currentMemo;
     }
 
     /**
@@ -416,7 +417,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(Dataset);
+        const manager = new StorageManager<Dataset<Data>>(Dataset as any);
         manager.closeStorage(this);
     }
 
@@ -441,7 +442,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
+        const manager = new StorageManager<Dataset<Data>>(Dataset as any, options.config);
         return manager.openStorage(datasetIdOrName, options);
     }
 }

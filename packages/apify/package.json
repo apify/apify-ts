@@ -83,5 +83,9 @@
         "puppeteer": {
             "optional": true
         }
+    },
+    "devDependencies": {
+        "@types/mime-types": "^2.1.1",
+        "@types/stream-json": "^1.7.1"
     }
 }

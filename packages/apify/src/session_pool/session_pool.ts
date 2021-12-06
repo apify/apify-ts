@@ -126,7 +126,7 @@ export class SessionPool extends EventEmitter {
     sessionOptions: SessionOptions;
     persistStateKeyValueStoreId?: string;
     persistStateKey: string;
-    private _listener: () => Promise<void>;
+    private _listener!: () => Promise<void>;
 
     /**
      * @internal
