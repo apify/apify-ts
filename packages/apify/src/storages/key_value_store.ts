@@ -369,10 +369,10 @@ export async function openKeyValueStore(storeIdOrName?: string | null, options: 
  *   on the MIME content type of the record, or `null`
  *   if the record is missing.
  */
-export async function getValue<T extends Dictionary | string | Buffer>(key: string): Promise<T | null> {
+export async function getValue<T>(key: string): Promise<T | null> {
     const store = await openKeyValueStore();
 
-    return store.getValue(key);
+    return store.getValue<T>(key);
 }
 
 /**

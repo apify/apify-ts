@@ -275,7 +275,7 @@ export class RequestList {
     private persistRequestsKey?: string;
     private initialState?: RequestListState;
     private keepDuplicateUrls: boolean;
-    private sources: (Source)[];
+    private sources: Source[];
     private sourcesFunction?: RequestListSourcesFunction;
 
     /**
@@ -322,10 +322,8 @@ export class RequestList {
     /**
      * Loads all remote sources of URLs and potentially starts periodic state persistence.
      * This function must be called before you can start using the instance in a meaningful way.
-     *
-     * @returns {Promise<void>}
      */
-    async initialize() {
+    async initialize(): Promise<void> {
         if (this.isLoading) {
             throw new Error('RequestList sources are already loading or were loaded.');
         }
@@ -336,7 +334,7 @@ export class RequestList {
         // Add persisted requests / new sources in a memory efficient way because with very
         // large lists, we were running out of memory.
         if (persistedRequests) {
-            await this._addPersistedRequests(persistedRequests);
+            await this._addPersistedRequests(persistedRequests as Buffer);
         } else {
             await this._addRequestsFromSources();
         }
@@ -353,12 +351,11 @@ export class RequestList {
      * Adds previously persisted Requests, as retrieved from the key-value store.
      * This needs to be done in a memory efficient way. We should update the input
      * to a Stream once apify-client supports streams.
-     * @param {Buffer} persistedRequests
+     * @param persistedRequests
      * @ignore
-     * @protected
      * @internal
      */
-    async _addPersistedRequests(persistedRequests) {
+    protected async _addPersistedRequests(persistedRequests: Buffer) {
         // We don't need the sources so we purge them to
         // prevent them from hanging in memory.
         for (let i = 0; i < this.sources.length; i++) {
@@ -378,12 +375,10 @@ export class RequestList {
      * This function is called only when persisted sources were not loaded.
      * We need to avoid keeping both sources and requests in memory
      * to reduce memory footprint with very large sources.
-     * @returns {Promise<void>}
      * @ignore
-     * @protected
      * @internal
      */
-    async _addRequestsFromSources() {
+    protected async _addRequestsFromSources() {
         // We'll load all sources in sequence to ensure that they get loaded in the right order.
         const sourcesCount = this.sources.length;
         for (let i = 0; i < sourcesCount; i++) {
@@ -394,8 +389,8 @@ export class RequestList {
 
             // @ts-ignore
             if (typeof source === 'object' && source.requestsFromUrl) {
-                const fetchedRequests = await this._fetchRequestsFromUrl(source);
-                await this._addFetchedRequests(source, fetchedRequests);
+                const fetchedRequests = await this._fetchRequestsFromUrl(source as InternalSource);
+                await this._addFetchedRequests(source as InternalSource, fetchedRequests);
             } else {
                 this._addRequest(source);
             }
@@ -410,9 +405,10 @@ export class RequestList {
                 const sourcesFromFunctionCount = sourcesFromFunction.length;
                 for (let i = 0; i < sourcesFromFunctionCount; i++) {
                     const source = sourcesFromFunction.shift();
-                    this._addRequest(source);
+                    this._addRequest(source!);
                 }
-            } catch (err) {
+            } catch (e) {
+                const err = e as Error;
                 throw new Error(`Loading requests with sourcesFunction failed.\nCause: ${err.message}`);
             }
         }
@@ -424,10 +420,8 @@ export class RequestList {
      * is useful in cases where you want to have the most current state available after you pause
      * or stop fetching its requests. For example after you pause or abort a crawl. Or just before
      * a server migration.
-     *
-     * @return {Promise<void>}
      */
-    async persistState() {
+    async persistState(): Promise<void> {
         if (!this.persistStateKey) {
             throw new Error('Cannot persist state. options.persistStateKey is not set.');
         }
@@ -435,7 +429,8 @@ export class RequestList {
         try {
             await setValue(this.persistStateKey, this.getState());
             this.isStatePersisted = true;
-        } catch (err) {
+        } catch (e) {
+            const err = e as Error;
             this.log.exception(err, 'Attempted to persist state, but failed.');
         }
     }
@@ -444,8 +439,6 @@ export class RequestList {
      * Unlike persistState(), this is used only internally, since the sources
      * are automatically persisted at RequestList initialization (if the persistRequestsKey is set),
      * but there's no reason to persist it again afterwards, because RequestList is immutable.
-     *
-     * @return {Promise<void>}
      * @ignore
      * @internal
      */
@@ -458,12 +451,11 @@ export class RequestList {
     /**
      * Restores RequestList state from a state object.
      *
-     * @param {RequestListState} state
+     * @param state
      * @ignore
-     * @protected
      * @internal
      */
-    _restoreState(state) {
+    protected _restoreState(state?: RequestListState) {
         // If there's no state it means we've not persisted any (yet).
         if (!state) return;
         // Restore previous state.
@@ -522,23 +514,21 @@ export class RequestList {
      * Attempts to load state and requests using the `RequestList` configuration
      * and returns a tuple of [state, requests] where each may be null if not loaded.
      *
-     * @return {Promise<Array<(RequestListState|null)>>}
      * @ignore
-     * @protected
      * @internal
      */
-    async _loadStateAndPersistedRequests() {
-        let state;
-        let persistedRequests;
+    protected async _loadStateAndPersistedRequests(): Promise<[RequestListState, Buffer]> {
+        let state!: RequestListState;
+        let persistedRequests!: Buffer;
         if (this.initialState) {
             state = this.initialState;
             this.log.debug('Loaded state from options.state argument.');
         } else if (this.persistStateKey) {
-            state = getValue(this.persistStateKey);
+            state = (await getValue<RequestListState>(this.persistStateKey))!;
             if (state) this.log.debug('Loaded state from key value store using the persistStateKey.');
         }
         if (this.persistRequestsKey) {
-            persistedRequests = await getValue(this.persistRequestsKey);
+            persistedRequests = (await getValue(this.persistRequestsKey))!;
             if (persistedRequests) this.log.debug('Loaded requests from key value store using the persistRequestsKey.');
         }
         // Unwraps "state" promise if needed, otherwise no-op.
@@ -548,10 +538,8 @@ export class RequestList {
     /**
      * Returns an object representing the internal state of the `RequestList` instance.
      * Note that the object's fields can change in future releases.
-     *
-     * @returns {RequestListState}
      */
-    getState() {
+    getState(): RequestListState {
         this._ensureIsInitialized();
 
         return {
@@ -576,10 +564,8 @@ export class RequestList {
 
     /**
      * Returns `true` if all requests were already handled and there are no more left.
-     *
-     * @returns {Promise<boolean>}
      */
-    async isFinished() {
+    async isFinished(): Promise<boolean> {
         this._ensureIsInitialized();
 
         return !getFirstKey(this.inProgress) && this.nextIndex >= this.requests.length;
@@ -619,10 +605,9 @@ export class RequestList {
     /**
      * Marks request as handled after successful processing.
      *
-     * @param {Request} request
-     * @returns {Promise<void>}
+     * @param request
      */
-    async markRequestHandled(request) {
+    async markRequestHandled(request: Request): Promise<void> {
         const { uniqueKey } = request;
 
         this._ensureUniqueKeyValid(uniqueKey);
@@ -637,10 +622,9 @@ export class RequestList {
      * Reclaims request to the list if its processing failed.
      * The request will become available in the next `this.fetchNextRequest()`.
      *
-     * @param {Request} request
-     * @returns {Promise<void>}
+     * @param request
      */
-    async reclaimRequest(request) {
+    async reclaimRequest(request: Request): Promise<void> {
         const { uniqueKey } = request;
 
         this._ensureUniqueKeyValid(uniqueKey);
@@ -654,10 +638,9 @@ export class RequestList {
      * Adds all fetched requests from a URL from a remote resource.
      *
      * @ignore
-     * @protected
      * @internal
      */
-    async _addFetchedRequests(source, fetchedRequests) {
+    protected async _addFetchedRequests(source: InternalSource, fetchedRequests: RequestOptions[]) {
         const { requestsFromUrl, regex } = source;
         const originalLength = this.requests.length;
 
@@ -679,12 +662,10 @@ export class RequestList {
     /**
      * Fetches URLs from requestsFromUrl and returns them in format of list of requests
      * @param {*} source
-     * @return {Promise<Array<RequestOptions>>}
      * @ignore
-     * @protected
      * @internal
      */
-    async _fetchRequestsFromUrl(source) {
+    protected async _fetchRequestsFromUrl(source: InternalSource): Promise<RequestOptions[]> {
         const { requestsFromUrl, regex, ...sharedOpts } = source;
         const { downloadListOfUrls } = publicUtils;
         const fixedRequestsFromUrl = this._ensureCorrectRemoteRequestListUrl(requestsFromUrl);
@@ -712,13 +693,11 @@ export class RequestList {
 
     /**
      * Tries to detect wrong urls and fix them. Currently detects only sharing url instead of csv download one.
-     * @param {string} url
-     * @return {string}
+     * @param url
      * @ignore
      * @internal
-     * @private
      */
-    _ensureCorrectRemoteRequestListUrl(url) {
+    private _ensureCorrectRemoteRequestListUrl(url: string) {
         const match = url.match(/^(https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:\w|-)+)\/edit/);
 
         if (match) {
@@ -733,25 +712,24 @@ export class RequestList {
      * If the `source` parameter is a string or plain object and not an instance
      * of a `Request`, then the function creates a `Request` instance.
      *
-     * @param {(string|Request|object)} source
+     * @param source
      * @ignore
-     * @protected
      * @internal
      */
-    _addRequest(source) {
+    protected _addRequest(source: string | Request | RequestOptions) {
         let request;
         const type = typeof source;
         if (type === 'string') {
-            request = new Request({ url: source });
+            request = new Request({ url: source as string });
         } else if (source instanceof Request) {
             request = source;
         } else if (source && type === 'object') {
-            request = new Request(source);
+            request = new Request(source as RequestOptions);
         } else {
             throw new Error(`Cannot create Request from type: ${type}`);
         }
 
-        const hasUniqueKey = !!source.uniqueKey;
+        const hasUniqueKey = Reflect.has(Object(source), 'uniqueKey');
 
         // Add index to uniqueKey if duplicates are to be kept
         if (this.keepDuplicateUrls && !hasUniqueKey) {
@@ -775,10 +753,9 @@ export class RequestList {
      * Throws an error if uniqueKey is not a non-empty string.
      *
      * @ignore
-     * @protected
      * @internal
      */
-    _ensureUniqueKeyValid(uniqueKey) { // eslint-disable-line class-methods-use-this
+    protected _ensureUniqueKeyValid(uniqueKey: string) {
         if (typeof uniqueKey !== 'string' || !uniqueKey) {
             throw new Error('Request object\'s uniqueKey must be a non-empty string');
         }
@@ -788,10 +765,9 @@ export class RequestList {
      * Checks that request is not reclaimed and throws an error if so.
      *
      * @ignore
-     * @protected
      * @internal
      */
-    _ensureInProgressAndNotReclaimed(uniqueKey) {
+    protected _ensureInProgressAndNotReclaimed(uniqueKey: string) {
         if (!this.inProgress[uniqueKey]) {
             throw new Error(`The request is not being processed (uniqueKey: ${uniqueKey})`);
         }
@@ -804,10 +780,9 @@ export class RequestList {
      * Throws an error if request list wasn't initialized.
      *
      * @ignore
-     * @protected
      * @internal
      */
-    _ensureIsInitialized() {
+    protected _ensureIsInitialized() {
         if (!this.isInitialized) {
             throw new Error('RequestList is not initialized; you must call "await requestList.initialize()" before using it!');
         }
@@ -815,10 +790,8 @@ export class RequestList {
 
     /**
      * Returns the total number of unique requests present in the `RequestList`.
-     *
-     * @returns {number}
      */
-    length() {
+    length(): number {
         this._ensureIsInitialized();
 
         return this.requests.length;
@@ -826,10 +799,8 @@ export class RequestList {
 
     /**
      * Returns number of handled requests.
-     *
-     * @returns {number}
      */
-    handledCount() {
+    handledCount(): number {
         this._ensureIsInitialized();
 
         return this.nextIndex - _.size(this.inProgress);
@@ -984,12 +955,13 @@ export interface RequestListState {
     nextIndex: number;
 
     /** Key of the next request to be processed. */
-    nextUniqueKey: string;
+    nextUniqueKey: string | null;
 
     /** An object mapping request keys to a boolean value representing whether they are being processed at the moment. */
     inProgress: Record<string, boolean>;
 
 }
 
-export type Source = RequestOptions | Request | { requestsFromUrl: string } | { regex: RegExp } | string;
+export type Source = string | (RequestOptions & { requestsFromUrl: string; regex?: RegExp }) | Request;
+type InternalSource = { requestsFromUrl: string; regex?: RegExp };
 export type RequestListSourcesFunction = () => Promise<Source[]>;
