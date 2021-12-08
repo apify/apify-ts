@@ -77,7 +77,7 @@ export class Request {
      * or may not be included, depending on their nature. This generally means that redirects,
      * which happen immediately will most likely be included, but delayed redirects will not.
      */
-    loadedUrl: string;
+    loadedUrl?: string;
 
     /**
      * A unique key identifying the request.
