@@ -131,7 +131,7 @@ export const apifyClient = newClient();
  * @returns {string}
  * @ignore
  */
-export const addCharsetToContentType = (contentType: string): string => {
+export const addCharsetToContentType = (contentType?: string): string | undefined => {
     if (!contentType) return contentType;
 
     const parsed = contentTypeParser.parse(contentType);
