@@ -962,6 +962,6 @@ export interface RequestListState {
 
 }
 
-export type Source = string | (RequestOptions & { requestsFromUrl: string; regex?: RegExp }) | Request;
+export type Source = string | (RequestOptions & { requestsFromUrl?: string; regex?: RegExp }) | Request;
 type InternalSource = { requestsFromUrl: string; regex?: RegExp };
 export type RequestListSourcesFunction = () => Promise<Source[]>;

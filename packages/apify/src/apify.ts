@@ -1,11 +1,11 @@
 import ow from 'ow';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import { ApifyClient } from 'apify-client';
-import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun, ApifyEnv } from './actor';
+import { ApifyClient, Webhook, WebhookEventType } from 'apify-client';
+import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, ApifyEnv } from './actor';
 import { initializeEvents, stopEvents } from './events';
 import { StorageManager } from './storages/storage_manager';
 import { Dataset } from './storages/dataset';
-import { KeyValueStore, maybeStringify } from './storages/key_value_store';
+import { KeyValueStore, maybeStringify, RecordOptions } from './storages/key_value_store';
 import { RequestList, RequestListOptions, REQUESTS_PERSISTENCE_KEY, STATE_PERSISTENCE_KEY } from './request_list';
 import { RequestQueue } from './storages/request_queue';
 import { SessionPool, SessionPoolOptions } from './session_pool/session_pool';
@@ -20,7 +20,7 @@ import { socialUtils } from './utils_social';
 import { enqueueLinks } from './enqueue_links/enqueue_links';
 import { requestAsBrowser } from './utils_request';
 import { ApifyCallError } from './errors';
-import { ActorRun, Constructor, Dictionary } from './typedefs';
+import { ActorRunWithOutput, Constructor, Dictionary } from './typedefs';
 import { Request, RequestOptions } from './request';
 
 export interface MetamorphOptions {
@@ -135,7 +135,7 @@ export class Apify {
         // This is to enable unit tests where process.exit() is mocked and doesn't really exit the process
         // Note that mocked process.exit() might throw, so set exited flag before calling it to avoid confusion.
         let exited = false;
-        const exitWithError = (err, exitCode) => {
+        const exitWithError = (err: Error, exitCode: number) => {
             log.exception(err, '');
             exited = true;
             process.exit(exitCode);
@@ -155,12 +155,12 @@ export class Apify {
                     process.exit(EXIT_CODES.SUCCESS);
                 } catch (err) {
                     if (!exited) {
-                        exitWithError(err, EXIT_CODES.ERROR_USER_FUNCTION_THREW);
+                        exitWithError(err as Error, EXIT_CODES.ERROR_USER_FUNCTION_THREW);
                     }
                 }
             })();
         } catch (err) {
-            exitWithError(err, EXIT_CODES.ERROR_UNKNOWN);
+            exitWithError(err as Error, EXIT_CODES.ERROR_UNKNOWN);
         } finally {
             stopEvents();
             clearInterval(intervalId);
@@ -206,7 +206,7 @@ export class Apify {
      * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRun> {
+    async call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRunWithOutput> {
         ow(actId, ow.string);
         // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
@@ -248,8 +248,8 @@ export class Apify {
         try {
             run = await client.actor(actId).call(input, callActorOpts);
         } catch (err) {
-            if (err.message.startsWith('Waiting for run to finish')) {
-                throw new ApifyCallError({ id: run.id, actId: run.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
+            if ((err as Error).message.startsWith('Waiting for run to finish')) {
+                throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
             }
             throw err;
         }
@@ -308,9 +308,9 @@ export class Apify {
      * @param {object} [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async callTask(taskId: string, input?: Dictionary | string, options: CallTaskOptions = {}): Promise<ActorRun> {
+    async callTask(taskId: string, input?: Dictionary | Dictionary[], options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
         ow(taskId, ow.string);
-        ow(input, ow.optional.any(ow.string, ow.object));
+        ow(input, ow.optional.any(ow.object, ow.array.ofType(ow.object)));
         ow(options, ow.object.exactShape({
             token: ow.optional.string,
             memoryMbytes: ow.optional.number.not.negative,
@@ -342,11 +342,10 @@ export class Apify {
         // Start task and wait for run to finish if waitSecs is provided
         let run;
         try {
-            // TODO client types are weird?
-            run = await client.task(taskId).call(input as any, callTaskOpts);
+            run = await client.task(taskId).call(input, callTaskOpts);
         } catch (err) {
-            if (err.message.startsWith('Waiting for run to finish')) {
-                throw new ApifyCallError({ id: run.id, actId: run.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
+            if ((err as Error).message.startsWith('Waiting for run to finish')) {
+                throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
             }
             throw err;
         }
@@ -425,9 +424,9 @@ export class Apify {
      * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
      * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
      */
-    async addWebhook(options: WebhookOptions): Promise<WebhookRun | undefined> {
+    async addWebhook(options: WebhookOptions): Promise<Webhook | undefined> {
         ow(options, ow.object.exactShape({
-            eventTypes: ow.array.ofType(ow.string),
+            eventTypes: ow.array.ofType<WebhookEventType>(ow.string),
             requestUrl: ow.string,
             payloadTemplate: ow.optional.string,
             idempotencyKey: ow.optional.string,
@@ -445,10 +444,9 @@ export class Apify {
             throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
         }
 
-        // @ts-ignore return type mismatch with client
         return this.newClient().webhooks().create({
             isAdHoc: true,
-            eventTypes: eventTypes as any, // FIXME weird type mismatch with client types
+            eventTypes,
             condition: {
                 actorRunId: runId,
             },
@@ -509,7 +507,7 @@ export class Apify {
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(Dataset).openStorage(datasetIdOrName, options);
+        return this._getStorageManager<Dataset>(Dataset as any).openStorage(datasetIdOrName, options);
     }
 
     /**
@@ -540,9 +538,9 @@ export class Apify {
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getValue(key) {
+    async getValue<T = unknown>(key: string): Promise<T | null> {
         const store = await this.openKeyValueStore();
-        return store.getValue(key);
+        return store.getValue<T>(key);
     }
 
     /**
@@ -577,7 +575,7 @@ export class Apify {
      * @param {string} [options.contentType]
      *   Specifies a custom MIME content type of the record.
      */
-    async setValue(key, value, options): Promise<void> {
+    async setValue<T>(key: string, value: T | null, options: RecordOptions = {}): Promise<void> {
         const store = await this.openKeyValueStore();
         return store.setValue(key, value, options);
     }
@@ -637,7 +635,7 @@ export class Apify {
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(KeyValueStore).openStorage(storeIdOrName, options);
+        return this._getStorageManager<KeyValueStore>(KeyValueStore as any).openStorage(storeIdOrName, options);
     }
 
     /**
@@ -738,7 +736,7 @@ export class Apify {
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(RequestQueue).openStorage(queueIdOrName, options);
+        return this._getStorageManager<RequestQueue>(RequestQueue as any).openStorage(queueIdOrName, options);
     }
 
     /**
@@ -863,7 +861,7 @@ export class Apify {
         return this.storageManagers.get(storageClass) as StorageManager<T>;
     }
 
-    private _isRunUnsuccessful(status: keyof typeof ACT_JOB_STATUSES): boolean {
+    private _isRunUnsuccessful(status: typeof ACT_JOB_STATUSES[keyof typeof ACT_JOB_STATUSES]): boolean {
         return status !== ACT_JOB_STATUSES.SUCCEEDED
             && status !== ACT_JOB_STATUSES.RUNNING
             && status !== ACT_JOB_STATUSES.READY;

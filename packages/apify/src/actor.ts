@@ -497,9 +497,9 @@ export interface CallTaskOptions {
  * @param [options]
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
-export async function callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+export async function callTask(taskId: string, input?: Dictionary | Dictionary[], options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
     ow(taskId, ow.string);
-    ow(input, ow.optional.any(ow.object));
+    ow(input, ow.optional.any(ow.object, ow.array.ofType(ow.object)));
     ow(options, ow.object.exactShape({
         token: ow.optional.string,
         memoryMbytes: ow.optional.number.not.negative,
@@ -530,7 +530,6 @@ export async function callTask(taskId: string, input?: Dictionary, options: Call
     // Start task and wait for run to finish if waitSecs is provided
     let run;
     try {
-        // @ts-expect-error Awaits client update
         run = await client.task(taskId).call(input, callTaskOpts);
     } catch (err) {
         if ((err as Error).message.startsWith('Waiting for run to finish')) {

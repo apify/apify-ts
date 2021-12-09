@@ -448,7 +448,7 @@ export class ProxyConfiguration {
             proxyUrl = this.newUrlFunction!(sessionId!);
             new URL(proxyUrl); // eslint-disable-line no-new
         } catch (err) {
-            this._throwNewUrlFunctionInvalid(err);
+            this._throwNewUrlFunctionInvalid(err as Error);
         }
 
         return proxyUrl;
@@ -466,7 +466,7 @@ export class ProxyConfiguration {
      * Throws Apify Proxy is not connected
      * @internal
      */
-    protected _throwApifyProxyConnectionError(errorMessage) {
+    protected _throwApifyProxyConnectionError(errorMessage: string) {
         throw new Error(errorMessage);
     }
 
