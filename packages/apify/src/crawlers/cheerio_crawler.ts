@@ -6,7 +6,7 @@ import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import iconv from 'iconv-lite';
 import ow from 'ow';
 import util from 'util';
-import { TimeoutError } from 'got-scraping';
+import { Method, TimeoutError } from 'got-scraping';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { addTimeoutToPromise, parseContentTypeFromResponse } from '../utils';
@@ -14,12 +14,12 @@ import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
 import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions } from './basic_crawler';
 import { CrawlerExtension } from './crawler_extension';
-import { Request, RequestOptions } from '../request';
+import { Request } from '../request';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { Session } from '../session_pool/session';
 import { validators } from '../validators';
 import { BrowserHandlePageFunction, GotoFunction, BrowserHook } from './browser_crawler';
-import { Awaitable } from '../typedefs';
+import { Awaitable, entries } from '../typedefs';
 
 /**
  * Default mime types, which CheerioScraper supports.
@@ -453,8 +453,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
     protected navigationTimeoutMillis!: number;
     protected gotoFunction!: GotoFunction;
     protected defaultGotoOptions!: { timeout: number };
-    protected preNavigationHooks: CheerioHook[];
-    protected postNavigationHooks: CheerioHook[];
+    protected preNavigationHooks: CheerioHook<JSONData>[];
+    protected postNavigationHooks: CheerioHook<JSONData>[];
     protected persistCookiesPerSession: boolean;
     protected requestTimeoutMillis: number;
     protected ignoreSslErrors: boolean;
@@ -514,6 +514,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
+            // @ts-expect-error Function types are not acting nice
             handleRequestFunction: handlePageFunction,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
@@ -567,12 +568,12 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         extensionOptions.userProvidedHandler = extensionOptions.handlePageFunction;
         delete extensionOptions.handlePageFunction;
 
-        for (const [key, value] of Object.entries(extensionOptions)) {
+        for (const [key, value] of entries(extensionOptions)) {
             const isConfigurable = this.hasOwnProperty(key); // eslint-disable-line
-            const originalType = typeof this[key];
+            const originalType = typeof this[key as keyof this];
             const extensionType = typeof value; // What if we want to null something? It is really needed?
             const isSameType = originalType === extensionType || value == null; // fast track for deleting keys
-            const exists = this[key] != null;
+            const exists = this[key as keyof this] != null;
 
             if (!isConfigurable) { // Test if the property can be configured on the crawler
                 throw new Error(`${extension.name} tries to set property "${key}" that is not configurable on CheerioCrawler instance.`);
@@ -586,14 +587,14 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
 
             this.log.warning(`${extension.name} is overriding "CheerioCrawler.${key}: ${originalType}" with ${value}.`);
 
-            this[key] = value;
+            this[key as keyof this] = value as this[keyof this];
         }
     }
 
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestFunction(crawlingContext: CheerioCrawlingContext) {
+    protected override async _handleRequestFunction(crawlingContext: CheerioCrawlingContext<JSONData>) {
         const { request, session } = crawlingContext;
 
         if (this.proxyConfiguration) {
@@ -654,7 +655,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         );
     }
 
-    protected async _handleNavigation(crawlingContext: CheerioCrawlingContext) {
+    protected async _handleNavigation(crawlingContext: CheerioCrawlingContext<JSONData>) {
         if (this.prepareRequestFunction) {
             this.log.deprecated('Option "prepareRequestFunction" is deprecated. Use "preNavigationHooks" instead.');
             await this.prepareRequestFunction(crawlingContext);
@@ -779,10 +780,9 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      * Combines the provided `requestOptions` with mandatory (non-overridable) values.
      */
     protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: RequestAsBrowserOptions) {
-        const requestOptions: RequestOptions = {
+        const requestOptions: RequestAsBrowserOptions = {
             url: request.url,
-            // @ts-expect-error mis both should be typed as AllowedHttpMethods, why is this not working?
-            method: request.method,
+            method: request.method as Method,
             proxyUrl,
             timeout: { request: this.requestTimeoutMillis },
             sessionToken: session,
@@ -801,15 +801,12 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         //   because users can use normal + MITM proxies in a single configuration.
         //   Disable SSL verification for MITM proxies
         if (this.proxyConfiguration && this.proxyConfiguration.isManInTheMiddle) {
-            // @ts-expect-error missing https property - intentional?
             requestOptions.https = {
-                // @ts-expect-error missing https property - intentional?
                 ...requestOptions.https,
                 rejectUnauthorized: false,
             };
         }
 
-        // @ts-expect-error missing body property - intentional?
         if (/PATCH|POST|PUT/.test(request.method)) requestOptions.body = request.payload;
 
         return requestOptions;

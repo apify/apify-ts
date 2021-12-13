@@ -21,7 +21,7 @@
 
 import ow from 'ow';
 import _ from 'underscore';
-import { Page, Response } from 'playwright';
+import { Page, Response, Route } from 'playwright';
 import log from './utils_log';
 import { validators } from './validators';
 import { Request } from './request';
@@ -79,7 +79,7 @@ export async function gotoExtended(page: Page, request: Request, gotoOptions: Di
         log.deprecated('Using other request methods than GET, rewriting headers and adding payloads has a high impact on performance '
             + 'in recent versions of Playwright. Use only when necessary.');
         let wasCalled = false;
-        const interceptRequestHandler = async (route) => {
+        const interceptRequestHandler = async (route: Route) => {
             try {
                 // We want to ensure that this won't get executed again in a case that there is a subsequent request
                 // for example for some asset file link from main HTML.

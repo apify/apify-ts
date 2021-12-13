@@ -25,7 +25,7 @@ import vm from 'vm';
 import util from 'util';
 import _ from 'underscore';
 import { LruCache } from '@apify/datastructures';
-import { Page, HTTPResponse, ResponseForRequest } from 'puppeteer';
+import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log from './utils_log';
 import { validators } from './validators';
 
@@ -239,7 +239,7 @@ export async function blockRequests(page: Page, options: { urlPatterns?: string[
  * 'Until this resolves, please use `Apify.utils.puppeteer.blockRequests()`.
  * @deprecated
  */
-const blockResources = async (page, resourceTypes = ['stylesheet', 'font', 'image', 'media']) => {
+const blockResources = async (page: Page, resourceTypes = ['stylesheet', 'font', 'image', 'media']) => {
     log.deprecated('Apify.utils.puppeteer.blockResources() has a high impact on performance in recent versions of Puppeteer. '
         + 'Until this resolves, please use Apify.utils.puppeteer.blockRequests()');
     await addInterceptRequestHandler(page, async (request) => {
@@ -345,7 +345,7 @@ export function compileScript(scriptString: string, context: Dictionary = Object
     try {
         func = vm.runInNewContext(funcString, context); // "Secure" the context by removing prototypes, unless custom context is provided.
     } catch (err) {
-        log.exception(err, 'Cannot compile script!');
+        log.exception(err as Error, 'Cannot compile script!');
         throw err;
     }
 
@@ -384,7 +384,7 @@ export async function gotoExtended(page: Page, request: Request, gotoOptions: Di
         log.deprecated('Using other request methods than GET, rewriting headers and adding payloads has a high impact on performance '
             + 'in recent versions of Puppeteer. Use only when necessary.');
         let wasCalled = false;
-        const interceptRequestHandler = async (interceptedRequest) => {
+        const interceptRequestHandler = async (interceptedRequest: PuppeteerRequest) => {
             // We want to ensure that this won't get executed again in a case that there is a subsequent request
             // for example for some asset file link from main HTML.
             if (wasCalled) {
@@ -607,7 +607,7 @@ export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}
             await store.setValue(htmlName, html, { contentType: 'text/html' });
         }
     } catch (err) {
-        throw new Error(`saveSnapshot with key ${key} failed.\nCause:${err.message}`);
+        throw new Error(`saveSnapshot with key ${key} failed.\nCause:${(err as Error).message}`);
     }
 }
 
