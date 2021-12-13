@@ -1,15 +1,18 @@
 import path from 'path';
 import express from 'express';
-import Apify, { KeyValueStore } from 'apify';
-import { Browser } from 'puppeteer';
+import Apify, { Dictionary, KeyValueStore } from 'apify';
+import { Browser, Page, ResponseForRequest } from 'puppeteer';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
 
 const { utils: { log } } = Apify;
 
 const HOSTNAME = '127.0.0.1';
-let port;
-let server;
+let port: number;
+let server: Server;
+
 beforeAll(async () => {
     const app = express();
 
@@ -26,7 +29,7 @@ beforeAll(async () => {
     });
 
     server = await startExpressAppPromise(app, 0);
-    port = server.address().port; //eslint-disable-line
+    port = (server.address() as AddressInfo).port; //eslint-disable-line
 });
 
 afterAll(() => {
@@ -34,8 +37,8 @@ afterAll(() => {
 });
 
 describe('Apify.utils.puppeteer', () => {
-    let ll;
-    let localStorageEmulator;
+    let ll: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
 
     beforeAll(async () => {
         ll = log.getLevel();
@@ -52,34 +55,35 @@ describe('Apify.utils.puppeteer', () => {
         log.setLevel(ll);
         await localStorageEmulator.destroy();
     });
+
     describe.each([
         ['launchPuppeteer', { launchOptions: { headless: true } }],
         // ['launchPlaywright', { launchOptions: { headless: true } }],
-    ])('with %s', (launchName, launchContext) => {
+    ] as const)('with %s', (launchName, launchContext) => {
         test('injectFile()', async () => {
         /* eslint-disable no-shadow */
             const browser2 = await Apify[launchName](launchContext);
             const survive = async (browser: Browser) => {
-            // Survive navigations
+                // Survive navigations
                 const page = await browser.newPage();
-                // @ts-ignore
+                // @ts-expect-error
                 let result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await Apify.utils.puppeteer.injectFile(page, path.join(__dirname, 'data', 'inject_file.txt'), { surviveNavigations: true });
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('about:chrome');
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('https://www.example.com');
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
             };
-            const remove = async (browser) => {
-            // Remove with navigations
+            const remove = async (browser: Browser) => {
+                // Remove with navigations
                 const page = await browser.newPage();
                 // @ts-ignore
                 let result = await page.evaluate(() => window.injectedVariable === 42);
@@ -167,7 +171,7 @@ describe('Apify.utils.puppeteer', () => {
         });
 
         describe('blockRequests()', () => {
-            let browser = null;
+            let browser: Browser = null;
             beforeAll(async () => {
                 browser = await Apify[launchName](launchContext);
             });
@@ -176,7 +180,7 @@ describe('Apify.utils.puppeteer', () => {
             });
 
             test('works with default values', async () => {
-                const loadedUrls = [];
+                const loadedUrls: string[] = [];
 
                 const page = await browser.newPage();
                 await Apify.utils.puppeteer.blockRequests(page);
@@ -191,7 +195,7 @@ describe('Apify.utils.puppeteer', () => {
             });
 
             test('works with overridden values', async () => {
-                const loadedUrls = [];
+                const loadedUrls: string[] = [];
 
                 const page = await browser.newPage();
                 await Apify.utils.puppeteer.blockRequests(page, {
@@ -212,7 +216,7 @@ describe('Apify.utils.puppeteer', () => {
             });
 
             test('blockResources() supports default values', async () => {
-                const loadedUrls = [];
+                const loadedUrls: string[] = [];
 
                 const page = await browser.newPage();
                 await Apify.utils.puppeteer.blockResources(page);
@@ -229,7 +233,7 @@ describe('Apify.utils.puppeteer', () => {
             });
 
             test('blockResources() supports nondefault values', async () => {
-                const loadedUrls = [];
+                const loadedUrls: string[] = [];
 
                 const page = await browser.newPage();
                 await Apify.utils.puppeteer.blockResources(page, ['script']);
@@ -249,7 +253,7 @@ describe('Apify.utils.puppeteer', () => {
 
         test('supports cacheResponses()', async () => {
             const browser = await Apify[launchName](launchContext);
-            const cache = {};
+            const cache: Dictionary<Partial<ResponseForRequest>> = {};
 
             const getResourcesLoadedFromWiki = async () => {
                 let downloadedBytes = 0;
@@ -285,7 +289,7 @@ describe('Apify.utils.puppeteer', () => {
                 on: () => {},
             };
 
-            const testRuleType = async (value) => {
+            const testRuleType = async (value: string | RegExp) => {
                 try {
                     await Apify.utils.puppeteer.cacheResponses(mockedPage as any, {}, [value]);
                 } catch (error) {
@@ -295,11 +299,17 @@ describe('Apify.utils.puppeteer', () => {
 
                 expect(`Rule '${value}' should have thrown error`).toBe('');
             };
+
+            // @ts-expect-error
             await testRuleType(0);
+            // @ts-expect-error
             await testRuleType(1);
             await testRuleType(null);
+            // @ts-expect-error
             await testRuleType([]);
+            // @ts-expect-error
             await testRuleType(['']);
+            // @ts-expect-error
             await testRuleType(() => {});
         });
 
@@ -317,7 +327,7 @@ describe('Apify.utils.puppeteer', () => {
                 throw new Error('Should fail.');
             } catch (err) {
                 // TODO figure out why the err.message comes out empty in the logs.
-                expect(err.message).toMatch(/Unexpected token '?const'?/);
+                expect((err as Error).message).toMatch(/Unexpected token '?const'?/);
             }
             const browser = await Apify[launchName](launchContext);
             try {
@@ -360,7 +370,7 @@ describe('Apify.utils.puppeteer', () => {
                 return (window.innerHeight + window.pageYOffset) >= document.body.offsetHeight;
             }
 
-            let browser;
+            let browser: Browser;
             beforeAll(async () => {
                 browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
             });
@@ -368,7 +378,7 @@ describe('Apify.utils.puppeteer', () => {
                 await browser.close();
             });
 
-            let page;
+            let page: Page;
             beforeEach(async () => {
                 page = await browser.newPage();
                 let count = 0;
@@ -418,7 +428,7 @@ describe('Apify.utils.puppeteer', () => {
                 const contentHTML = '<html><head></head><body><div style="border: 1px solid black">Div number: 1</div></body></html>';
                 await page.setContent(contentHTML);
 
-                const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', screenshotQuality: 60 });
+                const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 60 });
 
                 // Test saving both image and html
                 const object = { setValue: jest.fn() };
@@ -433,7 +443,7 @@ describe('Apify.utils.puppeteer', () => {
                 await Apify.utils.puppeteer.saveSnapshot(page, { saveHtml: false });
 
                 // Default quality is 50
-                const screenshot2 = await page.screenshot({ fullPage: true, type: 'jpeg', screenshotQuality: 50 });
+                const screenshot2 = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 50 });
                 expect(object.setValue).toBeCalledWith('SNAPSHOT.jpg', screenshot2, { contentType: 'image/jpeg' });
             } finally {
                 openKVSSpy.mockRestore();

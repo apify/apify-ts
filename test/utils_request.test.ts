@@ -1,5 +1,7 @@
 import express from 'express';
-import { requestAsBrowser } from '../packages/apify/src/utils_request';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
+import { requestAsBrowser, RequestAsBrowserOptions } from 'apify/src/utils_request';
 import { startExpressAppPromise } from './_helper';
 
 const CONTENT = 'CONTENT';
@@ -7,8 +9,8 @@ const JSON_CONTENT = JSON.stringify({ content: CONTENT });
 const HOSTNAME = '127.0.0.1';
 
 describe('Apify.utils_request', () => {
-    let port;
-    let server;
+    let port: number;
+    let server: Server;
     beforeAll(async () => {
         const app = express();
 
@@ -88,7 +90,7 @@ describe('Apify.utils_request', () => {
         });
 
         server = await startExpressAppPromise(app, 0);
-        port = server.address().port; //eslint-disable-line
+        port = (server.address() as AddressInfo).port;
     });
 
     afterAll(() => {
@@ -132,7 +134,6 @@ describe('Apify.utils_request', () => {
         test.each(testQueries)(`it works with not encoded urls: '%s' (stream)`, async (query, decoded) => {
             const response = await requestAsBrowser({
                 url: `http://${HOSTNAME}:${port}/test-encoding/?q=${query}`,
-                // @ts-ignore TODO missing in options?
                 stream: true,
             });
 
@@ -210,7 +211,7 @@ describe('Apify.utils_request', () => {
                 error = e;
             }
 
-            expect(error).toBeFalsy(); //eslint-disable-line
+            expect(error).toBeFalsy();
         });
 
         test('overrides defaults', async () => {
@@ -230,7 +231,7 @@ describe('Apify.utils_request', () => {
 
         test('custom headers in uppercase for HTTP1', async () => {
             const host = `${HOSTNAME}:${port}`;
-            const options = {
+            const options: RequestAsBrowserOptions = {
                 url: `http://${host}/rawHeaders`,
                 headers: {
                     Accept: 'foo',
@@ -240,16 +241,15 @@ describe('Apify.utils_request', () => {
                 responseType: 'json',
             };
 
-            const response = await requestAsBrowser(options);
+            const response = await requestAsBrowser<string[]>(options);
             expect(response.statusCode).toBe(200);
 
             // Split an array into chunks of two
-            // @ts-ignore TODO body is string, not array? maybe it should be generic?
             const entries = response.body.reduce((all, one, i) => {
                 const ch = Math.floor(i / 2);
                 all[ch] = [].concat((all[ch] || []), one);
                 return all;
-            }, []);
+            }, [] as string[][]);
 
             expect(Object.fromEntries(entries)).toMatchObject({
                 Accept: 'foo',
@@ -273,9 +273,9 @@ describe('Apify.utils_request', () => {
                 });
             } catch (err) {
                 if (process.version.startsWith('v10')) {
-                    expect(err.message).toMatch('Parse Error');
+                    expect((err as Error).message).toMatch('Parse Error');
                 } else {
-                    expect(err.message).toMatch('Parse Error: Invalid header value char');
+                    expect((err as Error).message).toMatch('Parse Error: Invalid header value char');
                 }
             }
         });
@@ -287,7 +287,7 @@ describe('Apify.utils_request', () => {
             } catch (err) {
                 // If it's some other error, it's fine for the purpose of this test.
                 // We're only making sure that the max redirect error is not there.
-                if (err.name === 'MaxRedirectsError') throw err;
+                if ((err as Error).name === 'MaxRedirectsError') throw err;
             }
         });
 
@@ -298,10 +298,10 @@ describe('Apify.utils_request', () => {
             const response = await requestAsBrowser({ url, useHttp2: true });
             // TODO Node v10 does not support HTTP2 well, remove when we drop support.
             if (process.version.startsWith('v10')) {
-                // @ts-ignore TODO missing Response.request?
+                // @ts-expect-error Request not provided?
                 expect(response.request.options.http2).toBe(false);
             } else {
-                // @ts-ignore TODO missing Response.request?
+                // @ts-expect-error Request not provided?
                 expect(response.request.options.http2).toBe(true);
             }
             expect(response.body.length).toBeGreaterThan(10000);
@@ -311,10 +311,10 @@ describe('Apify.utils_request', () => {
         test('get works with streams', async () => {
             const response = await requestAsBrowser({
                 url: 'https://apify.com/',
-                // @ts-ignore TODO missing in options?
                 stream: true,
             });
-            // @ts-ignore TODO missing in options?
+
+            // @ts-expect-error Options not provided?
             expect(response.options.isStream).toBe(true);
             const chunks = [];
             for await (const chunk of response) {
@@ -328,11 +328,11 @@ describe('Apify.utils_request', () => {
             const response = await requestAsBrowser({
                 method: 'POST',
                 url: `http://${HOSTNAME}:${port}/echo-body`,
-                // @ts-ignore TODO missing in options?
                 stream: true,
-                payload: 'TEST',
+                body: 'TEST',
             });
-            // @ts-ignore TODO missing in options?
+
+            // @ts-expect-error Options not provided?
             expect(response.options.isStream).toBe(true);
             const chunks = [];
             for await (const chunk of response) {
@@ -345,9 +345,8 @@ describe('Apify.utils_request', () => {
         describe('old requestAsBrowser API', () => {
             test('correctly handles json: true without payload', async () => {
                 const host = `${HOSTNAME}:${port}`;
-                const options = {
+                const options: RequestAsBrowserOptions = {
                     url: `http://${host}/json`,
-                    json: true,
                 };
 
                 const response = await requestAsBrowser(options);
@@ -359,12 +358,11 @@ describe('Apify.utils_request', () => {
             test('correctly handles json: true with payload', async () => {
                 const host = `${HOSTNAME}:${port}`;
                 const body = { hello: 'world' };
-                const options = {
+                const options: RequestAsBrowserOptions = {
                     url: `http://${host}/jsonEcho`,
                     method: 'POST',
-                    json: true,
                     headers: { 'content-type': 'application/json' },
-                    payload: JSON.stringify(body),
+                    body: JSON.stringify(body),
                 };
 
                 const response = await requestAsBrowser(options);
@@ -374,9 +372,8 @@ describe('Apify.utils_request', () => {
 
             test('correctly handles json: false without payload', async () => {
                 const host = `${HOSTNAME}:${port}`;
-                const options = {
+                const options: RequestAsBrowserOptions = {
                     url: `http://${host}/json`,
-                    json: false,
                 };
 
                 const response = await requestAsBrowser(options);
@@ -387,12 +384,11 @@ describe('Apify.utils_request', () => {
             test('correctly handles json: false with payload', async () => {
                 const host = `${HOSTNAME}:${port}`;
                 const payload = JSON.stringify({ hello: 'world' });
-                const options = {
+                const options: RequestAsBrowserOptions = {
                     url: `http://${host}/jsonEcho`,
-                    json: false,
                     method: 'POST',
                     headers: { 'content-type': 'application/json' },
-                    payload,
+                    body: payload,
                 };
 
                 const response = await requestAsBrowser(options);
@@ -414,11 +410,11 @@ describe('Apify.utils_request', () => {
             test('correctly handles json: undefined with payload', async () => {
                 const host = `${HOSTNAME}:${port}`;
                 const payload = JSON.stringify({ hello: 'world' });
-                const options = {
+                const options: RequestAsBrowserOptions = {
                     url: `http://${host}/jsonEcho`,
                     method: 'POST',
                     headers: { 'content-type': 'application/json' },
-                    payload,
+                    body: payload,
                 };
 
                 const response = await requestAsBrowser(options);
@@ -434,7 +430,7 @@ describe('Apify.utils_request', () => {
 
                 const host = `${HOSTNAME}:${port}`;
                 const json = { foo: 'bar' };
-                const options = {
+                const options: RequestAsBrowserOptions = {
                     url: `http://${host}/jsonEcho`,
                     method: 'POST',
                     json,

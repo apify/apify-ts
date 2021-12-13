@@ -4,11 +4,11 @@ import { ProxyConfiguration } from 'apify/src/proxy_configuration';
 import { EVENT_SESSION_RETIRED } from 'apify/src/session_pool/events';
 import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
 
-import Apify from 'apify';
+import Apify, { Dictionary, entries } from 'apify';
 
 describe('Session - testing session behaviour ', () => {
-    let sessionPool;
-    let session;
+    let sessionPool: SessionPool;
+    let session: Session;
 
     beforeEach(() => {
         sessionPool = new SessionPool();
@@ -16,13 +16,19 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should markGood session and lower the errorScore', () => {
+        // @ts-expect-error Private property
         expect(session.usageCount).toBe(0);
+        // @ts-expect-error Private property
         expect(session.errorScore).toBe(0);
         session.markGood();
+        // @ts-expect-error Private property
         expect(session.usageCount).toBe(1);
+        // @ts-expect-error Private property
         expect(session.errorScore).toBe(0);
+        // @ts-expect-error Private property
         session.errorScore = 1;
         session.markGood();
+        // @ts-expect-error Private property
         expect(session.errorScore).toBe(0.5);
     });
 
@@ -35,12 +41,14 @@ describe('Session - testing session behaviour ', () => {
             err = e;
         }
         expect(err).toBeDefined(); // eslint-disable-line
-        expect(err.message.includes('object `sessionPool` `{}` to be of type `SessionPool`')).toBe(true); // eslint-disable-line
+        expect((err as Error).message.includes('object `sessionPool` `{}` to be of type `SessionPool`')).toBe(true); // eslint-disable-line
     });
 
     test('should mark session markBad', () => {
         session.markBad();
+        // @ts-expect-error Private property
         expect(session.errorScore).toBe(1);
+        // @ts-expect-error Private property
         expect(session.usageCount).toBe(1);
     });
 
@@ -52,6 +60,7 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should max out session usage', () => {
+        // @ts-expect-error Private property
         session.maxUsageCount = 1;
         session.markGood();
         expect(session.isMaxUsageCountReached()).toBe(true);
@@ -59,6 +68,7 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should block session', () => {
+        // @ts-expect-error Private property
         session.errorScore += session.maxErrorScore;
         expect(session.isBlocked()).toBe(true);
         expect(session.isUsable()).toBe(false);
@@ -67,7 +77,7 @@ describe('Session - testing session behaviour ', () => {
         let error;
 
         try {
-            session.setCookiesFromResponse({ headers: { Cookie: 'invaldi*{*{*{*-----***@s' } });
+            session.setCookiesFromResponse({ headers: { Cookie: 'invaldi*{*{*{*-----***@s' }, url: 'http://localhost:1337' });
         } catch (e) {
             error = e;
         }
@@ -77,6 +87,7 @@ describe('Session - testing session behaviour ', () => {
 
     test('should markGood session', () => {
         session.markGood();
+        // @ts-expect-error Private property
         expect(session.usageCount).toBe(1);
         expect(session.isUsable()).toBe(true);
     });
@@ -88,11 +99,13 @@ describe('Session - testing session behaviour ', () => {
             discarded = true;
         });
         session.retire();
-        expect(discarded).toBe(true); // eslint-disable-line
+        expect(discarded).toBe(true);
+        // @ts-expect-error Private property
         expect(session.usageCount).toBe(1);
     });
 
     test('should retire session after marking bad', () => {
+        // @ts-expect-error Private property
         jest.spyOn(session, '_maybeSelfRetire');
         jest.spyOn(session, 'retire');
         session.markBad();
@@ -103,6 +116,7 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should retire session after marking good', () => {
+        // @ts-expect-error Private property
         jest.spyOn(session, '_maybeSelfRetire');
         jest.spyOn(session, 'retire');
 
@@ -115,10 +129,13 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should reevaluate usability of session after marking the session', () => {
+        // @ts-expect-error Private property
         jest.spyOn(session, '_maybeSelfRetire');
         session.markGood();
+        // @ts-expect-error Private property
         expect(session._maybeSelfRetire).toBeCalledTimes(1); // eslint-disable-line
         session.markBad();
+        // @ts-expect-error Private property
         expect(session._maybeSelfRetire).toBeCalledTimes(2); // eslint-disable-line
     });
 
@@ -135,9 +152,9 @@ describe('Session - testing session behaviour ', () => {
         expect(state.usageCount).toBeDefined();
         expect(state.errorScore).toBeDefined();
 
-        Object.entries(state).forEach(([key, value]) => {
+        entries(state).forEach(([key, value]) => {
             if (session[key] instanceof Date) {
-                expect(session[key].toISOString()).toEqual(value);
+                expect((session[key] as Date).toISOString()).toEqual(value);
             } else if (key === 'cookieJar') {
                 expect(value).toEqual(session[key].toJSON());
             } else {
@@ -161,6 +178,7 @@ describe('Session - testing session behaviour ', () => {
 
     test('should use cookieJar', () => {
         session = new Session({ sessionPool });
+        // @ts-expect-error Private property
         expect(session.cookieJar.setCookie).toBeDefined();
     });
 
@@ -228,7 +246,7 @@ describe('Session - testing session behaviour ', () => {
 
     describe('.putResponse & .getCookieString', () => {
         test('should set and update cookies from "set-cookie" header', () => {
-            const headers = {};
+            const headers: Dictionary<string | string[]> = {};
 
             headers['set-cookie'] = [
                 'CSRF=e8b667; Domain=example.com; Secure ',
@@ -249,7 +267,7 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should correctly persist and init cookieJar', () => {
-        const headers = {};
+        const headers: Dictionary<string | string[]> = {};
 
         headers['set-cookie'] = [
             'CSRF=e8b667; Domain=example.com; Secure ',

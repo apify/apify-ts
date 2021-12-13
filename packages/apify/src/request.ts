@@ -142,7 +142,6 @@ export class Request {
             // @ts-ignore
             loadedUrl,
             uniqueKey,
-            method = 'GET',
             payload,
             // @ts-ignore
             noRetry = false,
@@ -157,6 +156,12 @@ export class Request {
             keepUrlFragment = false,
             useExtendedUniqueKey = false,
         } = options;
+
+        let {
+            method = 'GET',
+        } = options;
+
+        method = method.toUpperCase() as AllowedHttpMethods;
 
         if (method === 'GET' && payload) throw new Error('Request with GET method cannot have a payload.');
 
@@ -271,7 +276,7 @@ export interface RequestOptions {
     uniqueKey?: string;
 
     /** @default 'GET' */
-    method?: AllowedHttpMethods;
+    method?: AllowedHttpMethods | Lowercase<AllowedHttpMethods>;
 
     /** HTTP request payload, e.g. for POST requests. */
     payload?: string | Buffer;

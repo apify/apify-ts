@@ -1,9 +1,10 @@
 import { Cookie } from 'tough-cookie';
 import { getCookiesFromResponse } from 'apify/src/session_pool/session_utils';
+import { Dictionary } from 'apify';
 
 describe('getCookiesFromResponse ', () => {
     test('should parse cookies if set-cookie is array', () => {
-        const headers = {};
+        const headers: Dictionary<string | string[]> = {};
         const dummyCookies = ['CSRF=e8b667; Domain=example.com; Secure', 'id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT'];
         headers['set-cookie'] = dummyCookies;
         const cookies = getCookiesFromResponse({ headers });
@@ -17,7 +18,7 @@ describe('getCookiesFromResponse ', () => {
     });
 
     test('should parse cookies if set-cookie is string', () => {
-        const headers = {};
+        const headers: Dictionary<string | string[]> = {};
         const dummyCookie = 'CSRF=e8b667; Domain=example.com; Secure';
         headers['set-cookie'] = dummyCookie;
         const cookies = getCookiesFromResponse({ headers });
@@ -28,7 +29,7 @@ describe('getCookiesFromResponse ', () => {
     });
 
     test('should not throw error on parsing invalid cookie', () => {
-        const headers = {};
+        const headers: Dictionary<string | string[]> = {};
         const dummyCookie = 'totally Invalid Cookie $@$@#$**';
         headers['set-cookie'] = dummyCookie;
         const cookies = getCookiesFromResponse({ headers });

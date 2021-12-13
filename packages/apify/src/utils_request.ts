@@ -88,6 +88,8 @@ export interface RequestAsBrowserOptions extends GotOptionsInit {
      * Set this option to make these headers persistent.
      */
     sessionToken?: object;
+
+    stream?: boolean;
 }
 
 export type AbortFunction = (response: IncomingMessage) => boolean;

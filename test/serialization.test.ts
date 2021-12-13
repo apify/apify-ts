@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import util from 'util';
 import zlib from 'zlib';
-import { serializeArray, deserializeArray, createDeserialize } from '../packages/apify/src/serialization';
+import { serializeArray, deserializeArray, createDeserialize } from 'apify/src/serialization';
 
 const TEST_JSON_PATH = path.join(__dirname, 'data', 'sample.json.gz');
 

@@ -4,13 +4,14 @@ import scanner from 'fpscanner';
 import path from 'path';
 
 import Apify from 'apify';
+import { Browser, Page } from 'puppeteer';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 const fingerPrintPath = require.resolve('fpcollect/dist/fpCollect.min.js');
 const pathToHTML = path.join(__dirname, 'test_html.html');
 const testUrl = `file://${pathToHTML}`;
 
-const getFingerPrint = async (page) => {
+const getFingerPrint = async (page: Page) => {
     await Apify.utils.puppeteer.injectFile(page, fingerPrintPath);
 
     // @ts-expect-error Evaluated method
@@ -19,7 +20,7 @@ const getFingerPrint = async (page) => {
 
 // we can speed up the test to make the requests to the local static html
 describe('Stealth - testing headless chrome hiding tricks', () => {
-    let localStorageEmulator;
+    let localStorageEmulator: LocalStorageDirEmulator;
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();
@@ -56,9 +57,9 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
     }, 60e3);
 
     describe('work in launchPuppeteer', () => {
-        let browser;
-        let page;
-        jest.setTimeout(60e3);
+        let browser: Browser;
+        let page: Page;
+        jest.setTimeout(60_000);
 
         beforeEach(async () => {
             browser = await Apify.launchPuppeteer({
@@ -176,8 +177,6 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
             await page.goto(testUrl);
             const fingerPrint = await getFingerPrint(page);
             const testedFingerprint = scanner.analyseFingerprint(fingerPrint);
-            // TODO: if this is our module, type it
-            // @ts-expect-error testedFingerprint is not typed
             const failedChecks = Object.values(testedFingerprint).filter((val) => val.consistent < 3);
 
             // webdriver check is failing due to the outdated fp analyzer
