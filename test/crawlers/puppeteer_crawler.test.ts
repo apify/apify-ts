@@ -2,11 +2,8 @@ import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
 import log from 'apify/src/utils_log';
 import Apify, {
-    Dictionary,
-    GotoFunction,
     ProxyConfiguration,
     PuppeteerCookie,
-    PuppeteerCrawlContext,
     PuppeteerGoToOptions,
     PuppeteerHandlePage,
     PuppeteerHandlePageFunctionParam,
@@ -113,7 +110,7 @@ describe('PuppeteerCrawler', () => {
 
     test('should override goto timeout with gotoTimeoutSecs ', async () => {
         const timeoutSecs = 10;
-        let options: Dictionary;
+        let options: PuppeteerGoToOptions;
         const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
@@ -159,7 +156,7 @@ describe('PuppeteerCrawler', () => {
 
     test('should override goto timeout with navigationTimeoutSecs ', async () => {
         const timeoutSecs = 10;
-        let options: Dictionary;
+        let options: PuppeteerGoToOptions;
         const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,

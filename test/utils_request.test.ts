@@ -347,6 +347,7 @@ describe('Apify.utils_request', () => {
                 const host = `${HOSTNAME}:${port}`;
                 const options: RequestAsBrowserOptions = {
                     url: `http://${host}/json`,
+                    json: true,
                 };
 
                 const response = await requestAsBrowser(options);
@@ -363,6 +364,7 @@ describe('Apify.utils_request', () => {
                     method: 'POST',
                     headers: { 'content-type': 'application/json' },
                     body: JSON.stringify(body),
+                    json: true,
                 };
 
                 const response = await requestAsBrowser(options);

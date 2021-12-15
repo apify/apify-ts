@@ -789,8 +789,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
             ...requestAsBrowserOptions,
             headers: { ...request.headers, ...requestAsBrowserOptions?.headers },
             https: {
-                // @ts-expect-error mis missing https property - intentional?
-                ...requestAsBrowserOptions.https,
+                ...requestAsBrowserOptions?.https,
                 rejectUnauthorized: !this.ignoreSslErrors,
             },
             isStream: true,

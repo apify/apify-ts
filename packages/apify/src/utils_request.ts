@@ -9,7 +9,7 @@ type GotRequest = ReturnType<GotStream>
 
 export type RequestAsBrowserResult<T = string> = IncomingMessage & { body: T };
 
-export interface RequestAsBrowserOptions extends GotOptionsInit {
+export interface RequestAsBrowserOptions extends Omit<GotOptionsInit, 'json'> {
     /**
      *  URL of the target endpoint. Supports both HTTP and HTTPS schemes.
      */
@@ -90,6 +90,11 @@ export interface RequestAsBrowserOptions extends GotOptionsInit {
     sessionToken?: object;
 
     stream?: boolean;
+
+    /**
+     * The `boolean` type for `json` is deprecated
+     */
+    json?: Dictionary | undefined | boolean;
 }
 
 export type AbortFunction = (response: IncomingMessage) => boolean;
