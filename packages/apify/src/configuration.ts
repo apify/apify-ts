@@ -220,7 +220,7 @@ export class Configuration {
      * multiple instances, one for each variant of the options.
      * @internal
      */
-    getClient(options: CreateClientOptions = {}): ApifyClient {
+    getClient(options: ApifyClientOptions = {}): ApifyClient {
         const baseUrl = options.baseUrl ?? this.get('apiBaseUrl');
         const token = options.token ?? this.get('token');
         const cacheKey = `${baseUrl}~${token}`;
@@ -260,7 +260,7 @@ export class Configuration {
      * Creates an instance of ApifyClient using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createClient(options: CreateClientOptions = {}): ApifyClient {
+    createClient(options: ApifyClientOptions = {}): ApifyClient {
         return new ApifyClient({
             baseUrl: this.get('apiBaseUrl'),
             token: this.get('token'),
@@ -297,11 +297,4 @@ export class Configuration {
 
         return Configuration.globalConfig;
     }
-}
-
-export interface CreateClientOptions {
-    token?: string;
-    maxRetries?: number;
-    minDelayBetweenRetriesMillis?: number;
-    baseUrl?: string;
 }

@@ -812,7 +812,7 @@ export class Apify {
      * environment variables. You can override the token via the available options. That's useful
      * if you want to use the client as a different Apify user than the SDK internals are using.
      */
-    newClient(options: Omit<ApifyClientOptions, 'baseUrl' | 'requestInterceptors' | 'timeoutSecs'> = {}): ApifyClient {
+    newClient(options: ApifyClientOptions = {}): ApifyClient {
         return this.config.createClient(options);
     }
 
