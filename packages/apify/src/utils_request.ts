@@ -243,8 +243,7 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
                     return reject(e);
                 }
 
-                // TODO: stream vs response interface?
-                addResponsePropertiesToStream(duplexStream as any, res);
+                addResponsePropertiesToStream(duplexStream, res);
 
                 return resolve(duplexStream as unknown as RequestAsBrowserResult<T>);
             });
