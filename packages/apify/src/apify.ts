@@ -536,9 +536,9 @@ export class Apify {
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getValue(key: string): Promise<Record<string, unknown> | string | Buffer | null> {
+    async getValue<T>(key: string): Promise<T | null> {
         const store = await this.openKeyValueStore();
-        return store.getValue(key);
+        return store.getValue<T>(key);
     }
 
     /**
@@ -571,7 +571,7 @@ export class Apify {
      *   For any other value an error will be thrown.
      * @param [options]
      */
-    async setValue(key: string, value: string | Record<string, unknown> | Buffer | null, options: RecordOptions): Promise<void> {
+    async setValue<T>(key: string, value: T, options: RecordOptions = {}): Promise<void> {
         const store = await this.openKeyValueStore();
         return store.setValue(key, value, options);
     }
@@ -604,8 +604,8 @@ export class Apify {
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getInput(): Promise<Record<string, unknown> | string | Buffer | null> {
-        return this.getValue(this.config.get('inputKey'));
+    async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
+        return this.getValue<T>(this.config.get('inputKey'));
     }
 
     /**
