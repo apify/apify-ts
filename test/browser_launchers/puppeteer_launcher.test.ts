@@ -1,9 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+// TODO: no types
+// @ts-expect-error
 import proxy from 'proxy';
-import http from 'http';
+import http, { Server } from 'http';
 import util from 'util';
+// TODO: no types
+// @ts-expect-error
 import portastic from 'portastic';
+// TODO: no types
+// @ts-expect-error
 import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import sinon from 'sinon';
@@ -11,17 +17,19 @@ import { ENV_VARS } from '@apify/consts';
 import express from 'express';
 import Apify, { Dictionary } from 'apify';
 import * as utils from 'apify/src/utils';
+import { AddressInfo } from 'net';
+import { Browser, Page } from 'puppeteer';
 import { startExpressAppPromise } from '../_helper';
 
-let prevEnvHeadless;
-let proxyServer;
-let proxyPort; // eslint-disable-line no-unused-vars
+let prevEnvHeadless: string;
+let proxyServer: Server;
+let proxyPort: number;
 const proxyAuth = { scheme: 'Basic', username: 'username', password: 'password' };
-let wasProxyCalled = false; // eslint-disable-line no-unused-vars
+let wasProxyCalled = false;
 
 const HOSTNAME = '127.0.0.1';
-let port;
-let server;
+let port: number;
+let server: Server;
 beforeAll(async () => {
     const app = express();
 
@@ -38,7 +46,7 @@ beforeAll(async () => {
     });
 
     server = await startExpressAppPromise(app, 0);
-    port = server.address().port; //eslint-disable-line
+    port = (server.address() as AddressInfo).port;
 });
 
 afterAll(() => {
@@ -51,7 +59,7 @@ beforeAll(() => {
     process.env[ENV_VARS.HEADLESS] = '1';
 
     // Find free port for the proxy
-    return portastic.find({ min: 50100, max: 50199 }).then((ports) => {
+    return portastic.find({ min: 50100, max: 50199 }).then((ports: number[]) => {
         return new Promise<void>((resolve, reject) => {
             const httpServer = http.createServer();
 
@@ -77,17 +85,17 @@ beforeAll(() => {
 
             proxyServer = proxy(httpServer);
             proxyServer.listen(ports[0], () => {
-                proxyPort = proxyServer.address().port;
+                proxyPort = (proxyServer.address() as AddressInfo).port;
                 resolve();
             });
         });
     });
 });
 
-afterAll(() => {
+afterAll(async () => {
     process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
 
-    if (proxyServer) return util.promisify(proxyServer.close).bind(proxyServer)();
+    if (proxyServer) await util.promisify(proxyServer.close).bind(proxyServer)();
 }, 5000);
 
 describe('Apify.launchPuppeteer()', () => {
@@ -130,8 +138,8 @@ describe('Apify.launchPuppeteer()', () => {
     });
 
     test('opens https://www.example.com', () => {
-        let browser;
-        let page;
+        let browser: Browser;
+        let page: Page;
 
         return Apify
             .launchPuppeteer()
@@ -151,8 +159,8 @@ describe('Apify.launchPuppeteer()', () => {
     });
 
     test.skip('opens https://www.example.com via proxy with authentication', () => {
-        let browser;
-        let page;
+        let browser: Browser;
+        let page: Page;
 
         // Test headless parameter
         process.env[ENV_VARS.HEADLESS] = '0';
@@ -181,8 +189,9 @@ describe('Apify.launchPuppeteer()', () => {
     });
 
     test('supports userAgent option', () => {
-        let browser;
-        let page;
+        let browser: Browser;
+        let page: Page;
+
         const opts = {
             // Have space in user-agent to test passing of params
             userAgent: 'MyUserAgent/1234 AnotherString/456',

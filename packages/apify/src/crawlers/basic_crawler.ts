@@ -37,6 +37,8 @@ export interface CrawlingContext<Response = IncomingMessage> extends Record<Prop
      * For basic crawlers, this is an instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object.
      */
     response?: Response;
+
+    crawler?: BasicCrawler;
 }
 
 export interface HandleFailedRequestInput extends CrawlingContext {
@@ -57,7 +59,7 @@ export interface HandleFailedRequestInput extends CrawlingContext {
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export interface BasicCrawlerOptions {
+export interface BasicCrawlerOptions<Inputs extends HandleRequestInputs = HandleRequestInputs> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
@@ -82,7 +84,7 @@ export interface BasicCrawlerOptions {
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handleRequestFunction: HandleRequest;
+    handleRequestFunction: HandleRequest<Inputs>;
 
     /**
      * Static list of URLs to be processed.
@@ -230,7 +232,7 @@ export interface BasicCrawlerOptions {
  * ```
  * @category Crawlers
  */
-export class BasicCrawler {
+export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInputs> {
     /**
      * Static list of URLs to be processed.
      */
@@ -305,7 +307,7 @@ export class BasicCrawler {
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions) {
+    constructor(options: BasicCrawlerOptions<Inputs>) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {
@@ -696,7 +698,7 @@ export class BasicCrawler {
     }
 }
 
-export type HandleRequest = (inputs: HandleRequestInputs) => Awaitable<void>;
+export type HandleRequest<Inputs extends HandleRequestInputs = HandleRequestInputs> = (inputs: Inputs) => Awaitable<void>;
 
 export interface HandleRequestInputs {
     /**

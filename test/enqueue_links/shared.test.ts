@@ -1,5 +1,6 @@
 import { PseudoUrl } from 'apify/src/pseudo_url';
 import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from 'apify/src/enqueue_links/shared';
+import { Request } from 'apify';
 
 describe('Enqueue links shared functions', () => {
     describe('constructPseudoUrlInstances()', () => {
@@ -39,7 +40,7 @@ describe('Enqueue links shared functions', () => {
                 new PseudoUrl('http[s?]://example.com/[.*]', { userData: { one: 1 } }),
             ];
 
-            const transformRequestFunction = (request) => {
+            const transformRequestFunction = (request: Request) => {
                 request.userData.foo = 'bar';
                 return request;
             };
@@ -59,8 +60,8 @@ describe('Enqueue links shared functions', () => {
     describe('addRequestsToQueueInBatches()', () => {
         test('should work', async () => {
             const fakeRequestQueue = {
-                requests: [],
-                async addRequest(request) {
+                requests: [] as number[],
+                async addRequest(request: number) {
                     this.requests.push(request);
                 },
             };

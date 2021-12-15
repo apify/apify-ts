@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { BrowserPoolOptions } from 'browser-pool';
+import { BrowserPoolOptions, PuppeteerPlugin } from 'browser-pool';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { DirectNavigationOptions, gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
@@ -8,19 +8,27 @@ import { HandleFailedRequest } from './basic_crawler';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
 import { Dictionary } from '../typedefs';
 
-export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page, HTTPResponse> {
+export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
+
+export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> {
     crawler: PuppeteerCrawler;
 }
 
-export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext>;
+export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext, PuppeteerGoToOptions>;
 
-export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext<Page, HTTPResponse> {
+export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> {
     crawler: PuppeteerCrawler;
 }
 
 export type PuppeteerHandlePage = BrowserHandlePageFunction<PuppeteerHandlePageFunctionParam>;
 
-export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
+export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
+
+export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
+    PuppeteerCrawlContext,
+    PuppeteerGoToOptions,
+    { browserPlugins: [PuppeteerPlugin] }
+> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -58,7 +66,7 @@ export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'ha
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: PuppeteerHandlePage;
+    handlePageFunction: BrowserCrawlerOptions<PuppeteerCrawlContext>['handlePageFunction'];
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -180,7 +188,7 @@ export interface PuppeteerCrawlerOptions extends Omit<BrowserCrawlerOptions, 'ha
  * ```
  * @category Crawlers
  */
-export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
+export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions, { browserPlugins: [PuppeteerPlugin] }, PuppeteerCrawlContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
@@ -209,18 +217,17 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
         const puppeteerLauncher = new PuppeteerLauncher(launchContext);
 
         browserPoolOptions.browserPlugins = [
-            // @ts-ignore plugin types are not compatible?
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions } as any); // TODO: These types really need to be redone
+        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
 
         if (stealth) {
             this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
                 // @TODO: We can do this better now. It is not necessary to override the page.
                 //   we can modify the page in the postPageCreateHook
                 const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
-                await applyStealthToBrowser(browserController.browser, newStealthOptions);
+                applyStealthToBrowser(browserController.browser, newStealthOptions);
             });
         }
 

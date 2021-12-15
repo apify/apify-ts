@@ -240,7 +240,6 @@ export class RequestQueue {
             forefront: ow.optional.boolean,
         }));
 
-        // @ts-ignore
         const { forefront = false } = options;
 
         const request = requestLike instanceof Request

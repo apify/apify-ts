@@ -1,21 +1,18 @@
 import sinon from 'sinon';
 import { Statistics } from 'apify/src/crawlers/statistics';
-import Apify from 'apify';
+import Apify, { Dictionary } from 'apify';
 import { events } from 'apify/src/events';
 import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('Statistics', () => {
-    const getPerMinute = (jobCount, totalTickMillis) => {
+    const getPerMinute = (jobCount: number, totalTickMillis: number) => {
         return Math.round(jobCount / (totalTickMillis / 1000 / 60));
     };
 
-    // eslint-disable-next-line no-unused-vars
-    const toISOString = (date) => new Date(date).toISOString();
-
-    let clock;
-    let stats;
-    let localStorageEmulator;
+    let clock: sinon.SinonFakeTimers;
+    let stats: Statistics;
+    let localStorageEmulator: LocalStorageDirEmulator;
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();
@@ -45,6 +42,7 @@ describe('Statistics', () => {
             expect(stats.id).toEqual(0);
             // @ts-expect-error Accessing private prop
             expect(Statistics.id).toEqual(1);
+            // @ts-expect-error Accessing private prop
             expect(stats.persistStateKey).toEqual('SDK_CRAWLER_STATISTICS_0');
             const [n1, n2] = [new Statistics(), new Statistics()];
             expect(n1.id).toEqual(1);
@@ -65,6 +63,7 @@ describe('Statistics', () => {
 
             // console.dir(stats);
             // eslint-disable-next-line no-unused-vars
+            // @ts-expect-error Accessing private prop
             const state = await stats.keyValueStore.getValue(stats.persistStateKey);
 
             /*
@@ -184,12 +183,16 @@ describe('Statistics', () => {
             await stats.startCapturing(); // keyValueStore is initialized here
 
             const state = stats.toJSON();
+            // @ts-expect-error Accessing private prop
             const spy = sinon.spy(stats.keyValueStore, 'setValue');
 
             events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
 
+            // TODO: these properties don't exist on the calculate return type
+            // @ts-expect-error Incorrect types?
             const { retryHistogram, finished, failed, ...rest } = stats.calculate();
 
+            // @ts-expect-error Accessing private prop
             expect(spy.getCall(0).args).toEqual([stats.persistStateKey, { ...state, ...rest }]);
         }, 2000);
     });
@@ -284,7 +287,8 @@ describe('Statistics', () => {
     });
 
     test('should regularly log stats', async () => {
-        const logged = [];
+        const logged: [string, Dictionary?][] = [];
+        // @ts-expect-error Accessing private prop
         sinon.stub(stats.log, 'info').callsFake((...args) => {
             logged.push(args);
         });

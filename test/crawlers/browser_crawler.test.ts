@@ -3,26 +3,25 @@
 import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
-import { BrowserPool, PuppeteerPlugin } from 'browser-pool';
+import { BrowserPool, PuppeteerPlugin, BROWSER_POOL_EVENTS } from 'browser-pool';
 import { OperatingSystemsName } from 'browser-pool/dist/fingerprinting/types';
 import puppeteer from 'puppeteer';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext } from 'apify';
+import Apify, { BrowserCrawler, BrowserCrawlingContext, HandleFailedRequestInput, ProxyInfo, PuppeteerGoToOptions, PuppeteerHandlePage } from 'apify';
 import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
 import * as utilsRequest from 'apify/src/utils_request';
 import { Request } from 'apify/src/request';
 import { AutoscaledPool } from 'apify/src/autoscaling/autoscaled_pool';
 import { Session } from 'apify/src/session_pool/session';
 import { EVENT_SESSION_RETIRED } from 'apify/src/session_pool/events';
-import { IncomingMessage } from 'http';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 
 describe('BrowserCrawler', () => {
-    let prevEnvHeadless;
-    let logLevel;
-    let localStorageEmulator;
-    let puppeteerPlugin;
+    let prevEnvHeadless: string;
+    let logLevel: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
+    let puppeteerPlugin: PuppeteerPlugin;
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -58,13 +57,13 @@ describe('BrowserCrawler', () => {
             { url: 'http://example.com/?q=6' },
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
-        const processed = [];
-        const failed = [];
+        const processed: Request[] = [];
+        const failed: Request[] = [];
         const requestList = new Apify.RequestList({ sources });
-        const handlePageFunction = async ({ page, request, response }) => {
+        const handlePageFunction: PuppeteerHandlePage = async ({ page, request, response }) => {
             await page.waitForSelector('title');
 
-            expect(await response.status()).toBe(200);
+            expect(response.status()).toBe(200);
             request.userData.title = await page.title();
             processed.push(request);
         };
@@ -74,13 +73,9 @@ describe('BrowserCrawler', () => {
                 browserPlugins: [puppeteerPlugin],
             },
             requestList,
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             gotoFunction: ({ page, request }) => page.goto(request.url),
             minConcurrency: 1,
             maxConcurrency: 1,
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             handlePageFunction,
             handleFailedRequestFunction: async ({ request }) => {
                 failed.push(request);
@@ -134,7 +129,7 @@ describe('BrowserCrawler', () => {
         class TimeoutError extends Error {
 
         }
-        let sessionGoto;
+        let sessionGoto: Session;
         const browserCrawler = new BrowserCrawlerTest({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
@@ -210,8 +205,6 @@ describe('BrowserCrawler', () => {
                 isEvaluated = hookFinished as boolean;
             },
             maxRequestRetries: 0,
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             gotoFunction: ({ page, request }) => page.goto(request.url),
             postNavigationHooks: [
                 async (crawlingContext) => {
@@ -233,7 +226,7 @@ describe('BrowserCrawler', () => {
                 { url: 'http://example.com/?q=1' },
             ],
         });
-        let optionsGoto;
+        let optionsGoto: PuppeteerGoToOptions;
         const browserCrawler = new BrowserCrawlerTest({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
@@ -244,8 +237,6 @@ describe('BrowserCrawler', () => {
             maxRequestRetries: 0,
             gotoFunction: ({ page, request }, gotoOptions) => {
                 optionsGoto = gotoOptions;
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
                 return page.goto(request.url, gotoOptions);
             },
             preNavigationHooks: [
@@ -275,12 +266,8 @@ describe('BrowserCrawler', () => {
                     browserPlugins: [puppeteerPlugin],
                 },
                 requestList,
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
                 gotoFunction: ({ page, request }) => page.goto(request.url),
                 handlePageFunction: ({ page }) => {
-                    // TODO: figure out if we can make page present in types
-                    // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
                     page.close = async () => {
                         if (i === 0) {
                             throw new Error();
@@ -306,8 +293,8 @@ describe('BrowserCrawler', () => {
                 { url: 'http://example.com/?q=1' },
             ],
         });
-        const handlePageSessions = [];
-        const goToPageSessions = [];
+        const handlePageSessions: Session[] = [];
+        const goToPageSessions: Session[] = [];
         const browserCrawler = new BrowserCrawlerTest({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
@@ -324,8 +311,6 @@ describe('BrowserCrawler', () => {
         // @ts-expect-error Overriding protected method
         browserCrawler.gotoFunction = async ({ session, page, request }) => {
             goToPageSessions.push(session);
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             return page.goto(request.url);
         };
 
@@ -400,7 +385,7 @@ describe('BrowserCrawler', () => {
             ],
         });
         const goToPageSessions = [];
-        const loadedCookies = [];
+        const loadedCookies: string[] = [];
         const browserCrawler = new BrowserCrawlerTest({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
@@ -416,12 +401,8 @@ describe('BrowserCrawler', () => {
 
         // @ts-expect-error Overriding protected method
         browserCrawler.gotoFunction = async ({ session, page, request }) => {
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             await page.setCookie({ name: 'TEST', value: '12321312312', domain: 'example.com', expires: Date.now() + 100000 });
             goToPageSessions.push(session);
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             return page.goto(request.url);
         };
 
@@ -452,7 +433,7 @@ describe('BrowserCrawler', () => {
         const requestList = await Apify.openRequestList(null, sources);
 
         let called = false;
-        const failedRequests = [];
+        const failedRequests: Request[] = [];
         const crawler = new BrowserCrawlerTest({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
@@ -495,7 +476,7 @@ describe('BrowserCrawler', () => {
         const requestList = await Apify.openRequestList(null, sources);
 
         let called = false;
-        const failedRequests = [];
+        const failedRequests: Request[] = [];
         const crawler = new BrowserCrawlerTest({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
@@ -507,8 +488,6 @@ describe('BrowserCrawler', () => {
             handlePageFunction: async () => {
                 called = true;
             },
-            // TODO: figure out if we can make page present in types
-            // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
             gotoFunction: ({ page, request }) => page.goto(request.url),
             handleFailedRequestFunction: async ({ request }) => {
                 failedRequests.push(request);
@@ -536,7 +515,7 @@ describe('BrowserCrawler', () => {
                 { url: 'http://example.com/?q=1' },
             ],
         });
-        let resolve;
+        let resolve: (value?: unknown) => void;
 
         const retirementPromise = new Promise((r) => {
             resolve = r;
@@ -553,16 +532,13 @@ describe('BrowserCrawler', () => {
             },
             maxRequestRetries: 1,
             gotoFunction: async ({ session, crawler, page, request }) => {
-                // TODO: figure out if we can make crawler present in types
-            // @ts-expect-error crawler is not defined in the BrowserCrawlingContext, so it is typed as unknown
-                crawler.browserPool.on('browserRetired', () => {
+                crawler.browserPool.on(BROWSER_POOL_EVENTS.BROWSER_RETIRED, () => {
                     resolve();
                     called = true;
                 });
 
                 session.retire();
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
+
                 return page.goto(request.url);
             },
         });
@@ -633,7 +609,6 @@ describe('BrowserCrawler', () => {
             requestList,
             useSessionPool: false,
             gotoFunction: async ({ page, request }) => {
-                // @ts-expect-error TODO: page is unknown because using direct browser crawler with puppeteer
                 return page.goto(request.url);
             },
             handlePageFunction: async ({ browserController }) => {
@@ -648,7 +623,7 @@ describe('BrowserCrawler', () => {
     });
 
     describe('proxy', () => {
-        let requestList;
+        let requestList: Apify.RequestList;
         beforeEach(async () => {
             requestList = new Apify.RequestList({
                 sources: [
@@ -691,8 +666,7 @@ describe('BrowserCrawler', () => {
                 requestList,
                 maxRequestsPerCrawl: 1,
                 maxRequestRetries: 0,
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
+
                 gotoFunction: ({ page, request }) => page.goto(request.url, { timeout: 1000 }),
                 handlePageFunction: async () => {
                 },
@@ -716,8 +690,8 @@ describe('BrowserCrawler', () => {
             const stub = sinon.stub(utilsRequest, 'requestAsBrowser').callsFake(fakeCall);
 
             const proxyConfiguration = await Apify.createProxyConfiguration();
-            const proxies = [];
-            const sessions = [];
+            const proxies: ProxyInfo[] = [];
+            const sessions: Session[] = [];
             const handlePageFunction = async ({ session, proxyInfo }: BrowserCrawlingContext) => {
                 proxies.push(proxyInfo);
                 sessions.push(session);
@@ -729,8 +703,7 @@ describe('BrowserCrawler', () => {
                 },
                 requestList,
                 handlePageFunction,
-                // TODO: figure out if we can make page present in types
-                // @ts-expect-error page is not defined in the BrowserCrawlingContext, so it is typed as unknown
+
                 gotoFunction: ({ page, request }) => page.goto(request.url),
                 proxyConfiguration,
                 useSessionPool: true,
@@ -757,7 +730,7 @@ describe('BrowserCrawler', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
-            const browserProxies = [];
+            const browserProxies: string[] = [];
 
             const browserCrawler = new BrowserCrawlerTest({
                 browserPoolOptions: {
@@ -794,8 +767,8 @@ describe('BrowserCrawler', () => {
     });
     describe('Crawling context', () => {
         const sources = ['http://example.com/'];
-        let requestList;
-        let actualLogLevel;
+        let requestList: Apify.RequestList;
+        let actualLogLevel: number;
         beforeEach(async () => {
             actualLogLevel = log.getLevel();
             log.setLevel(log.LEVELS.OFF);
@@ -807,9 +780,9 @@ describe('BrowserCrawler', () => {
         });
 
         test('uses correct crawling context', async () => {
-            let prepareCrawlingContext;
+            let prepareCrawlingContext: BrowserCrawlingContext;
 
-            const gotoFunction = async (crawlingContext) => {
+            const gotoFunction = async (crawlingContext: BrowserCrawlingContext) => {
                 prepareCrawlingContext = crawlingContext;
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -817,7 +790,7 @@ describe('BrowserCrawler', () => {
                 expect(typeof crawlingContext.page).toBe('object');
             };
 
-            const handlePageFunction = async (crawlingContext) => {
+            const handlePageFunction = async (crawlingContext: BrowserCrawlingContext) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -829,14 +802,14 @@ describe('BrowserCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = async (crawlingContext) => {
+            const handleFailedRequestFunction = async (crawlingContext: HandleFailedRequestInput) => {
                 expect(crawlingContext).toBe(prepareCrawlingContext);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
                 expect(crawlingContext.session).toBeInstanceOf(Session);
                 expect(typeof crawlingContext.page).toBe('object');
                 expect(crawlingContext.crawler).toBeInstanceOf(BrowserCrawlerTest);
-                expect(crawlingContext.crawler.browserPool).toBeInstanceOf(BrowserPool);
+                expect((crawlingContext.crawler as BrowserCrawler).browserPool).toBeInstanceOf(BrowserPool);
                 expect(crawlingContext.hasOwnProperty('response')).toBe(true);
 
                 expect(crawlingContext.error).toBeInstanceOf(Error);

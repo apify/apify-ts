@@ -1,5 +1,6 @@
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
+import { Browser } from 'playwright';
 import { getTypicalChromeExecutablePath, isAtHome } from '../utils';
 import { BrowserPlugin } from './browser_plugin';
 import { Constructor } from '../typedefs';
@@ -130,7 +131,7 @@ export abstract class BrowserLauncher<
      * Launches a browser instance based on the plugin.
      * @returns Browser instance.
      */
-    async launch(): Promise<unknown> {
+    async launch(): Promise<Browser> {
         const plugin = this.createBrowserPlugin();
         const context = await plugin.createLaunchContext();
         return plugin.launch(context);

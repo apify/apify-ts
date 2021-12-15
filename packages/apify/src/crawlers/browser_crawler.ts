@@ -1,5 +1,7 @@
 import ow from 'ow';
-import { BrowserController, BrowserPool, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
+import { BrowserController, BrowserPool, BrowserPoolHooks, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
+import type { BrowserPlugin, CommonPage } from 'browser-pool/dist/abstract-classes/browser-plugin';
+import type { InferBrowserPluginArray } from 'browser-pool/dist/utils';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { EVENT_SESSION_RETIRED } from '../session_pool/events';
 import { addTimeoutToPromise } from '../utils';
@@ -9,27 +11,40 @@ import {
     handleRequestTimeout,
 } from './crawler_utils';
 import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './basic_crawler';
-import { ProxyConfiguration } from '../proxy_configuration';
+import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
 import { Awaitable, Dictionary } from '../typedefs';
 
-export interface BrowserCrawlingContext<Page = unknown, Response = unknown> extends CrawlingContext<Response> {
-    browserController: BrowserController;
+export interface BrowserCrawlingContext<
+    Page extends CommonPage = CommonPage,
+    Response = unknown,
+    ProvidedController = BrowserController
+> extends CrawlingContext<Response> {
+    browserController: ProvidedController;
     page: Page;
 }
 
 export type BrowserHook<
     Context = BrowserCrawlingContext,
-    GoToOptions extends Record<PropertyKey, any> = Dictionary
+    GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary
 > = (crawlingContext: Context, gotoOptions: GoToOptions) => Awaitable<void>;
-export type BrowserHandlePageFunction<Context = BrowserCrawlingContext> = (context: Context) => Awaitable<void>;
+
+export type BrowserHandlePageFunction<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (context: Context) => Awaitable<void>;
+
 export type GotoFunction<
     Context = BrowserCrawlingContext,
-    GoToOptions extends Record<PropertyKey, any> = Dictionary
-> = (context: Context, gotoOptions: GoToOptions) => Awaitable<any>;
+    GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary
+> = (context: Context, gotoOptions?: GoToOptions) => Awaitable<any>;
 
-export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
+export interface BrowserCrawlerOptions<
+    Context extends BrowserCrawlingContext = BrowserCrawlingContext,
+    GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary,
+    InternalBrowserPoolOptions extends BrowserPoolOptions = BrowserPoolOptions,
+    __BrowserPlugins extends BrowserPlugin[] = InferBrowserPluginArray<InternalBrowserPoolOptions['browserPlugins']>,
+    __BrowserControllerReturn extends BrowserController = ReturnType<__BrowserPlugins[number]['createController']>,
+    __LaunchContextReturn extends LaunchContext = ReturnType<__BrowserPlugins[number]['createLaunchContext']>
+> extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -69,7 +84,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: BrowserHandlePageFunction;
+    handlePageFunction: BrowserHandlePageFunction<Context>;
 
     /**
      * Timeout in which the function passed as `handlePageFunction` needs to finish, in seconds.
@@ -79,7 +94,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
     /**
      * Navigation function for corresponding library. `page.goto(url)` is supported by both `playwright` and `puppeteer`.
      */
-    gotoFunction?: GotoFunction;
+    gotoFunction?: GotoFunction<Context, GoToOptions>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -106,8 +121,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
      * You can tweak those to fine-tune browser management.
      */
-    // TODO: this interface doesn't include the hooks
-    browserPoolOptions?: BrowserPoolOptions;
+    browserPoolOptions?: Partial<BrowserPoolOptions> & Partial<BrowserPoolHooks<__BrowserControllerReturn, __LaunchContextReturn>>;
 
     /**
      * If set, the crawler will be configured for all connections to use
@@ -130,7 +144,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * ]
      * ```
      */
-    preNavigationHooks?: BrowserHook[];
+    preNavigationHooks?: BrowserHook<Context>[];
 
     /**
      * Async functions that are sequentially evaluated after the navigation. Good for checking if the navigation was successful.
@@ -147,7 +161,7 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
      * ]
      * ```
      */
-    postNavigationHooks?: BrowserHook[];
+    postNavigationHooks?: BrowserHook<Context>[];
 
     /**
      * Timeout in which page navigation needs to finish, in seconds.
@@ -208,7 +222,12 @@ export interface BrowserCrawlerOptions extends Omit<BasicCrawlerOptions, 'handle
  * ```
  * @category Crawlers
  */
-export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
+export abstract class BrowserCrawler<
+    LaunchOptions = Dictionary,
+    InternalBrowserPoolOptions extends BrowserPoolOptions = BrowserPoolOptions,
+    Context extends BrowserCrawlingContext = BrowserCrawlingContext,
+    GoToOptions extends Record<PropertyKey, any> = Dictionary
+> extends BasicCrawler<Context> {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -220,18 +239,18 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
      * For more information about it, see the [`browser-pool` module](https://github.com/apify/browser-pool).
      * @todo the type is almost unusable with so many generic arguments, what should go there? we need inference
      */
-    browserPool: BrowserPool<any, any, any, any, any, any>;
+    browserPool: BrowserPool<InternalBrowserPoolOptions>;
 
-    launchContext?: BrowserLaunchContext<TOptions>;
+    launchContext?: BrowserLaunchContext<LaunchOptions>;
 
-    protected handlePageFunction: BrowserHandlePageFunction;
+    protected handlePageFunction: BrowserHandlePageFunction<Context>;
     protected handlePageTimeoutSecs: number;
     protected handlePageTimeoutMillis: number;
     protected navigationTimeoutMillis: number;
-    protected gotoFunction?: GotoFunction;
-    protected defaultGotoOptions: { timeout: number };
-    protected preNavigationHooks: BrowserHook[];
-    protected postNavigationHooks: BrowserHook[];
+    protected gotoFunction?: GotoFunction<Context, GoToOptions>;
+    protected defaultGotoOptions: GoToOptions;
+    protected preNavigationHooks: BrowserHook<Context>[];
+    protected postNavigationHooks: BrowserHook<Context>[];
     protected persistCookiesPerSession: boolean;
 
     protected static override optionsShape = {
@@ -258,7 +277,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     /**
      * All `BrowserCrawler` parameters are passed via an options object.
      */
-    protected constructor(options: BrowserCrawlerOptions) {
+    protected constructor(options: BrowserCrawlerOptions<Context, GoToOptions>) {
         ow(options, 'BrowserCrawlerOptions', ow.object.exactShape(BrowserCrawler.optionsShape));
         const {
             handlePageFunction,
@@ -276,7 +295,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
 
         super({
             ...basicCrawlerOptions,
-            handleRequestFunction: (...args) => this._handleRequestFunction(...args as [BrowserCrawlingContext]),
+            handleRequestFunction: (...args) => this._handleRequestFunction(...args),
             handleRequestTimeoutSecs: navigationTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
@@ -297,13 +316,11 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         this.gotoFunction = gotoFunction;
         this.defaultGotoOptions = {
             timeout: this.navigationTimeoutMillis,
-        };
+        } as unknown as GoToOptions;
 
         this.proxyConfiguration = proxyConfiguration;
 
-        /** @type {Array<Hook>} */
         this.preNavigationHooks = preNavigationHooks;
-        /** @type {Array<Hook>} */
         this.postNavigationHooks = postNavigationHooks;
 
         if (this.useSessionPool) {
@@ -313,7 +330,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         }
 
         const { preLaunchHooks = [], postLaunchHooks = [], ...rest } = browserPoolOptions as any; // TODO hooks from browser pool options?
-        this.browserPool = new BrowserPool({
+        this.browserPool = new BrowserPool<InternalBrowserPoolOptions>({
             ...rest,
             preLaunchHooks: [
                 this._extendLaunchContext.bind(this),
@@ -329,7 +346,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestFunction(crawlingContext: BrowserCrawlingContext) {
+    protected override async _handleRequestFunction(crawlingContext: Context) {
         const { request, session } = crawlingContext;
 
         const newPageOptions: Dictionary = {
@@ -355,7 +372,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
             }
         }
 
-        const page = await this.browserPool.newPage(newPageOptions);
+        const page = await this.browserPool.newPage(newPageOptions) as CommonPage;
 
         this._enhanceCrawlingContextWithPageInfo(crawlingContext, page, useIncognitoPages);
 
@@ -390,26 +407,26 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         }
     }
 
-    protected _enhanceCrawlingContextWithPageInfo(crawlingContext: BrowserCrawlingContext, page: unknown, useIncognitoPages?: boolean): void {
+    protected _enhanceCrawlingContextWithPageInfo(crawlingContext: Context, page: CommonPage, useIncognitoPages?: boolean): void {
         crawlingContext.page = page;
 
         // This switch is because the crawlingContexts are created on per request basis.
         // However, we need to add the proxy info and session from browser, which is created based on the browser-pool configuration.
         // We would not have to do this switch if the proxy and configuration worked as in CheerioCrawler,
         // which configures proxy and session for every new request
-        const browserControllerInstance = this.browserPool.getBrowserControllerByPage(page);
+        const browserControllerInstance = this.browserPool.getBrowserControllerByPage(page as any) as Context['browserController'];
         crawlingContext.browserController = browserControllerInstance;
 
         if (!useIncognitoPages) {
-            crawlingContext.session = browserControllerInstance.launchContext.session;
+            crawlingContext.session = browserControllerInstance.launchContext.session as Session;
         }
 
         if (!crawlingContext.proxyInfo) {
-            crawlingContext.proxyInfo = browserControllerInstance.launchContext.proxyInfo;
+            crawlingContext.proxyInfo = browserControllerInstance.launchContext.proxyInfo as ProxyInfo;
         }
     }
 
-    protected async _handleNavigation(crawlingContext: BrowserCrawlingContext) {
+    protected async _handleNavigation(crawlingContext: Context) {
         const gotoOptions = { ...this.defaultGotoOptions };
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotoOptions);
         try {
@@ -426,7 +443,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     /**
      * Marks session bad in case of navigation timeout.
      */
-    protected _handleNavigationTimeout(crawlingContext: BrowserCrawlingContext, error: Error): void {
+    protected _handleNavigationTimeout(crawlingContext: Context, error: Error): void {
         const { session } = crawlingContext;
 
         if (error && error.constructor.name === 'TimeoutError') {
@@ -434,7 +451,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         }
     }
 
-    protected async _navigationHandler(crawlingContext: BrowserCrawlingContext, gotoOptions: Dictionary) {
+    protected async _navigationHandler(crawlingContext: Context, gotoOptions: GoToOptions) {
         if (!this.gotoFunction) {
             // @TODO: although it is optional in the validation,
             //   because when you make automation library specific you can override this handler.
@@ -447,7 +464,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
      * Should be overridden in case of different automation library that does not support this response API.
      * @todo: This can be also done as a postNavigation hook except the loadedUrl marking.
      */
-    protected async _responseHandler(crawlingContext: BrowserCrawlingContext): Promise<void> {
+    protected async _responseHandler(crawlingContext: Context): Promise<void> {
         const { response, session, request, page } = crawlingContext as any; // FIXME page is not there yet?
 
         if (this.sessionPool && response) {
@@ -487,12 +504,14 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         launchContext.extend(launchContextExtends);
     }
 
-    protected _maybeAddSessionRetiredListener(_pageId: string, browserController: BrowserController): void {
+    protected _maybeAddSessionRetiredListener(_pageId: string, browserController: Context['browserController']): void {
         if (this.sessionPool) {
             const listener = (session: Session) => {
                 const { launchContext } = browserController;
                 if (session.id === (launchContext.session as Session).id) {
-                    this.browserPool.retireBrowserController(browserController);
+                    this.browserPool.retireBrowserController(
+                        browserController as Parameters<BrowserPool<InternalBrowserPoolOptions>['retireBrowserController']>[0],
+                    );
                 }
             };
 
