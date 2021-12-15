@@ -2,7 +2,6 @@ import { AfterResponseHook, GotOptionsInit, gotScraping, Method, Response, GotSt
 import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
 import ow from 'ow';
-import { Duplex } from 'stream';
 import { Dictionary, keys } from './typedefs';
 import log from './utils_log';
 
