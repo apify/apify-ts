@@ -87,23 +87,16 @@ describe('Apify.Request', () => {
         };
 
         request.pushErrorMessage(undefined);
-        // @ts-expect-error Argument of type 'boolean' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage(false);
-        // @ts-expect-error Argument of type 'number' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage(5);
-        // @ts-expect-error Argument of type '() => number' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage(() => 2);
         request.pushErrorMessage('bar');
-        // @ts-expect-error Argument of type 'symbol' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage(Symbol('A Symbol'));
         request.pushErrorMessage(null);
         request.pushErrorMessage(new Error('foo'), { omitStack: true });
         request.pushErrorMessage({ message: 'A message.' });
-        // @ts-expect-error Argument of type 'number' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage([1, 2, 3]);
-        // @ts-expect-error Argument of type '{ one: number; two: string; }' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage(obj);
-        // @ts-expect-error Argument of type '{ toString(): string; }' is not assignable to parameter of type 'string | Error'.
         request.pushErrorMessage(toStr);
         request.pushErrorMessage(circularObj);
 

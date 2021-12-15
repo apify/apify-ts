@@ -190,7 +190,7 @@ export class Request {
      * @param errorOrMessage Error object or error message to be stored in the request.
      * @param [options]
      */
-    pushErrorMessage(errorOrMessage: Error | string, options: PushErrorMessageOptions = {}): void {
+    pushErrorMessage(errorOrMessage: unknown, options: PushErrorMessageOptions = {}): void {
         const { omitStack } = options;
         let message;
         const type = typeof errorOrMessage;
@@ -204,8 +204,8 @@ export class Request {
                     : errorOrMessage.stack;
             } else if (Reflect.has(Object(errorOrMessage), 'message')) {
                 message = Reflect.get(Object(errorOrMessage), 'message');
-            } else if (errorOrMessage.toString() !== '[object Object]') {
-                message = errorOrMessage.toString();
+            } else if ((errorOrMessage as string).toString() !== '[object Object]') {
+                message = (errorOrMessage as string).toString();
             } else {
                 try {
                     message = util.inspect(errorOrMessage);
@@ -216,7 +216,7 @@ export class Request {
         } else if (type === 'undefined') {
             message = 'undefined';
         } else {
-            message = errorOrMessage.toString();
+            message = (errorOrMessage as string).toString();
         }
 
         this.errorMessages.push(message);

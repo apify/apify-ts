@@ -647,32 +647,6 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
     };
 }
 
-export interface WaitForRunToFinishOptions {
-    /**
-     * ID of the actor that started the run.
-     */
-    actorId: string;
-
-    /**
-     * ID of the run itself.
-     */
-    runId: string;
-
-    /**
-     * Maximum time to wait for the run to finish, in seconds.
-     * If the limit is reached, the returned promise is resolved to a run object that will have
-     * status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
-     */
-    waitSecs?: string;
-
-    /**
-     * You can supply an Apify token to override the default one
-     * that's used by the default ApifyClient instance.
-     * E.g. you can track other users' runs.
-     */
-    token?: string;
-}
-
 /**
  * Returns a promise that resolves with the finished Run object when the provided actor run finishes
  * or with the unfinished Run object when the `waitSecs` timeout lapses. The promise is NOT rejected
