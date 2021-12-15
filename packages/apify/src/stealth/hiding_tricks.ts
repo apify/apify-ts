@@ -197,7 +197,7 @@ export const addPlugins = () => {
                 },
                 refresh: () => {
                     // Refreshes all plugins on the current page, optionally reloading documents.
-                    const fn = function () {
+                    const fn = function (): undefined {
                         return undefined;
                     };
                     mockedFns.push({ ref: fn, name: 'refresh' });
