@@ -641,7 +641,7 @@ describe('new Apify({ ... })', () => {
 
             await sdk.setValue('key-1', record);
             expect(setValueSpy).toBeCalledTimes(1);
-            expect(setValueSpy).toBeCalledWith('key-1', record, undefined);
+            expect(setValueSpy).toBeCalledWith('key-1', record, {});
         });
 
         test('getValue()', async () => {
