@@ -257,7 +257,6 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
  * Those options are mutually exclusive. `requestAsBrowser` also supports `payload` as
  * an alias of `body`. It must be exclusive as well.
  * @internal
- * @ignore
  */
 function areBodyOptionsCompatible(requestAsBrowserOptions: RequestAsBrowserOptions): boolean {
     // @ts-expect-error Property does not exist on type 'RequestAsBrowserOptions' // TODO
@@ -277,7 +276,6 @@ function areBodyOptionsCompatible(requestAsBrowserOptions: RequestAsBrowserOptio
  * got-scraping uses 'body', but we also support 'payload' from {@link Request}.
  * @param {string|Buffer} payload
  * @param {GotScrapingOptions} gotScrapingOptions
- * @ignore
  * @internal
  */ // TODO GotScrapingOptions as interface?
 function normalizePayloadOption(payload: string | Buffer, gotScrapingOptions): void {
@@ -290,7 +288,6 @@ function normalizePayloadOption(payload: string | Buffer, gotScrapingOptions): v
  * compatible we need to figure out which option the user provided.
  * @param {*} json
  * @param {GotScrapingOptions} gotScrapingOptions
- * @ignore
  * @internal
  */ // TODO GotScrapingOptions as interface?
 function normalizeJsonOption(json: boolean | Record<string, unknown>, gotScrapingOptions): void {
@@ -316,7 +313,6 @@ function normalizeJsonOption(json: boolean | Record<string, unknown>, gotScrapin
  * 'connection' and 'host' headers are forbidden when using HTTP2. We delete
  * them from user-provided headers because we switched the default from HTTP1 to 2.
  * @param {GotScrapingOptions} gotScrapingOptions
- * @ignore
  * @internal
  */ // TODO GotScrapingOptions as interface?
 function ensureCorrectHttp2Headers(gotScrapingOptions): void {
@@ -339,7 +335,6 @@ function ensureCorrectHttp2Headers(gotScrapingOptions): void {
  * the response body is read to save bandwidth.
  * @param {function} abortFunction
  * @param {GotScrapingOptions} gotScrapingOptions
- * @ignore
  * @internal
  */ // TODO GotScrapingOptions as interface?
 function maybeAddAbortHook(abortFunction: AbortFunction, gotScrapingOptions) {
@@ -384,7 +379,6 @@ function ensureRequestIsDispatched(duplexStream: Duplex, gotScrapingOptions): vo
 }
 
 /**
- * @ignore
  * @internal
  */
 function logDeprecatedOptions(options: RequestAsBrowserOptions): void {
@@ -431,7 +425,6 @@ function logDeprecatedOptions(options: RequestAsBrowserOptions): void {
  * @param {GotStream} stream
  * @param {http.IncomingMessage} response
  * @return {GotStream}
- * @ignore
  * @internal
  */
 function addResponsePropertiesToStream(stream: Duplex, response: IncomingMessage): Duplex {
