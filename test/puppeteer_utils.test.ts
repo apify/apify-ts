@@ -428,8 +428,7 @@ describe('Apify.utils.puppeteer', () => {
                 const contentHTML = '<html><head></head><body><div style="border: 1px solid black">Div number: 1</div></body></html>';
                 await page.setContent(contentHTML);
 
-                // @ts-expect-error
-                const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', screenshotQuality: 60 });
+                const screenshot = await page.screenshot({ fullPage: true, type: 'jpeg', quality: 60 });
 
                 // Test saving both image and html
                 const object = { setValue: jest.fn() };
