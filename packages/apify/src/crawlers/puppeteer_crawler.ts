@@ -1,15 +1,12 @@
 import ow from 'ow';
 import { BrowserPoolOptions } from 'browser-pool';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
-import { gotoExtended } from '../puppeteer_utils';
+import { DirectNavigationOptions, gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
 import { HandleFailedRequest } from './basic_crawler';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
-import { RequestList } from '../request_list';
-import { RequestQueue } from '../storages/request_queue';
-import { AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
-import { Awaitable } from '../typedefs';
+import { Dictionary } from '../typedefs';
 
 export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page, HTTPResponse> {
     crawler: PuppeteerCrawler;
@@ -216,7 +213,7 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
+        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions } as any); // TODO: These types really need to be redone
 
         if (stealth) {
             this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
@@ -230,11 +227,11 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions> {
         this.launchContext = launchContext;
     }
 
-    protected override async _navigationHandler(crawlingContext, gotoOptions) {
+    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlContext, gotoOptions: DirectNavigationOptions) {
         if (this.gotoFunction) {
             this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
 
-            return this.gotoFunction(crawlingContext, gotoOptions);
+            return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
         }
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
     }

@@ -1,6 +1,6 @@
 import util from 'util';
 import { normalizeUrl } from '@apify/utilities';
-import Apify, { hashPayload } from '../packages/apify/src';
+import Apify, { hashPayload } from 'apify/src';
 
 describe('Apify.Request', () => {
     test('should not accept invalid values', () => {
@@ -29,7 +29,6 @@ describe('Apify.Request', () => {
         const payload = JSON.stringify({ foo: 'bar' });
         const payloadHash = hashPayload(payload);
         const normalizedUrl = normalizeUrl(url);
-        // @ts-ignore TODO should we change the types so we allow lower case too?
         const request = new Apify.Request({ url, method: 'post', payload, useExtendedUniqueKey: true });
 
         const uniqueKey = `POST(${payloadHash}):${normalizedUrl}`;
@@ -87,16 +86,24 @@ describe('Apify.Request', () => {
         };
 
         request.pushErrorMessage(undefined);
+        // @ts-expect-error
         request.pushErrorMessage(false);
+        // @ts-expect-error
         request.pushErrorMessage(5);
+        // @ts-expect-error
         request.pushErrorMessage(() => 2);
         request.pushErrorMessage('bar');
+        // @ts-expect-error
         request.pushErrorMessage(Symbol('A Symbol'));
         request.pushErrorMessage(null);
         request.pushErrorMessage(new Error('foo'), { omitStack: true });
+        // @ts-expect-error
         request.pushErrorMessage({ message: 'A message.' });
+        // @ts-expect-error
         request.pushErrorMessage([1, 2, 3]);
+        // @ts-expect-error
         request.pushErrorMessage(obj);
+        // @ts-expect-error
         request.pushErrorMessage(toStr);
         request.pushErrorMessage(circularObj);
 

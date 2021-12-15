@@ -685,7 +685,7 @@ export class RequestList {
      * If the `source` parameter is a string or plain object and not an instance
      * of a `Request`, then the function creates a `Request` instance.
      */
-    protected _addRequest(source: string | Request | RequestOptions) {
+    protected _addRequest(source: Source) {
         let request;
         const type = typeof source;
         if (type === 'string') {
@@ -922,6 +922,6 @@ export interface RequestListState {
 
 }
 
-export type Source = string | (RequestOptions & { requestsFromUrl: string; regex?: RegExp }) | Request;
+export type Source = string | (Partial<RequestOptions> & { requestsFromUrl?: string; regex?: RegExp }) | Request;
 type InternalSource = { requestsFromUrl: string; regex?: RegExp };
 export type RequestListSourcesFunction = () => Promise<Source[]>;

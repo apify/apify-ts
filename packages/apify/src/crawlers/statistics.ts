@@ -49,7 +49,7 @@ export class Statistics {
     /**
      * Current statistic state used for doing calculations on {@link Statistics.calculate} calls
      */
-    public state: StatisticState;
+    public state!: StatisticState;
 
     /**
      * Contains the current retries histogram. Index 0 means 0 retries, index 2, 2 retries, and so on
@@ -63,7 +63,7 @@ export class Statistics {
     private listener: () => Promise<void>;
     private requestsInProgress = new Map<number | string, Job>();
     private readonly log = defaultLog.child({ prefix: 'Statistics' });
-    private instanceStart: number;
+    private instanceStart!: number;
     private logInterval: unknown;
 
     /**

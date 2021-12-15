@@ -1,5 +1,8 @@
 import express from 'express';
 import Apify from 'apify';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
+import { HTTPRequest } from 'browser-pool/dist/puppeteer/puppeteer-proxy-per-page';
 import { startExpressAppPromise } from './_helper';
 
 const { addInterceptRequestHandler, removeInterceptRequestHandler } = Apify.utils.puppeteer;
@@ -12,8 +15,9 @@ const HTML_PAGE = `<html><body>
 </body></html>`;
 
 const HOSTNAME = '127.0.0.1';
-let port;
-let server;
+let port: number;
+let server: Server;
+
 beforeAll(async () => {
     const app = express();
 
@@ -30,7 +34,7 @@ beforeAll(async () => {
     });
 
     server = await startExpressAppPromise(app, 0);
-    port = server.address().port; //eslint-disable-line
+    port = (server.address() as AddressInfo).port; //eslint-disable-line
 });
 
 afterAll(() => {
@@ -39,11 +43,10 @@ afterAll(() => {
 
 describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptRequestHandler()', () => {
     test('should allow multiple handlers', async () => {
-        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
-        const allUrls = [];
-        const loadedUrls = [];
+        const allUrls: string[] = [];
+        const loadedUrls: string[] = [];
 
         try {
             const page = await browser.newPage();
@@ -88,9 +91,8 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     test(
         'should not propagate aborted/responded requests to following handlers',
         async () => {
-        // @ts-ignore TODO headless is not defined option?
             const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
-            const propagatedUrls = [];
+            const propagatedUrls: string[] = [];
 
             try {
                 const page = await browser.newPage();
@@ -128,7 +130,6 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     );
 
     test('should allow to modify request', async () => {
-        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
         try {
@@ -166,7 +167,6 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     });
 
     test('should allow async handler', async () => {
-        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
         try {
@@ -190,7 +190,6 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
 
     describe('internal handleRequest function should return correctly formated headers', () => {
         test('should correctly capitalize headers', async () => {
-        // @ts-ignore TODO headless is not defined option?
             const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
             try {
@@ -208,7 +207,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
                 });
 
                 const response = await page.goto(`http://${HOSTNAME}:${port}/getRawHeaders`);
-                const rawHeadersArr = JSON.parse(await response.text());
+                const rawHeadersArr = JSON.parse(await response.text()) as string[];
 
                 const acceptIndex = rawHeadersArr.findIndex((headerItem) => headerItem === 'Accept');
                 expect(typeof acceptIndex).toBe('number');
@@ -235,17 +234,16 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
 
 describe('Apify.utils.puppeteer.removeInterceptRequestHandler()', () => {
     test('works', async () => {
-        // @ts-ignore TODO headless is not defined option?
         const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
 
-        const loadedUrls = [];
+        const loadedUrls: string[] = [];
 
         try {
             const page = await browser.newPage();
             page.on('response', (response) => loadedUrls.push(response.url()));
 
             // Abort images.
-            const abortImagesHandler = (request) => {
+            const abortImagesHandler = (request: HTTPRequest) => {
                 if (request.resourceType() === 'image') return request.abort();
                 return request.continue();
             };

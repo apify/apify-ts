@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-import { Dictionary } from '../typedefs';
+import type { Dictionary } from '../typedefs';
 
 export const hackPermissions = () => {
     const originalQuery = window.navigator.permissions.query;
@@ -11,6 +11,7 @@ export const hackPermissions = () => {
     // Inspired by: https://github.com/ikarienator/phantomjs_hide_and_seek/blob/master/5.spoofFunctionBind.js
     const oldCall = Function.prototype.call;
     function call() {
+        // @ts-ignore
         return oldCall.apply(this, arguments); //eslint-disable-line
     }
     // eslint-disable-next-line
@@ -23,12 +24,16 @@ export const hackPermissions = () => {
     const oldToString = Function.prototype.toString;
 
     function functionToString() {
+        // @ts-ignore
         if (this === window.navigator.permissions.query) {
             return 'function query() { [native code] }';
         }
+        // @ts-ignore
         if (this === functionToString) {
             return nativeToStringFunctionString;
         }
+
+        // @ts-ignore
         return oldCall.call(oldToString, this);
     }
     // eslint-disable-next-line
@@ -80,6 +85,7 @@ export const addPlugins = () => {
         const makeFnsNative = (fns: Dictionary[] = []) => {
             const oldCall = Function.prototype.call;
             function call() {
+                // @ts-ignore
                 return oldCall.apply(this, arguments); // eslint-disable-line
             }
             // eslint-disable-next-line
@@ -93,14 +99,18 @@ export const addPlugins = () => {
 
             function functionToString() {
                 for (const fn of fns) {
+                    // @ts-ignore
                     if (this === fn.ref) {
                         return `function ${fn.name}() { [native code] }`;
                     }
                 }
 
+                // @ts-ignore
                 if (this === functionToString) {
                     return nativeToStringFunctionString;
                 }
+
+                // @ts-ignore
                 return oldCall.call(oldToString, this);
             }
             // eslint-disable-next-line
@@ -155,27 +165,31 @@ export const addPlugins = () => {
                 },
             ],
             fns: {
-                namedItem: (instanceName) => {
+                namedItem: (instanceName: string) => {
                     // Returns the Plugin/MimeType with the specified name.
-                    const fn = function (name) {
+                    const fn = function (name: string) {
                         if (!arguments.length) {
                             throw new TypeError(
                                 `Failed to execute 'namedItem' on '${instanceName}': 1 argument required, but only 0 present.`,
                             );
                         }
+
+                        // @ts-ignore
                         return this[name] || null;
                     };
                     mockedFns.push({ ref: fn, name: 'namedItem' });
                     return fn;
                 },
-                item: (instanceName) => {
+                item: (instanceName: string) => {
                     // Returns the Plugin/MimeType at the specified index into the array.
-                    const fn = function (index) {
+                    const fn = function (index: number) {
                         if (!arguments.length) {
                             throw new TypeError(
                                 `Failed to execute 'namedItem' on '${instanceName}': 1 argument required, but only 0 present.`,
                             );
                         }
+
+                        // @ts-ignore
                         return this[index] || null;
                     };
                     mockedFns.push({ ref: fn, name: 'item' });
@@ -192,7 +206,9 @@ export const addPlugins = () => {
             },
         };
         // Poor mans _.pluck
-        const getSubset = (keys, obj) => keys.reduce((a, c) => ({ ...a, [c]: obj[c] }), {});
+        const getSubset = <T extends Dictionary, Keys extends keyof T>(keys: Keys[], obj: T) => keys.reduce(
+            (a, c) => ({ ...a, [c]: obj[c] }), {} as { [K in Keys]: T[K] },
+        );
 
         function generateMimeTypeArray() {
             const arr = fakeData.mimeTypes
@@ -218,26 +234,35 @@ export const addPlugins = () => {
         function generatePluginArray() {
             const arr = fakeData.plugins
                 .map((obj) => getSubset(['name', 'filename', 'description'], obj))
-                .map((obj) => {
+                .map((obj): { description: string; name: string; filename: string; length: number } => {
                     const mimes = fakeData.mimeTypes.filter(
                         m => m.__pluginName === obj.name, // eslint-disable-line
                     );
                     // Add mimetypes
                     mimes.forEach((mime, index) => {
+                        // @ts-expect-error mimeTypes can be indexed by number and string too
                         window.navigator.mimeTypes[mime.type].enabledPlugin = obj;
+                        // @ts-expect-error mimeTypes can be indexed by number and string too
                         obj[mime.type] = window.navigator.mimeTypes[mime.type];
+                        // @ts-expect-error mimeTypes can be indexed by number and string too
                         obj[index] = window.navigator.mimeTypes[mime.type];
                     });
-                    obj.length = mimes.length;
-                    return obj;
+
+                    return {
+                        ...obj,
+                        length: mimes.length,
+                    };
                 })
                 .map((obj) => {
                     // Mock functions
-                    obj.namedItem = fakeData.fns.namedItem('Plugin');
-                    obj.item = fakeData.fns.item('Plugin');
-                    return obj;
+                    return {
+                        ...obj,
+                        namedItem: fakeData.fns.namedItem('Plugin'),
+                        item: fakeData.fns.item('Plugin'),
+                    };
                 })
                 .map((obj) => Object.setPrototypeOf(obj, window.Plugin.prototype));
+
             arr.forEach((obj) => {
                 arr[obj.name] = obj;
             });
@@ -289,16 +314,18 @@ export const mockChrome = () => {
 // Should cover that it is custom function same as the permission query
 export const mockChromeInIframe = () => {
     const oldCreate = document.createElement.bind(document);
-    const newCreate = (...args) => {
+    const newCreate = (...args: Parameters<Document['createElement']>) => {
         if (args[0] === 'iframe') {
-            const iframe = oldCreate(...args);
+            const iframe = oldCreate(...args) as HTMLIFrameElement;
             if (!iframe.contentWindow) {
                 Object.defineProperty(iframe, 'contentWindow', {
                     configurable: true,
                     value: { chrome: {} },
                 });
             }
-            if (!iframe.contentWindow.chrome) {
+
+            // @ts-expect-error
+            if (!iframe.contentWindow?.chrome) {
                 Object.defineProperty(iframe.contentWindow, 'chrome', {
                     value: {},
                     configurable: true,
@@ -315,6 +342,7 @@ export const mockChromeInIframe = () => {
 
     const oldCall = Function.prototype.call;
     function call() {
+        // @ts-ignore
         return oldCall.apply(this, arguments); //eslint-disable-line
     }
     // eslint-disable-next-line
@@ -327,12 +355,17 @@ export const mockChromeInIframe = () => {
     const oldToString = Function.prototype.toString;
 
     function functionToString() {
+        // @ts-ignore
         if (this === window.document.createElement) {
             return 'function createElement() { [native code] }';
         }
+
+        // @ts-ignore
         if (this === functionToString) {
             return nativeToStringFunctionString;
         }
+
+        // @ts-ignore
         return oldCall.call(oldToString, this);
     }
     // eslint-disable-next-line

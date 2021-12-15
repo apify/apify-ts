@@ -56,8 +56,7 @@ export function createRequests(requestOptions: (string | Record<string, unknown>
     const requests: Request[] = [];
     requestOptions.forEach((opts) => {
         pseudoUrls
-            // @ts-ignore opts can be a string?
-            .filter((purl) => purl.matches(opts.url))
+            .filter((purl) => purl.matches(typeof opts === 'string' ? opts : opts.url as string))
             .forEach((purl) => {
                 const request = purl.createRequest(opts);
                 requests.push(request);

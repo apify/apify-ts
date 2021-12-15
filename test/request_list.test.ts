@@ -1,16 +1,16 @@
 import _ from 'underscore';
 import sinon from 'sinon';
 import Apify, { KeyValueStore } from 'apify';
-import log from '../packages/apify/src/utils_log';
-import { ACTOR_EVENT_NAMES_EX } from '../packages/apify/src/constants';
-import { deserializeArray } from '../packages/apify/src/serialization';
-import * as utils from '../packages/apify/src/utils';
-import * as requestUtils from '../packages/apify/src/utils_request';
+import log from 'apify/src/utils_log';
+import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
+import { deserializeArray } from 'apify/src/serialization';
+import * as utils from 'apify/src/utils';
+import * as requestUtils from 'apify/src/utils_request';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
 describe('Apify.RequestList', () => {
-    let ll;
-    let localStorageEmulator;
+    let ll: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
     beforeAll(() => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
@@ -795,7 +795,7 @@ describe('Apify.RequestList', () => {
             const getValueSpy = jest.spyOn(KeyValueStore.prototype, 'getValue');
             const setValueSpy = jest.spyOn(KeyValueStore.prototype, 'setValue');
 
-            const name = null;
+            const name: string = null;
             const sources = [{ url: 'https://example.com' }];
             const requests = sources.map(({ url }) => new Apify.Request({ url }));
 
@@ -819,21 +819,22 @@ describe('Apify.RequestList', () => {
                 ['x', {}],
                 ['x', 6, {}],
                 ['x', [], []],
-            ];
+            ] as const;
             for (const arg of args) {
                 try {
                     // @ts-ignore
                     await Apify.openRequestList(...arg);
                     throw new Error('wrong error');
                 } catch (err) {
-                    expect(err.message).not.toBe('wrong error');
-                    if (err.message.match('argument to be of type `string`')) {
-                        expect(err.message).toMatch('received type `undefined`');
-                    } else if (err.message.match('argument to be of type `array`')) {
-                        const isMatched = err.message.match('received type `Object`') || err.message.match('received type `number`');
+                    const e = err as Error;
+                    expect(e.message).not.toBe('wrong error');
+                    if (e.message.match('argument to be of type `string`')) {
+                        expect(e.message).toMatch('received type `undefined`');
+                    } else if (e.message.match('argument to be of type `array`')) {
+                        const isMatched = e.message.match('received type `Object`') || e.message.match('received type `number`');
                         expect(isMatched).toBeTruthy();
-                    } else if (err.message.match('argument to be of type `null`')) {
-                        expect(err.message).toMatch('received type `undefined`');
+                    } else if (e.message.match('argument to be of type `null`')) {
+                        expect(e.message).toMatch('received type `undefined`');
                     }
                 }
             }

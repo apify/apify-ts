@@ -3,7 +3,7 @@ import { SystemStatus } from 'apify/src/autoscaling/system_status';
 import { Snapshotter } from 'apify/src/autoscaling/snapshotter';
 
 describe('SystemStatus', () => {
-    let logLevel;
+    let logLevel: number;
     beforeAll(() => {
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);

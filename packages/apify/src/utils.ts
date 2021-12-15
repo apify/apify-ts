@@ -123,7 +123,7 @@ export const apifyClient = newClient();
  * Adds charset=utf-8 to given content type if this parameter is missing.
  * @ignore
  */
-export const addCharsetToContentType = (contentType: string): string => {
+export const addCharsetToContentType = (contentType?: string): string | undefined => {
     if (!contentType) return contentType;
 
     const parsed = contentTypeParser.parse(contentType);

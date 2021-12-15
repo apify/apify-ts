@@ -3,13 +3,9 @@ import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
-import { HandleFailedRequest, CrawlingContext } from './basic_crawler';
-import { RequestList } from '../request_list';
-import { RequestQueue } from '../storages/request_queue';
-import { Request } from '../request';
-import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
-import { gotoExtended } from '../playwright_utils';
-import { Awaitable } from '../typedefs';
+import { HandleFailedRequest } from './basic_crawler';
+import { DirectNavigationOptions, gotoExtended } from '../playwright_utils';
+import { Dictionary } from '../typedefs';
 
 export interface PlaywrightCrawlerOptions extends Omit<BrowserCrawlerOptions, 'handlePageFunction' | 'preNavigationHooks' | 'postNavigationHooks'> {
     /**
@@ -237,14 +233,14 @@ export class PlaywrightCrawler extends BrowserCrawler<LaunchOptions> {
             playwrightLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, browserPoolOptions });
+        super({ ...browserCrawlerOptions, browserPoolOptions } as any); // TODO: These options really need to be re-done
         this.launchContext = launchContext;
     }
 
-    protected override async _navigationHandler(crawlingContext, gotoOptions) {
+    protected override async _navigationHandler(crawlingContext: PlaywrightCrawlContext, gotoOptions: DirectNavigationOptions) {
         if (this.gotoFunction) {
             this.log.deprecated('PlaywrightCrawler.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
-            return this.gotoFunction(crawlingContext, gotoOptions);
+            return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
         }
 
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);

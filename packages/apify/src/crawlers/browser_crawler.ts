@@ -10,9 +10,6 @@ import {
 } from './crawler_utils';
 import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './basic_crawler';
 import { ProxyConfiguration } from '../proxy_configuration';
-import { RequestList } from '../request_list';
-import { RequestQueue } from '../storages/request_queue';
-import { Request } from '../request';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
 import { Awaitable, Dictionary } from '../typedefs';
@@ -225,7 +222,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
      */
     browserPool: BrowserPool<any, any, any, any, any, any>;
 
-    launchContext: BrowserLaunchContext<TOptions>;
+    launchContext?: BrowserLaunchContext<TOptions>;
 
     protected handlePageFunction: BrowserHandlePageFunction;
     protected handlePageTimeoutSecs: number;
@@ -363,7 +360,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         this._enhanceCrawlingContextWithPageInfo(crawlingContext, page, useIncognitoPages);
 
         if (this.useSessionPool) {
-            const sessionCookies = session.getPuppeteerCookies(request.url);
+            const sessionCookies = session!.getPuppeteerCookies(request.url);
             if (sessionCookies.length) {
                 await crawlingContext.browserController.setCookies(page, sessionCookies);
             }
@@ -375,10 +372,10 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
             await this._responseHandler(crawlingContext);
 
             // save cookies
-            // @TODO: Should we save the cookies also after/only the handle page?
+            // TODO: Should we save the cookies also after/only the handle page?
             if (this.persistCookiesPerSession) {
                 const cookies = await crawlingContext.browserController.getCookies(page);
-                session.setPuppeteerCookies(cookies, request.loadedUrl);
+                session?.setPuppeteerCookies(cookies, request.loadedUrl!);
             }
 
             await addTimeoutToPromise(
@@ -389,7 +386,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
 
             if (session) session.markGood();
         } finally {
-            page.close().catch((error) => this.log.debug('Error while closing page', { error }));
+            page.close().catch((error: Error) => this.log.debug('Error while closing page', { error }));
         }
     }
 
@@ -413,13 +410,12 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
     }
 
     protected async _handleNavigation(crawlingContext: BrowserCrawlingContext) {
-        /** @type {*} */
         const gotoOptions = { ...this.defaultGotoOptions };
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotoOptions);
         try {
             crawlingContext.response = await this._navigationHandler(crawlingContext, gotoOptions);
         } catch (error) {
-            this._handleNavigationTimeout(crawlingContext, error);
+            this._handleNavigationTimeout(crawlingContext, error as Error);
 
             throw error;
         }
@@ -434,7 +430,7 @@ export abstract class BrowserCrawler<TOptions> extends BasicCrawler {
         const { session } = crawlingContext;
 
         if (error && error.constructor.name === 'TimeoutError') {
-            handleRequestTimeout(session, error.message);
+            handleRequestTimeout({ session, errorMessage: error.message });
         }
     }
 

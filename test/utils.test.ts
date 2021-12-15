@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import sinon from 'sinon';
+import sinon, { SinonMock } from 'sinon';
 import _ from 'underscore';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +8,7 @@ import cheerio from 'cheerio';
 import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
 import { IncomingMessage } from 'http';
-import Apify from 'apify';
+import Apify, { CheerioRoot } from 'apify';
 import * as utils from 'apify/src/utils';
 import log from 'apify/src/utils_log';
 import * as requestUtils from 'apify/src/utils_request';
@@ -481,19 +481,19 @@ describe('Apify.utils.extractUrls()', () => {
 
     const { extractUrls, URL_WITH_COMMAS_REGEX } = utils.publicUtils;
 
-    const getURLData = (filename) => {
+    const getURLData = (filename: string) => {
         const string = fs.readFileSync(path.join(__dirname, 'data', filename), 'utf8');
         const array = string.trim().split(/[\r\n]+/g).map((u) => u.trim());
         return { string, array };
     };
 
-    const makeJSON = ({ string, array }) => JSON.stringify({
+    const makeJSON = ({ string, array }: { string: string; array: string[] }) => JSON.stringify({
         one: [{ http: string }],
         two: array.map((url) => ({ num: 123, url })),
     });
     const makeCSV = (array: string[], delimiter?: string) => array.map((url) => ['ABC', 233, url, '.'].join(delimiter || ',')).join('\n');
 
-    const makeText = (array) => {
+    const makeText = (array: string[]) => {
         const text = fs.readFileSync(path.join(__dirname, 'data', 'lipsum.txt'), 'utf8').split('');
         const ID = 'ů';
         const maxIndex = text.length - 1;
@@ -646,7 +646,7 @@ describe('Apify.utils.downloadListOfUrls()', () => {
     });
 });
 
-const checkHtmlToText = (html, expectedText, hasBody = false) => {
+const checkHtmlToText = (html: string | CheerioRoot, expectedText: string, hasBody = false) => {
     const text1 = Apify.utils.htmlToText(html);
     expect(text1).toEqual(expectedText);
 
@@ -676,6 +676,7 @@ describe('utils.htmlToText()', () => {
     test('handles invalid args', () => {
         checkHtmlToText(null, '');
         checkHtmlToText('', '');
+        // @ts-expect-error
         checkHtmlToText(0, '');
         checkHtmlToText(undefined, '');
     });
@@ -845,7 +846,7 @@ describe('utils.addTimeoutToPromise()', () => {
             await p;
             throw new Error('Wrong error.');
         } catch (err) {
-            expect(err.message).toBe('Timed out.');
+            expect((err as Error).message).toBe('Timed out.');
         } finally {
             clock.restore();
         }
@@ -870,7 +871,7 @@ describe('utils.addTimeoutToPromise()', () => {
 });
 
 describe('utils.printOutdatedSdkWarning()', () => {
-    let logMock;
+    let logMock: SinonMock;
 
     const currentVersion = require('../package.json').version; // eslint-disable-line
 
