@@ -86,24 +86,16 @@ describe('Apify.Request', () => {
         };
 
         request.pushErrorMessage(undefined);
-        // @ts-expect-error
         request.pushErrorMessage(false);
-        // @ts-expect-error
         request.pushErrorMessage(5);
-        // @ts-expect-error
         request.pushErrorMessage(() => 2);
         request.pushErrorMessage('bar');
-        // @ts-expect-error
         request.pushErrorMessage(Symbol('A Symbol'));
         request.pushErrorMessage(null);
         request.pushErrorMessage(new Error('foo'), { omitStack: true });
-        // @ts-expect-error
         request.pushErrorMessage({ message: 'A message.' });
-        // @ts-expect-error
         request.pushErrorMessage([1, 2, 3]);
-        // @ts-expect-error
         request.pushErrorMessage(obj);
-        // @ts-expect-error
         request.pushErrorMessage(toStr);
         request.pushErrorMessage(circularObj);
 
