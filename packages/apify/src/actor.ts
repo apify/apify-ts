@@ -365,7 +365,7 @@ export async function call(actId: string, input?: Dictionary | string, options: 
     callActorOpts.timeout = timeoutSecs;
 
     if (input) {
-        callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType);
+        callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
         input = maybeStringify(input, callActorOpts);
     }
 
@@ -601,7 +601,7 @@ export async function metamorph(targetActorId: string, input: Dictionary | strin
     if (!runId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} must be provided!`);
 
     if (input) {
-        metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType);
+        metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType!);
         input = maybeStringify(input, metamorphOpts);
     }
 
@@ -652,7 +652,7 @@ export interface WebhookOptions {
  * In local environment, the function will print a warning and have no effect.
  *
  * @param options
- * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
+ * @return The return value is the Webhook object.
  * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
  */
 export async function addWebhook(options: WebhookOptions): Promise<Webhook | undefined> {

@@ -1,7 +1,7 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
 import { join } from 'path';
-import { ApifyStorageLocal } from '@apify/storage-local';
-import { ApifyClient } from 'apify-client';
+import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@apify/storage-local';
+import { ApifyClient, ApifyClientOptions } from 'apify-client';
 import log from './utils_log';
 import { entries } from './typedefs';
 
@@ -122,7 +122,7 @@ export class Configuration {
     };
 
     /**
-     * maps config keys to environment variables (e.g. `proxyPort` to `APIFY_PROXY_PORT`)
+     * Maps config keys to environment variables (e.g. `proxyPort` to `APIFY_PROXY_PORT`).
      */
     private static ENV_MAP_REVERSED = entries(Configuration.ENV_MAP).reduce((obj, [key, value]) => {
         obj[value] = key;
@@ -207,7 +207,7 @@ export class Configuration {
      * Sets value for given option. Only affects this `Configuration` instance, the value will not be propagated down to the env var.
      * To reset a value, we can omit the `value` argument or pass `undefined` there.
      */
-    set(key: keyof ConfigurationOptions, value?: string | number | boolean) {
+    set(key: keyof ConfigurationOptions, value?: string | number | boolean): void {
         this.options.set(key, value);
     }
 
@@ -220,7 +220,7 @@ export class Configuration {
      * multiple instances, one for each variant of the options.
      * @internal
      */
-    getClient(options: CreateClientOptions = {}): ApifyClient {
+    getClient(options: ApifyClientOptions = {}): ApifyClient {
         const baseUrl = options.baseUrl ?? this.get('apiBaseUrl');
         const token = options.token ?? this.get('token');
         const cacheKey = `${baseUrl}~${token}`;
@@ -235,12 +235,9 @@ export class Configuration {
      *
      * Caching works based on the `storageDir` option, so calling this method with different `storageDir` will return
      * multiple instances, one for each directory.
-     *
-     * @param [options.storageDir]
-     * @param [options.enableWalMode=true]
      * @internal
      */
-    getStorageLocal(options: { storageDir?: string; enableWalMode?: boolean } = {}): ApifyStorageLocal {
+    getStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
         const cacheKey = options.storageDir ?? this.get('localStorageDir');
         return this._getService('ApifyStorageLocal', () => this.createStorageLocal(options), cacheKey);
     }
@@ -263,7 +260,7 @@ export class Configuration {
      * Creates an instance of ApifyClient using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createClient(options: CreateClientOptions = {}): ApifyClient {
+    createClient(options: ApifyClientOptions = {}): ApifyClient {
         return new ApifyClient({
             baseUrl: this.get('apiBaseUrl'),
             token: this.get('token'),
@@ -275,7 +272,7 @@ export class Configuration {
      * Creates an instance of ApifyStorageLocal using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createStorageLocal(options: { storageDir?: string; enableWalMode?: boolean } = {}): ApifyStorageLocal {
+    createStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
         const storageDir = options.storageDir ?? this.get('localStorageDir');
         const enableWalMode = options.enableWalMode ?? this.get('localStorageEnableWalMode');
         const storage = new ApifyStorageLocal({ ...options, storageDir, enableWalMode });
@@ -300,11 +297,4 @@ export class Configuration {
 
         return Configuration.globalConfig;
     }
-}
-
-export interface CreateClientOptions {
-    token?: string;
-    maxRetries?: number;
-    minDelayBetweenRetriesMillis?: number;
-    baseUrl?: string;
 }

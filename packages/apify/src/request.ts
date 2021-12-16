@@ -192,11 +192,10 @@ export class Request {
      * inspection of the passed argument and attempts to extract as much information
      * as possible, since just throwing a bad type error makes any debugging rather difficult.
      *
-     * @param {(Error|string)} errorOrMessage Error object or error message to be stored in the request.
-     * @param {object} [options]
-     * @param {boolean} [options.omitStack=false] Only push the error message without stack trace when true.
+     * @param errorOrMessage Error object or error message to be stored in the request.
+     * @param [options]
      */
-    pushErrorMessage(errorOrMessage: Error | string, options: PushErrorMessageOptions = {}) {
+    pushErrorMessage(errorOrMessage: unknown, options: PushErrorMessageOptions = {}): void {
         const { omitStack } = options;
         let message;
         const type = typeof errorOrMessage;
@@ -210,8 +209,8 @@ export class Request {
                     : errorOrMessage.stack;
             } else if (Reflect.has(Object(errorOrMessage), 'message')) {
                 message = Reflect.get(Object(errorOrMessage), 'message');
-            } else if (errorOrMessage.toString() !== '[object Object]') {
-                message = errorOrMessage.toString();
+            } else if ((errorOrMessage as string).toString() !== '[object Object]') {
+                message = (errorOrMessage as string).toString();
             } else {
                 try {
                     message = util.inspect(errorOrMessage);
@@ -222,15 +221,12 @@ export class Request {
         } else if (type === 'undefined') {
             message = 'undefined';
         } else {
-            message = errorOrMessage.toString();
+            message = (errorOrMessage as string).toString();
         }
 
         this.errorMessages.push(message);
     }
 
-    /**
-     * @internal
-     */
     protected _computeUniqueKey({ url, method, payload, keepUrlFragment, useExtendedUniqueKey }: ComputeUniqueKeyOptions) {
         const normalizedMethod = method.toUpperCase();
         const normalizedUrl = normalizeUrl(url, keepUrlFragment) || url; // It returns null when url is invalid, causing weird errors.
@@ -321,6 +317,10 @@ export interface RequestOptions {
 }
 
 export interface PushErrorMessageOptions {
+    /**
+     * Only push the error message without stack trace when true.
+     * @default false
+     */
     omitStack?: boolean;
 }
 

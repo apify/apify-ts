@@ -6,7 +6,7 @@ import { ApifyStorageLocal } from '@apify/storage-local';
 import { ApifyClient, RequestQueueClient, RequestQueue as RequestQueueInfo } from 'apify-client';
 import ow from 'ow';
 import { entries } from '../typedefs';
-import { StorageManager } from './storage_manager';
+import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { sleep } from '../utils';
 import log from '../utils_log';
 import { Request, RequestOptions } from '../request';
@@ -98,15 +98,6 @@ export interface RequestQueueOperationOptions {
      * @default false
      */
     forefront?: boolean;
-}
-
-export interface OpenRequestQueueOptions {
-    /**
-     * If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     * environment variable is set. This way it is possible to combine local and cloud storage.
-     * @default false
-     */
-    forceCloud?: boolean;
 }
 
 /**
@@ -673,7 +664,7 @@ export class RequestQueue {
      *   the function returns the default request queue associated with the actor run.
      * @param [options] Open Request Queue options.
      */
-    static async open(queueIdOrName?: string | null, options: OpenRequestQueueOptions = {}): Promise<RequestQueue> {
+    static async open(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -700,7 +691,7 @@ export class RequestQueue {
  * @param [options] Open Request Queue options.
  * @deprecated use `RequestQueue.open()` instead
  */
-export async function openRequestQueue(queueIdOrName?: string | null, options: OpenRequestQueueOptions = {}): Promise<RequestQueue> {
+export async function openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
     return RequestQueue.open(queueIdOrName, options);
 }
 

@@ -42,8 +42,8 @@ const EMAIL_URL_PREFIX_REGEX = /^mailto:/i;
 /**
  * The function extracts email addresses from a plain text.
  * Note that the function preserves the order of emails and keep duplicates.
- * @param {string} text Text to search in.
- * @return {string[]} Array of emails addresses found.
+ * @param text Text to search in.
+ * @return Array of emails addresses found.
  * If no emails are found, the function returns an empty array.
  */
 export function emailsFromText(text: string): string[] {
@@ -56,7 +56,7 @@ export function emailsFromText(text: string): string[] {
  * Basically it looks for all `mailto:` URLs and returns valid email addresses from them.
  * Note that the function preserves the order of emails and keep duplicates.
  * @param urls Array of URLs.
- * @return {string[]} Array of emails addresses found.
+ * @return Array of emails addresses found.
  * If no emails are found, the function returns an empty array.
  */
 export function emailsFromUrls(urls: string[]): string[] {
@@ -138,7 +138,7 @@ const SKIP_PHONE_REGEX = new RegExp(`^(${SKIP_PHONE_REGEXS.join('|')})$`, 'i');
  * the results might not be accurate, since phone numbers appear in a large variety of formats and conventions.
  * If you encounter some problems, please [file an issue](https://github.com/apify/apify-js/issues).
  * @param text Text to search the phone numbers in.
- * @return {string[]} Array of phone numbers found.
+ * @return Array of phone numbers found.
  * If no phone numbers are found, the function returns an empty array.
  */
 export function phonesFromText(text: string): string[] {
@@ -164,7 +164,7 @@ export function phonesFromText(text: string): string[] {
  * Finds phone number links in an array of URLs and extracts the phone numbers from them.
  * Note that the phone number links look like `tel://123456789`, `tel:/123456789` or `tel:123456789`.
  * @param urls Array of URLs.
- * @return {string[]} Array of phone numbers found.
+ * @return Array of phone numbers found.
  * If no phone numbers are found, the function returns an empty array.
  */
 export function phonesFromUrls(urls: string[]): string[] {
@@ -270,7 +270,7 @@ export interface SocialHandles {
  * @param [data] Optional object which will receive the `text` and `$` properties
  *   that contain text content of the HTML and `cheerio` object, respectively. This is an optimization
  *   so that the caller doesn't need to parse the HTML document again, if needed.
- * @return {SocialHandles} An object with the social handles.
+ * @return An object with the social handles.
  */
 export function parseHandlesFromHtml(html: string, data: Record<string, unknown> | null = null): SocialHandles {
     const result: SocialHandles = {

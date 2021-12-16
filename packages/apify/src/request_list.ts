@@ -339,7 +339,7 @@ export class RequestList {
             await this._addRequestsFromSources();
         }
 
-        this._restoreState(state);
+        this._restoreState(state as RequestListState);
         this.isInitialized = true;
         if (this.persistRequestsKey && !this.areRequestsPersisted) await this._persistRequests();
         if (this.persistStateKey) {
@@ -351,11 +351,8 @@ export class RequestList {
      * Adds previously persisted Requests, as retrieved from the key-value store.
      * This needs to be done in a memory efficient way. We should update the input
      * to a Stream once apify-client supports streams.
-     * @param persistedRequests
-     * @ignore
-     * @internal
      */
-    protected async _addPersistedRequests(persistedRequests: Buffer) {
+    protected async _addPersistedRequests(persistedRequests: Buffer): Promise<void> {
         // We don't need the sources so we purge them to
         // prevent them from hanging in memory.
         for (let i = 0; i < this.sources.length; i++) {
@@ -375,10 +372,8 @@ export class RequestList {
      * This function is called only when persisted sources were not loaded.
      * We need to avoid keeping both sources and requests in memory
      * to reduce memory footprint with very large sources.
-     * @ignore
-     * @internal
      */
-    protected async _addRequestsFromSources() {
+    protected async _addRequestsFromSources(): Promise<void> {
         // We'll load all sources in sequence to ensure that they get loaded in the right order.
         const sourcesCount = this.sources.length;
         for (let i = 0; i < sourcesCount; i++) {
@@ -439,10 +434,8 @@ export class RequestList {
      * Unlike persistState(), this is used only internally, since the sources
      * are automatically persisted at RequestList initialization (if the persistRequestsKey is set),
      * but there's no reason to persist it again afterwards, because RequestList is immutable.
-     * @ignore
-     * @internal
      */
-    protected async _persistRequests() {
+    protected async _persistRequests(): Promise<void> {
         const serializedRequests = await serializeArray(this.requests);
         await setValue(this.persistRequestsKey!, serializedRequests, { contentType: CONTENT_TYPE_BINARY });
         this.areRequestsPersisted = true;
@@ -450,12 +443,8 @@ export class RequestList {
 
     /**
      * Restores RequestList state from a state object.
-     *
-     * @param state
-     * @ignore
-     * @internal
      */
-    protected _restoreState(state?: RequestListState) {
+    protected _restoreState(state?: RequestListState): void {
         // If there's no state it means we've not persisted any (yet).
         if (!state) return;
         // Restore previous state.
@@ -506,16 +495,13 @@ export class RequestList {
         this.nextIndex = state.nextIndex;
         this.inProgress = state.inProgress;
 
-        // All in-progress requests need to be recrawled
+        // All in-progress requests need to be re-crawled
         this.reclaimed = _.clone(this.inProgress);
     }
 
     /**
      * Attempts to load state and requests using the `RequestList` configuration
      * and returns a tuple of [state, requests] where each may be null if not loaded.
-     *
-     * @ignore
-     * @internal
      */
     protected async _loadStateAndPersistedRequests(): Promise<[RequestListState, Buffer]> {
         let state!: RequestListState;
@@ -604,8 +590,6 @@ export class RequestList {
 
     /**
      * Marks request as handled after successful processing.
-     *
-     * @param request
      */
     async markRequestHandled(request: Request): Promise<void> {
         const { uniqueKey } = request;
@@ -621,8 +605,6 @@ export class RequestList {
     /**
      * Reclaims request to the list if its processing failed.
      * The request will become available in the next `this.fetchNextRequest()`.
-     *
-     * @param request
      */
     async reclaimRequest(request: Request): Promise<void> {
         const { uniqueKey } = request;
@@ -636,9 +618,6 @@ export class RequestList {
 
     /**
      * Adds all fetched requests from a URL from a remote resource.
-     *
-     * @ignore
-     * @internal
      */
     protected async _addFetchedRequests(source: InternalSource, fetchedRequests: RequestOptions[]) {
         const { requestsFromUrl, regex } = source;
@@ -661,9 +640,6 @@ export class RequestList {
 
     /**
      * Fetches URLs from requestsFromUrl and returns them in format of list of requests
-     * @param {*} source
-     * @ignore
-     * @internal
      */
     protected async _fetchRequestsFromUrl(source: InternalSource): Promise<RequestOptions[]> {
         const { requestsFromUrl, regex, ...sharedOpts } = source;
@@ -693,11 +669,8 @@ export class RequestList {
 
     /**
      * Tries to detect wrong urls and fix them. Currently detects only sharing url instead of csv download one.
-     * @param url
-     * @ignore
-     * @internal
      */
-    private _ensureCorrectRemoteRequestListUrl(url: string) {
+    private _ensureCorrectRemoteRequestListUrl(url: string): string {
         const match = url.match(/^(https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:\w|-)+)\/edit/);
 
         if (match) {
@@ -711,10 +684,6 @@ export class RequestList {
      * Adds given request.
      * If the `source` parameter is a string or plain object and not an instance
      * of a `Request`, then the function creates a `Request` instance.
-     *
-     * @param source
-     * @ignore
-     * @internal
      */
     protected _addRequest(source: Source) {
         let request;
@@ -751,11 +720,8 @@ export class RequestList {
     /**
      * Helper function that validates unique key.
      * Throws an error if uniqueKey is not a non-empty string.
-     *
-     * @ignore
-     * @internal
      */
-    protected _ensureUniqueKeyValid(uniqueKey: string) {
+    protected _ensureUniqueKeyValid(uniqueKey: string): void {
         if (typeof uniqueKey !== 'string' || !uniqueKey) {
             throw new Error('Request object\'s uniqueKey must be a non-empty string');
         }
@@ -763,11 +729,8 @@ export class RequestList {
 
     /**
      * Checks that request is not reclaimed and throws an error if so.
-     *
-     * @ignore
-     * @internal
      */
-    protected _ensureInProgressAndNotReclaimed(uniqueKey: string) {
+    protected _ensureInProgressAndNotReclaimed(uniqueKey: string): void {
         if (!this.inProgress[uniqueKey]) {
             throw new Error(`The request is not being processed (uniqueKey: ${uniqueKey})`);
         }
@@ -778,11 +741,8 @@ export class RequestList {
 
     /**
      * Throws an error if request list wasn't initialized.
-     *
-     * @ignore
-     * @internal
      */
-    protected _ensureIsInitialized() {
+    protected _ensureIsInitialized(): void {
         if (!this.isInitialized) {
             throw new Error('RequestList is not initialized; you must call "await requestList.initialize()" before using it!');
         }

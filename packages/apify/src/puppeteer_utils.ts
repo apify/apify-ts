@@ -65,6 +65,30 @@ export interface DirectNavigationOptions {
     referer?: string;
 }
 
+export interface InjectFileOptions {
+    /**
+     * Enables the injected script to survive page navigations and reloads without need to be re-injected manually.
+     * This does not mean, however, that internal state will be preserved. Just that it will be automatically
+     * re-injected on each navigation before any other scripts get the chance to execute.
+     */
+    surviveNavigations?: boolean;
+}
+
+export interface BlockRequestsOptions {
+    /**
+     * The patterns of URLs to block from being loaded by the browser.
+     * Only `*` can be used as a wildcard. It is also automatically added to the beginning
+     * and end of the pattern. This limitation is enforced by the DevTools protocol.
+     * `.png` is the same as `*.png*`.
+     */
+    urlPatterns?: string[];
+
+    /**
+     * If you just want to append to the default blocked patterns, use this property.
+     */
+    extraUrlPatterns?: string[];
+}
+
 export interface CompiledScriptParams {
     page: Page;
     request: Request;
@@ -84,16 +108,11 @@ const injectedFilesCache = new LruCache({ maxLength: MAX_INJECT_FILE_CACHE_SIZE 
  *
  * File contents are cached for up to 10 files to limit file system access.
  *
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param filePath File path
  * @param [options]
- * @param [options.surviveNavigations]
- *   Enables the injected script to survive page navigations and reloads without need to be re-injected manually.
- *   This does not mean, however, that internal state will be preserved. Just that it will be automatically
- *   re-injected on each navigation before any other scripts get the chance to execute.
  */
-export async function injectFile(page: Page, filePath: string, options: { surviveNavigations?: boolean } = {}): Promise<unknown> {
+export async function injectFile(page: Page, filePath: string, options: InjectFileOptions = {}): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(filePath, ow.string);
     ow(options, ow.object.exactShape({
@@ -134,8 +153,7 @@ export async function injectFile(page: Page, filePath: string, options: { surviv
  * [`page.$()`](https://pptr.dev/#?product=Puppeteer&show=api-pageselector)
  * function in any way.
  *
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  */
 export function injectJQuery(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
@@ -205,18 +223,10 @@ export function injectUnderscore(page: Page): Promise<unknown> {
  * await page.goto('https://cnn.com');
  * ```
  *
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param [options]
- * @param [options.urlPatterns]
- *   The patterns of URLs to block from being loaded by the browser.
- *   Only `*` can be used as a wildcard. It is also automatically added to the beginning
- *   and end of the pattern. This limitation is enforced by the DevTools protocol.
- *   `.png` is the same as `*.png*`.
- * @param [options.extraUrlPatterns]
- *   If you just want to append to the default blocked patterns, use this property.
  */
-export async function blockRequests(page: Page, options: { urlPatterns?: string[]; extraUrlPatterns?: string[] } = {}): Promise<void> {
+export async function blockRequests(page: Page, options: BlockRequestsOptions = {}): Promise<void> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(options, ow.object.exactShape({
         urlPatterns: ow.optional.array.ofType(ow.string),
@@ -362,8 +372,7 @@ export function compileScript(scriptString: string, context: Dictionary = Object
  * *NOTE:* In recent versions of Puppeteer using requests other than GET, overriding headers and adding payloads disables
  * browser cache which degrades performance.
  *
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param request
  * @param [gotoOptions] Custom options for `page.goto()`.
  */
@@ -440,8 +449,7 @@ export interface InfiniteScrollOptions {
 /**
  * Scrolls to the bottom of a page, or until it times out.
  * Loads dynamic content when it hits the bottom of a page, and then continues scrolling.
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param [options]
  */
 export async function infiniteScroll(page: Page, options: InfiniteScrollOptions = {}): Promise<void> {
@@ -569,8 +577,7 @@ export interface SaveSnapshotOptions {
 
 /**
  * Saves a full screenshot and HTML of the current page into a Key-Value store.
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param [options]
  */
 export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}): Promise<void> {
