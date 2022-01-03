@@ -601,7 +601,7 @@ export class RequestQueue {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager<RequestQueue>(RequestQueue as any);
+        const manager = new StorageManager<RequestQueue>(RequestQueue);
         manager.closeStorage(this);
     }
 
@@ -669,7 +669,7 @@ export class RequestQueue {
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
-        const manager = new StorageManager<RequestQueue>(RequestQueue as any);
+        const manager = new StorageManager<RequestQueue>(RequestQueue);
         return manager.openStorage(queueIdOrName, options);
     }
 }

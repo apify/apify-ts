@@ -417,7 +417,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager<Dataset<Data>>(Dataset as any);
+        const manager = new StorageManager<Dataset<Data>>(Dataset);
         manager.closeStorage(this);
     }
 
@@ -442,7 +442,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        const manager = new StorageManager<Dataset<Data>>(Dataset as any, options.config);
+        const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
         return manager.openStorage(datasetIdOrName, options);
     }
 }

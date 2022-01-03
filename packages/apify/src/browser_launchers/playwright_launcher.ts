@@ -85,7 +85,7 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
             launcher,
         });
 
-        this.Plugin = PlaywrightPlugin as any;
+        this.Plugin = PlaywrightPlugin;
     }
 }
 

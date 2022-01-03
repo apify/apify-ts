@@ -125,7 +125,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
             ...stealthOptions,
         };
 
-        this.Plugin = PuppeteerPlugin as any;
+        this.Plugin = PuppeteerPlugin;
     }
 
     override async launch() {

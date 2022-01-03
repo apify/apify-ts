@@ -498,13 +498,15 @@ export class Apify {
      *   the function returns the default dataset associated with the actor run.
      * @param [options]
      */
-    async openDataset(datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<Dataset> {
+    async openDataset<Data extends Dictionary = Dictionary>(
+        datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
+    ): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager<Dataset>(Dataset as any).openStorage(datasetIdOrName, options);
+        return this._getStorageManager<Dataset<Data>>(Dataset).openStorage(datasetIdOrName, options);
     }
 
     /**
@@ -626,7 +628,7 @@ export class Apify {
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager<KeyValueStore>(KeyValueStore as any).openStorage(storeIdOrName, options);
+        return this._getStorageManager(KeyValueStore).openStorage(storeIdOrName, options);
     }
 
     /**
@@ -724,7 +726,7 @@ export class Apify {
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager<RequestQueue>(RequestQueue as any).openStorage(queueIdOrName, options);
+        return this._getStorageManager(RequestQueue).openStorage(queueIdOrName, options);
     }
 
     /**

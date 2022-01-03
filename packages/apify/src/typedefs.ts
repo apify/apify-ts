@@ -6,7 +6,7 @@ import { ActorRun } from 'apify-client';
 export type Dictionary<T = unknown> = Record<PropertyKey, T>;
 
 /** @ignore */
-export type Constructor<T = unknown> = new (...args: unknown[]) => T;
+export type Constructor<T = unknown> = new (...args: any[]) => T;
 
 /** @ignore */
 export type Awaitable<T> = T | PromiseLike<T>;
