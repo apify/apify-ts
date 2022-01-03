@@ -54,6 +54,8 @@
         "@apify/ps-tree": "^1.1.4",
         "@apify/storage-local": "^2.0.1",
         "@apify/utilities": "^1.2.2",
+        "@types/mime-types": "^2.1.1",
+        "@types/stream-json": "^1.7.1",
         "apify-client": "beta",
         "browser-pool": "^3.1.0-beta.0",
         "cheerio": "1.0.0-rc.10",
@@ -83,9 +85,5 @@
         "puppeteer": {
             "optional": true
         }
-    },
-    "devDependencies": {
-        "@types/mime-types": "^2.1.1",
-        "@types/stream-json": "^1.7.1"
     }
 }

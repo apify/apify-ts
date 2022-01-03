@@ -811,7 +811,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         return requestOptions;
     }
 
-    // TODO type response properly
     protected _encodeResponse(request: Request, response: IncomingMessage, encoding: BufferEncoding): {
         encoding: BufferEncoding;
         response: IncomingMessage;
