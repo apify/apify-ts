@@ -578,7 +578,7 @@ describe('Apify.metamorph()', () => {
 
 describe('Apify.addWebhook()', () => {
     const runId = 'my-run-id';
-    const expectedEventTypes = ['ACTOR_RUN_SUCCEEDED'] as const;
+    const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'] as const;
     const expectedRequestUrl = 'http://example.com/api';
     const expectedPayloadTemplate = '{"hello":{{world}}';
     const expectedIdempotencyKey = 'some-key';

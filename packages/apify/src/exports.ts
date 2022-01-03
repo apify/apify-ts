@@ -78,3 +78,15 @@ export * from './autoscaling/system_status';
 export * from './events';
 export * from './errors';
 export * from './typedefs';
+
+export type {
+    ActorRun,
+    ActorStartOptions,
+    ApifyClientOptions,
+    Dataset as DatasetInfo,
+    RequestQueue as RequestQueueInfo,
+    TaskStartOptions,
+    Webhook,
+    WebhookEventType,
+    WebhookUpdateData,
+} from 'apify-client';
