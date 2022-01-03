@@ -129,7 +129,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
     }
 
     override async launch() {
-        const browser = await super.launch() as Browser;
+        const browser = await super.launch();
 
         if (this.stealth) {
             const { hideWebDriver, ...newStealthOptions } = this.stealthOptions!;

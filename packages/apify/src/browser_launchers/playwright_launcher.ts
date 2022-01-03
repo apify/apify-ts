@@ -148,5 +148,5 @@ function getDefaultExecutablePath(launchContext: PlaywrightLaunchContext): strin
 export async function launchPlaywright(launchContext?: PlaywrightLaunchContext): Promise<Browser> {
     const playwrightLauncher = new PlaywrightLauncher(launchContext);
 
-    return playwrightLauncher.launch() as Promise<Browser>;
+    return playwrightLauncher.launch();
 }
