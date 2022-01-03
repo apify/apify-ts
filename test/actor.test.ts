@@ -2,7 +2,8 @@ import path from 'path';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import Apify, { ApifyCallError, ApifyEnv, WebhookOptions } from 'apify';
+import Apify, { ApifyCallError, ApifyEnv } from 'apify';
+import { WebhookUpdateData } from 'apify-client';
 import * as utils from 'apify/src/utils';
 
 const { utils: { log } } = Apify;
@@ -254,7 +255,7 @@ describe('Apify.call()', () => {
     test('works as expected', async () => {
         const memoryMbytes = 1024;
         const timeoutSecs = 60;
-        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
         const clientMock = sinon.mock(utils.apifyClient);
         clientMock.expects('actor')
@@ -293,7 +294,7 @@ describe('Apify.call()', () => {
     test('works with token', async () => {
         const memoryMbytes = 1024;
         const timeoutSecs = 60;
-        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
         const utilsMock = sinon.mock(utils);
         const callStub = sinon.stub().resolves(finishedRun);
@@ -402,7 +403,7 @@ describe('Apify.callTask()', () => {
     const memoryMbytes = 256;
     const timeoutSecs = 60;
     const build = 'beta';
-    const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+    const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
     test('works as expected', async () => {
         const clientMock = sinon.mock(utils.apifyClient);
