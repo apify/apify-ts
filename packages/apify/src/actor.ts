@@ -2,7 +2,7 @@ import ow from 'ow';
 import path from 'path';
 import _ from 'underscore';
 import { ACT_JOB_STATUSES, ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
-import { Webhook, WebhookEventType } from 'apify-client';
+import { ActorStartOptions, TaskStartOptions, Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
@@ -99,7 +99,7 @@ export function getEnv(): ApifyEnv {
     const envVars = {} as ApifyEnv;
 
     _.mapObject(ENV_VARS, (fullName, shortName) => {
-        const camelCaseName = snakeCaseToCamelCase(shortName);
+        const camelCaseName = snakeCaseToCamelCase(shortName) as keyof ApifyEnv;
         let value: string | number | Date | undefined = env[fullName];
 
         // Parse dates and integers.
@@ -236,7 +236,6 @@ export function main(userFunc: UserFunc): void {
     });
 }
 
-// TODO(vladfrangu): This should really extend ActorStartOptions from the client!
 export interface CallOptions {
     /**
      * Content type for the `input`. If not specified,
@@ -295,7 +294,7 @@ export interface CallOptions {
      * to receive a notification e.g. when the actor finished or failed, see
      * [ad hook webhooks documentation](https://docs.apify.com/webhooks/ad-hoc-webhooks) for detailed description.
      */
-    webhooks?: readonly WebhookOptions[];
+    webhooks?: readonly WebhookUpdateData[];
 }
 
 /**
@@ -347,7 +346,7 @@ export async function call(actId: string, input?: Dictionary | string, options: 
         waitSecs: ow.optional.number.not.negative,
         fetchOutput: ow.optional.boolean,
         disableBodyParser: ow.optional.boolean,
-        webhooks: ow.optional.array.ofType(ow.object),
+        webhooks: ow.optional.array.ofType<WebhookUpdateData>(ow.object),
     }));
 
     const {
@@ -359,13 +358,13 @@ export async function call(actId: string, input?: Dictionary | string, options: 
         ...callActorOpts
     } = options;
 
-    // @ts-ignore should this be public?
-    callActorOpts.memory = memoryMbytes;
-    // @ts-ignore should this be public?
-    callActorOpts.timeout = timeoutSecs;
+    const castedCallActorOpts = callActorOpts as ActorStartOptions;
+
+    castedCallActorOpts.memory = memoryMbytes;
+    castedCallActorOpts.timeout = timeoutSecs;
 
     if (input) {
-        callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
+        castedCallActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
         input = maybeStringify(input, callActorOpts);
     }
 
@@ -373,7 +372,7 @@ export async function call(actId: string, input?: Dictionary | string, options: 
 
     let run;
     try {
-        run = await client.actor(actId).call(input, callActorOpts);
+        run = await client.actor(actId).call(input, castedCallActorOpts);
     } catch (err) {
         if ((err as Error).message.startsWith('Waiting for run to finish')) {
             throw new ApifyCallError({ id: run?.id, actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
@@ -406,7 +405,6 @@ export async function call(actId: string, input?: Dictionary | string, options: 
     return result;
 }
 
-// TODO(vladfrangu): This should extend TaskStartOptions from the client
 export interface CallTaskOptions {
     /**
      * User API token that is used to run the actor. By default, it is taken from the `APIFY_TOKEN` environment variable.
@@ -457,7 +455,7 @@ export interface CallTaskOptions {
      * to receive a notification e.g. when the actor finished or failed, see
      * [ad hook webhooks documentation](https://docs.apify.com/webhooks/ad-hoc-webhooks) for detailed description.
      */
-    webhooks?: readonly WebhookOptions[];
+    webhooks?: readonly WebhookUpdateData[];
 }
 
 /**
@@ -508,7 +506,7 @@ export async function callTask(taskId: string, input?: Dictionary | Dictionary[]
         waitSecs: ow.optional.number.not.negative,
         fetchOutput: ow.optional.boolean,
         disableBodyParser: ow.optional.boolean,
-        webhooks: ow.optional.array.ofType(ow.object),
+        webhooks: ow.optional.array.ofType<WebhookUpdateData>(ow.object),
     }));
 
     const {
@@ -520,17 +518,16 @@ export async function callTask(taskId: string, input?: Dictionary | Dictionary[]
         ...callTaskOpts
     } = options;
 
-    // TODO(vladfrangu): should we move users to this in v3?
-    // @ts-expect-error should this be public?
-    callTaskOpts.memory = memoryMbytes;
-    // @ts-expect-error should this be public?
-    callTaskOpts.timeout = timeoutSecs;
+    const castedCallTaskOptions = callTaskOpts as TaskStartOptions;
+
+    castedCallTaskOptions.memory = memoryMbytes;
+    castedCallTaskOptions.timeout = timeoutSecs;
 
     const client = token ? newClient({ token }) : apifyClient;
     // Start task and wait for run to finish if waitSecs is provided
     let run;
     try {
-        run = await client.task(taskId).call(input, callTaskOpts);
+        run = await client.task(taskId).call(input, castedCallTaskOptions);
     } catch (err) {
         if ((err as Error).message.startsWith('Waiting for run to finish')) {
             throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
