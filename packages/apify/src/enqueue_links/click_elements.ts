@@ -1,6 +1,6 @@
 import ow from 'ow';
 import { URL } from 'url';
-import { Page, HTTPRequest as PuppeteerRequest, Target, Frame, PageEventObject } from 'puppeteer';
+import { Page, HTTPRequest as PuppeteerRequest, Target, Frame } from 'puppeteer';
 import log from '../utils_log';
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue'; // eslint-disable-line import/named,no-unused-vars
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../puppeteer_request_interception';
@@ -274,7 +274,7 @@ function createTargetCreatedHandler(page: Page, requests: Set<string>): (target:
             const createdPage = await target.page();
             await createdPage!.close();
         } catch (err) {
-            log.debug('enqueueLinksByClickingElements: Could not close spawned page.', { error: err.stack });
+            log.debug('enqueueLinksByClickingElements: Could not close spawned page.', { error: (err as Error).stack });
         }
     };
 }
@@ -318,9 +318,11 @@ async function preventHistoryNavigation(page: Page): Promise<unknown> {
             back() {},
             forward() {},
             pushState(...args) {
+                // @ts-expect-error Overriding built-in history object
                 this.stateHistory.push(args);
             },
             replaceState(...args) {
+                // @ts-expect-error Overriding built-in history object
                 this.stateHistory.push(args);
             },
         } as typeof window.history;
@@ -347,13 +349,14 @@ export async function clickElements(page: Page, selector: string): Promise<void>
             await handle.click();
             clickedElementsCount++;
         } catch (err) {
-            if (shouldLogWarning && err.stack.includes('is detached from document')) {
+            const e = err as Error;
+            if (shouldLogWarning && e.stack!.includes('is detached from document')) {
                 log.warning(`An element with selector ${selector} that you're trying to click has been removed from the page. `
                     + 'This was probably caused by an earlier click which triggered some JavaScript on the page that caused it to change. '
                     + 'If you\'re trying to enqueue pagination links, we suggest using the "next" button, if available and going one by one.');
                 shouldLogWarning = false;
             }
-            log.debug('enqueueLinksByClickingElements: Click failed.', { stack: err.stack });
+            log.debug('enqueueLinksByClickingElements: Click failed.', { stack: e.stack });
         }
     }
     log.debug(`enqueueLinksByClickingElements: Successfully clicked ${clickedElementsCount} elements out of ${elementHandles.length}`);
@@ -391,10 +394,10 @@ function updateElementCssToEnableMouseClick(el: HTMLElement, zIndex: number): vo
  */
 async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdleMillis }: WaitForPageIdleOptions): Promise<void> {
     return new Promise<void>((resolve) => {
-        let timeout;
-        let maxTimeout;
+        let timeout: NodeJS.Timeout;
+        let maxTimeout: NodeJS.Timeout;
 
-        function newTabTracker(target) {
+        function newTabTracker(target: Target) {
             if (isTargetRelevant(page, target)) activityHandler();
         }
 
@@ -420,10 +423,11 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         }
 
         maxTimeout = setTimeout(maxTimeoutHandler, maxWaitForPageIdleMillis);
-        timeout = activityHandler(); // We call this once manually in case there would be no requests at all.
+        activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on('request', activityHandler);
         page.on('framenavigated', activityHandler);
-        page.on('targetcreated' as keyof PageEventObject, newTabTracker);
+        // @ts-expect-error Private / untyped event?
+        page.on('targetcreated', newTabTracker);
     });
 }
 
@@ -435,20 +439,20 @@ async function restoreHistoryNavigationAndSaveCapturedUrls(page: Page, requests:
     /* eslint-disable no-shadow */
     /* istanbul ignore next */
     const stateHistory = await page.evaluate(() => {
-        // @ts-ignore what is `stateHistory`?
+        // @ts-expect-error Custom state history property
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const { stateHistory } = window.history;
-        // @ts-ignore assign to const property
+        // @ts-expect-error assign to const property
         window.history = window.__originalHistory__; // eslint-disable-line no-underscore-dangle
         return stateHistory;
     });
-    stateHistory.forEach((args) => {
+    stateHistory.forEach((args: Parameters<History['pushState']>) => {
         try {
             const stateUrl = args[args.length - 1];
             const url = new URL(stateUrl, page.url()).href;
             requests.add(JSON.stringify({ url }));
         } catch (err) {
-            log.debug('enqueueLinksByClickingElements: Failed to ', { error: err.stack });
+            log.debug('enqueueLinksByClickingElements: Failed to ', { error: (err as Error).stack });
         }
     });
 }

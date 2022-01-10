@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { LaunchOptions } from 'playwright';
+import { Browser, BrowserType, LaunchOptions } from 'playwright';
 import { PlaywrightPlugin } from 'browser-pool';
 import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
 
@@ -51,7 +51,7 @@ export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOpti
      * By default this function uses `require("playwright").chromium`.
      * If you want to use a different browser you can pass it by this property as e.g. `require("playwright").firefox`
      */
-    launcher?: unknown;
+    launcher?: BrowserType;
 }
 
 /**
@@ -145,7 +145,7 @@ function getDefaultExecutablePath(launchContext: PlaywrightLaunchContext): strin
  * @returns
  *   Promise that resolves to Playwright's `Browser` instance.
  */
-export async function launchPlaywright(launchContext?: PlaywrightLaunchContext): Promise<unknown> {
+export async function launchPlaywright(launchContext?: PlaywrightLaunchContext): Promise<Browser> {
     const playwrightLauncher = new PlaywrightLauncher(launchContext);
 
     return playwrightLauncher.launch();

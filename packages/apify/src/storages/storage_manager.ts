@@ -12,20 +12,20 @@ const DEFAULT_ID_ENV_VAR_NAMES = {
     Dataset: ENV_VARS.DEFAULT_DATASET_ID,
     KeyValueStore: ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID,
     RequestQueue: ENV_VARS.DEFAULT_REQUEST_QUEUE_ID,
-};
+} as const;
 
 const DEFAULT_ID_CONFIG_KEYS = {
     Dataset: 'defaultDatasetId',
     KeyValueStore: 'defaultKeyValueStoreId',
     RequestQueue: 'defaultRequestQueueId',
-};
+} as const;
 
 /**
  * StorageManager takes care of opening remote or local storages.
  * @ignore
  */
 export class StorageManager<T> {
-    private readonly name: string;
+    private readonly name: 'Dataset' | 'KeyValueStore' | 'RequestQueue';
     private readonly StorageConstructor: Constructor<T> & { name: string };
     private readonly cache: LruCache;
 
@@ -34,7 +34,7 @@ export class StorageManager<T> {
         private readonly config = Configuration.getGlobalConfig(),
     ) {
         this.StorageConstructor = StorageConstructor;
-        this.name = this.StorageConstructor.name;
+        this.name = this.StorageConstructor.name as 'Dataset' | 'KeyValueStore' | 'RequestQueue';
         this.cache = cacheContainer.openCache(this.name, MAX_OPENED_STORAGES);
     }
 
@@ -101,13 +101,13 @@ export class StorageManager<T> {
 
     protected _getStorageClientFactories(client: ApifyClient | ApifyStorageLocal, storageConstructorName: string) {
         // Dataset => dataset
-        const clientName = storageConstructorName[0].toLowerCase() + storageConstructorName.slice(1);
+        const clientName = storageConstructorName[0].toLowerCase() + storageConstructorName.slice(1) as ClientNames;
         // dataset => datasets
-        const collectionClientName = `${clientName}s`;
+        const collectionClientName = `${clientName}s` as ClientCollectionNames;
 
         return {
-            createStorageClient: client[clientName].bind(client),
-            createStorageCollectionClient: client[collectionClientName].bind(client),
+            createStorageClient: client[clientName!].bind(client),
+            createStorageCollectionClient: client[collectionClientName!].bind(client),
         };
     }
 
@@ -121,6 +121,9 @@ export class StorageManager<T> {
         }
     }
 }
+
+type ClientNames = 'dataset' | 'keyValueStore' | 'requestQueue';
+type ClientCollectionNames = 'datasets' | 'keyValueStores' | 'requestQueues';
 
 export interface StorageManagerOptions {
     /**

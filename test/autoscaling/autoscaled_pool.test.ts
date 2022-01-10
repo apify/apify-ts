@@ -7,7 +7,7 @@ import { AutoscaledPool } from 'apify/src/autoscaling/autoscaled_pool';
 /* eslint-disable no-underscore-dangle */
 
 describe('AutoscaledPool', () => {
-    let logLevel;
+    let logLevel: number;
     beforeAll(() => {
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
@@ -19,7 +19,7 @@ describe('AutoscaledPool', () => {
 
     test('should work with concurrency 1', async () => {
         const range = _.range(0, 10);
-        const result = [];
+        const result: number[] = [];
 
         let isFinished = false;
 
@@ -49,7 +49,7 @@ describe('AutoscaledPool', () => {
 
     test('should work with concurrency 10', async () => {
         const range = _.range(0, 100);
-        const result = [];
+        const result: number[] = [];
 
         let isFinished = false;
 
@@ -80,7 +80,7 @@ describe('AutoscaledPool', () => {
 
     test('enables setting concurrency', async () => {
         const range = _.range(0, 100);
-        const result = [];
+        const result: number[] = [];
 
         let isFinished = false;
 
@@ -215,7 +215,7 @@ describe('AutoscaledPool', () => {
 
         test('works at minConcurrency when currently overloaded', async () => {
             let limit = 5;
-            let concurrencyLog = [];
+            let concurrencyLog: number[] = [];
             let count = 0;
             // @ts-expect-error Overwriting readonly private prop
             pool.systemStatus.okNow = false;
@@ -259,7 +259,7 @@ describe('AutoscaledPool', () => {
 
     describe('should throw', () => {
         // Turn off unnecessary error logging.
-        let originalLevel;
+        let originalLevel: number;
         beforeAll(() => {
             originalLevel = log.getLevel();
             log.setLevel(log.LEVELS.OFF);
@@ -362,7 +362,7 @@ describe('AutoscaledPool', () => {
     });
 
     test('should break and resume when the task queue is empty for a while', async () => {
-        const finished = [];
+        const finished: number[] = [];
         let isFinished = false;
         let isTaskReady = true;
 
@@ -448,8 +448,8 @@ describe('AutoscaledPool', () => {
 
     test('should pause and resume', async () => {
         let count = 0;
-        const results = [];
-        let pauseResolve;
+        const results: number[] = [];
+        let pauseResolve: (value: unknown) => void;
         const pausePromise = new Promise((res) => { pauseResolve = res; });
 
         const pool = new AutoscaledPool({

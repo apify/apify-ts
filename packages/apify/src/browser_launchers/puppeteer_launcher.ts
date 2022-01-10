@@ -5,8 +5,6 @@ import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
 import { isAtHome } from '../utils';
 import { DEFAULT_USER_AGENT } from '../constants';
 import { applyStealthToBrowser, StealthOptions } from '../stealth/stealth';
-import { BrowserPlugin } from './browser_plugin';
-import { Constructor } from '../typedefs';
 
 const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
     width: 1366,
@@ -131,7 +129,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
     }
 
     override async launch() {
-        const browser = await super.launch() as Browser;
+        const browser = await super.launch();
 
         if (this.stealth) {
             const { hideWebDriver, ...newStealthOptions } = this.stealthOptions!;

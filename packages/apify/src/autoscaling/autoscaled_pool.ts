@@ -170,6 +170,7 @@ export class AutoscaledPool {
     // Configurable properties.
     private readonly desiredConcurrencyRatio: number;
     private readonly scaleUpStepRatio: number;
+    // @ts-expect-error TODO: property is never used?
     private readonly scaleDownStepRatio: number;
     private readonly maybeRunIntervalMillis: number;
     private readonly loggingIntervalMillis: number;
@@ -187,14 +188,14 @@ export class AutoscaledPool {
     private isStopped = false;
     private lastLoggingTime = 0;
     private resolve: ((val?: unknown) => void) | null = null;
-    private reject: ((reason?: any) => void) | null = null;
+    private reject: ((reason?: unknown) => void) | null = null;
     private snapshotter: Snapshotter;
     private systemStatus: SystemStatus;
-    private poolPromise: Promise<unknown>;
-    private autoscaleInterval: any;
-    private maybeRunInterval: any;
-    private queryingIsTaskReady: boolean;
-    private queryingIsFinished: boolean;
+    private poolPromise!: Promise<unknown>;
+    private autoscaleInterval!: ReturnType<typeof betterSetInterval>;
+    private maybeRunInterval!: ReturnType<typeof betterSetInterval>;
+    private queryingIsTaskReady!: boolean;
+    private queryingIsFinished!: boolean;
 
     constructor(options: AutoscaledPoolOptions) {
         ow(options, ow.object.exactShape({
@@ -338,11 +339,13 @@ export class AutoscaledPool {
         await this.snapshotter.start();
 
         // This interval checks the system status and updates the desired concurrency accordingly.
+        // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
         this.autoscaleInterval = betterSetInterval(this._autoscale, this.autoscaleIntervalMillis);
 
         // This is here because if we scale down to let's say 1, then after each promise is finished
         // this._maybeRunTask() doesn't trigger another one. So if that 1 instance gets stuck it results
         // in the actor getting stuck and even after scaling up it never triggers another promise.
+        // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
         this.maybeRunInterval = betterSetInterval(this._maybeRunTask, this.maybeRunIntervalMillis);
 
         try {
@@ -387,7 +390,7 @@ export class AutoscaledPool {
         if (this.isStopped) return;
         this.isStopped = true;
         return new Promise((resolve, reject) => {
-            let timeout;
+            let timeout: NodeJS.Timeout;
             if (timeoutSecs) {
                 timeout = setTimeout(() => {
                     const err = new Error('The pool\'s running tasks did not finish'
@@ -425,7 +428,7 @@ export class AutoscaledPool {
      *
      * It doesn't allow multiple concurrent runs of this method.
      */
-    protected async _maybeRunTask(intervalCallback): Promise<void> {
+    protected async _maybeRunTask(intervalCallback?: () => void): Promise<void> {
         this.log.perf('Attempting to run a task.');
         // Check if the function was invoked by the maybeRunInterval and use an empty function if not.
         const done = intervalCallback || (() => {});
@@ -459,7 +462,8 @@ export class AutoscaledPool {
         try {
             this.log.perf('Checking for ready tasks.');
             isTaskReady = await this.isTaskReadyFunction();
-        } catch (err) {
+        } catch (e) {
+            const err = e as Error;
             this.log.perf('Checking for ready tasks failed.');
             // We might have already rejected this promise.
             if (this.reject) {
@@ -504,7 +508,8 @@ export class AutoscaledPool {
             this._currentConcurrency--;
             // Run task after the previous one finished.
             setImmediate(this._maybeRunTask);
-        } catch (err) {
+        } catch (e) {
+            const err = e as Error;
             this.log.perf('Running a task failed.');
             // We might have already rejected this promise.
             if (this.reject) {
@@ -520,7 +525,7 @@ export class AutoscaledPool {
      * If the system IS NOT overloaded and the settings allow it, it scales up.
      * If the system IS overloaded and the settings allow it, it scales down.
      */
-    protected _autoscale(intervalCallback) {
+    protected _autoscale(intervalCallback: () => void) {
         // Don't scale if paused.
         if (this.isStopped) return intervalCallback();
 
@@ -607,7 +612,8 @@ export class AutoscaledPool {
         try {
             const isFinished = await this.isFinishedFunction();
             if (isFinished && this.resolve) this.resolve();
-        } catch (err) {
+        } catch (e) {
+            const err = e as Error;
             if (this.reject) {
                 // No need to log all concurrent errors.
                 this.log.exception(err, 'isFinishedFunction failed.');

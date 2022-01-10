@@ -1,11 +1,11 @@
 import ow from 'ow';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import { ApifyClient } from 'apify-client';
-import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, WebhookRun, ApifyEnv } from './actor';
+import { ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
+import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, ApifyEnv } from './actor';
 import { initializeEvents, stopEvents } from './events';
-import { StorageManager } from './storages/storage_manager';
+import { StorageManager, StorageManagerOptions } from './storages/storage_manager';
 import { Dataset } from './storages/dataset';
-import { KeyValueStore, maybeStringify } from './storages/key_value_store';
+import { KeyValueStore, RecordOptions, maybeStringify } from './storages/key_value_store';
 import { RequestList, RequestListOptions, REQUESTS_PERSISTENCE_KEY, STATE_PERSISTENCE_KEY } from './request_list';
 import { RequestQueue } from './storages/request_queue';
 import { SessionPool, SessionPoolOptions } from './session_pool/session_pool';
@@ -20,7 +20,7 @@ import { socialUtils } from './utils_social';
 import { enqueueLinks } from './enqueue_links/enqueue_links';
 import { requestAsBrowser } from './utils_request';
 import { ApifyCallError } from './errors';
-import { ActorRun, Constructor, Dictionary } from './typedefs';
+import { ActorRunWithOutput, Constructor, Dictionary } from './typedefs';
 import { Request, RequestOptions } from './request';
 
 export interface MetamorphOptions {
@@ -135,7 +135,7 @@ export class Apify {
         // This is to enable unit tests where process.exit() is mocked and doesn't really exit the process
         // Note that mocked process.exit() might throw, so set exited flag before calling it to avoid confusion.
         let exited = false;
-        const exitWithError = (err, exitCode) => {
+        const exitWithError = (err: Error, exitCode: number) => {
             log.exception(err, '');
             exited = true;
             process.exit(exitCode);
@@ -155,12 +155,12 @@ export class Apify {
                     process.exit(EXIT_CODES.SUCCESS);
                 } catch (err) {
                     if (!exited) {
-                        exitWithError(err, EXIT_CODES.ERROR_USER_FUNCTION_THREW);
+                        exitWithError(err as Error, EXIT_CODES.ERROR_USER_FUNCTION_THREW);
                     }
                 }
             })();
         } catch (err) {
-            exitWithError(err, EXIT_CODES.ERROR_UNKNOWN);
+            exitWithError(err as Error, EXIT_CODES.ERROR_UNKNOWN);
         } finally {
             stopEvents();
             clearInterval(intervalId);
@@ -206,7 +206,7 @@ export class Apify {
      * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRun> {
+    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
         ow(actId, ow.string);
         // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
@@ -238,7 +238,7 @@ export class Apify {
         callActorOpts.token = token;
 
         if (input) {
-            callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType);
+            callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
             input = maybeStringify(input, callActorOpts);
         }
 
@@ -248,8 +248,8 @@ export class Apify {
         try {
             run = await client.actor(actId).call(input, callActorOpts);
         } catch (err) {
-            if (err.message.startsWith('Waiting for run to finish')) {
-                throw new ApifyCallError({ id: run.id, actId: run.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
+            if ((err as Error).message.startsWith('Waiting for run to finish')) {
+                throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
             }
             throw err;
         }
@@ -305,12 +305,12 @@ export class Apify {
      *  Input overrides for the actor task. If it is an object, it will be stringified to
      *  JSON and its content type set to `application/json; charset=utf-8`.
      *  Provided input will be merged with actor task input.
-     * @param {object} [options]
+     * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async callTask(taskId: string, input?: Dictionary | string, options: CallTaskOptions = {}): Promise<ActorRun> {
+    async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
         ow(taskId, ow.string);
-        ow(input, ow.optional.any(ow.string, ow.object));
+        ow(input, ow.optional.object);
         ow(options, ow.object.exactShape({
             token: ow.optional.string,
             memoryMbytes: ow.optional.number.not.negative,
@@ -331,22 +331,21 @@ export class Apify {
             ...callTaskOpts
         } = options;
 
-        // @ts-ignore should this be public?
-        callTaskOpts.memory = memoryMbytes;
-        // @ts-ignore should this be public?
-        callTaskOpts.timeout = timeoutSecs;
-        // @ts-ignore should this be public?
-        callTaskOpts.token = token;
+        const castedCallTaskOptions = callTaskOpts as TaskStartOptions;
+
+        castedCallTaskOptions.memory = memoryMbytes;
+        castedCallTaskOptions.timeout = timeoutSecs;
+        // @ts-expect-error should this be public?
+        castedCallTaskOptions.token = token;
 
         const client = this.newClient({ token });
         // Start task and wait for run to finish if waitSecs is provided
         let run;
         try {
-            // TODO client types are weird?
-            run = await client.task(taskId).call(input as any, callTaskOpts);
+            run = await client.task(taskId).call(input, castedCallTaskOptions);
         } catch (err) {
-            if (err.message.startsWith('Waiting for run to finish')) {
-                throw new ApifyCallError({ id: run.id, actId: run.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
+            if ((err as Error).message.startsWith('Waiting for run to finish')) {
+                throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
             }
             throw err;
         }
@@ -379,10 +378,10 @@ export class Apify {
      * @param [input]
      *  Input for the actor. If it is an object, it will be stringified to
      *  JSON and its content type set to `application/json; charset=utf-8`.
-     *  Otherwise the `options.contentType` parameter must be provided.
-     * @param {object} [options]
+     *  Otherwise, the `options.contentType` parameter must be provided.
+     * @param [options]
      */
-    async metamorph(targetActorId: string, input?: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
+    async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
         ow(targetActorId, ow.string);
         // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
@@ -402,7 +401,7 @@ export class Apify {
         if (!runId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} must be provided!`);
 
         if (input) {
-            metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType);
+            metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType!);
             input = maybeStringify(input, metamorphOpts);
         }
 
@@ -422,12 +421,12 @@ export class Apify {
      * In local environment, the function will print a warning and have no effect.
      *
      * @param options
-     * @return {Promise<WebhookRun | undefined>} The return value is the Webhook object.
+     * @returns The return value is the Webhook object.
      * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
      */
-    async addWebhook(options: WebhookOptions): Promise<WebhookRun | undefined> {
+    async addWebhook(options: WebhookOptions): Promise<Webhook | undefined> {
         ow(options, ow.object.exactShape({
-            eventTypes: ow.array.ofType(ow.string),
+            eventTypes: ow.array.ofType<WebhookEventType>(ow.string),
             requestUrl: ow.string,
             payloadTemplate: ow.optional.string,
             idempotencyKey: ow.optional.string,
@@ -445,10 +444,9 @@ export class Apify {
             throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
         }
 
-        // @ts-ignore return type mismatch with client
         return this.newClient().webhooks().create({
             isAdHoc: true,
-            eventTypes: eventTypes as any, // FIXME weird type mismatch with client types
+            eventTypes,
             condition: {
                 actorRunId: runId,
             },
@@ -481,7 +479,7 @@ export class Apify {
      * @param item Object or array of objects containing data to be stored in the default dataset.
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
-    async pushData(item: Record<string, unknown>): Promise<void> {
+    async pushData(item: Dictionary): Promise<void> {
         const dataset = await this.openDataset();
         return dataset.pushData(item);
     }
@@ -499,17 +497,16 @@ export class Apify {
      *   ID or name of the dataset to be opened. If `null` or `undefined`,
      *   the function returns the default dataset associated with the actor run.
      * @param [options]
-     * @param [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openDataset(datasetIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<Dataset> {
+    async openDataset<Data extends Dictionary = Dictionary>(
+        datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
+    ): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(Dataset).openStorage(datasetIdOrName, options);
+        return this._getStorageManager<Dataset<Data>>(Dataset).openStorage(datasetIdOrName, options);
     }
 
     /**
@@ -532,17 +529,16 @@ export class Apify {
      * For more information, see  {@link Apify.openKeyValueStore}
      * and  {@link KeyValueStore.getValue}.
      *
-     * @param {string} key
-     *   Unique record key.
-     * @returns {Promise<Object<string, *>|string|Buffer|null>}
+     * @param key Unique record key.
+     * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getValue(key) {
+    async getValue<T = unknown>(key: string): Promise<T | null> {
         const store = await this.openKeyValueStore();
-        return store.getValue(key);
+        return store.getValue<T>(key);
     }
 
     /**
@@ -565,19 +561,17 @@ export class Apify {
      * For more information, see  {@link Apify.openKeyValueStore}
      * and  {@link KeyValueStore.getValue}.
      *
-     * @param {string} key
+     * @param key
      *   Unique record key.
-     * @param {*} value
+     * @param value
      *   Record data, which can be one of the following values:
      *    - If `null`, the record in the key-value store is deleted.
-     *    - If no `options.contentType` is specified, `value` can be any JavaScript object and it will be stringified to JSON.
-     *    - If `options.contentType` is set, `value` is taken as is and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
+     *    - If no `options.contentType` is specified, `value` can be any JavaScript object, and it will be stringified to JSON.
+     *    - If `options.contentType` is set, `value` is taken as is, and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
      *   For any other value an error will be thrown.
-     * @param {object} [options]
-     * @param {string} [options.contentType]
-     *   Specifies a custom MIME content type of the record.
+     * @param [options]
      */
-    async setValue(key, value, options): Promise<void> {
+    async setValue<T>(key: string, value: T | null, options: RecordOptions = {}): Promise<void> {
         const store = await this.openKeyValueStore();
         return store.setValue(key, value, options);
     }
@@ -604,14 +598,14 @@ export class Apify {
      * For more information, see  {@link Apify.openKeyValueStore}
      * and {@link KeyValueStore.getValue}.
      *
-     * @returns {Promise<Object<string, *>|string|Buffer|null>}
+     * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    async getInput() {
-        return this.getValue(this.config.get('inputKey'));
+    async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
+        return this.getValue<T>(this.config.get('inputKey'));
     }
 
     /**
@@ -627,11 +621,8 @@ export class Apify {
      *   ID or name of the key-value store to be opened. If `null` or `undefined`,
      *   the function returns the default key-value store associated with the actor run.
      * @param [options]
-     * @param [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openKeyValueStore(storeIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<KeyValueStore> {
+    async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -728,11 +719,8 @@ export class Apify {
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
      * @param [options]
-     * @param {boolean} [options.forceCloud=false]
-     *   If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     *   environment variable is set. This way it is possible to combine local and cloud storage.
      */
-    async openRequestQueue(queueIdOrName?: string | null, options: { forceCloud?: boolean } = {}): Promise<RequestQueue> {
+    async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
@@ -823,26 +811,19 @@ export class Apify {
      * NPM package, and it is automatically configured using the `APIFY_API_BASE_URL`, and `APIFY_TOKEN`
      * environment variables. You can override the token via the available options. That's useful
      * if you want to use the client as a different Apify user than the SDK internals are using.
-     *
-     * @param {object} [options]
-     * @param {string} [options.token]
-     * @param {string} [options.maxRetries]
-     * @param {string} [options.minDelayBetweenRetriesMillis]
      */
-    newClient(options = {}): ApifyClient {
+    newClient(options: ApifyClientOptions = {}): ApifyClient {
         return this.config.createClient(options);
     }
 
     /**
      * Returns `true` when code is running on Apify platform and `false` otherwise (for example locally).
-     *
-     * @returns {boolean}
      */
-    isAtHome() {
+    isAtHome(): boolean {
         return !!this.config.get('isAtHome');
     }
 
-    get utils() {
+    get utils(): Record<string, unknown> {
         return {
             ...publicUtils,
             puppeteer: puppeteerUtils,
@@ -863,7 +844,7 @@ export class Apify {
         return this.storageManagers.get(storageClass) as StorageManager<T>;
     }
 
-    private _isRunUnsuccessful(status: keyof typeof ACT_JOB_STATUSES): boolean {
+    private _isRunUnsuccessful(status: typeof ACT_JOB_STATUSES[keyof typeof ACT_JOB_STATUSES]): boolean {
         return status !== ACT_JOB_STATUSES.SUCCEEDED
             && status !== ACT_JOB_STATUSES.RUNNING
             && status !== ACT_JOB_STATUSES.READY;

@@ -1,5 +1,6 @@
 import ow from 'ow';
 import { pipeline as streamPipeline, Readable, Writable } from 'stream';
+import Chain from 'stream-chain';
 import StreamArray from 'stream-json/streamers/StreamArray';
 import util from 'util';
 import zlib from 'zlib';
@@ -109,6 +110,8 @@ export function createDeserialize(compressedData: Buffer): Readable {
         Readable.from([compressedData]),
         zlib.createGunzip(),
         destination,
+        // TODO: figure this out
+        // @ts-expect-error Somethings wrong here, the types are wrong but tests fail if we correct the code to make them right
         (err) => destination.emit(err),
     );
 
@@ -137,7 +140,7 @@ function createChunkCollector<T extends string | Buffer>(options: { fromValuesSt
     return { collector, chunks };
 }
 
-function pluckValue(streamArray) {
+function pluckValue(streamArray: Chain) {
     const realPush = streamArray.push.bind(streamArray);
     streamArray.push = (obj) => realPush(obj && obj.value);
     return streamArray;

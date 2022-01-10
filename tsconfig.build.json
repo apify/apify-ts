@@ -10,10 +10,7 @@
         "baseUrl": ".",
         "allowJs": true,
         "skipLibCheck": true,
-        "strict": false,
-        "strictNullChecks": true,
-        "resolveJsonModule": false,
-        "noUnusedLocals": false
+        "resolveJsonModule": false
     },
     "include": [
         "./packages/*/src/**/*"

@@ -16,7 +16,6 @@ import { Request } from '../request';
 import { RequestList } from '../request_list';
 import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
-import { BrowserHook } from './browser_crawler';
 import { Awaitable } from '../typedefs';
 
 export interface CrawlingContext<Response = IncomingMessage> extends Record<PropertyKey, unknown> {
@@ -25,7 +24,7 @@ export interface CrawlingContext<Response = IncomingMessage> extends Record<Prop
      * The original {@link Request} object.
      */
     request: Request;
-    session: Session;
+    session?: Session;
 
     /**
      * An object with information about currently used proxy by the crawler
@@ -38,6 +37,8 @@ export interface CrawlingContext<Response = IncomingMessage> extends Record<Prop
      * For basic crawlers, this is an instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object.
      */
     response?: Response;
+
+    crawler?: BasicCrawler;
 }
 
 export interface HandleFailedRequestInput extends CrawlingContext {
@@ -58,7 +59,7 @@ export interface HandleFailedRequestInput extends CrawlingContext {
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export interface BasicCrawlerOptions {
+export interface BasicCrawlerOptions<Inputs extends HandleRequestInputs = HandleRequestInputs> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
@@ -83,7 +84,7 @@ export interface BasicCrawlerOptions {
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handleRequestFunction: HandleRequest;
+    handleRequestFunction: HandleRequest<Inputs>;
 
     /**
      * Static list of URLs to be processed.
@@ -231,7 +232,7 @@ export interface BasicCrawlerOptions {
  * ```
  * @category Crawlers
  */
-export class BasicCrawler {
+export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInputs> {
     /**
      * Static list of URLs to be processed.
      */
@@ -306,7 +307,7 @@ export class BasicCrawler {
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions) {
+    constructor(options: BasicCrawlerOptions<Inputs>) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {
@@ -540,8 +541,8 @@ export class BasicCrawler {
     protected async _runTaskFunction() {
         const source = this.requestQueue || this.requestList!;
 
-        let request;
-        let session;
+        let request: Request | null;
+        let session: Session | undefined;
 
         if (this.useSessionPool) {
             [request, session] = await Promise.all([this._fetchNextRequest(), this.sessionPool!.getSession()]);
@@ -577,12 +578,12 @@ export class BasicCrawler {
             this.handledRequestsCount++;
 
             // reclaim session if request finishes successfully
-            if (session) session.markGood();
+            session?.markGood();
         } catch (err) {
             try {
-                await this._requestFunctionErrorHandler(err, crawlingContext, source);
+                await this._requestFunctionErrorHandler(err as Error, crawlingContext, source);
             } catch (secondaryError) {
-                this.log.exception(secondaryError, 'runTaskFunction error handler threw an exception. '
+                this.log.exception(secondaryError as Error, 'runTaskFunction error handler threw an exception. '
                     + 'This places the crawler and its underlying storages into an unknown state and crawling will be terminated. '
                     + 'This may have happened due to an internal error of Apify\'s API or due to a misconfigured crawler. '
                     + 'If you are sure that there is no error in your code, selecting "Restart on error" in the actor\'s settings'
@@ -678,7 +679,7 @@ export class BasicCrawler {
         }
     }
 
-    protected async _executeHooks<HookLike extends (...args: unknown[]) => Awaitable<void>>(hooks: HookLike[], ...args: Parameters<HookLike>) {
+    protected async _executeHooks<HookLike extends (...args: any[]) => Awaitable<void>>(hooks: HookLike[], ...args: Parameters<HookLike>) {
         if (Array.isArray(hooks) && hooks.length) {
             for (const hook of hooks) {
                 await hook(...args);
@@ -697,7 +698,7 @@ export class BasicCrawler {
     }
 }
 
-export type HandleRequest = (inputs: HandleRequestInputs) => Awaitable<void>;
+export type HandleRequest<Inputs extends HandleRequestInputs = HandleRequestInputs> = (inputs: Inputs) => Awaitable<void>;
 
 export interface HandleRequestInputs {
     /**

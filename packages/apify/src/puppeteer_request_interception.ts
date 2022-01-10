@@ -1,11 +1,12 @@
 import { EventEmitter } from 'events';
 import ow from 'ow';
 import _ from 'underscore';
-import { HTTPRequest as PuppeteerRequest, Page } from 'puppeteer'; // eslint-disable-line no-unused-vars
+import { HTTPRequest, HTTPRequest as PuppeteerRequest, Page } from 'puppeteer'; // eslint-disable-line no-unused-vars
 import log from './utils_log';
+import { Dictionary } from './typedefs';
 
 // We use weak maps here so that the content gets discarted after page gets closed.
-const pageInterceptRequestHandlersMap = new WeakMap(); // Maps page to an array of request interception handlers.
+const pageInterceptRequestHandlersMap: WeakMap<Page, InterceptHandler[]> = new WeakMap(); // Maps page to an array of request interception handlers.
 const pageInterceptRequestMasterHandlerMap = new WeakMap(); // Maps page to master request interception handler.
 const pageInterceptedRequestsMap = new WeakMap(); // Maps page to a set of its pending intercepted requests.
 
@@ -16,13 +17,13 @@ const pageInterceptedRequestsMap = new WeakMap(); // Maps page to a set of its p
 class ObservableSet<T> extends EventEmitter {
     set = new Set<T>();
 
-    add(value): Set<T> {
+    add(value: T): Set<T> {
         this.set.add(value);
         this.emit('add', value);
         return this.set;
     }
 
-    delete(value): boolean {
+    delete(value: T): boolean {
         const success = this.set.delete(value);
         this.emit('delete', value);
         return success;
@@ -39,7 +40,7 @@ export type InterceptHandler = (request: PuppeteerRequest) => unknown;
  * Makes all request headers capitalized to more look like in browser
  */
 function browserifyHeaders(headers: Record<string, string>): Record<string, string> {
-    const finalHeaders = {};
+    const finalHeaders: Dictionary<string> = {};
     // eslint-disable-next-line prefer-const
     for (let [key, value] of Object.entries(headers)) {
         key = key.toLowerCase()
@@ -60,10 +61,10 @@ function browserifyHeaders(headers: Record<string, string>): Record<string, stri
  * @param interceptRequestHandlers An array of intercept request handlers.
  * @ignore
  */
-async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers: InterceptHandler[]) {
+async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers?: InterceptHandler[]): Promise<void> {
     // If there are no intercept handlers, it means that request interception is not enabled (anymore)
     // and therefore .abort() .respond() and .continue() would throw and crash the process.
-    if (!interceptRequestHandlers.length) return;
+    if (!interceptRequestHandlers?.length) return;
 
     let wasAborted = false;
     let wasResponded = false;
@@ -155,8 +156,7 @@ async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers
  * await page.goto('http://example.com');
  * ```
  *
- * @param page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param handler Request interception handler.
  */
 export async function addInterceptRequestHandler(page: Page, handler: InterceptHandler): Promise<void> {
@@ -171,7 +171,7 @@ export async function addInterceptRequestHandler(page: Page, handler: InterceptH
         pageInterceptedRequestsMap.set(page, new ObservableSet());
     }
 
-    const handlersArray = pageInterceptRequestHandlersMap.get(page);
+    const handlersArray = pageInterceptRequestHandlersMap.get(page)!;
     handlersArray.push(handler);
 
     // First handler was just added at this point so we need to set up request interception.
@@ -180,7 +180,7 @@ export async function addInterceptRequestHandler(page: Page, handler: InterceptH
 
         // This is a handler that gets set in page.on('request', ...) and that executes all the user
         // added custom handlers.
-        const masterHandler = async (request) => {
+        const masterHandler = async (request: HTTPRequest) => {
             const interceptedRequests = pageInterceptedRequestsMap.get(page);
             interceptedRequests.add(request);
             const interceptHandlers = pageInterceptRequestHandlersMap.get(page);
@@ -199,17 +199,15 @@ export async function addInterceptRequestHandler(page: Page, handler: InterceptH
 /**
  * Removes request interception handler for given page.
  *
- * @param {Page} page
- *   Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
- * @param {InterceptHandler} handler Request interception handler.
- * @return {Promise<void>}
+ * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
+ * @param handler Request interception handler.
  */
-export const removeInterceptRequestHandler = async (page, handler) => {
+export const removeInterceptRequestHandler = async (page: Page, handler: InterceptHandler): Promise<void> => {
     ow(page, ow.object.hasKeys('goto', 'evaluate'));
     ow(handler, ow.function);
 
     const handlersArray = pageInterceptRequestHandlersMap
-        .get(page)
+        .get(page)!
         .filter((item) => item !== handler);
 
     pageInterceptRequestHandlersMap.set(page, handlersArray);
@@ -237,8 +235,8 @@ export const removeInterceptRequestHandler = async (page, handler) => {
     }
 };
 
-async function disableRequestInterception(page) {
+async function disableRequestInterception(page: Page): Promise<void> {
     await page.setRequestInterception(false);
     const requestHandler = pageInterceptRequestMasterHandlerMap.get(page);
-    page.removeListener('request', requestHandler);
+    page.off('request', requestHandler);
 }

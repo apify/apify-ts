@@ -19,7 +19,7 @@ describe('dataset', () => {
     });
 
     describe('remote', () => {
-        const mockData = (bytes) => 'x'.repeat(bytes);
+        const mockData = (bytes: number) => 'x'.repeat(bytes);
 
         test('openDataset should open storage', async () => {
             const datasetName = 'abc';
@@ -138,7 +138,7 @@ describe('dataset', () => {
                 throw new Error('Should fail!');
             } catch (err) {
                 expect(err).toBeInstanceOf(Error);
-                expect(err.message).toMatch('Data item is too large');
+                expect((err as Error).message).toMatch('Data item is too large');
             }
         });
         test('should throw on too large file in an array', async () => {
@@ -155,7 +155,7 @@ describe('dataset', () => {
                 throw new Error('Should fail!');
             } catch (err) {
                 expect(err).toBeInstanceOf(Error);
-                expect(err.message).toMatch('Data item at index 3 is too large');
+                expect((err as Error).message).toMatch('Data item at index 3 is too large');
             }
         });
 
@@ -196,14 +196,14 @@ describe('dataset', () => {
             } catch (err) {
                 e = err;
             }
-            expect(e.message).toEqual('dataset.getData(): The response is too large for parsing. You can fix this by lowering the "limit" option.'); // eslint-disable-line max-len
+            expect((e as Error).message).toEqual('dataset.getData(): The response is too large for parsing. You can fix this by lowering the "limit" option.'); // eslint-disable-line max-len
             spy.mockRestore();
         });
 
         test('getInfo() should work', async () => {
             const dataset = new Dataset({ id: 'some-id', client: apifyClient });
 
-            const expected = {
+            const expected: Awaited<ReturnType<Dataset['getInfo']>> = {
                 id: 'WkzbQMuFYuamGv3YF',
                 name: 'd7b9MDYsbtX5L7XAj',
                 userId: 'wRsJZtadYvn4mBZmm',
@@ -276,8 +276,8 @@ describe('dataset', () => {
         test('forEach() should work', async () => {
             const { dataset, restoreAndVerify } = getRemoteDataset();
 
-            const items = [];
-            const indexes = [];
+            const items: Dictionary[] = [];
+            const indexes: number[] = [];
             const result = await dataset.forEach((item, index) => {
                 items.push(item);
                 indexes.push(index);
@@ -409,7 +409,7 @@ describe('dataset', () => {
                 desc: true,
             });
 
-            const calledForIndexes = [];
+            const calledForIndexes: number[] = [];
 
             const result = await dataset.reduce((memo, item, index) => {
                 calledForIndexes.push(index);

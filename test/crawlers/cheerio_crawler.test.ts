@@ -10,7 +10,16 @@ import { Readable } from 'stream';
 import iconv from 'iconv-lite';
 import { Log } from '@apify/log';
 import log from 'apify/src/utils_log';
-import Apify, { CheerioHandlePageInputs, Source } from 'apify';
+import Apify, {
+    CheerioHandlePage,
+    CheerioHandlePageInputs,
+    Dictionary,
+    entries,
+    HandleFailedRequestInput,
+    PrepareRequestInputs,
+    ProxyInfo,
+    Source,
+} from 'apify';
 import { sleep } from 'apify/src/utils';
 import { Session } from 'apify/src/session_pool/session';
 import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
@@ -19,7 +28,8 @@ import { CrawlerExtension } from 'apify/src/crawlers/crawler_extension';
 import { Request } from 'apify/src/request';
 import { AutoscaledPool } from 'apify/src/autoscaling/autoscaled_pool';
 import { mergeCookies } from 'apify/src/crawlers/crawler_utils';
-import { IncomingMessage } from 'http';
+import { IncomingHttpHeaders, Server } from 'http';
+import { AddressInfo } from 'net';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 const HOST = '127.0.0.1';
@@ -94,7 +104,7 @@ app.post('/mock', (req, res) => {
         throw new Error(error);
     }
 
-    Object.entries(headers).forEach(([key, value]) => res.setHeader(key, value));
+    entries(headers as Record<string, string>).forEach(([key, value]) => res.setHeader(key, value));
 
     res.status(statusCode).send(body);
 });
@@ -140,15 +150,15 @@ app.get('/timeout', async (_req, res) => {
 
 /* eslint-disable no-underscore-dangle */
 describe('CheerioCrawler', () => {
-    let logLevel;
-    let server;
-    let port;
-    let localStorageEmulator;
+    let logLevel: number;
+    let server: Server;
+    let port: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
     beforeAll(async () => {
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
         server = await startExpressAppPromise(app, 0);
-        port = server.address().port; //eslint-disable-line
+        port = (server.address() as AddressInfo).port;
         localStorageEmulator = new LocalStorageDirEmulator();
 
         server.on('connect', (_request, socket) => {
@@ -177,9 +187,9 @@ describe('CheerioCrawler', () => {
 
     test('should work', async () => {
         const requestList = await getRequestListForMirror(port);
-        const processed = [];
-        const failed = [];
-        const handlePageFunction = ({ $, body, request }) => {
+        const processed: Request[] = [];
+        const failed: Request[] = [];
+        const handlePageFunction: CheerioHandlePage = ({ $, body, request }) => {
             request.userData.title = $('title').text();
             request.userData.body = body;
             processed.push(request);
@@ -204,7 +214,7 @@ describe('CheerioCrawler', () => {
         processed.forEach((request) => {
             expect(request.userData.title).toBe('Title');
             expect(typeof request.userData.body).toBe('string');
-            expect(request.userData.body.length).not.toBe(0);
+            expect((request.userData.body as string).length).not.toBe(0);
         });
     });
 
@@ -235,9 +245,9 @@ describe('CheerioCrawler', () => {
 
         ];
         let failed = null;
-        let success;
+        let success: Request;
         const requestList = new Apify.RequestList({ sources });
-        const handlePageFunction = ({ request }) => {
+        const handlePageFunction: CheerioHandlePage = ({ request }) => {
             success = request;
         };
         await requestList.initialize();
@@ -265,9 +275,9 @@ describe('CheerioCrawler', () => {
         ];
         const requestList = new Apify.RequestList({ sources });
         await requestList.initialize();
-        const processed = [];
-        const failed = [];
-        const handlePageFunction = ({ $, body, request }) => {
+        const processed: Request[] = [];
+        const failed: Request[] = [];
+        const handlePageFunction: CheerioHandlePage = ({ $, body, request }) => {
             request.userData.title = $('title').text();
             request.userData.body = body;
             processed.push(request);
@@ -335,7 +345,7 @@ describe('CheerioCrawler', () => {
     });
 
     describe('should timeout', () => {
-        let ll;
+        let ll: number;
         beforeAll(() => {
             ll = log.getLevel();
             log.setLevel(log.LEVELS.OFF);
@@ -351,10 +361,10 @@ describe('CheerioCrawler', () => {
                 { url: 'http://example.com/?q=1' },
                 { url: 'http://example.com/?q=2' },
             ];
-            const processed = [];
-            const failed = [];
+            const processed: Request[] = [];
+            const failed: Request[] = [];
             const requestList = new Apify.RequestList({ sources });
-            const handlePageFunction = ({ request }) => {
+            const handlePageFunction: CheerioHandlePage = ({ request }) => {
                 processed.push(request);
             };
 
@@ -390,7 +400,7 @@ describe('CheerioCrawler', () => {
         });
 
         test('after handlePageTimeoutSecs', async () => {
-            const failed = [];
+            const failed: Request[] = [];
             const requestList = await getRequestListForMirror(port);
             const handlePageFunction = async () => {
                 await sleep(2000);
@@ -430,10 +440,10 @@ describe('CheerioCrawler', () => {
                 { url: `http://${HOST}:${port}/timeout?a=12` },
                 { url: `http://${HOST}:${port}/timeout?a=23` },
             ];
-            const processed = [];
-            const failed = [];
+            const processed: Request[] = [];
+            const failed: Request[] = [];
             const requestList = new Apify.RequestList({ sources });
-            const handlePageFunction = ({ request }) => {
+            const handlePageFunction: CheerioHandlePage = ({ request }) => {
                 processed.push(request);
             };
 
@@ -459,7 +469,7 @@ describe('CheerioCrawler', () => {
 
     describe('should ensure text/html Content-Type', () => {
         test('by setting a correct Accept header', async () => {
-            const headers = [];
+            const headers: IncomingHttpHeaders[] = [];
             const requestList = await getRequestListForMirror(port);
             const crawler = new Apify.CheerioCrawler({
                 requestList,
@@ -482,7 +492,7 @@ describe('CheerioCrawler', () => {
         describe('by throwing', () => {
             let crawler;
             let handlePageInvocationCount = 0;
-            let errorMessages = [];
+            let errorMessages: string[] = [];
 
             beforeEach(() => {
                 log.setLevel(log.LEVELS.OFF);
@@ -618,9 +628,9 @@ describe('CheerioCrawler', () => {
     });
 
     describe('should work with all content types from options.additionalMimeTypes', () => {
-        let handlePageInvocationParams;
+        let handlePageInvocationParams: CheerioHandlePageInputs;
         let handleFailedInvoked = false;
-        const runCrawler = async (url) => {
+        const runCrawler = async (url: string) => {
             const sources = [url];
             const requestList = await Apify.openRequestList(null, sources);
             const crawler = new Apify.CheerioCrawler({
@@ -729,7 +739,7 @@ describe('CheerioCrawler', () => {
 
             const requestList = await getRequestListForMirror(port);
 
-            const proxies = [];
+            const proxies: string[] = [];
             const crawler = new Apify.CheerioCrawler({
                 requestList,
                 handlePageFunction: ({ proxyInfo }) => {
@@ -752,8 +762,8 @@ describe('CheerioCrawler', () => {
                 proxyUrls,
             });
 
-            const proxies = [];
-            const sessions = [];
+            const proxies: ProxyInfo[] = [];
+            const sessions: Session[] = [];
             const handlePageFunction = ({ session, proxyInfo }: CheerioHandlePageInputs) => {
                 proxies.push(proxyInfo);
                 sessions.push(session);
@@ -783,7 +793,7 @@ describe('CheerioCrawler', () => {
 
     describe('SessionPool', () => {
         const sources = ['http://example.com/'];
-        let requestList;
+        let requestList: Apify.RequestList;
 
         beforeEach(async () => {
             requestList = await Apify.openRequestList(null, sources.slice());
@@ -858,8 +868,8 @@ describe('CheerioCrawler', () => {
 
         test('should retire session on "blocked" status codes', async () => {
             for (const code of STATUS_CODES_BLOCKED) {
-                const failed = [];
-                const sessions = [];
+                const failed: Request[] = [];
+                const sessions: Session[] = [];
                 const crawler = new Apify.CheerioCrawler({
                     requestList: await getRequestListForMock(port, {
                         statusCode: code,
@@ -887,6 +897,7 @@ describe('CheerioCrawler', () => {
 
                 // eslint-disable-next-line no-loop-func
                 sessions.forEach((session) => {
+                    // @ts-expect-error Accessing private prop
                     expect(session.errorScore).toBeGreaterThanOrEqual(session.maxErrorScore);
                 });
 
@@ -909,13 +920,13 @@ describe('CheerioCrawler', () => {
                     },
                 });
             } catch (e) {
-                expect(e.message).toEqual('You cannot use "persistCookiesPerSession" without "useSessionPool" set to true.');
+                expect((e as Error).message).toEqual('You cannot use "persistCookiesPerSession" without "useSessionPool" set to true.');
             }
         });
 
         test('should send cookies', async () => {
             const cookie = 'SESSID=abcd123';
-            const requests = [];
+            const requests: Request[] = [];
             const crawler = new Apify.CheerioCrawler({
                 requestList: await getRequestListForMock(port, {
                     headers: { 'set-cookie': cookie, 'content-type': 'text/html' },
@@ -945,8 +956,8 @@ describe('CheerioCrawler', () => {
         });
 
         test('should merge cookies set in pre-nav hook with the session ones', async () => {
-            const responses = [];
-            const requestAsBrowserOptions = [];
+            const responses: unknown[] = [];
+            const requestAsBrowserOptions: utilsRequest.RequestAsBrowserOptions[] = [];
             const crawler = new Apify.CheerioCrawler({
                 requestList: await Apify.openRequestList(null, [{
                     url: `http://${HOST}:${port}/headers`,
@@ -983,7 +994,7 @@ describe('CheerioCrawler', () => {
         });
 
         test('should work with cookies adjusted on `context.request` in pre-nav hook', async () => {
-            const responses = [];
+            const responses: unknown[] = [];
             const crawler = new Apify.CheerioCrawler({
                 requestList: await Apify.openRequestList(null, [{
                     url: `http://${HOST}:${port}/headers`,
@@ -1064,11 +1075,11 @@ describe('CheerioCrawler', () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
 
             const requestListNew = new Apify.RequestList({ sources: sourcesNew });
-            let usedSession;
-            const usedRequests = [];
+            let usedSession: Session;
+            const usedRequests: utilsRequest.RequestAsBrowserOptions[] = [];
             const status = { connected: true };
 
-            const fakeCall = (opt) => {
+            const fakeCall = (opt: utilsRequest.RequestAsBrowserOptions) => {
                 usedRequests.push(opt);
                 return { body: status } as never;
             };
@@ -1104,8 +1115,8 @@ describe('CheerioCrawler', () => {
 
     describe('Crawling context', () => {
         const sources = ['http://example.com/'];
-        let requestList;
-        let actualLogLevel;
+        let requestList: Apify.RequestList;
+        let actualLogLevel: number;
         beforeEach(async () => {
             actualLogLevel = log.getLevel();
             log.setLevel(log.LEVELS.OFF);
@@ -1117,16 +1128,16 @@ describe('CheerioCrawler', () => {
         });
 
         test('uses correct crawling context', async () => {
-            let prepareCrawlingContext;
+            let prepareCrawlingContext: PrepareRequestInputs;
 
-            const prepareRequestFunction = (crawlingContext) => {
+            const prepareRequestFunction = (crawlingContext: PrepareRequestInputs) => {
                 prepareCrawlingContext = crawlingContext;
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
                 expect(crawlingContext.session).toBeInstanceOf(Session);
             };
 
-            const handlePageFunction = (crawlingContext) => {
+            const handlePageFunction = (crawlingContext: CheerioHandlePageInputs) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -1138,7 +1149,8 @@ describe('CheerioCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = (crawlingContext) => {
+            const handleFailedRequestFunction = (crawlingContext: HandleFailedRequestInput) => {
+                // @ts-expect-error
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -1193,10 +1205,10 @@ describe('CheerioCrawler', () => {
 
     describe('use', () => {
         const sources = ['http://example.com/'];
-        let requestList;
+        let requestList: Apify.RequestList;
 
         class DummyExtension extends CrawlerExtension {
-            constructor(readonly options) {
+            constructor(readonly options: Dictionary) {
                 super();
             }
 
@@ -1271,7 +1283,7 @@ describe('CheerioCrawler', () => {
     });
 });
 
-async function getRequestListForMock(port, mockData, pathName = 'mock') {
+async function getRequestListForMock(port: number, mockData: Dictionary, pathName = 'mock') {
     const sources: Source[] = [1, 2, 3, 4].map((num) => {
         return {
             url: `http://${HOST}:${port}/${pathName}?a=${num}`,
@@ -1285,7 +1297,7 @@ async function getRequestListForMock(port, mockData, pathName = 'mock') {
     return requestList;
 }
 
-async function getRequestListForMirror(port) {
+async function getRequestListForMirror(port: number) {
     const sources = [
         { url: `http://${HOST}:${port}/mirror?a=12` },
         { url: `http://${HOST}:${port}/mirror?a=23` },
@@ -1297,8 +1309,8 @@ async function getRequestListForMirror(port) {
     return requestList;
 }
 
-async function startExpressAppPromise(expressApp, port) {
-    return new Promise((resolve) => {
+async function startExpressAppPromise(expressApp: express.Application, port: number) {
+    return new Promise<Server>((resolve) => {
         const server = expressApp.listen(port, () => resolve(server));
     });
 }

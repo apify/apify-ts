@@ -1,4 +1,4 @@
-import Apify, { SessionPool, openSessionPool, events, Session } from 'apify';
+import Apify, { SessionPool, openSessionPool, events, Session, entries } from 'apify';
 import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
 import { Log } from 'apify/src/utils_log';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
@@ -52,7 +52,7 @@ describe('SessionPool - testing session pool', () => {
         await sessionPool.initialize();
         await sessionPool.teardown();
 
-        Object.entries(opts).filter(([key]) => key !== 'sessionOptions').forEach(([key, value]) => {
+        entries(opts).filter(([key]) => key !== 'sessionOptions').forEach(([key, value]) => {
             expect(sessionPool[key]).toEqual(value);
         });
         // log is appended to sessionOptions after sessionPool instantiation
@@ -77,7 +77,7 @@ describe('SessionPool - testing session pool', () => {
         sessionPool = await openSessionPool(opts);
         await sessionPool.teardown();
 
-        Object.entries(opts).filter(([key]) => key !== 'sessionOptions').forEach(([key, value]) => {
+        entries(opts).filter(([key]) => key !== 'sessionOptions').forEach(([key, value]) => {
             expect(sessionPool[key]).toEqual(value);
         });
         // log is appended to sessionOptions after sessionPool instantiation
@@ -155,23 +155,20 @@ describe('SessionPool - testing session pool', () => {
         await sessionPool.persistState();
 
         const kvStore = await Apify.openKeyValueStore();
-        const sessionPoolSaved = await kvStore.getValue(sessionPool.persistStateKey);
+        const sessionPoolSaved = await kvStore.getValue<ReturnType<SessionPool['getState']>>(sessionPool.persistStateKey);
 
-        Object.entries(sessionPoolSaved).forEach(([key, value]) => {
+        entries(sessionPoolSaved).forEach(([key, value]) => {
             if (key !== 'sessions') {
                 expect(value).toEqual(sessionPool[key]);
             }
         });
-        // TODO: type kvStore getValue
-        // @ts-expect-error Missing types
+
         expect(sessionPoolSaved.sessions.length).toEqual(sessionPool.sessions.length);
 
-        // TODO: type kvStore getValue
-        // @ts-expect-error Missing types
         sessionPoolSaved.sessions.forEach((session, index) => {
-            Object.entries(session).forEach(([key, value]) => {
+            entries(session).forEach(([key, value]) => {
                 if (sessionPool.sessions[index][key] instanceof Date) {
-                    expect(value).toEqual(sessionPool.sessions[index][key].toISOString());
+                    expect(value).toEqual((sessionPool.sessions[index][key] as Date).toISOString());
                 } else if (key === 'cookieJar') {
                     expect(value).toEqual(sessionPool.sessions[index][key].toJSON());
                 } else {
@@ -314,7 +311,7 @@ describe('SessionPool - testing session pool', () => {
 
     test('should createSessionFunction work', async () => {
         let isCalled;
-        const createSessionFunction = (sessionPool2) => {
+        const createSessionFunction = (sessionPool2: SessionPool) => {
             isCalled = true;
             expect(sessionPool2 instanceof SessionPool).toBe(true);
             return new Session({ sessionPool: sessionPool2 });
@@ -352,7 +349,7 @@ describe('SessionPool - testing session pool', () => {
             await sessionPool.addSession({ id: 'test-session' });
             await sessionPool.addSession({ id: 'test-session' });
         } catch (e) {
-            expect(e.message).toBe("Cannot add session with id 'test-session' as it already exists in the pool");
+            expect((e as Error).message).toBe("Cannot add session with id 'test-session' as it already exists in the pool");
         }
         expect.assertions(1);
     });

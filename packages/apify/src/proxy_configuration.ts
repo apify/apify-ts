@@ -2,7 +2,7 @@ import { APIFY_PROXY_VALUE_REGEX, ENV_VARS } from '@apify/consts';
 import ow from 'ow';
 import { COUNTRY_CODE_REGEX } from './constants';
 import { apifyClient } from './utils';
-import { requestAsBrowser } from './utils_request';
+import { requestAsBrowser, RequestAsBrowserOptions } from './utils_request';
 import defaultLog from './utils_log';
 import { Configuration } from './configuration';
 
@@ -279,7 +279,7 @@ export class ProxyConfiguration {
      *  All the HTTP requests going through the proxy with the same session identifier
      *  will use the same target proxy server (i.e. the same IP address).
      *  The identifier must not be longer than 50 characters and include only the following: `0-9`, `a-z`, `A-Z`, `"."`, `"_"` and `"~"`.
-     * @return {ProxyInfo} represents information about used proxy and its configuration.
+     * @return Represents information about used proxy and its configuration.
      */
     newProxyInfo(sessionId?: string | number): ProxyInfo {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
@@ -310,7 +310,7 @@ export class ProxyConfiguration {
      *  All the HTTP requests going through the proxy with the same session identifier
      *  will use the same target proxy server (i.e. the same IP address).
      *  The identifier must not be longer than 50 characters and include only the following: `0-9`, `a-z`, `A-Z`, `"."`, `"_"` and `"~"`.
-     * @return {string} A string with a proxy URL, including authentication credentials and port number.
+     * @return A string with a proxy URL, including authentication credentials and port number.
      *  For example, `http://bob:password123@proxy.example.com:8000`
      */
     newUrl(sessionId?: string | number): string {
@@ -399,7 +399,7 @@ export class ProxyConfiguration {
      * Apify Proxy can be down for a second or a minute, but this should not crash processes.
      */
     protected async _fetchStatus(): Promise<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean } | undefined> {
-        const requestOpts = {
+        const requestOpts: RequestAsBrowserOptions = {
             url: `${this.config.get('proxyStatusUrl')}/?format=json`,
             proxyUrl: this.newUrl(),
             timeout: { request: CHECK_ACCESS_REQUEST_TIMEOUT_MILLIS },
@@ -408,9 +408,9 @@ export class ProxyConfiguration {
 
         for (let attempt = 1; attempt <= CHECK_ACCESS_MAX_ATTEMPTS; attempt++) {
             try {
-                const response = await requestAsBrowser(requestOpts);
-                return response.body as any; // TODO better type cast?
-            } catch (err) {
+                const response = await requestAsBrowser<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean }>(requestOpts);
+                return response.body;
+            } catch {
                 // retry connection errors
             }
         }
@@ -448,7 +448,7 @@ export class ProxyConfiguration {
             proxyUrl = this.newUrlFunction!(sessionId!);
             new URL(proxyUrl); // eslint-disable-line no-new
         } catch (err) {
-            this._throwNewUrlFunctionInvalid(err);
+            this._throwNewUrlFunctionInvalid(err as Error);
         }
 
         return proxyUrl;
@@ -466,7 +466,7 @@ export class ProxyConfiguration {
      * Throws Apify Proxy is not connected
      * @internal
      */
-    protected _throwApifyProxyConnectionError(errorMessage) {
+    protected _throwApifyProxyConnectionError(errorMessage: string) {
         throw new Error(errorMessage);
     }
 

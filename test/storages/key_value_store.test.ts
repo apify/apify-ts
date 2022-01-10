@@ -195,7 +195,7 @@ describe('KeyValueStore remote', () => {
                 try {
                     await store.setValue(`my_id_${char}`, 'value');
                 } catch (err) {
-                    if (err.message.match('The "key" argument must be at most 256 characters')) counter++;
+                    if ((err as Error).message.match('The "key" argument must be at most 256 characters')) counter++;
                 }
             }
             expect(counter).toEqual(INVALID_CHARACTERS.length);
@@ -207,7 +207,7 @@ describe('KeyValueStore remote', () => {
             try {
                 await store.setValue('X'.repeat(257), 'value');
             } catch (err) {
-                if (err.message.match('The "key" parameter must be at most 256 characters')) counter++;
+                if ((err as Error).message.match('The "key" parameter must be at most 256 characters')) counter++;
             }
         });
 
@@ -394,7 +394,7 @@ describe('KeyValueStore remote', () => {
                 limit: 1,
             });
 
-            const results = [];
+            const results: [string, number, { size: number }][] = [];
             await store.forEachKey(async (key, index, info) => {
                 results.push([key, index, info]);
             }, { exclusiveStartKey: 'key0' });

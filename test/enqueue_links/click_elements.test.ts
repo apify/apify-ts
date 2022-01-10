@@ -1,10 +1,11 @@
-import Apify from 'apify';
+import Apify, { Request, RequestOptions } from 'apify';
 import { RequestQueue } from 'apify/src/storages/request_queue';
 import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from 'apify/src/enqueue_links/click_elements';
+import { Browser, Page, Target } from 'puppeteer';
 
 describe('enqueueLinksByClickingElements()', () => {
-    let browser;
-    let page;
+    let browser: Browser;
+    let page: Page;
 
     beforeAll(async () => {
         browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
@@ -23,9 +24,9 @@ describe('enqueueLinksByClickingElements()', () => {
     });
 
     test('should work', async () => {
-        const addedRequests = [];
+        const addedRequests: (Request | RequestOptions)[] = [];
         const requestQueue = Object.create(RequestQueue.prototype);
-        requestQueue.addRequest = async (request) => addedRequests.push(request);
+        requestQueue.addRequest = async (request: Request) => addedRequests.push(request);
         const html = `
 <html>
     <body>
@@ -294,7 +295,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
             await page.setContent(html);
             const callCounts = await new Promise<{ create: number; destroy: number }>((resolve) => {
-                let spawnedTarget;
+                let spawnedTarget: Target;
                 const counts = {
                     create: 0,
                     destroy: 0,

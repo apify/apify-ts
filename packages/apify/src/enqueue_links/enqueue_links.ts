@@ -169,6 +169,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
 // eslint-disable-next-line @typescript-eslint/ban-types
 export async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
     /* istanbul ignore next */
+    // @ts-expect-error TODO: what is the type of linkEls?
     return page.$$eval(selector, (linkEls) => linkEls.map((link) => link.href).filter((href) => !!href));
 }
 

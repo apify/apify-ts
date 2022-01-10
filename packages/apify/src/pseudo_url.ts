@@ -127,7 +127,7 @@ export class PseudoUrl {
      * Determines whether a URL matches this pseudo-URL pattern.
      *
      * @param url URL to be matched.
-     * @return {boolean} Returns `true` if given URL matches pseudo-URL.
+     * @return Returns `true` if given URL matches pseudo-URL.
      */
     matches(url: string): boolean {
         return _.isString(url) && url.match(this.regex) !== null;

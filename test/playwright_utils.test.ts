@@ -1,14 +1,17 @@
 import playwright from 'playwright';
 import express from 'express';
 import Apify from 'apify';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
 
 const { utils: { log } } = Apify;
 
 const HOSTNAME = '127.0.0.1';
-let port;
-let server;
+let port: number;
+let server: Server;
+
 beforeAll(async () => {
     const app = express();
 
@@ -25,7 +28,7 @@ beforeAll(async () => {
     });
 
     server = await startExpressAppPromise(app, 0);
-    port = server.address().port; //eslint-disable-line
+    port = (server.address() as AddressInfo).port;
 });
 
 afterAll(() => {
@@ -33,8 +36,8 @@ afterAll(() => {
 });
 
 describe('Apify.utils.playwright', () => {
-    let ll;
-    let localStorageEmulator;
+    let ll: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
 
     beforeAll(async () => {
         ll = log.getLevel();
@@ -75,5 +78,5 @@ describe('Apify.utils.playwright', () => {
         } finally {
             await browser.close();
         }
-    }, 60000);
+    }, 60_000);
 });

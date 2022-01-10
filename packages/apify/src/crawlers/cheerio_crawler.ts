@@ -6,24 +6,20 @@ import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import iconv from 'iconv-lite';
 import ow from 'ow';
 import util from 'util';
-import { TimeoutError } from 'got-scraping';
-import { IncomingMessage } from 'http';
-import { Readable } from 'stream';
+import { Method, TimeoutError } from 'got-scraping';
+import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { addTimeoutToPromise, parseContentTypeFromResponse } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
 import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions } from './basic_crawler';
 import { CrawlerExtension } from './crawler_extension';
-import { AutoscaledPool } from '../autoscaling/autoscaled_pool';
-import { Request, RequestOptions } from '../request';
-import { RequestList } from '../request_list';
+import { Request } from '../request';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
-import { RequestQueue } from '../storages/request_queue';
 import { Session } from '../session_pool/session';
 import { validators } from '../validators';
 import { BrowserHandlePageFunction, GotoFunction, BrowserHook } from './browser_crawler';
-import { Awaitable } from '../typedefs';
+import { Awaitable, entries } from '../typedefs';
 
 /**
  * Default mime types, which CheerioScraper supports.
@@ -451,14 +447,14 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      */
     public proxyConfiguration?: ProxyConfiguration;
 
-    protected handlePageFunction: BrowserHandlePageFunction;
-    protected handlePageTimeoutSecs: number;
+    protected handlePageFunction!: BrowserHandlePageFunction;
+    protected handlePageTimeoutSecs!: number;
     protected handlePageTimeoutMillis: number;
-    protected navigationTimeoutMillis: number;
-    protected gotoFunction: GotoFunction;
-    protected defaultGotoOptions: { timeout: number };
-    protected preNavigationHooks: CheerioHook[];
-    protected postNavigationHooks: CheerioHook[];
+    protected navigationTimeoutMillis!: number;
+    protected gotoFunction!: GotoFunction;
+    protected defaultGotoOptions!: { timeout: number };
+    protected preNavigationHooks: CheerioHook<JSONData>[];
+    protected postNavigationHooks: CheerioHook<JSONData>[];
     protected persistCookiesPerSession: boolean;
     protected requestTimeoutMillis: number;
     protected ignoreSslErrors: boolean;
@@ -518,6 +514,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
+            // @ts-expect-error Function types are not acting nice
             handleRequestFunction: handlePageFunction,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
@@ -571,12 +568,12 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         extensionOptions.userProvidedHandler = extensionOptions.handlePageFunction;
         delete extensionOptions.handlePageFunction;
 
-        for (const [key, value] of Object.entries(extensionOptions)) {
+        for (const [key, value] of entries(extensionOptions)) {
             const isConfigurable = this.hasOwnProperty(key); // eslint-disable-line
-            const originalType = typeof this[key];
+            const originalType = typeof this[key as keyof this];
             const extensionType = typeof value; // What if we want to null something? It is really needed?
             const isSameType = originalType === extensionType || value == null; // fast track for deleting keys
-            const exists = this[key] != null;
+            const exists = this[key as keyof this] != null;
 
             if (!isConfigurable) { // Test if the property can be configured on the crawler
                 throw new Error(`${extension.name} tries to set property "${key}" that is not configurable on CheerioCrawler instance.`);
@@ -590,14 +587,14 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
 
             this.log.warning(`${extension.name} is overriding "CheerioCrawler.${key}: ${originalType}" with ${value}.`);
 
-            this[key] = value;
+            this[key as keyof this] = value as this[keyof this];
         }
     }
 
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestFunction(crawlingContext: CheerioCrawlingContext) {
+    protected override async _handleRequestFunction(crawlingContext: CheerioCrawlingContext<JSONData>) {
         const { request, session } = crawlingContext;
 
         if (this.proxyConfiguration) {
@@ -610,11 +607,11 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response!);
 
         if (this.useSessionPool) {
-            this._throwOnBlockedRequest(session, response.statusCode);
+            this._throwOnBlockedRequest(session!, response.statusCode!);
         }
 
         if (this.persistCookiesPerSession) {
-            session.setCookiesFromResponse(response);
+            session!.setCookiesFromResponse(response);
         }
 
         request.loadedUrl = response.url;
@@ -658,7 +655,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         );
     }
 
-    protected async _handleNavigation(crawlingContext: CheerioCrawlingContext) {
+    protected async _handleNavigation(crawlingContext: CheerioCrawlingContext<JSONData>) {
         if (this.prepareRequestFunction) {
             this.log.deprecated('Option "prepareRequestFunction" is deprecated. Use "preNavigationHooks" instead.');
             await this.prepareRequestFunction(crawlingContext);
@@ -686,7 +683,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
 
         if (this.postResponseFunction) {
             this.log.deprecated('Option "postResponseFunction" is deprecated. Use "postNavigationHooks" instead.');
-            // @ts-ignore maybe the context type is wrong?
             await this.postResponseFunction(crawlingContext);
         }
     }
@@ -717,7 +713,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      */
     protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
         const opts = this._getRequestOptions(request, session, proxyUrl, requestAsBrowserOptions);
-        let responseWithStream;
+        let responseWithStream: IncomingMessage;
 
         try {
             responseWithStream = await requestAsBrowser(opts);
@@ -729,7 +725,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
             }
         }
 
-        return responseWithStream;
+        return responseWithStream!;
     }
 
     /**
@@ -738,7 +734,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      */
     private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: RequestAsBrowserOptions): void {
         const userCookie = request.headers?.Cookie ?? request.headers?.cookie;
-        const sessionCookie = session.getCookieString(request.url);
+        const sessionCookie = session!.getCookieString(request.url);
         const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie!]);
 
         // merge cookies from all possible sources
@@ -784,18 +780,16 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      * Combines the provided `requestOptions` with mandatory (non-overridable) values.
      */
     protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: RequestAsBrowserOptions) {
-        const requestOptions: RequestOptions = {
+        const requestOptions: RequestAsBrowserOptions = {
             url: request.url,
-            // @ts-ignore both should be typed as AllowedHttpMethods, why is this not working?
-            method: request.method,
+            method: request.method as Method,
             proxyUrl,
             timeout: { request: this.requestTimeoutMillis },
             sessionToken: session,
             ...requestAsBrowserOptions,
             headers: { ...request.headers, ...requestAsBrowserOptions?.headers },
             https: {
-                // @ts-ignore missing https property - intentional?
-                ...requestAsBrowserOptions.https,
+                ...requestAsBrowserOptions?.https,
                 rejectUnauthorized: !this.ignoreSslErrors,
             },
             isStream: true,
@@ -806,22 +800,21 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         //   because users can use normal + MITM proxies in a single configuration.
         //   Disable SSL verification for MITM proxies
         if (this.proxyConfiguration && this.proxyConfiguration.isManInTheMiddle) {
-            // @ts-ignore missing https property - intentional?
             requestOptions.https = {
-                // @ts-ignore missing https property - intentional?
                 ...requestOptions.https,
                 rejectUnauthorized: false,
             };
         }
 
-        // @ts-ignore missing body property - intentional?
         if (/PATCH|POST|PUT/.test(request.method)) requestOptions.body = request.payload;
 
         return requestOptions;
     }
 
-    // TODO type response properly
-    protected _encodeResponse(request, response, encoding: BufferEncoding): { encoding: BufferEncoding; response: any } {
+    protected _encodeResponse(request: Request, response: IncomingMessage, encoding: BufferEncoding): {
+        encoding: BufferEncoding;
+        response: IncomingMessage;
+    } {
         if (this.forceResponseEncoding) {
             encoding = this.forceResponseEncoding as BufferEncoding;
         } else if (!encoding && this.suggestResponseEncoding) {
@@ -840,13 +833,17 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         if (iconv.encodingExists(encoding)) {
             const encodeStream = iconv.encodeStream(utf8);
             const decodeStream = iconv.decodeStream(encoding).on('error', (err) => encodeStream.emit('error', err));
-            response.on('error', (err) => decodeStream.emit('error', err));
-            const encodedResponse = response.pipe(decodeStream).pipe(encodeStream);
+            response.on('error', (err: Error) => decodeStream.emit('error', err));
+            const encodedResponse = response.pipe(decodeStream).pipe(encodeStream) as NodeJS.ReadWriteStream & {
+                statusCode?: number;
+                headers: IncomingHttpHeaders;
+                url?: string;
+            };
             encodedResponse.statusCode = response.statusCode;
             encodedResponse.headers = response.headers;
             encodedResponse.url = response.url;
             return {
-                response: encodedResponse,
+                response: encodedResponse as any,
                 encoding: utf8,
             };
         }
@@ -854,7 +851,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         throw new Error(`Resource ${request.url} served with unsupported charset/encoding: ${encoding}`);
     }
 
-    protected async _parseHtmlToDom(response) {
+    protected async _parseHtmlToDom(response: IncomingMessage) {
         return new Promise((resolve, reject) => {
             const domHandler = new DomHandler((err, dom) => {
                 if (err) reject(err);
@@ -896,8 +893,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
     /**
      * Handles timeout request
      */
-    protected _handleRequestTimeout(session: Session) {
-        if (session) session.markBad();
+    protected _handleRequestTimeout(session?: Session) {
+        session?.markBad();
         throw new Error(`request timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`);
     }
 
@@ -920,7 +917,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
 
 interface RequestFunctionOptions {
     request: Request;
-    session: Session;
+    session?: Session;
     proxyUrl?: string;
     requestAsBrowserOptions: RequestAsBrowserOptions;
 }

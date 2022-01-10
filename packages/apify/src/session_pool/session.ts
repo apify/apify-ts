@@ -288,14 +288,14 @@ export class Session {
      *
      * It then parses and saves the cookies from the `set-cookie` header, if available.
      */
-    setCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]> }) {
+    setCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]>; url: string }) {
         try {
             const cookies = getCookiesFromResponse(response).filter((c) => c);
-            // @ts-ignore probably a mistake, as `HTTPResponse.url` is a method, not a string
-            this._setCookies(cookies, response.url);
+            this._setCookies(cookies, typeof response.url === 'function' ? response.url() : response.url!);
         } catch (e) {
+            const err = e as Error;
             // if invalid Cookie header is provided just log the exception.
-            this.log.exception(e, 'Could not get cookies from response');
+            this.log.exception(err, 'Could not get cookies from response');
         }
     }
 
@@ -386,7 +386,8 @@ export class Session {
             try {
                 this.cookieJar.setCookieSync(cookie, url, { ignoreError: false });
             } catch (e) {
-                errorMessages.push(e.message);
+                const err = e as Error;
+                errorMessages.push(err.message);
             }
         }
 

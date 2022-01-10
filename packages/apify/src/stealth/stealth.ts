@@ -3,6 +3,7 @@ import { Page, Browser } from 'puppeteer';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import globalLog from '../utils_log';
 import * as hidingTricks from './hiding_tricks';
+import { keys } from '../typedefs';
 
 const log = globalLog.child({ prefix: 'Stealth' });
 
@@ -64,7 +65,7 @@ export function applyStealthToBrowser(browser: Browser, options: StealthOptions)
     const prevNewPage = contextPrototype.newPage;
 
     if (!contextPrototype.newPage[alreadyWrapped]) {
-        contextPrototype.newPage = async function (...args) {
+        contextPrototype.newPage = async function (...args: unknown[]) {
             const page = await prevNewPage.bind(this)(...args);
 
             const evaluationDebugMessage = generateEvaluationDebugMessage();
@@ -120,14 +121,14 @@ function addStealthDebugToPage(page: Page, evaluationDebugMessage: string): void
  * @internal
  */
 export function applyStealthTricks(page: Page, evaluationDebugMessage: string, options: StealthOptions): Promise<void> {
-    const functions = Object.keys(options)
+    const functions = keys(options)
         .filter((key) => {
             return options[key];
         })
-        .map((key) => hidingTricks[key].toString());
+        .map((key) => hidingTricks[key as keyof typeof hidingTricks].toString());
 
     /* istanbul ignore next */
-    const addFunctions = (functionsArr, errorMessagePrefix, debugMessage) => {
+    const addFunctions = (functionsArr: string[], errorMessagePrefix: string, debugMessage: string) => {
         // eslint-disable-next-line no-console
         console.log(debugMessage);
         // add functions
@@ -135,8 +136,9 @@ export function applyStealthTricks(page: Page, evaluationDebugMessage: string, o
             try {
                 eval(func)(); // eslint-disable-line
             } catch (e) {
+                const err = e as Error;
                 // eslint-disable-next-line no-console
-                console.error(`${errorMessagePrefix}: Failed to apply stealth trick reason: ${e.message}`);
+                console.error(`${errorMessagePrefix}: Failed to apply stealth trick reason: ${err.message}`);
             }
         }
     };

@@ -3,7 +3,7 @@ import { LOCAL_STORAGE_SUBDIRS, LOCAL_ENV_VARS, ENV_VARS } from '@apify/consts';
 import fs from 'fs-extra';
 import path from 'path';
 import { utils } from 'apify';
-import cacheContainer from '../packages/apify/src/cache_container';
+import cacheContainer from 'apify/src/cache_container';
 
 const { log } = utils;
 
@@ -49,7 +49,7 @@ class LocalStorageDirEmulator {
         return Promise.all(promises);
     }
 
-    async _ensureStructure(localStorageDir) {
+    async _ensureStructure(localStorageDir: string) {
         // create first level
         const promises = DEFAULT_FOLDERS.map((folder) => {
             return fs.ensureDir(path.join(localStorageDir, folder));

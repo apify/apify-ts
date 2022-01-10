@@ -1,14 +1,14 @@
 import { ENV_VARS } from '@apify/consts';
 import playwright from 'playwright';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext, PlaywrightHandlePageFunction, PlaywrightHandlePageFunctionParam } from 'apify';
+import Apify, { PlaywrightGotoOptions, PlaywrightHandlePageFunction, PlaywrightHandlePageFunctionParam, Request } from 'apify';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {
-    let prevEnvHeadless;
-    let logLevel;
-    let localStorageEmulator;
-    let requestList;
+    let prevEnvHeadless: string;
+    let logLevel: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
+    let requestList: Apify.RequestList;
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -31,7 +31,7 @@ describe('PlaywrightCrawler', () => {
 
     describe('should work', () => {
         // @TODO: add webkit and solve te timeout issue on github actions.
-        test.each(['chromium', 'firefox'])('with %s', async (browser) => {
+        test.each(['chromium', 'firefox'] as const)('with %s', async (browser) => {
             const sourcesLarge = [
                 { url: 'http://example.com/?q=1' },
                 { url: 'http://example.com/?q=2' },
@@ -41,8 +41,8 @@ describe('PlaywrightCrawler', () => {
                 { url: 'http://example.com/?q=6' },
             ];
             const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
-            const processed = [];
-            const failed = [];
+            const processed: Request[] = [];
+            const failed: Request[] = [];
             const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
             const handlePageFunction = async ({ page, request, response }: Parameters<PlaywrightHandlePageFunction>[0]) => {
                 expect(response.status()).toBe(200);
@@ -79,7 +79,7 @@ describe('PlaywrightCrawler', () => {
 
     test('should override goto timeout with gotoTimeoutSecs', async () => {
         const timeoutSecs = 10;
-        let options;
+        let options: PlaywrightGotoOptions;
         const playwrightCrawler = new Apify.PlaywrightCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
@@ -103,7 +103,7 @@ describe('PlaywrightCrawler', () => {
     test('should support custom gotoFunction', async () => {
         const functions = {
             handlePageFunction: () => { },
-            gotoFunction: ({ page, request }: PlaywrightHandlePageFunctionParam, options) => {
+            gotoFunction: ({ page, request }: PlaywrightHandlePageFunctionParam, options: PlaywrightGotoOptions) => {
                 return page.goto(request.url, options);
             },
         };
@@ -127,7 +127,7 @@ describe('PlaywrightCrawler', () => {
 
     test('should override goto timeout with navigationTimeoutSecs', async () => {
         const timeoutSecs = 10;
-        let options;
+        let options: PlaywrightGotoOptions;
         const playwrightCrawler = new Apify.PlaywrightCrawler({
             requestList,
             maxRequestRetries: 0,

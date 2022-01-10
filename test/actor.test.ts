@@ -2,8 +2,9 @@ import path from 'path';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import Apify, { ApifyCallError, WebhookOptions } from '../packages/apify/src';
-import * as utils from '../packages/apify/src/utils';
+import Apify, { ApifyCallError, ApifyEnv } from 'apify';
+import { WebhookUpdateData } from 'apify-client';
+import * as utils from 'apify/src/utils';
 
 const { utils: { log } } = Apify;
 
@@ -28,7 +29,7 @@ const popFreePort = () => freePorts.pop();
  * Helper function that enables testing of Apify.main()
  * @returns Promise
  */
-const testMain = async ({ userFunc, exitCode }) => {
+const testMain = async ({ userFunc, exitCode }: { userFunc?: () => void; exitCode: number }) => {
     // Mock process.exit() to check exit code and prevent process exit
     const processMock = sinon.mock(process);
     const exitExpectation = processMock
@@ -37,7 +38,7 @@ const testMain = async ({ userFunc, exitCode }) => {
         .once()
         .returns({});
 
-    let error = null;
+    let error: Error = null;
 
     try {
         await Promise.resolve()
@@ -86,8 +87,8 @@ const testMain = async ({ userFunc, exitCode }) => {
 const getEmptyEnv = () => {
     return {
         // internalPort: null,
-        actId: null,
-        actRunId: null,
+        actorId: null,
+        actorRunId: null,
         userId: null,
         token: null,
         startedAt: null,
@@ -95,12 +96,12 @@ const getEmptyEnv = () => {
         defaultKeyValueStoreId: null,
         defaultDatasetId: null,
         memoryMbytes: null,
-    };
+    } as ApifyEnv;
 };
 
-const setEnv = (env) => {
-    delete process.env.APIFY_ACT_ID;
-    delete process.env.APIFY_ACT_RUN_ID;
+const setEnv = (env: ApifyEnv) => {
+    delete process.env.APIFY_ACTOR_ID;
+    delete process.env.APIFY_ACTOR_RUN_ID;
     delete process.env.APIFY_USER_ID;
     delete process.env.APIFY_TOKEN;
     delete process.env.APIFY_STARTED_AT;
@@ -108,8 +109,8 @@ const setEnv = (env) => {
     delete process.env.APIFY_DEFAULT_KEY_VALUE_STORE_ID;
     delete process.env.APIFY_DEFAULT_DATASET_ID;
 
-    if (env.actId) process.env.APIFY_ACT_ID = env.actId;
-    if (env.actRunId) process.env.APIFY_ACT_RUN_ID = env.actRunId;
+    if (env.actorId) process.env.APIFY_ACTOR_ID = env.actorId;
+    if (env.actorRunId) process.env.APIFY_ACTOR_RUN_ID = env.actorRunId;
     if (env.userId) process.env.APIFY_USER_ID = env.userId;
     if (env.token) process.env.APIFY_TOKEN = env.token;
     if (env.startedAt) process.env.APIFY_STARTED_AT = env.startedAt.toISOString();
@@ -120,7 +121,7 @@ const setEnv = (env) => {
 };
 
 describe('Apify.getEnv()', () => {
-    let prevEnv;
+    let prevEnv: ApifyEnv;
 
     beforeAll(() => {
         prevEnv = Apify.getEnv();
@@ -141,8 +142,8 @@ describe('Apify.getEnv()', () => {
     test('works with with non-null values', () => {
         const expectedEnv = _.extend(getEmptyEnv(), {
             // internalPort: 12345,
-            actId: 'test actId',
-            actRunId: 'test actId',
+            actorId: 'test actId',
+            actorRunId: 'test actId',
             userId: 'some user',
             token: 'auth token',
             startedAt: new Date('2017-01-01'),
@@ -254,7 +255,7 @@ describe('Apify.call()', () => {
     test('works as expected', async () => {
         const memoryMbytes = 1024;
         const timeoutSecs = 60;
-        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
         const clientMock = sinon.mock(utils.apifyClient);
         clientMock.expects('actor')
@@ -293,7 +294,7 @@ describe('Apify.call()', () => {
     test('works with token', async () => {
         const memoryMbytes = 1024;
         const timeoutSecs = 60;
-        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+        const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
         const utilsMock = sinon.mock(utils);
         const callStub = sinon.stub().resolves(finishedRun);
@@ -373,8 +374,11 @@ describe('Apify.call()', () => {
             throw new Error('This was suppose to fail!');
         } catch (err) {
             expect(err).toBeInstanceOf(ApifyCallError);
-            expect(err.run.status).toEqual(ACT_JOB_STATUSES.ABORTED);
-            expect(err.run).toEqual(failedRun);
+
+            const casted = err as ApifyCallError;
+
+            expect(casted.run.status).toEqual(ACT_JOB_STATUSES.ABORTED);
+            expect(casted.run).toEqual(failedRun);
             clientMock.restore();
         }
     });
@@ -399,7 +403,7 @@ describe('Apify.callTask()', () => {
     const memoryMbytes = 256;
     const timeoutSecs = 60;
     const build = 'beta';
-    const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+    const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
     test('works as expected', async () => {
         const clientMock = sinon.mock(utils.apifyClient);
@@ -511,8 +515,11 @@ describe('Apify.callTask()', () => {
             throw new Error('This was suppose to fail!');
         } catch (err) {
             expect(err).toBeInstanceOf(ApifyCallError);
-            expect(err.run.status).toEqual(ACT_JOB_STATUSES.ABORTED);
-            expect(err.run).toEqual(failedRun);
+
+            const casted = err as ApifyCallError;
+
+            expect(casted.run.status).toEqual(ACT_JOB_STATUSES.ABORTED);
+            expect(casted.run).toEqual(failedRun);
             clientMock.restore();
         }
     });

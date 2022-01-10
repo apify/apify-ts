@@ -9,10 +9,10 @@ import { events } from 'apify/src/events';
 import { Snapshotter } from 'apify/src/autoscaling/snapshotter';
 import * as utils from 'apify/src/utils';
 
-const toBytes = (x) => x * 1024 * 1024;
+const toBytes = (x: number) => x * 1024 * 1024;
 
 describe('Snapshotter', () => {
-    let logLevel;
+    let logLevel: number;
     beforeAll(() => {
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
@@ -108,7 +108,7 @@ describe('Snapshotter', () => {
     test('correctly marks CPU overloaded using Platform event', async () => {
         process.env[ENV_VARS.IS_AT_HOME] = '1';
         let count = 0;
-        const emitAndWait = async (delay) => {
+        const emitAndWait = async (delay: number) => {
             events.emit(ACTOR_EVENT_NAMES.SYSTEM_INFO, {
                 isCpuOverloaded: count % 2 === 0,
                 createdAt: (new Date()).toISOString(),

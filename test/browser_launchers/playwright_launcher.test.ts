@@ -1,9 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+// TODO: no types
+// @ts-expect-error
 import proxy from 'proxy';
-import http from 'http';
+import http, { Server } from 'http';
 import util from 'util';
+// TODO: no types
+// @ts-expect-error
 import portastic from 'portastic';
+// TODO: no types
+// @ts-expect-error
 import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import sinon from 'sinon';
@@ -12,12 +18,14 @@ import Apify from 'apify';
 import * as utils from 'apify/src/utils';
 
 import { PlaywrightLauncher } from 'apify/src/browser_launchers/playwright_launcher';
+import { AddressInfo } from 'net';
+import { Browser, BrowserType } from 'playwright';
 
-let prevEnvHeadless;
-let proxyServer;
-let proxyPort; // eslint-disable-line no-unused-vars
+let prevEnvHeadless: string;
+let proxyServer: Server;
+let proxyPort: number;
 const proxyAuth = { scheme: 'Basic', username: 'username', password: 'password' };
-let wasProxyCalled = false; // eslint-disable-line no-unused-vars
+let wasProxyCalled = false;
 
 // Setup local proxy server for the tests
 beforeAll(() => {
@@ -25,7 +33,7 @@ beforeAll(() => {
     process.env[ENV_VARS.HEADLESS] = '1';
 
     // Find free port for the proxy
-    return portastic.find({ min: 50000, max: 50099 }).then((ports) => {
+    return portastic.find({ min: 50000, max: 50099 }).then((ports: number[]) => {
         return new Promise<void>((resolve, reject) => {
             const httpServer = http.createServer();
 
@@ -51,17 +59,17 @@ beforeAll(() => {
 
             proxyServer = proxy(httpServer);
             proxyServer.listen(ports[0], () => {
-                proxyPort = proxyServer.address().port;
+                proxyPort = (proxyServer.address() as AddressInfo).port;
                 resolve();
             });
         });
     });
 });
 
-afterAll(() => {
+afterAll(async () => {
     process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
 
-    if (proxyServer) return util.promisify(proxyServer.close).bind(proxyServer)();
+    if (proxyServer) await util.promisify(proxyServer.close).bind(proxyServer)();
 }, 5000);
 
 describe('Apify.launchPlaywright()', () => {
@@ -85,36 +93,30 @@ describe('Apify.launchPlaywright()', () => {
     test('supports non-HTTP proxies without authentication', async () => {
         const closePromises = [];
         const browser1 = await Apify.launchPlaywright({ proxyUrl: 'socks4://example.com:1234' });
-        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser1.close());
 
         const browser2 = await Apify.launchPlaywright({ proxyUrl: 'socks5://example.com:1234' });
-        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser2.close());
 
         const browser3 = await Apify.launchPlaywright({ proxyUrl: 'https://example.com:1234' });
-        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser3.close());
 
         const browser4 = await Apify.launchPlaywright({ proxyUrl: 'HTTP://example.com:1234' });
-        // @ts-expect-error Browsers marked as unknown
         closePromises.push(browser4.close());
         await Promise.all(closePromises);
     });
 
     test('opens https://www.example.com', async () => {
         const browser = await Apify.launchPlaywright();
-        // @ts-expect-error Browsers marked as unknown
         const page = await browser.newPage();
 
         await page.goto('https://www.example.com');
         const html = await page.content();
         expect(html).toMatch('<h1>Example Domain</h1>');
-        // @ts-expect-error Browsers marked as unknown
         browser.close();
     });
     describe('headful mode', () => {
-        let browser;
+        let browser: Browser;
 
         beforeAll(() => {
             // Test headless parameter
@@ -186,7 +188,7 @@ describe('Apify.launchPlaywright()', () => {
 
         test('uses Apify default browser path', () => {
             const launcher = new PlaywrightLauncher({
-                launcher: {},
+                launcher: {} as BrowserType,
             });
             const plugin = launcher.createBrowserPlugin();
 
@@ -196,7 +198,7 @@ describe('Apify.launchPlaywright()', () => {
         test('does not use default when using chrome', () => {
             const launcher = new PlaywrightLauncher({
                 useChrome: true,
-                launcher: {},
+                launcher: {} as BrowserType,
             });
             const plugin = launcher.createBrowserPlugin();
 
@@ -210,7 +212,7 @@ describe('Apify.launchPlaywright()', () => {
                 launchOptions: {
                     executablePath: newPath,
                 },
-                launcher: {},
+                launcher: {} as BrowserType,
             });
             const plugin = launcher.createBrowserPlugin();
 

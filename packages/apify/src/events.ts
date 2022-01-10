@@ -104,7 +104,7 @@ export function initializeEvents(config = Configuration.getGlobalConfig()) {
                 emitPersistStateEvent(true);
             }
         } catch (err) {
-            log.exception(err, 'Cannot parse actor event');
+            log.exception(err as Error, 'Cannot parse actor event');
         }
     });
     eventsWs.on('error', (err) => {

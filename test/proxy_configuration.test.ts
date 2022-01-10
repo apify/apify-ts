@@ -33,15 +33,15 @@ describe('ProxyConfiguration', () => {
         const proxyConfiguration = new ProxyConfiguration(basicOpts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
-        // @ts-ignore TODO should be public/internal?
+        // @ts-expect-error TODO should be public/internal?
         expect(proxyConfiguration.groups).toBe(groups);
-        // @ts-ignore TODO should be public/internal?
+        // @ts-expect-error TODO should be public/internal?
         expect(proxyConfiguration.countryCode).toBe(countryCode);
-        // @ts-ignore TODO should be public/internal?
+        // @ts-expect-error TODO should be public/internal?
         expect(proxyConfiguration.password).toBe(password);
-        // @ts-ignore TODO should be public/internal?
+        // @ts-expect-error TODO should be public/internal?
         expect(proxyConfiguration.hostname).toBe(hostname);
-        // @ts-ignore TODO should be public/internal?
+        // @ts-expect-error TODO should be public/internal?
         expect(proxyConfiguration.port).toBe(port);
     });
 
@@ -78,9 +78,9 @@ describe('ProxyConfiguration', () => {
 
         const proxyConfiguration = new ProxyConfiguration(input);
 
-        // @ts-ignore
+        // @ts-expect-error
         expect(proxyConfiguration.groups).toStrictEqual(apifyProxyGroups);
-        // @ts-ignore
+        // @ts-expect-error
         expect(proxyConfiguration.countryCode).toStrictEqual(apifyProxyCountry);
     });
 
@@ -90,11 +90,12 @@ describe('ProxyConfiguration', () => {
         let opts = { ...basicOpts };
         opts.groups = invalidGroups;
         try {
+            // @ts-expect-error
             // eslint-disable-next-line no-unused-vars
             const proxyConfiguration = new ProxyConfiguration(opts);
             throw new Error('wrong error');
         } catch (err) {
-            expect(err.message).toMatch('got `GROUP1*` in object');
+            expect((err as Error).message).toMatch('got `GROUP1*` in object');
         }
 
         // Country code
@@ -102,11 +103,12 @@ describe('ProxyConfiguration', () => {
         opts = { ...basicOpts };
         opts.countryCode = invalidCountryCode;
         try {
+            // @ts-expect-error
             // eslint-disable-next-line no-unused-vars
             const proxyConfiguration = new ProxyConfiguration(opts);
             throw new Error('wrong error');
         } catch (err) {
-            expect(err.message).toMatch('got `CZE` in object');
+            expect((err as Error).message).toMatch('got `CZE` in object');
         }
     });
 
@@ -165,7 +167,7 @@ describe('ProxyConfiguration', () => {
             proxyConfiguration.newUrl();
             throw new Error('wrong error');
         } catch (err) {
-            expect(err.message).toMatch('The provided newUrlFunction did not return');
+            expect((err as Error).message).toMatch('The provided newUrlFunction did not return');
         }
     });
 
@@ -196,7 +198,7 @@ describe('ProxyConfiguration', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
-            // @ts-ignore TODO private property?
+            // @ts-expect-error TODO private property?
             const { proxyUrls } = proxyConfiguration;
             expect(proxyConfiguration.newUrl()).toEqual(proxyUrls[0]);
             expect(proxyConfiguration.newUrl()).toEqual(proxyUrls[1]);
@@ -211,7 +213,7 @@ describe('ProxyConfiguration', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
-            // @ts-ignore TODO private property?
+            // @ts-expect-error TODO private property?
             const { proxyUrls } = proxyConfiguration;
             expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[0]);
             expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[1]);
@@ -227,7 +229,7 @@ describe('ProxyConfiguration', () => {
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
-            // @ts-ignore TODO private property?
+            // @ts-expect-error TODO private property?
             const { proxyUrls } = proxyConfiguration;
             // should use same proxy URL
             expect(proxyConfiguration.newUrl(sessions[0])).toEqual(proxyUrls[0]);
@@ -252,6 +254,7 @@ describe('ProxyConfiguration', () => {
                 return proxyUrls[Math.floor(Math.random() * proxyUrls.length)];
             };
             try {
+                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     groups: ['GROUP1'],
@@ -259,10 +262,11 @@ describe('ProxyConfiguration', () => {
                 });
                 throw new Error('wrong error');
             } catch (err) {
-                expect(err.message).toMatch('Cannot combine custom proxies with Apify Proxy!');
+                expect((err as Error).message).toMatch('Cannot combine custom proxies with Apify Proxy!');
             }
 
             try {
+                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     groups: ['GROUP1'],
@@ -270,7 +274,7 @@ describe('ProxyConfiguration', () => {
                 });
                 throw new Error('wrong error');
             } catch (err) {
-                expect(err.message).toMatch('Cannot combine custom proxies with Apify Proxy!');
+                expect((err as Error).message).toMatch('Cannot combine custom proxies with Apify Proxy!');
             }
         });
 
@@ -280,6 +284,7 @@ describe('ProxyConfiguration', () => {
                 return proxyUrls[Math.floor(Math.random() * proxyUrls.length)];
             };
             try {
+                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls,
@@ -287,31 +292,33 @@ describe('ProxyConfiguration', () => {
                 });
                 throw new Error('wrong error');
             } catch (err) {
-                expect(err.message).toMatch('Cannot combine custom proxies "options.proxyUrls"');
+                expect((err as Error).message).toMatch('Cannot combine custom proxies "options.proxyUrls"');
             }
         });
 
         test('should throw proxyUrls array is empty', async () => {
             try {
+                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls: [],
                 });
                 throw new Error('wrong error');
             } catch (err) {
-                expect(err.message).toMatch('Expected property array `proxyUrls` to not be empty');
+                expect((err as Error).message).toMatch('Expected property array `proxyUrls` to not be empty');
             }
         });
 
         test('should throw invalid custom URL form', async () => {
             try {
+                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls: ['http://proxy.com:1111*invalid_url'],
                 });
                 throw new Error('wrong error');
             } catch (err) {
-                expect(err.message).toMatch('to be a URL, got `http://proxy.com:1111*invalid_url`');
+                expect((err as Error).message).toMatch('to be a URL, got `http://proxy.com:1111*invalid_url`');
             }
         });
     });
@@ -331,15 +338,15 @@ describe('Apify.createProxyConfiguration()', () => {
         const proxyConfiguration = await Apify.createProxyConfiguration(basicOpts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.groups).toBe(groups);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.countryCode).toBe(countryCode);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.password).toBe(password);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.hostname).toBe(hostname);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.port).toBe(port);
 
         expect(spy).toBeCalledWith({ url, proxyUrl, timeout: { request: 4000 }, responseType: 'json' });
@@ -369,15 +376,15 @@ describe('Apify.createProxyConfiguration()', () => {
         const proxyConfiguration = await Apify.createProxyConfiguration(opts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.groups).toBe(groups);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.countryCode).toBe(countryCode);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.password).toBe(password);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.hostname).toBe(hostname);
-        // @ts-ignore TODO maybe should be public/internal?
+        // @ts-expect-error TODO maybe should be public/internal?
         expect(proxyConfiguration.port).toBe(port);
 
         requestUtilsMock.verify();
@@ -397,7 +404,7 @@ describe('Apify.createProxyConfiguration()', () => {
 
         // eslint-disable-next-line no-unused-vars
         const proxyConfiguration = new ProxyConfiguration(basicOpts);
-        // @ts-ignore
+        // @ts-expect-error
         const logMock = sinon.mock(proxyConfiguration.log);
         logMock.expects('warning').once();
 
@@ -424,7 +431,7 @@ describe('Apify.createProxyConfiguration()', () => {
             await Apify.createProxyConfiguration();
             throw new Error('wrong error');
         } catch (err) {
-            expect(err.message).toMatch('Apify Proxy password must be provided');
+            expect((err as Error).message).toMatch('Apify Proxy password must be provided');
         }
         stub.restore();
     });
@@ -449,7 +456,7 @@ describe('Apify.createProxyConfiguration()', () => {
             await Apify.createProxyConfiguration({ groups });
             throw new Error('wrong error');
         } catch (err) {
-            expect(err.message).toMatch(connectionError);
+            expect((err as Error).message).toMatch(connectionError);
         }
         stub1.restore();
         userClientMock.verify();

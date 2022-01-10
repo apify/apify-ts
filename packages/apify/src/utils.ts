@@ -14,9 +14,10 @@
  * @module utils
  */
 
+// @ts-expect-error We need to add typings for @apify/ps-tree
 import psTree from '@apify/ps-tree';
 import { execSync } from 'child_process';
-import { ApifyClient } from 'apify-client';
+import { ActorRun, ApifyClient, ApifyClientOptions } from 'apify-client';
 // @ts-ignore if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyClientVersion } from 'apify-client/package.json';
 import { ACT_JOB_TERMINAL_STATUSES, ENV_VARS } from '@apify/consts';
@@ -40,7 +41,7 @@ import { version as apifyVersion } from '../package.json';
 import log from './utils_log';
 import { requestAsBrowser } from './utils_request';
 import { Request } from './request';
-import { ActorRun, Dictionary } from './typedefs';
+import { Dictionary } from './typedefs';
 import { CheerioRoot } from './crawlers/cheerio_crawler';
 
 const rimrafp = util.promisify(rimraf);
@@ -79,13 +80,8 @@ const psTreePromised = util.promisify(psTree);
  * NPM package, and it is automatically configured using the `APIFY_API_BASE_URL`, and `APIFY_TOKEN`
  * environment variables. You can override the token via the available options. That's useful
  * if you want to use the client as a different Apify user than the SDK internals are using.
- *
- * @param {object} [options]
- * @param {string} [options.token]
- * @param {string} [options.maxRetries]
- * @param {string} [options.minDelayBetweenRetriesMillis]
  */
-export function newClient(options = {}): ApifyClient {
+export function newClient(options: ApifyClientOptions = {}): ApifyClient {
     ow(options, ow.object.exactShape({
         baseUrl: ow.optional.string.url,
         token: ow.optional.string,
@@ -125,12 +121,9 @@ export const apifyClient = newClient();
 
 /**
  * Adds charset=utf-8 to given content type if this parameter is missing.
- *
- * @param {string} contentType
- * @returns {string}
  * @ignore
  */
-export const addCharsetToContentType = (contentType) => {
+export const addCharsetToContentType = (contentType?: string): string | undefined => {
     if (!contentType) return contentType;
 
     const parsed = contentTypeParser.parse(contentType);
@@ -142,8 +135,9 @@ export const addCharsetToContentType = (contentType) => {
     return contentTypeParser.format(parsed);
 };
 
-let isDockerPromiseCache;
-const createIsDockerPromise = () => {
+let isDockerPromiseCache: Promise<boolean>;
+
+const createIsDockerPromise = async () => {
     const promise1 = util
         .promisify(fs.stat)('/.dockerenv')
         .then(() => true)
@@ -154,9 +148,10 @@ const createIsDockerPromise = () => {
         .then((content) => content.indexOf('docker') !== -1)
         .catch(() => false);
 
-    return Promise
-        .all([promise1, promise2])
-        .then(([result1, result2]) => result1 || result2);
+    const [result1, result2] = await Promise
+        .all([promise1, promise2]);
+
+    return result1 || result2;
 };
 
 /**
@@ -176,7 +171,7 @@ export function isDocker(forceReset?: boolean): Promise<boolean> {
 export function weightedAvg(arrValues: number[], arrWeights: number[]): number {
     const result = arrValues.map((value, i) => {
         const weight = arrWeights[i];
-        const sum = value * weight; // eslint-disable-line no-shadow
+        const sum = value * weight;
 
         return [sum, weight];
     }).reduce((p, c) => [p[0] + c[0], p[1] + c[1]], [0, 0]);
@@ -202,6 +197,40 @@ export interface MemoryInfo {
 
     /** Amount of memory used by child processes of the current Node.js process */
     childProcessesBytes: number;
+}
+
+export interface DownloadListOfUrlsOptions {
+    /**
+     * URL to the file
+     */
+    url: string;
+
+    /**
+     * The encoding of the file.
+     * @default 'utf8'
+     */
+    encoding?: BufferEncoding;
+
+    /**
+     * Custom regular expression to identify the URLs in the file to extract.
+     * The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
+     * @default Apify.utils.URL_NO_COMMAS_REGEX
+     */
+    urlRegExp?: RegExp;
+}
+
+// TODO add proper param description
+export interface ExtractUrlsOptions {
+    /**
+     * Arbitrary string
+     */
+    string: string;
+
+    /**
+     * Custom regular expression
+     * @default Apify.utils.URL_NO_COMMAS_REGEX
+     */
+    urlRegExp?: RegExp;
 }
 
 /**
@@ -244,6 +273,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
         // Query both root and child processes
         const processes = await psTreePromised(process.pid, true);
 
+        // @ts-expect-error TODO: fixed after typing psTree
         processes.forEach((rec) => {
             // Skip the 'ps' or 'wmic' commands used by ps-tree to query the processes
             if (rec.COMMAND === 'ps' || rec.COMMAND === 'WMIC.exe') {
@@ -277,7 +307,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
         const accessPromised = util.promisify(fs.access);
 
         // Check wheter cgroups V1 or V2 is used
-        let cgroupsVersion = 'V1';
+        let cgroupsVersion: keyof typeof MEMORY_FILE_PATHS.TOTAL = 'V1';
         try {
             // If this directory does not exists, assume docker is using cgroups V2
             await accessPromised('/sys/fs/cgroup/memory/', fs.constants.R_OK);
@@ -312,7 +342,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
             // log.deprecated logs a warning only once
             log.deprecated('Your environment is Docker, but your system does not support memory cgroups. '
                 + 'If you\'re running containers with limited memory, memory auto-scaling will not work properly.\n\n'
-                + `Cause: ${err.message}`);
+                + `Cause: ${(err as Error).message}`);
             totalBytes = os.totalmem();
             freeBytes = os.freemem();
             usedBytes = totalBytes - freeBytes;
@@ -334,7 +364,6 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
 
 /**
  * Helper function that returns the first key from plain object.
- *
  * @ignore
  */
 export function getFirstKey<K extends PropertyKey>(dict: Record<K, unknown>): K | undefined {
@@ -408,15 +437,8 @@ export function sleep(millis?: number): Promise<void> {
 /**
  * Returns a promise that resolves to an array of urls parsed from the resource available at the provided url.
  * Optionally, custom regular expression and encoding may be provided.
- *
- * @param options
- * @param options.url URL to the file
- * @param [options.encoding='utf8'] The encoding of the file.
- * @param [options.urlRegExp=URL_NO_COMMAS_REGEX]
- *   Custom regular expression to identify the URLs in the file to extract.
- *   The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
  */
-async function downloadListOfUrls(options: { url: string; encoding?: BufferEncoding; urlRegExp?: RegExp }): Promise<string[]> {
+async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Promise<string[]> {
     ow(options, ow.object.exactShape({
         url: ow.string.url,
         encoding: ow.optional.string,
@@ -430,11 +452,8 @@ async function downloadListOfUrls(options: { url: string; encoding?: BufferEncod
 
 /**
  * Collects all URLs in an arbitrary string to an array, optionally using a custom regular expression.
- * @param options
- * @param options.string
- * @param [options.urlRegExp=Apify.utils.URL_NO_COMMAS_REGEX]
  */
-function extractUrls(options: { string: string; urlRegExp?: RegExp }): string[] {
+function extractUrls(options: ExtractUrlsOptions): string[] {
     ow(options, ow.object.exactShape({
         string: ow.string,
         urlRegExp: ow.optional.regExp,
@@ -443,7 +462,7 @@ function extractUrls(options: { string: string; urlRegExp?: RegExp }): string[] 
     return string.match(urlRegExp) || [];
 }
 
-// NOTE: We skipping 'noscript' since it's content is evaluated as text, instead of HTML elements. That damages the results.
+// NOTE: We are skipping 'noscript' since it's content is evaluated as text, instead of HTML elements. That damages the results.
 const SKIP_TAGS_REGEX = /^(script|style|canvas|svg|noscript)$/i;
 const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|dl|div|fieldset|form|table|tr|select|option)$/i;
 
@@ -473,7 +492,7 @@ const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|
  * const text = htmlToText(cheerio.load(html, { decodeEntities: true }));
  * ```
  * @param html HTML text or parsed HTML represented using a [cheerio](https://www.npmjs.com/package/cheerio) function.
- * @return {string} Plain text
+ * @return Plain text
  */
 function htmlToText(html: string | CheerioRoot): string {
     if (!html) return '';
@@ -490,6 +509,10 @@ function htmlToText(html: string | CheerioRoot): string {
     const $ = typeof html === 'function' ? html : cheerio.load(html, { decodeEntities: true });
     let text = '';
 
+    // TODO: the type for elems is very annoying to work with.
+    // The correct type is Node[] from cheerio but it needs a lot more casting in each branch, or alternatively,
+    // use the is* methods from domhandler (isText, isTag, isComment, etc.)
+    // @ts-expect-error
     const process = (elems) => {
         const len = elems ? elems.length : 0;
         for (let i = 0; i < len; i++) {
@@ -620,7 +643,7 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
 
     return {
         type: parsedContentType.type,
-        charset: parsedContentType.parameters.charset,
+        charset: parsedContentType.parameters.charset as BufferEncoding,
     };
 }
 
@@ -631,25 +654,10 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
  *
  * This is useful when you need to chain actor executions. Similar effect can be achieved
  * by using webhooks, so be sure to review which technique fits your use-case better.
- *
- * @param {object} options
- * @param {string} options.actorId
- *  ID of the actor that started the run.
- * @param {string} options.runId
- *  ID of the run itself.
- * @param {string} [options.waitSecs]
- *  Maximum time to wait for the run to finish, in seconds.
- *  If the limit is reached, the returned promise is resolved to a run object that will have
- *  status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
- * @param {string} [options.token]
- *  You can supply an Apify token to override the default one
- *  that's used by the default ApifyClient instance.
- *  E.g. you can track other users' runs.
- * @deprecated
- *  Please use the 'waitForFinish' functions of 'apify-client'.
+ * @deprecated Please use the 'waitForFinish' functions of 'apify-client'.
  * @ignore
  */
-export async function waitForRunToFinish(options): Promise<ActorRun> {
+export async function waitForRunToFinish(options: WaitForRunToFinishOptions): Promise<ActorRun> {
     ow(options, ow.object.exactShape({
         actorId: ow.string,
         runId: ow.string,
@@ -657,11 +665,12 @@ export async function waitForRunToFinish(options): Promise<ActorRun> {
     }));
 
     const {
+        // @ts-expect-error TODO: We don't need the actorId, we should remove it (or remove the entire function since its deprecated)
         actorId,
         runId,
         waitSecs,
     } = options;
-    let run;
+    let run: ActorRun;
 
     const startedAt = Date.now();
     const shouldRepeat = () => {
@@ -676,19 +685,41 @@ export async function waitForRunToFinish(options): Promise<ActorRun> {
             ? Math.round(waitSecs - (Date.now() - startedAt) / 1000)
             : 999999;
 
-        // @ts-ignore `run` method has only one argument?
-        run = await apifyClient.run(runId, actorId).waitForFinish({ waitSecs: waitForFinish });
+        run = await apifyClient.run(runId).waitForFinish({ waitSecs: waitForFinish });
 
         // It might take some time for database replicas to get up-to-date,
         // so getRun() might return null. Wait a little bit and try it again.
         if (!run) await sleep(250);
     }
 
-    if (!run) {
+    if (!run!) {
         throw new Error('Waiting for run to finish failed. Cannot fetch actor run details from the server.');
     }
 
     return run;
+}
+
+export interface WaitForRunToFinishOptions {
+    /**
+     * ID of the actor that started the run.
+     */
+    actorId: string;
+    /**
+     * ID of the run itself.
+     */
+    runId: string;
+    /**
+     * Maximum time to wait for the run to finish, in seconds.
+     * If the limit is reached, the returned promise is resolved to a run object that will have
+     * status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
+     */
+    waitSecs?: number;
+    /**
+     * You can supply an Apify token to override the default one
+     * that's used by the default ApifyClient instance.
+     * E.g. you can track other users' runs.
+     */
+    token?: string;
 }
 
 /**

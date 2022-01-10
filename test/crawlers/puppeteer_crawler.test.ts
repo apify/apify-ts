@@ -1,20 +1,30 @@
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
 import log from 'apify/src/utils_log';
-import Apify, { BrowserCrawlingContext, ProxyConfiguration, PuppeteerCookie, PuppeteerHandlePage, PuppeteerHandlePageFunctionParam } from 'apify';
+import Apify, {
+    ProxyConfiguration,
+    PuppeteerCookie,
+    PuppeteerGoToOptions,
+    PuppeteerHandlePage,
+    PuppeteerHandlePageFunctionParam,
+    Request,
+} from 'apify';
 import * as utils from 'apify/src/utils';
-import { createServer } from 'http';
+import { createServer, Server } from 'http';
+import { Server as ProxyChainServer } from 'proxy-chain';
 import { promisify } from 'util';
+import { once } from 'events';
+import { AddressInfo } from 'net';
 import { createProxyServer } from '../create-proxy-server';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PuppeteerCrawler', () => {
-    let prevEnvHeadless;
-    let logLevel;
-    let localStorageEmulator;
-    let requestList;
-    let servers;
-    let target;
+    let prevEnvHeadless: string;
+    let logLevel: number;
+    let localStorageEmulator: LocalStorageDirEmulator;
+    let requestList: Apify.RequestList;
+    let servers: ProxyChainServer[];
+    let target: Server;
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -27,7 +37,8 @@ describe('PuppeteerCrawler', () => {
             response.end(request.socket.remoteAddress);
         });
 
-        await promisify(target.listen.bind(target))(0, '127.0.0.1');
+        target.listen(0, '127.0.0.1');
+        await once(target, 'listening');
 
         servers = [
             createProxyServer('127.0.0.2', '', ''),
@@ -50,7 +61,7 @@ describe('PuppeteerCrawler', () => {
         process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
         await localStorageEmulator.destroy();
 
-        await Promise.all(servers.map((server) => promisify(server.close.bind(server))()));
+        await Promise.all(servers.map((server) => promisify(server.close.bind(server))(true)));
         await promisify(target.close.bind(target))();
     });
 
@@ -64,8 +75,8 @@ describe('PuppeteerCrawler', () => {
             { url: 'http://example.com/?q=6' },
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
-        const processed = [];
-        const failed = [];
+        const processed: Request[] = [];
+        const failed: Request[] = [];
         const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
         const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
             await page.waitForSelector('title');
@@ -99,8 +110,8 @@ describe('PuppeteerCrawler', () => {
 
     test('should override goto timeout with gotoTimeoutSecs ', async () => {
         const timeoutSecs = 10;
-        let options;
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({ //eslint-disable-line
+        let options: PuppeteerGoToOptions;
+        const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -121,7 +132,7 @@ describe('PuppeteerCrawler', () => {
     test('should support custom gotoFunction', async () => {
         const functions = {
             handlePageFunction: async () => {},
-            gotoFunction: ({ page, request }: PuppeteerHandlePageFunctionParam, options) => {
+            gotoFunction: ({ page, request }: PuppeteerHandlePageFunctionParam, options: PuppeteerGoToOptions) => {
                 return page.goto(request.url, options);
             },
         };
@@ -145,7 +156,7 @@ describe('PuppeteerCrawler', () => {
 
     test('should override goto timeout with navigationTimeoutSecs ', async () => {
         const timeoutSecs = 10;
-        let options;
+        let options: PuppeteerGoToOptions;
         const puppeteerCrawler = new Apify.PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
@@ -176,7 +187,7 @@ describe('PuppeteerCrawler', () => {
                 handlePageFunction: () => {},
             });
         } catch (e) {
-            expect(e.message).toMatch('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.');
+            expect((e as Error).message).toMatch('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.');
         }
 
         expect.hasAssertions();
@@ -185,6 +196,7 @@ describe('PuppeteerCrawler', () => {
     // FIXME: I have no idea why but this test hangs
     test.skip('supports useChrome option', async () => {
         const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
+        // @ts-expect-error
         const puppeteerCrawler = new Apify.PuppeteerCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
@@ -211,7 +223,7 @@ describe('PuppeteerCrawler', () => {
             ],
         });
 
-        const serverUrl = `http://127.0.0.1:${target.address().port}`;
+        const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
 
         const requestListLarge = new Apify.RequestList({
             sources: [
@@ -237,7 +249,6 @@ describe('PuppeteerCrawler', () => {
                 useIncognitoPages: true,
             },
             browserPoolOptions: {
-                // @ts-expect-error Type for browserPoolOptions does not include hooks yet
                 prePageCreateHooks: [
                     (_id, _controller, options) => {
                         options.proxyBypassList = ['<-loopback>'];

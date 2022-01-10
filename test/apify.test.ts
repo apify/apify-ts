@@ -4,7 +4,7 @@ import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts'
 import { ApifyClient } from 'apify-client';
 import {
     Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore,
-    StorageManager, ProxyConfiguration, SessionPool, WebhookOptions,
+    StorageManager, ProxyConfiguration, SessionPool, ApifyEnv, WebhookUpdateData,
 } from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
@@ -13,7 +13,7 @@ const { log, sleep } = utils;
 /**
  * Helper function that enables testing of Apify.main()
  */
-const testMain = async ({ userFunc, exitCode }) => {
+const testMain = async ({ userFunc, exitCode }: { userFunc?: (sdk: Apify) => void; exitCode: number }) => {
     const exitSpy = jest.spyOn(process, 'exit');
     exitSpy.mockImplementationOnce((i) => i as never); // prevent `process.exit()`
 
@@ -26,7 +26,6 @@ const testMain = async ({ userFunc, exitCode }) => {
             if (userFunc) {
                 return userFunc(sdk);
             }
-            // @ts-ignore TODO shall we always return promise? any reason why not?
         }).catch((err) => { error = err; });
 
         // Waits max 1000 millis for process.exit() mock to be called
@@ -52,8 +51,8 @@ const testMain = async ({ userFunc, exitCode }) => {
 const getEmptyEnv = () => {
     return {
         // internalPort: null,
-        actId: null,
-        actRunId: null,
+        actorId: null,
+        actorRunId: null,
         userId: null,
         token: null,
         startedAt: null,
@@ -61,12 +60,12 @@ const getEmptyEnv = () => {
         defaultKeyValueStoreId: null,
         defaultDatasetId: null,
         memoryMbytes: null,
-    };
+    } as ApifyEnv;
 };
 
-const setEnv = (env) => {
-    delete process.env.APIFY_ACT_ID;
-    delete process.env.APIFY_ACT_RUN_ID;
+const setEnv = (env: ApifyEnv) => {
+    delete process.env.APIFY_ACTOR_ID;
+    delete process.env.APIFY_ACTOR_RUN_ID;
     delete process.env.APIFY_USER_ID;
     delete process.env.APIFY_TOKEN;
     delete process.env.APIFY_STARTED_AT;
@@ -74,8 +73,8 @@ const setEnv = (env) => {
     delete process.env.APIFY_DEFAULT_KEY_VALUE_STORE_ID;
     delete process.env.APIFY_DEFAULT_DATASET_ID;
 
-    if (env.actId) process.env.APIFY_ACT_ID = env.actId;
-    if (env.actRunId) process.env.APIFY_ACT_RUN_ID = env.actRunId;
+    if (env.actorId) process.env.APIFY_ACTOR_ID = env.actorId;
+    if (env.actorRunId) process.env.APIFY_ACTOR_RUN_ID = env.actorRunId;
     if (env.userId) process.env.APIFY_USER_ID = env.userId;
     if (env.token) process.env.APIFY_TOKEN = env.token;
     if (env.startedAt) process.env.APIFY_STARTED_AT = env.startedAt.toISOString();
@@ -89,7 +88,7 @@ describe('new Apify({ ... })', () => {
     afterEach(() => jest.restoreAllMocks());
 
     describe('getEnv()', () => {
-        let prevEnv;
+        let prevEnv: ApifyEnv;
 
         beforeAll(() => { prevEnv = new Apify().getEnv(); });
         afterAll(() => { setEnv(prevEnv); });
@@ -105,8 +104,8 @@ describe('new Apify({ ... })', () => {
         test('works with with non-null values', () => {
             const expectedEnv = _.extend(getEmptyEnv(), {
                 // internalPort: 12345,
-                actId: 'test actId',
-                actRunId: 'test actId',
+                actorId: 'test actId',
+                actorRunId: 'test actId',
                 userId: 'some user',
                 token: 'auth token',
                 startedAt: new Date('2017-01-01'),
@@ -224,7 +223,7 @@ describe('new Apify({ ... })', () => {
         test('works as expected', async () => {
             const memoryMbytes = 1024;
             const timeoutSecs = 60;
-            const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+            const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
             const getRecordMock = jest.fn();
             getRecordMock.mockResolvedValueOnce(output);
@@ -483,7 +482,7 @@ describe('new Apify({ ... })', () => {
         const contentType = 'application/json';
         const input = '{ "foo": "bar" }';
         const build = 'beta';
-        const run = { id: runId, actId: actorId };
+        const run = { id: runId, actorId };
 
         beforeEach(() => {
             process.env[ENV_VARS.ACTOR_ID] = actorId;
@@ -609,8 +608,8 @@ describe('new Apify({ ... })', () => {
     });
 
     describe('Storage API', () => {
-        let localStorageEmulator;
-        let sdk;
+        let localStorageEmulator: LocalStorageDirEmulator;
+        let sdk: Apify;
 
         beforeAll(() => { localStorageEmulator = new LocalStorageDirEmulator(); });
         beforeEach(async () => { sdk = new Apify({ localStorageDir: await localStorageEmulator.init() }); });
@@ -642,7 +641,7 @@ describe('new Apify({ ... })', () => {
 
             await sdk.setValue('key-1', record);
             expect(setValueSpy).toBeCalledTimes(1);
-            expect(setValueSpy).toBeCalledWith('key-1', record, undefined);
+            expect(setValueSpy).toBeCalledWith('key-1', record, {});
         });
 
         test('getValue()', async () => {
@@ -669,8 +668,11 @@ describe('new Apify({ ... })', () => {
             initializeSpy.mockImplementationOnce(async () => {});
             const list = await sdk.openRequestList('my-list', ['url-1', 'url-2', 'url-3']);
             expect(initializeSpy).toBeCalledTimes(1);
+            // @ts-expect-error Private property
             expect(list.sources).toEqual(['url-1', 'url-2', 'url-3']);
+            // @ts-expect-error Private property
             expect(list.persistStateKey).toBe('SDK_my-list-REQUEST_LIST_STATE');
+            // @ts-expect-error Private property
             expect(list.persistRequestsKey).toBe('SDK_my-list-REQUEST_LIST_REQUESTS');
         });
 

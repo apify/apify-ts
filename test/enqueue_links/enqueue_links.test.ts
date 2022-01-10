@@ -1,8 +1,10 @@
 import cheerio from 'cheerio';
-import Apify from 'apify';
+import Apify, { CheerioRoot, Request, RequestOptions } from 'apify';
 import { apifyClient } from 'apify/src/utils';
 import { enqueueLinks } from 'apify/src/enqueue_links/enqueue_links';
 import { RequestQueue } from 'apify/src/storages/request_queue';
+import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
+import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
 
 const { utils: { log } } = Apify;
 
@@ -32,7 +34,7 @@ const HTML = `
 `;
 
 describe('enqueueLinks()', () => {
-    let ll;
+    let ll: number;
     beforeAll(() => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
@@ -45,12 +47,12 @@ describe('enqueueLinks()', () => {
     describe.each([
         ['launchPuppeteer'],
         ['launchPlaywright'],
-    ])('using %s', (launchName) => {
-        let browser;
-        let page;
+    ] as const)('using %s', (launchName) => {
+        let browser: PuppeteerBrowser | PlaywrightBrowser;
+        let page: PuppeteerPage | PlaywrightPage;
 
         beforeEach(async () => {
-            browser = await Apify[launchName]({ launchOptions: { headless: true } });
+            browser = await Apify[launchName]({ launchOptions: { headless: true } }) as PlaywrightBrowser | PuppeteerBrowser;
             page = await browser.newPage();
             await page.setContent(HTML);
         });
@@ -62,7 +64,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with item limit', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -90,13 +92,14 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with PseudoUrl instances', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
                 enqueued.push(request);
             };
+
             const pseudoUrls = [
                 new Apify.PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
                 new Apify.PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
@@ -120,13 +123,14 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with Actor UI output object', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
                 enqueued.push(request);
             };
+
             const pseudoUrls = [
                 { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' },
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
@@ -150,7 +154,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with string pseudoUrls', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -180,7 +184,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with RegExp pseudoUrls', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -211,7 +215,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with undefined pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -241,7 +245,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with null pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -271,7 +275,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with empty pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -301,7 +305,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('throws with sparse pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -319,14 +323,14 @@ describe('enqueueLinks()', () => {
                 await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
                 throw new Error('Wrong error.');
             } catch (err) {
-                expect(err.message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
+                expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
                 expect(enqueued).toHaveLength(0);
             }
         });
     });
 
     describe('using Cheerio', () => {
-        let $;
+        let $: CheerioRoot;
 
         beforeEach(async () => {
             $ = cheerio.load(HTML);
@@ -337,7 +341,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works from utils namespace', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -367,7 +371,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with PseudoUrl instances', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -397,7 +401,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with Actor UI output object', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
@@ -427,7 +431,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with string pseudoUrls', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -456,7 +460,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with RegExp pseudoUrls', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -485,7 +489,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with undefined pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -514,7 +518,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with null pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -543,7 +547,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('works with empty pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -572,7 +576,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('throws with sparse pseudoUrls[]', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -588,13 +592,13 @@ describe('enqueueLinks()', () => {
                 await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
                 throw new Error('Wrong error.');
             } catch (err) {
-                expect(err.message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
+                expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
                 expect(enqueued).toHaveLength(0);
             }
         });
 
         test('correctly resolves relative URLs', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -635,7 +639,7 @@ describe('enqueueLinks()', () => {
         });
 
         test('throws on finding a relative link with no baseUrl set', async () => {
-            const enqueued = [];
+            const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
             requestQueue.addRequest = async (request) => {
@@ -645,7 +649,7 @@ describe('enqueueLinks()', () => {
                 await enqueueLinks({ $, requestQueue });
                 throw new Error('wrong error');
             } catch (err) {
-                expect(err.message).toMatch('/x/absolutepath');
+                expect((err as Error).message).toMatch('/x/absolutepath');
             }
             expect(enqueued).toHaveLength(0);
         });

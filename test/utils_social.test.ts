@@ -1,11 +1,12 @@
 import _ from 'underscore';
 import Apify from 'apify';
+import { SocialHandles } from 'apify/src/utils_social';
 
 const { social } = Apify.utils;
 
 describe('utils.social', () => {
     describe('emailsFromText()', () => {
-        const testEmailsFromText = (text, phones) => {
+        const testEmailsFromText = (text: string, phones: string[]) => {
             expect(social.emailsFromText(text)).toEqual(phones);
         };
 
@@ -15,6 +16,7 @@ describe('utils.social', () => {
             testEmailsFromText('', []);
             testEmailsFromText(null, []);
             testEmailsFromText(undefined, []);
+            // @ts-expect-error
             testEmailsFromText({}, []);
             testEmailsFromText('         ', []);
             testEmailsFromText('  \n\n\r\t\n   ', []);
@@ -111,7 +113,7 @@ describe('utils.social', () => {
     });
 
     describe('phonesFromText()', () => {
-        const testPhonesFromText = (text, phones) => {
+        const testPhonesFromText = (text: string, phones: string[]) => {
             expect(social.phonesFromText(text)).toEqual(phones);
         };
 
@@ -122,6 +124,7 @@ describe('utils.social', () => {
             testPhonesFromText('', []);
             testPhonesFromText(null, []);
             testPhonesFromText(undefined, []);
+            // @ts-expect-error
             testPhonesFromText({}, []);
             testPhonesFromText('         ', []);
             testPhonesFromText('  \n\n\r\t\n   ', []);
@@ -317,7 +320,7 @@ describe('utils.social', () => {
     });
 
     describe('parseHandlesFromHtml()', () => {
-        const EMPTY_RESULT = {
+        const EMPTY_RESULT: SocialHandles = {
             emails: [],
             phones: [],
             phonesUncertain: [],

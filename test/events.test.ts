@@ -1,14 +1,13 @@
 import WebSocket from 'ws';
 import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import { ACTOR_EVENT_NAMES_EX } from '../packages/apify/src/constants';
-import { sleep } from '../packages/apify/src/utils';
-
-import Apify from '../packages/apify/src';
+import Apify, { Dictionary } from 'apify';
+import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
+import { sleep } from 'apify/src/utils';
 
 describe('Apify.events', () => {
-    let wss = null;
-    let clock;
+    let wss: WebSocket.Server = null;
+    let clock: sinon.SinonFakeTimers;
     beforeEach(() => {
         wss = new WebSocket.Server({ port: 9099 });
         clock = sinon.useFakeTimers();
@@ -48,7 +47,7 @@ describe('Apify.events', () => {
 
                 expect(req.url).toBe('/someRunId');
 
-                const send = (obj) => ws.send(JSON.stringify(obj));
+                const send = (obj: Dictionary) => ws.send(JSON.stringify(obj));
 
                 setTimeout(() => send({ name: 'name-1', data: [1, 2, 3] }), 50);
                 setTimeout(() => send({ name: 'name-1', data: { foo: 'bar' } }), 100);
@@ -57,7 +56,7 @@ describe('Apify.events', () => {
             });
         });
 
-        const eventsReceived = [];
+        const eventsReceived: unknown[] = [];
         // Run main and store received events
         expect(wsClosed).toBe(false);
         Apify.main(async () => {
@@ -71,7 +70,7 @@ describe('Apify.events', () => {
         // Main will call process.exit() so we must stub it.
         const stubbedExit = sinon
             .stub(process, 'exit')
-            .callsFake((async (code) => {
+            .callsFake((async (code: number) => {
                 expect(code).toBe(0);
                 expect(eventsReceived).toEqual([[1, 2, 3], { foo: 'bar' }]);
 
@@ -87,7 +86,7 @@ describe('Apify.events', () => {
 
     test('should work without Apify.main()', async () => {
         let wsClosed = false;
-        let finish;
+        let finish: (value?: unknown) => void;
         const closePromise = new Promise((resolve) => {
             finish = resolve;
         });
@@ -101,7 +100,7 @@ describe('Apify.events', () => {
 
                 expect(req.url).toBe('/someRunId');
 
-                const send = (obj) => ws.send(JSON.stringify(obj));
+                const send = (obj: Dictionary) => ws.send(JSON.stringify(obj));
 
                 setTimeout(() => send({ name: 'name-1', data: [1, 2, 3] }), 50);
                 setTimeout(() => send({ name: 'name-1', data: { foo: 'bar' } }), 100);
@@ -110,7 +109,7 @@ describe('Apify.events', () => {
             });
         });
 
-        const eventsReceived = [];
+        const eventsReceived: unknown[] = [];
         // Connect to websocket and receive events.
         expect(wsClosed).toBe(false);
         await Apify.initializeEvents();
@@ -133,10 +132,10 @@ describe('Apify.events', () => {
         await sleep(10);
     });
 
-    test('should send persist state events in regular interval', async () => {
+    test('should send persist state events in regular interval', () => {
         const eventsReceived = [];
         Apify.events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, (data) => eventsReceived.push(data));
-        await Apify.initializeEvents();
+        Apify.initializeEvents();
         clock.tick(60001);
         clock.tick(60001);
         clock.tick(60001);
