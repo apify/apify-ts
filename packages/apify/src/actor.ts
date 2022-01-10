@@ -578,7 +578,7 @@ function isRunUnsuccessful(status: typeof ACT_JOB_STATUSES[keyof typeof ACT_JOB_
  *  Otherwise the `options.contentType` parameter must be provided.
  * @param [options]
  */
-export async function metamorph(targetActorId: string, input: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
+export async function metamorph(targetActorId: string, input: unknown, options: MetamorphOptions = {}): Promise<void> {
     ow(targetActorId, ow.string);
     // input can be anything, no reason to validate
     ow(options, ow.object.exactShape({

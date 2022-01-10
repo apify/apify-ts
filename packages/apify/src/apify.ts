@@ -381,9 +381,9 @@ export class Apify {
      *  Otherwise, the `options.contentType` parameter must be provided.
      * @param [options]
      */
-    async metamorph(targetActorId: string, input?: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
+    async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
         ow(targetActorId, ow.string);
-        ow(input, ow.optional.any(ow.string, ow.object));
+        // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
             contentType: ow.optional.string.nonEmpty,
             build: ow.optional.string,
