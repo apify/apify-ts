@@ -4,7 +4,7 @@ import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts'
 import { ApifyClient } from 'apify-client';
 import {
     Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore,
-    StorageManager, ProxyConfiguration, SessionPool, WebhookOptions, ApifyEnv,
+    StorageManager, ProxyConfiguration, SessionPool, WebhookOptions, ApifyEnv, WebhookUpdateData,
 } from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
@@ -223,7 +223,7 @@ describe('new Apify({ ... })', () => {
         test('works as expected', async () => {
             const memoryMbytes = 1024;
             const timeoutSecs = 60;
-            const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookOptions[];
+            const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
             const getRecordMock = jest.fn();
             getRecordMock.mockResolvedValueOnce(output);
@@ -522,7 +522,7 @@ describe('new Apify({ ... })', () => {
 
     describe('addWebhook()', () => {
         const runId = 'my-run-id';
-        const expectedEventTypes = ['ACTOR_RUN_SUCCEEDED'] as const;
+        const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'] as const;
         const expectedRequestUrl = 'http://example.com/api';
         const expectedPayloadTemplate = '{"hello":{{world}}';
         const expectedIdempotencyKey = 'some-key';
