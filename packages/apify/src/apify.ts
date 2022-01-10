@@ -1,6 +1,6 @@
 import ow from 'ow';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import { ApifyClient, ApifyClientOptions, Webhook, WebhookEventType } from 'apify-client';
+import { ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, ApifyEnv } from './actor';
 import { initializeEvents, stopEvents } from './events';
 import { StorageManager, StorageManagerOptions } from './storages/storage_manager';
@@ -206,9 +206,9 @@ export class Apify {
      * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+    async call(actId: string, input?: string | Dictionary, options: CallOptions = {}): Promise<ActorRunWithOutput> {
         ow(actId, ow.string);
-        // input can be anything, no reason to validate
+        ow(input, ow.optional.any(ow.string, ow.object));
         ow(options, ow.object.exactShape({
             contentType: ow.optional.string.nonEmpty,
             token: ow.optional.string,
@@ -308,9 +308,9 @@ export class Apify {
      * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async callTask(taskId: string, input?: Dictionary | Dictionary[], options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+    async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
         ow(taskId, ow.string);
-        ow(input, ow.optional.any(ow.object, ow.array.ofType(ow.object)));
+        ow(input, ow.optional.object);
         ow(options, ow.object.exactShape({
             token: ow.optional.string,
             memoryMbytes: ow.optional.number.not.negative,
@@ -331,18 +331,18 @@ export class Apify {
             ...callTaskOpts
         } = options;
 
-        // @ts-ignore should this be public?
-        callTaskOpts.memory = memoryMbytes;
-        // @ts-ignore should this be public?
-        callTaskOpts.timeout = timeoutSecs;
-        // @ts-ignore should this be public?
-        callTaskOpts.token = token;
+        const castedCallTaskOptions = callTaskOpts as TaskStartOptions;
+
+        castedCallTaskOptions.memory = memoryMbytes;
+        castedCallTaskOptions.timeout = timeoutSecs;
+        // @ts-expect-error should this be public?
+        castedCallTaskOptions.token = token;
 
         const client = this.newClient({ token });
         // Start task and wait for run to finish if waitSecs is provided
         let run;
         try {
-            run = await client.task(taskId).call(input, callTaskOpts);
+            run = await client.task(taskId).call(input, castedCallTaskOptions);
         } catch (err) {
             if ((err as Error).message.startsWith('Waiting for run to finish')) {
                 throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
@@ -383,7 +383,7 @@ export class Apify {
      */
     async metamorph(targetActorId: string, input?: Dictionary | string, options: MetamorphOptions = {}): Promise<void> {
         ow(targetActorId, ow.string);
-        // input can be anything, no reason to validate
+        ow(input, ow.optional.any(ow.string, ow.object));
         ow(options, ow.object.exactShape({
             contentType: ow.optional.string.nonEmpty,
             build: ow.optional.string,
@@ -479,7 +479,7 @@ export class Apify {
      * @param item Object or array of objects containing data to be stored in the default dataset.
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
-    async pushData(item: Record<string, unknown>): Promise<void> {
+    async pushData(item: Dictionary): Promise<void> {
         const dataset = await this.openDataset();
         return dataset.pushData(item);
     }

@@ -2,7 +2,7 @@ import ow from 'ow';
 import path from 'path';
 import _ from 'underscore';
 import { ACT_JOB_STATUSES, ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
-import { ActorStartOptions, TaskStartOptions, Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
+import { ActorStartOptions, KeyValueClientGetRecordOptions, TaskStartOptions, Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
@@ -334,7 +334,7 @@ export interface CallOptions {
  * @param [options]
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
-export async function call(actId: string, input?: Dictionary | string, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+export async function call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
     ow(actId, ow.string);
     // input can be anything, no reason to validate
     ow(options, ow.object.exactShape({
@@ -389,12 +389,12 @@ export async function call(actId: string, input?: Dictionary | string, options: 
     if (!fetchOutput || run.status !== ACT_JOB_STATUSES.SUCCEEDED) return run;
 
     // Fetch output.
-    let getRecordOptions = {} as { buffer: true };
+    let getRecordOptions: KeyValueClientGetRecordOptions = {};
     if (disableBodyParser) getRecordOptions = { buffer: true };
 
-    // TODO the second parameter of `getRecord` requires literal `true` type, we should relax on that as its tedious to use in real life
     const actorOutput = await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions);
     const result: ActorRunWithOutput = { ...run };
+
     if (actorOutput) {
         result.output = {
             body: actorOutput.value,
@@ -495,9 +495,9 @@ export interface CallTaskOptions {
  * @param [options]
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
-export async function callTask(taskId: string, input?: Dictionary | Dictionary[], options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+export async function callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
     ow(taskId, ow.string);
-    ow(input, ow.optional.any(ow.object, ow.array.ofType(ow.object)));
+    ow(input, ow.optional.object);
     ow(options, ow.object.exactShape({
         token: ow.optional.string,
         memoryMbytes: ow.optional.number.not.negative,
