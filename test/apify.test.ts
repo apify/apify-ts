@@ -4,7 +4,7 @@ import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts'
 import { ApifyClient } from 'apify-client';
 import {
     Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore,
-    StorageManager, ProxyConfiguration, SessionPool, WebhookOptions, ApifyEnv, WebhookUpdateData,
+    StorageManager, ProxyConfiguration, SessionPool, ApifyEnv, WebhookUpdateData,
 } from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
