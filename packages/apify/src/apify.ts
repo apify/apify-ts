@@ -206,9 +206,9 @@ export class Apify {
      * @param [options]
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
-    async call(actId: string, input?: string | Dictionary, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
         ow(actId, ow.string);
-        ow(input, ow.optional.any(ow.string, ow.object));
+        // input can be anything, no reason to validate
         ow(options, ow.object.exactShape({
             contentType: ow.optional.string.nonEmpty,
             token: ow.optional.string,
