@@ -347,8 +347,6 @@ export abstract class BrowserCrawler<
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
     protected override async _handleRequestFunction(crawlingContext: Context) {
-        const { request, session } = crawlingContext;
-
         const newPageOptions: Dictionary = {
             id: crawlingContext.id,
         };
@@ -356,6 +354,8 @@ export abstract class BrowserCrawler<
         const useIncognitoPages = this.launchContext?.useIncognitoPages;
 
         if (this.proxyConfiguration && useIncognitoPages) {
+            const { session } = crawlingContext;
+
             const proxyInfo = this.proxyConfiguration.newProxyInfo(session?.id);
             crawlingContext.proxyInfo = proxyInfo;
 
@@ -375,6 +375,10 @@ export abstract class BrowserCrawler<
         const page = await this.browserPool.newPage(newPageOptions) as CommonPage;
         tryCancel();
         this._enhanceCrawlingContextWithPageInfo(crawlingContext, page, useIncognitoPages);
+
+        // DO NOT MOVE THIS LINE ABOVE!
+        // `enhanceCrawlingContextWithPageInfo` can (and will!) override those properties.
+        const { request, session } = crawlingContext;
 
         if (this.useSessionPool) {
             const sessionCookies = session!.getPuppeteerCookies(request.url);
