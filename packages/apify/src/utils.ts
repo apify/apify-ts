@@ -390,24 +390,6 @@ export function getTypicalChromeExecutablePath(): string {
 }
 
 /**
- * Wraps the provided Promise with another one that rejects with the given errorMessage
- * after the given timeoutMillis, unless the original promise resolves or rejects earlier.
- * @ignore
- */
-export function addTimeoutToPromise<T>(promise: Promise<T>, timeoutMillis: number, errorMessage: string): Promise<T> {
-    return new Promise((resolve, reject) => {
-        ow(promise, ow.promise);
-        ow(timeoutMillis, ow.number);
-        ow(errorMessage, ow.string);
-        const timeout = setTimeout(() => reject(new Error(errorMessage)), timeoutMillis);
-        promise
-            .then(resolve)
-            .catch(reject)
-            .finally(() => clearTimeout(timeout));
-    });
-}
-
-/**
  * Returns `true` when code is running on Apify platform and `false` otherwise (for example locally).
  */
 export function isAtHome(): boolean {

@@ -2,13 +2,13 @@ import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
 import _ from 'underscore';
+import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { Log } from '@apify/log';
 import { IncomingMessage } from 'http';
 import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
 import { events } from '../events';
 import { openSessionPool, SessionPool, SessionPoolOptions } from '../session_pool/session_pool';
 import { Statistics } from './statistics';
-import { addTimeoutToPromise } from '../utils';
 import defaultLog from '../utils_log';
 import { validators } from '../validators';
 import { ProxyInfo } from '../proxy_configuration';
@@ -528,7 +528,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
      */
     protected async timeoutForRunTaskFunction() {
         await addTimeoutToPromise(
-            this._runTaskFunction(),
+            () => this._runTaskFunction(),
             this.handleRequestTimeoutMillis * 2,
             `_runTaskFunction timed out after ${(this.handleRequestTimeoutMillis * 2) / 1000} seconds.`,
         );
@@ -550,6 +550,8 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
             request = await this._fetchNextRequest();
         }
 
+        tryCancel();
+
         if (!request) return;
 
         // Reset loadedUrl so an old one is not carried over to retries.
@@ -569,11 +571,13 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
 
         try {
             await addTimeoutToPromise(
-                this._handleRequestFunction(crawlingContext),
+                () => this._handleRequestFunction(crawlingContext),
                 this.handleRequestTimeoutMillis,
                 `handleRequestFunction timed out after ${this.handleRequestTimeoutMillis / 1000} seconds.`,
             );
+            tryCancel();
             await source.markRequestHandled(request);
+            tryCancel();
             this.stats.finishJob(statisticsId);
             this.handledRequestsCount++;
 
@@ -593,6 +597,8 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
         } finally {
             this.crawlingContexts.delete(crawlingContext.id);
         }
+
+        tryCancel();
     }
 
     /**
