@@ -273,6 +273,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
     protected failedContextHandler?: HandleFailedRequest;
     protected handleFailedRequestFunction?: HandleFailedRequest;
     protected handleRequestTimeoutMillis: number;
+    protected internalTimeoutMillis: number;
     protected maxRequestRetries: number;
     protected handledRequestsCount: number;
     protected sessionPoolOptions: SessionPoolOptions;
@@ -341,6 +342,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
         this.userProvidedHandler = handleRequestFunction;
         this.failedContextHandler = handleFailedRequestFunction;
         this.handleRequestTimeoutMillis = handleRequestTimeoutSecs * 1000;
+        this.internalTimeoutMillis = Math.max(this.handleRequestTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
         this.handleFailedRequestFunction = handleFailedRequestFunction;
         this.maxRequestRetries = maxRequestRetries;
         this.handledRequestsCount = 0;
@@ -536,8 +538,8 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
                     request = await this._fetchNextRequest();
                 }
             },
-            this.handleRequestTimeoutMillis,
-            `Fetching next request timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
+            this.internalTimeoutMillis,
+            `Fetching next request timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
         );
 
         tryCancel();
@@ -565,14 +567,13 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
                 this.handleRequestTimeoutMillis,
                 `handleRequestFunction timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
             );
-            tryCancel();
 
             await this._timeoutAndRetry(
                 () => source.markRequestHandled(request!),
-                this.handleRequestTimeoutMillis,
-                `Marking request ${request.url} as handled timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
+                this.internalTimeoutMillis,
+                `Marking request ${request.url} as handled timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
             );
-            tryCancel();
+
             this.stats.finishJob(statisticsId);
             this.handledRequestsCount++;
 
@@ -582,8 +583,8 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
             try {
                 await this._timeoutAndRetry(
                     () => this._requestFunctionErrorHandler(err as Error, crawlingContext, source),
-                    this.handleRequestTimeoutMillis,
-                    `Handling request failure of ${request.url} timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
+                    this.internalTimeoutMillis,
+                    `Handling request failure of ${request.url} timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
                 );
             } catch (secondaryError) {
                 this.log.exception(secondaryError as Error, 'runTaskFunction error handler threw an exception. '
@@ -596,8 +597,6 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
         } finally {
             this.crawlingContexts.delete(crawlingContext.id);
         }
-
-        tryCancel();
     }
 
     /**

@@ -3,6 +3,7 @@ import { ListDictionary, LruCache } from '@apify/datastructures';
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@apify/storage-local';
+import { tryCancel } from '@apify/timeout';
 import { ApifyClient, RequestQueueClient, RequestQueue as RequestQueueInfo } from 'apify-client';
 import ow from 'ow';
 import { entries } from '../typedefs';
@@ -441,6 +442,8 @@ export class RequestQueue {
         // Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
         // This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
         setTimeout(() => {
+            tryCancel();
+
             if (!this.inProgress.has(request.id)) {
                 this.log.warning('The request is no longer marked as in progress in the queue?!', { requestId: request.id });
                 return;
