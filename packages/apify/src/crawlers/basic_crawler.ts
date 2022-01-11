@@ -542,6 +542,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
 
         tryCancel();
 
+        // @ts-expect-error Variable 'request' is used before being assigned. // TODO
         if (!request) return;
 
         // Reset loadedUrl so an old one is not carried over to retries.
