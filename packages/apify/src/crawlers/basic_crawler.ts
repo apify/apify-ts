@@ -525,7 +525,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
     protected async _runTaskFunction() {
         const source = this.requestQueue || this.requestList!;
 
-        let request: Request | null;
+        let request: Request | null | undefined;
         let session: Session | undefined;
 
         await this._timeoutAndRetry(
