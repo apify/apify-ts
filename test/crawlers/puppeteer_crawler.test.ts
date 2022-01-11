@@ -214,106 +214,6 @@ describe('PuppeteerCrawler', () => {
         spy.restore();
     });
 
-    test('proxy per page', async () => {
-        const proxyConfiguration = new ProxyConfiguration({
-            proxyUrls: [
-                `http://127.0.0.2:${servers[0].port}`,
-                `http://127.0.0.3:${servers[1].port}`,
-                `http://127.0.0.4:${servers[2].port}`,
-            ],
-        });
-
-        const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
-
-        const requestListLarge = new Apify.RequestList({
-            sources: [
-                { url: `${serverUrl}/?q=1` },
-                { url: `${serverUrl}/?q=2` },
-                { url: `${serverUrl}/?q=3` },
-                { url: `${serverUrl}/?q=4` },
-                { url: `${serverUrl}/?q=5` },
-                { url: `${serverUrl}/?q=6` },
-            ],
-        });
-
-        const count = {
-            2: 0,
-            3: 0,
-            4: 0,
-        };
-
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
-            requestList: requestListLarge,
-            useSessionPool: true,
-            launchContext: {
-                useIncognitoPages: true,
-            },
-            browserPoolOptions: {
-                prePageCreateHooks: [
-                    (_id, _controller, options) => {
-                        options.proxyBypassList = ['<-loopback>'];
-                    },
-                ],
-            },
-            proxyConfiguration,
-            handlePageFunction: async ({ page }) => {
-                const content = await page.content();
-
-                if (content.includes('127.0.0.2')) {
-                    count[2]++;
-                } else if (content.includes('127.0.0.3')) {
-                    count[3]++;
-                } else if (content.includes('127.0.0.4')) {
-                    count[4]++;
-                }
-            },
-        });
-
-        await requestListLarge.initialize();
-        await puppeteerCrawler.run();
-
-        expect(count[2]).toBeGreaterThan(0);
-        expect(count[3]).toBeGreaterThan(0);
-        expect(count[4]).toBeGreaterThan(0);
-        expect(count[2] + count[3] + count[4]).toBe(6);
-    });
-
-    test('proxy rotation', async () => {
-        const used = new Map();
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
-            requestList: await Apify.openRequestList(null, [
-                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '1' },
-                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '2' },
-                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '3' },
-                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '4' },
-                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '5' },
-            ]),
-            launchContext: {
-                launchOptions: {
-                    headless: true,
-                },
-                // useIncognitoPages: true,
-            },
-            maxConcurrency: 1,
-            sessionPoolOptions: {
-                sessionOptions: {
-                    maxUsageCount: 1,
-                },
-            },
-            proxyConfiguration: await Apify.createProxyConfiguration(),
-            handlePageFunction: async ({ request, page }) => {
-                const pageContent = await page.$eval('body', (el) => JSON.parse(el.textContent));
-                const { clientIp } = pageContent;
-
-                if (used.has(clientIp)) throw new Error(`The ip address ${clientIp} was already used. Proxy rotation does not work properly.`);
-                used.set(clientIp, request.url);
-            },
-        });
-
-        await puppeteerCrawler.run();
-        expect(used.size).toBe(5);
-    });
-
     test('supports userAgent option', async () => {
         const opts = {
             // Have space in user-agent to test passing of params
@@ -478,5 +378,105 @@ describe('PuppeteerCrawler', () => {
         await puppeteerCrawler.run();
 
         expect(pageCookies).toEqual(sessionCookies);
+    });
+
+    test('proxy rotation', async () => {
+        const used = new Map();
+        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+            requestList: await Apify.openRequestList(null, [
+                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '1' },
+                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '2' },
+                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '3' },
+                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '4' },
+                { url: 'https://api.apify.com/v2/browser-info', uniqueKey: '5' },
+            ]),
+            launchContext: {
+                launchOptions: {
+                    headless: true,
+                },
+                // useIncognitoPages: true,
+            },
+            maxConcurrency: 1,
+            sessionPoolOptions: {
+                sessionOptions: {
+                    maxUsageCount: 1,
+                },
+            },
+            proxyConfiguration: await Apify.createProxyConfiguration(),
+            handlePageFunction: async ({ request, page }) => {
+                const pageContent = await page.$eval('body', (el) => JSON.parse(el.textContent));
+                const { clientIp } = pageContent;
+
+                if (used.has(clientIp)) throw new Error(`The ip address ${clientIp} was already used. Proxy rotation does not work properly.`);
+                used.set(clientIp, request.url);
+            },
+        });
+
+        await puppeteerCrawler.run();
+        expect(used.size).toBe(5);
+    });
+
+    test('proxy per page', async () => {
+        const proxyConfiguration = new ProxyConfiguration({
+            proxyUrls: [
+                `http://127.0.0.2:${servers[0].port}`,
+                `http://127.0.0.3:${servers[1].port}`,
+                `http://127.0.0.4:${servers[2].port}`,
+            ],
+        });
+
+        const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
+
+        const requestListLarge = new Apify.RequestList({
+            sources: [
+                { url: `${serverUrl}/?q=1` },
+                { url: `${serverUrl}/?q=2` },
+                { url: `${serverUrl}/?q=3` },
+                { url: `${serverUrl}/?q=4` },
+                { url: `${serverUrl}/?q=5` },
+                { url: `${serverUrl}/?q=6` },
+            ],
+        });
+
+        const count = {
+            2: 0,
+            3: 0,
+            4: 0,
+        };
+
+        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+            requestList: requestListLarge,
+            useSessionPool: true,
+            launchContext: {
+                useIncognitoPages: true,
+            },
+            browserPoolOptions: {
+                prePageCreateHooks: [
+                    (_id, _controller, options) => {
+                        options.proxyBypassList = ['<-loopback>'];
+                    },
+                ],
+            },
+            proxyConfiguration,
+            handlePageFunction: async ({ page }) => {
+                const content = await page.content();
+
+                if (content.includes('127.0.0.2')) {
+                    count[2]++;
+                } else if (content.includes('127.0.0.3')) {
+                    count[3]++;
+                } else if (content.includes('127.0.0.4')) {
+                    count[4]++;
+                }
+            },
+        });
+
+        await requestListLarge.initialize();
+        await puppeteerCrawler.run();
+
+        expect(count[2]).toBeGreaterThan(0);
+        expect(count[3]).toBeGreaterThan(0);
+        expect(count[4]).toBeGreaterThan(0);
+        expect(count[2] + count[3] + count[4]).toBe(6);
     });
 });
