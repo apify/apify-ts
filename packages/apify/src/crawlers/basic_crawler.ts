@@ -537,12 +537,11 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
                 }
             },
             this.handleRequestTimeoutMillis,
-            `Fetching next request timed out after ${this.handleRequestTimeoutMillis * 1e3} seconds.`,
+            `Fetching next request timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
         );
 
         tryCancel();
 
-        // @ts-expect-error Variable 'request' is used before being assigned. // TODO
         if (!request) return;
 
         // Reset loadedUrl so an old one is not carried over to retries.
@@ -564,14 +563,14 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
             await addTimeoutToPromise(
                 () => this._handleRequestFunction(crawlingContext),
                 this.handleRequestTimeoutMillis,
-                `handleRequestFunction timed out after ${this.handleRequestTimeoutMillis / 1000} seconds.`,
+                `handleRequestFunction timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
             );
             tryCancel();
 
             await this._timeoutAndRetry(
                 () => source.markRequestHandled(request!),
                 this.handleRequestTimeoutMillis,
-                `Marking request ${request.url} as handled timed out after ${this.handleRequestTimeoutMillis * 1e3} seconds.`,
+                `Marking request ${request.url} as handled timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
             );
             tryCancel();
             this.stats.finishJob(statisticsId);
@@ -584,7 +583,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
                 await this._timeoutAndRetry(
                     () => this._requestFunctionErrorHandler(err as Error, crawlingContext, source),
                     this.handleRequestTimeoutMillis,
-                    `Handling request failure of ${request.url} timed out after ${this.handleRequestTimeoutMillis * 1e3} seconds.`,
+                    `Handling request failure of ${request.url} timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
                 );
             } catch (secondaryError) {
                 this.log.exception(secondaryError as Error, 'runTaskFunction error handler threw an exception. '
