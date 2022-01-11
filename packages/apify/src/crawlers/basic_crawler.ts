@@ -527,10 +527,11 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
      * @ignore
      */
     protected async timeoutForRunTaskFunction() {
+        const timeout = 600e3; // 10 min last resort timeout for stuck runs
         await addTimeoutToPromise(
             () => this._runTaskFunction(),
-            this.handleRequestTimeoutMillis * 2,
-            `_runTaskFunction timed out after ${(this.handleRequestTimeoutMillis * 2) / 1000} seconds.`,
+            timeout,
+            `_runTaskFunction timed out after ${(timeout) / 1000} seconds.`,
         );
     }
 
