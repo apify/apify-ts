@@ -707,6 +707,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers?.Cookie ?? request.headers?.cookie);
 
         if (cookieDiff.length > 0) {
+            requestAsBrowserOptions.headers ??= {};
             requestAsBrowserOptions.headers!.Cookie = mergeCookies(request.url, [
                 requestAsBrowserOptions.headers!.Cookie,
                 cookieDiff,
