@@ -9,7 +9,8 @@
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "packages/actor-scraper/*"
     ],
     "keywords": [
         "apify",
@@ -45,7 +46,7 @@
         "postinstall": "npx husky install",
         "prepublishOnly": "npx lerna run copy",
         "clean": "lerna run clean",
-        "build": "lerna run build",
+        "build": "lerna run build --sort",
         "test": "jest --silent",
         "coverage": "jest --coverage",
         "release": "npm run build && lerna version patch && lerna publish from-package --contents dist",
