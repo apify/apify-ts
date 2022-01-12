@@ -92,7 +92,7 @@
         "playwright": "1.17.1",
         "portastic": "^1.0.1",
         "proxy": "^1.0.2",
-        "puppeteer": "11.0.0",
+        "puppeteer": "10.4.0",
         "sinon": "^12.0.1",
         "sinon-stub-promise": "^4.0.0",
         "ts-jest": "^27.0.7",
