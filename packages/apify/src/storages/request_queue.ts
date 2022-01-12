@@ -377,7 +377,7 @@ export class RequestQueue {
      * function as handled after successful processing.
      * Handled requests will never again be returned by the `fetchNextRequest` function.
      */
-    async markRequestHandled(request: Request): Promise<QueueOperationInfo> {
+    async markRequestHandled(request: Request): Promise<QueueOperationInfo | null> {
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -385,7 +385,8 @@ export class RequestQueue {
         }));
 
         if (!this.inProgress.has(request.id)) {
-            throw new Error(`Cannot mark request ${request.id} as handled, because it is not in progress!`);
+            this.log.debug(`Cannot mark request ${request.id} as handled, because it is not in progress!`, { requestId: request.id });
+            return null;
         }
 
         if (!request.handledAt) request.handledAt = new Date();
@@ -416,7 +417,7 @@ export class RequestQueue {
      * The request record in the queue is updated using the provided `request` parameter.
      * For example, this lets you store the number of retries or error messages for the request.
      */
-    async reclaimRequest(request: Request, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo> {
+    async reclaimRequest(request: Request, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo | null> {
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -428,7 +429,8 @@ export class RequestQueue {
         const { forefront = false } = options;
 
         if (!this.inProgress.has(request.id)) {
-            throw new Error(`Cannot reclaim request ${request.id}, because it is not in progress!`);
+            this.log.debug(`Cannot reclaim request ${request.id}, because it is not in progress!`, { requestId: request.id });
+            return null;
         }
 
         // TODO: If request hasn't been changed since the last getRequest(),
@@ -445,7 +447,7 @@ export class RequestQueue {
             tryCancel();
 
             if (!this.inProgress.has(request.id)) {
-                this.log.warning('The request is no longer marked as in progress in the queue?!', { requestId: request.id });
+                this.log.debug('The request is no longer marked as in progress in the queue?!', { requestId: request.id });
                 return;
             }
 
