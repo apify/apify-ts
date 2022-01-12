@@ -68,11 +68,6 @@
 // instead of '@apify/log'
 // TODO maybe we don't need this file anymore and we can just make the API docs include the @apify/log?
 
-import log from '@apify/log';
-
-export * from '@apify/log';
-export default log;
-
 /**
  * @typedef {object} LoggerOptions
  * @property {number} [level=4] Sets the log level to the given value, preventing messages from less important log levels
@@ -236,8 +231,9 @@ export default log;
  * @method
  */
 
-// // variable can't be the same from the namespace above
-// import log, { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText } from '@apify/log';
-//
-// export { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText };
-// export default log;
+import log, { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText } from '@apify/log';
+
+Object.assign(log, { Log, LogLevel, Logger, LoggerJson, LoggerText });
+
+export { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText };
+export default log;

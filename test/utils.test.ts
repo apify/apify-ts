@@ -9,6 +9,7 @@ import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
 import { addTimeoutToPromise } from '@apify/timeout';
 import { IncomingMessage } from 'http';
+import { Log, LoggerText } from '@apify/log';
 import Apify, { CheerioRoot } from 'apify';
 import * as utils from 'apify/src/utils';
 import log from 'apify/src/utils_log';
@@ -33,6 +34,14 @@ describe('utils.newClient()', () => {
 
         expect(client.token).toBe('token');
         expect(client.baseUrl).toBe('https://api.apify.com/v2');
+    });
+});
+
+describe('log export exposes custom loggers', () => {
+    test('works with log.LoggerText (#1238)', () => {
+        expect(Apify.utils.log).toBeInstanceOf(Log);
+        // @ts-expect-error Property 'LoggerText' does not exist on type 'Log'.
+        expect(Apify.utils.log.LoggerText).toBe(LoggerText);
     });
 });
 
