@@ -1,5 +1,6 @@
 const { createHref } = require('./tools/utils/createHref');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
+const versions = require('./versions.json');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
@@ -100,6 +101,20 @@ module.exports = {
                     position: 'left',
                 },
                 {
+                    to: 'api',
+                    type: 'dropdown',
+                    label: versions[0],
+                    position: 'left',
+                    items: [
+                        { label: 'Next', to: 'api/next' },
+                        ...versions.map((version, i) => ({
+                            label: version,
+                            to: i === 0 ? 'api' : `api/${version}`,
+                            exact: true,
+                        })),
+                    ],
+                },
+                {
                     type: 'docsVersionDropdown',
                     position: 'left',
                 },
@@ -115,7 +130,7 @@ module.exports = {
             theme: require('prism-react-renderer/themes/duotoneLight'),
             darkTheme: require('prism-react-renderer/themes/vsDark'),
         },
-        metadatas: [],
+        metadata: [],
         image: 'img/apify_og_SDK.png',
         footer: {
             links: [
