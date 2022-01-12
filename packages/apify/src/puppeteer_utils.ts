@@ -482,7 +482,19 @@ export async function infiniteScroll(page: Page, options: InfiniteScrollOptions 
     });
 
     // Move mouse to the center of the page, so we can scroll up-down
-    const body = await page.$('body');
+    let body = await page.$('body');
+    let retry = 0;
+
+    while (!body && retry < 10) {
+        await page.waitForTimeout(100);
+        body = await page.$('body');
+        retry++;
+    }
+
+    if (!body) {
+        return;
+    }
+
     const boundingBox = await body!.boundingBox();
     await page.mouse.move(
         boundingBox!.x + boundingBox!.width / 2, // x
