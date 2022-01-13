@@ -17,10 +17,10 @@
 // @ts-expect-error We need to add typings for @apify/ps-tree
 import psTree from '@apify/ps-tree';
 import { execSync } from 'child_process';
-import { ActorRun, ApifyClient, ApifyClientOptions } from 'apify-client';
+import { ApifyClient, ApifyClientOptions } from 'apify-client';
 // @ts-ignore if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyClientVersion } from 'apify-client/package.json';
-import { ACT_JOB_TERMINAL_STATUSES, ENV_VARS } from '@apify/consts';
+import { ENV_VARS } from '@apify/consts';
 import cheerio from 'cheerio';
 import contentTypeParser from 'content-type';
 import fs from 'fs';
@@ -638,81 +638,6 @@ export function parseContentTypeFromResponse(response: IncomingMessage): { type:
 }
 
 /**
- * Returns a promise that resolves with the finished Run object when the provided actor run finishes
- * or with the unfinished Run object when the `waitSecs` timeout lapses. The promise is NOT rejected
- * based on run status. You can inspect the `status` property of the Run object to find out its status.
- *
- * This is useful when you need to chain actor executions. Similar effect can be achieved
- * by using webhooks, so be sure to review which technique fits your use-case better.
- * @deprecated Please use the 'waitForFinish' functions of 'apify-client'.
- * @ignore
- */
-export async function waitForRunToFinish(options: WaitForRunToFinishOptions): Promise<ActorRun> {
-    ow(options, ow.object.exactShape({
-        actorId: ow.string,
-        runId: ow.string,
-        waitSecs: ow.optional.number,
-    }));
-
-    const {
-        // @ts-expect-error TODO: We don't need the actorId, we should remove it (or remove the entire function since its deprecated)
-        actorId,
-        runId,
-        waitSecs,
-    } = options;
-    let run: ActorRun;
-
-    const startedAt = Date.now();
-    const shouldRepeat = () => {
-        if (waitSecs && (Date.now() - startedAt) / 1000 >= waitSecs) return false;
-        if (run && ACT_JOB_TERMINAL_STATUSES.includes(run.status)) return false;
-
-        return true;
-    };
-
-    while (shouldRepeat()) {
-        const waitForFinish = waitSecs
-            ? Math.round(waitSecs - (Date.now() - startedAt) / 1000)
-            : 999999;
-
-        run = await apifyClient.run(runId).waitForFinish({ waitSecs: waitForFinish });
-
-        // It might take some time for database replicas to get up-to-date,
-        // so getRun() might return null. Wait a little bit and try it again.
-        if (!run) await sleep(250);
-    }
-
-    if (!run!) {
-        throw new Error('Waiting for run to finish failed. Cannot fetch actor run details from the server.');
-    }
-
-    return run;
-}
-
-export interface WaitForRunToFinishOptions {
-    /**
-     * ID of the actor that started the run.
-     */
-    actorId: string;
-    /**
-     * ID of the run itself.
-     */
-    runId: string;
-    /**
-     * Maximum time to wait for the run to finish, in seconds.
-     * If the limit is reached, the returned promise is resolved to a run object that will have
-     * status `READY` or `RUNNING`. If `waitSecs` omitted, the function waits indefinitely.
-     */
-    waitSecs?: number;
-    /**
-     * You can supply an Apify token to override the default one
-     * that's used by the default ApifyClient instance.
-     * E.g. you can track other users' runs.
-     */
-    token?: string;
-}
-
-/**
  * Cleans up the local storage folder created when testing locally.
  * This is useful in the event you are debugging your code locally.
  *
@@ -750,6 +675,5 @@ export const publicUtils = {
     URL_NO_COMMAS_REGEX,
     URL_WITH_COMMAS_REGEX,
     createRequestDebugInfo,
-    waitForRunToFinish,
     purgeLocalStorage,
 };

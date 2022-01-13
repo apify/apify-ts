@@ -81,7 +81,7 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
             launchOptions: {
                 ...launchOptions,
                 executablePath: getDefaultExecutablePath(launchContext),
-            }, // TODO maybe list executablePath in options?
+            },
             launcher,
         });
 

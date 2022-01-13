@@ -185,8 +185,6 @@ export async function requestAsBrowser<T = string>(options: RequestAsBrowserOpti
         throwOnHttpErrors = false,
         stream = false,
         decodeBody = true,
-        // @ts-expect-error
-        forceUrlEncoding, // TODO remove in v3. It's not used, but we keep it here to prevent validation errors in got.
         ...gotParams
     } = options;
 

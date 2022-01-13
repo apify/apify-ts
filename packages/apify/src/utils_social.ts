@@ -205,7 +205,7 @@ const FACEBOOK_REGEX_STRING = `(?<!\\w)(?:http(?:s)?:\\/\\/)?(?:www.)?(?:faceboo
 const YOUTUBE_REGEX_STRING = '(?:https?:\\/\\/)?(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch|v|embed|user|c(?:hannel)?)(?:\\.php)?(?:\\?[^ ]*v=|\\/))([a-zA-Z0-9\\-_]+)';
 
 try {
-    // @ts-ignore Avoid several eslint no-new errors
+    // @ts-expect-error tmp is never used, we just need to create the regexps to trigger the validation
     let tmp = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
     tmp = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
     tmp = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');

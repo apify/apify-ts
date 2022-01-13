@@ -1,8 +1,17 @@
+3.0.0 / TBA
+====================
+
+### Breaking changes:
+- `Apify.call()` is now just a shortcut for running `ApifyClient.actor(actId).call(input, options)`, while also taking the token inside env vars into account
+- `Apify.waitForRunToFinish()` has been removed, use `ApifyClient.waitForFinish()` instead
+- (internal) `QueueOperationInfo.request` is no longer available
+- (internal) `Request.handledAt` is now string date in ISO format
+
 2.2.2 / 2022/01/xx
 ====================
 - fix: ensure `request.headers` is set
 
-- 2.2.1 / 2022/01/03
+2.2.1 / 2022/01/03
 ====================
 - fix: ignore requests that are no longer in progress (#1258)
 - fix: do not use `tryCancel()` from inside sync callback (#1265)

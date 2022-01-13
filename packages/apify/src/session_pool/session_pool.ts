@@ -7,6 +7,7 @@ import { events } from '../events';
 import defaultLog from '../utils_log';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import { Configuration } from '../configuration';
+import { Dictionary } from '../typedefs';
 
 /**
  * Factory user-function which creates customized {@link Session} instances.
@@ -403,7 +404,7 @@ export class SessionPool extends EventEmitter {
      * If the state was persisted it loads the `SessionPool` from the persisted state.
      */
     protected async _maybeLoadSessionPool(): Promise<void> {
-        const loadedSessionPool = await this.keyValueStore.getValue(this.persistStateKey);
+        const loadedSessionPool = await this.keyValueStore.getValue<{ sessions: Dictionary[] }>(this.persistStateKey);
 
         if (!loadedSessionPool) return;
 
@@ -413,11 +414,10 @@ export class SessionPool extends EventEmitter {
             persistStateKey: this.persistStateKey,
         });
 
-        // @ts-ignore based on jsdoc it can be string and buffer too?
         for (const sessionObject of loadedSessionPool.sessions) {
             sessionObject.sessionPool = this;
-            sessionObject.createdAt = new Date(sessionObject.createdAt);
-            sessionObject.expiresAt = new Date(sessionObject.expiresAt);
+            sessionObject.createdAt = new Date(sessionObject.createdAt as string);
+            sessionObject.expiresAt = new Date(sessionObject.expiresAt as string);
             const recreatedSession = new Session(sessionObject);
 
             if (recreatedSession.isUsable()) {

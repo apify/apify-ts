@@ -207,68 +207,10 @@ export class Apify {
      * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
      */
     async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
-        ow(actId, ow.string);
-        // input can be anything, no reason to validate
-        ow(options, ow.object.exactShape({
-            contentType: ow.optional.string.nonEmpty,
-            token: ow.optional.string,
-            memoryMbytes: ow.optional.number.not.negative,
-            timeoutSecs: ow.optional.number.not.negative,
-            build: ow.optional.string,
-            waitSecs: ow.optional.number.not.negative,
-            fetchOutput: ow.optional.boolean,
-            disableBodyParser: ow.optional.boolean,
-            webhooks: ow.optional.array.ofType(ow.object),
-        }));
-
-        const {
-            token = this.config.get('token'),
-            fetchOutput = true,
-            disableBodyParser = false,
-            memoryMbytes,
-            timeoutSecs,
-            ...callActorOpts
-        } = options;
-
-        // @ts-ignore should this be public
-        callActorOpts.memory = memoryMbytes;
-        // @ts-ignore should this be public
-        callActorOpts.timeout = timeoutSecs;
-        // @ts-ignore should this be public
-        callActorOpts.token = token;
-
-        if (input) {
-            callActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
-            input = maybeStringify(input, callActorOpts);
-        }
-
+        const token = options.token ?? this.config.get('token');
         const client = this.newClient({ token });
 
-        let run;
-        try {
-            run = await client.actor(actId).call(input, callActorOpts);
-        } catch (err) {
-            if ((err as Error).message.startsWith('Waiting for run to finish')) {
-                throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
-            }
-            throw err;
-        }
-
-        if (this._isRunUnsuccessful(run.status)) {
-            const message = `The actor ${actId} invoked by Apify.call() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
-            throw new ApifyCallError(run, message);
-        }
-
-        // Finish if output is not requested or run haven't finished.
-        if (!fetchOutput || run.status !== ACT_JOB_STATUSES.SUCCEEDED) return run;
-
-        // Fetch output.
-        let getRecordOptions = {} as { buffer: true };
-        if (disableBodyParser) getRecordOptions = { buffer: true };
-
-        const { value: body, contentType } = (await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions))!;
-
-        return { ...run, output: { contentType, body } };
+        return client.actor(actId).call(input, options);
     }
 
     /**
@@ -777,10 +719,11 @@ export class Apify {
      * { useApifyProxy: false }
      * ```
      */
-    async createProxyConfiguration(proxyConfigurationOptions: ProxyConfigurationOptions = {}): Promise<ProxyConfiguration | undefined> {
+    async createProxyConfiguration(
+        proxyConfigurationOptions: ProxyConfigurationOptions & { useApifyProxy?: boolean } = {},
+    ): Promise<ProxyConfiguration | undefined> {
         // Compatibility fix for Input UI where proxy: None returns { useApifyProxy: false }
         // Without this, it would cause proxy to use the zero config / auto mode.
-        // @ts-ignore should be public?
         const dontUseApifyProxy = proxyConfigurationOptions.useApifyProxy === false;
         const dontUseCustomProxies = !proxyConfigurationOptions.proxyUrls;
 

@@ -89,7 +89,7 @@ export class Request {
     method: AllowedHttpMethods;
 
     /** HTTP request payload, e.g. for POST requests. */
-    payload?: string | Buffer;
+    payload?: string;
 
     /** The `true` value indicates that the request will not be automatically retried on error. */
     noRetry: boolean;
@@ -107,10 +107,10 @@ export class Request {
     userData?: Record<string, unknown>;
 
     /**
-     * Indicates the time when the request has been processed.
+     * ISO datetime string that indicates the time when the request has been processed.
      * Is `null` if the request has not been crawled yet.
      */
-    handledAt: Date | null;
+    handledAt?: string;
 
     /**
      * `Request` parameters including the URL, HTTP method and headers, and others.
@@ -136,26 +136,20 @@ export class Request {
         });
 
         const {
-            // @ts-ignore
             id,
             url,
-            // @ts-ignore
             loadedUrl,
             uniqueKey,
             payload,
-            // @ts-ignore
             noRetry = false,
-            // @ts-ignore
             retryCount = 0,
-            // @ts-ignore
             errorMessages = [],
             headers = {},
             userData = {},
-            // @ts-ignore
             handledAt,
             keepUrlFragment = false,
             useExtendedUniqueKey = false,
-        } = options;
+        } = options as RequestOptions & { loadedUrl?: string; retryCount?: number; errorMessages?: string[]; handledAt?: string | Date };
 
         let {
             method = 'GET',
@@ -174,12 +168,9 @@ export class Request {
         this.noRetry = noRetry;
         this.retryCount = retryCount;
         this.errorMessages = [...errorMessages];
-        // @property are ignored when reassigning, needs to enforced set again,
-        // otherwise the type will be {}
         this.headers = { ...headers };
         this.userData = { ...userData };
-        // Requests received from API will have ISOString dates, but we want to have a Date instance.
-        this.handledAt = typeof handledAt === 'string' ? new Date(handledAt) : handledAt;
+        this.handledAt = handledAt instanceof Date ? handledAt.toISOString() : handledAt!;
     }
 
     /**
@@ -275,7 +266,7 @@ export interface RequestOptions {
     method?: AllowedHttpMethods | Lowercase<AllowedHttpMethods>;
 
     /** HTTP request payload, e.g. for POST requests. */
-    payload?: string | Buffer;
+    payload?: string;
 
     /**
      * HTTP headers in the following format:
@@ -311,7 +302,13 @@ export interface RequestOptions {
      */
     useExtendedUniqueKey?: boolean;
 
-    // TODO: do we want to document this
+    /**
+     * The `true` value indicates that the request will not be automatically retried on error.
+     * @default false
+     */
+    noRetry?: boolean;
+
+    /** @internal */
     id?: string;
 
 }

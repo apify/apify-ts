@@ -2,7 +2,7 @@ import { Cookie } from 'tough-cookie';
 import { getCookiesFromResponse } from 'apify/src/session_pool/session_utils';
 import { Dictionary } from 'apify';
 
-describe('getCookiesFromResponse ', () => {
+describe('getCookiesFromResponse', () => {
     test('should parse cookies if set-cookie is array', () => {
         const headers: Dictionary<string | string[]> = {};
         const dummyCookies = ['CSRF=e8b667; Domain=example.com; Secure', 'id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT'];
