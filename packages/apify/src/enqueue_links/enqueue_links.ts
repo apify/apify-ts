@@ -153,7 +153,6 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     const urls = page ? await extractUrlsFromPage(page, selector) : extractUrlsFromCheerio($!, selector, baseUrl);
     let requestOptions = createRequestOptions(urls);
     if (transformRequestFunction) {
-        // @ts-ignore `url` is missing in the dictionary?
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
     let requests = createRequests(requestOptions, pseudoUrlInstances);
@@ -168,9 +167,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
-    /* istanbul ignore next */
-    // @ts-expect-error TODO: what is the type of linkEls?
-    return page.$$eval(selector, (linkEls) => linkEls.map((link) => link.href).filter((href) => !!href));
+    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.href).filter((href) => !!href));
 }
 
 /**

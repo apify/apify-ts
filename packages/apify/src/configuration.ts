@@ -278,8 +278,7 @@ export class Configuration {
         const storage = new ApifyStorageLocal({ ...options, storageDir, enableWalMode });
 
         process.on('exit', () => {
-            // TODO this is not public API, need to update
-            // storage local with some teardown
+            // TODO this is not public API, need to update storage local with some teardown
             storage.dbConnections.closeAllConnections();
         });
 

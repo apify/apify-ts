@@ -84,9 +84,6 @@ export interface QueueOperationInfo {
     /** The ID of the added request */
     requestId: string;
 
-    /** The original {@link Request} object passed to the `RequestQueue` function. */
-    request: Request;
-
 }
 
 export interface RequestQueueOperationOptions {
@@ -251,11 +248,9 @@ export class RequestQueue {
                 // request was already handled is there because just one client should be using one queue.
                 wasAlreadyHandled: cachedInfo.isHandled,
                 requestId: cachedInfo.id,
-                request,
             };
         }
 
-        // @ts-ignore TODO client types should maybe allow `payload: Buffer`?
         const queueOperationInfo = await this.client.addRequest(request, { forefront }) as QueueOperationInfo;
         const { requestId, wasAlreadyPresent } = queueOperationInfo;
         this._cacheRequest(cacheKey, queueOperationInfo);
@@ -266,8 +261,6 @@ export class RequestQueue {
             // Performance optimization: add request straight to head if possible
             this._maybeAddRequestToQueueHead(requestId, forefront);
         }
-
-        queueOperationInfo.request = { ...request, id: requestId } as Request;
 
         return queueOperationInfo;
     }
@@ -282,7 +275,7 @@ export class RequestQueue {
         ow(id, ow.string);
 
         // TODO: Could we also use requestsCache here? It would be consistent with addRequest()
-        // Downside is that it wouldn't reflect changes from outside...
+        //   Downside is that it wouldn't reflect changes from outside...
         const requestOptions = await this.client.getRequest(id);
         if (!requestOptions) return null;
 
@@ -381,7 +374,7 @@ export class RequestQueue {
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
-            handledAt: ow.optional.date,
+            handledAt: ow.optional.string,
         }));
 
         if (!this.inProgress.has(request.id)) {
@@ -389,9 +382,8 @@ export class RequestQueue {
             return null;
         }
 
-        if (!request.handledAt) request.handledAt = new Date();
+        if (!request.handledAt) request.handledAt = new Date().toISOString();
 
-        // @ts-ignore
         const queueOperationInfo = await this.client.updateRequest(request);
 
         this.inProgress.delete(request.id);
@@ -403,11 +395,6 @@ export class RequestQueue {
 
         this._cacheRequest(getRequestId(request.uniqueKey), queueOperationInfo);
 
-        // @ts-ignore
-        queueOperationInfo.request = request;
-
-        // @ts-expect-error Property 'request' is missing in type 'RequestQueueClientAddRequestResult'
-        // but required in type 'QueueOperationInfo'. // TODO
         return queueOperationInfo;
     }
 
@@ -434,12 +421,9 @@ export class RequestQueue {
         }
 
         // TODO: If request hasn't been changed since the last getRequest(),
-        // we don't need to call updateRequest() and thus improve performance.
-        // @ts-ignore
+        //   we don't need to call updateRequest() and thus improve performance.
         const queueOperationInfo = await this.client.updateRequest(request, { forefront });
         this._cacheRequest(getRequestId(request.uniqueKey), queueOperationInfo);
-        // @ts-ignore
-        queueOperationInfo.request = request;
 
         // Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
         // This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
@@ -461,8 +445,6 @@ export class RequestQueue {
             this._maybeAddRequestToQueueHead(request.id, forefront);
         }, STORAGE_CONSISTENCY_DELAY_MILLIS);
 
-        // @ts-expect-error Property 'request' is missing in type 'RequestQueueClientAddRequestResult'
-        // but required in type 'QueueOperationInfo'. // TODO
         return queueOperationInfo;
     }
 

@@ -54,10 +54,6 @@ describe('RequestQueue remote', () => {
         const requestA = new Apify.Request(requestOptions);
         expect(queueOperationInfo1).toMatchObject({
             ...firstResolveValue,
-            request: {
-                ...requestA,
-                id: 'a',
-            },
         });
         // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
@@ -70,10 +66,6 @@ describe('RequestQueue remote', () => {
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
             requestId: 'a',
-            request: {
-                ...requestA,
-                id: 'a',
-            },
         });
         // @ts-expect-error Accessing private property
         expect(queue.queueHeadDict.length()).toBe(1);
@@ -234,10 +226,6 @@ describe('RequestQueue remote', () => {
             requestId: 'a',
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
-            request: {
-                ...requestA,
-                id: 'a',
-            },
         });
     });
 
@@ -269,10 +257,6 @@ describe('RequestQueue remote', () => {
             requestId: 'x',
             wasAlreadyPresent: true,
             wasAlreadyHandled: true,
-            request: {
-                ...requestX,
-                id: 'x',
-            },
         });
     });
 
@@ -303,10 +287,6 @@ describe('RequestQueue remote', () => {
             requestId: 'a',
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
-            request: {
-                ...requestA,
-                id: 'a',
-            },
         });
     });
 

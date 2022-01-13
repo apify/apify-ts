@@ -1,23 +1,12 @@
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
+import { BrowserPluginOptions } from 'browser-pool';
 import { getTypicalChromeExecutablePath, isAtHome } from '../utils';
 import { BrowserPlugin } from './browser_plugin';
 import { Constructor } from '../typedefs';
 import { StealthOptions } from '../stealth/stealth';
 
-export interface BrowserLaunchContext<TOptions> {
-    /**
-     * `Options` passed to the browser launcher function. Options are based on underlying library.
-     */
-    launchOptions?: TOptions;
-
-    /**
-     * URL to a HTTP proxy server. It must define the port number,
-     * and it may also contain proxy username and password.
-     *
-     * Example: `http://bob:pass123@proxy.example.com:1234`.
-     */
-    proxyUrl?: string;
+export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOptions> {
 
     /**
      * If `true` and `executablePath` is not set,
@@ -35,18 +24,6 @@ export interface BrowserLaunchContext<TOptions> {
      * If you want to use a different browser you can pass it by this property as `require("playwright").firefox`
      */
     launcher?: any;
-
-    // TODO: this needs proper documentation strings
-    /**
-     * If the browser should use incognito pages
-     */
-    useIncognitoPages?: boolean;
-
-    // TODO: this needs proper documentation strings
-    /**
-     * Where browsers should store their data
-     */
-    userDataDir?: string;
 }
 
 /**

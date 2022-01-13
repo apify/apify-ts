@@ -54,16 +54,14 @@ describe('Apify.Request', () => {
             userData: {
                 yo: 123,
             },
-            handledAt: new Date(),
+            handledAt: new Date().toISOString(),
         };
-        // FIXME so what is `handledAt`, a string or a Date?
-        // @ts-ignore
+        // @ts-expect-error handledAt and other props are internal
         expect(new Apify.Request(data)).toMatchObject(data);
 
-        // @ts-ignore
         data.handledAt = (new Date()).toISOString();
         // @ts-ignore
-        expect((new Apify.Request(data)).handledAt).toBeInstanceOf(Date);
+        expect(typeof (new Apify.Request(data)).handledAt).toBe('string');
     });
 
     test('should allow to push error messages', () => {

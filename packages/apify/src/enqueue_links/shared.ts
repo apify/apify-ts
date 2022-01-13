@@ -47,10 +47,9 @@ export function constructPseudoUrlInstances(pseudoUrls: PseudoUrlInput[]): Pseud
 /**
  * @ignore
  */
-export function createRequests(requestOptions: (string | Record<string, unknown>)[], pseudoUrls: PseudoUrl[]): Request[] {
+export function createRequests(requestOptions: (string | RequestOptions)[], pseudoUrls: PseudoUrl[]): Request[] {
     if (!pseudoUrls || !pseudoUrls.length) {
-        // TODO maybe the request options are wrong? or why we need type cast?
-        return requestOptions.map((opts) => new Request(opts as unknown as RequestOptions));
+        return requestOptions.map((opts) => new Request(opts as RequestOptions));
     }
 
     const requests: Request[] = [];
@@ -58,7 +57,7 @@ export function createRequests(requestOptions: (string | Record<string, unknown>
         pseudoUrls
             .filter((purl) => purl.matches(typeof opts === 'string' ? opts : opts.url as string))
             .forEach((purl) => {
-                const request = purl.createRequest(opts);
+                const request = purl.createRequest(opts as string);
                 requests.push(request);
             });
     });
@@ -69,7 +68,7 @@ export function createRequests(requestOptions: (string | Record<string, unknown>
 /**
  * @ignore
  */
-export function createRequestOptions(sources: (string | Record<string, unknown>)[]): Record<string, unknown>[] {
+export function createRequestOptions(sources: (string | Record<string, unknown>)[]): RequestOptions[] {
     return sources
         .map((src) => {
             const reqOpts = typeof src === 'string'

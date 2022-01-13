@@ -2,7 +2,7 @@ import ow from 'ow';
 import path from 'path';
 import _ from 'underscore';
 import { ACT_JOB_STATUSES, ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
-import { ActorStartOptions, KeyValueClientGetRecordOptions, TaskStartOptions, Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
+import { TaskStartOptions, Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
@@ -335,74 +335,10 @@ export interface CallOptions {
  * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
 export async function call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
-    ow(actId, ow.string);
-    // input can be anything, no reason to validate
-    ow(options, ow.object.exactShape({
-        contentType: ow.optional.string.nonEmpty,
-        token: ow.optional.string,
-        memoryMbytes: ow.optional.number.not.negative,
-        timeoutSecs: ow.optional.number.not.negative,
-        build: ow.optional.string,
-        waitSecs: ow.optional.number.not.negative,
-        fetchOutput: ow.optional.boolean,
-        disableBodyParser: ow.optional.boolean,
-        webhooks: ow.optional.array.ofType<WebhookUpdateData>(ow.object),
-    }));
-
-    const {
-        token,
-        fetchOutput = true,
-        disableBodyParser = false,
-        memoryMbytes,
-        timeoutSecs,
-        ...callActorOpts
-    } = options;
-
-    const castedCallActorOpts = callActorOpts as ActorStartOptions;
-
-    castedCallActorOpts.memory = memoryMbytes;
-    castedCallActorOpts.timeout = timeoutSecs;
-
-    if (input) {
-        castedCallActorOpts.contentType = addCharsetToContentType(callActorOpts.contentType!);
-        input = maybeStringify(input, callActorOpts);
-    }
-
+    const { token, ...rest } = options;
     const client = token ? newClient({ token }) : apifyClient;
 
-    let run;
-    try {
-        run = await client.actor(actId).call(input, castedCallActorOpts);
-    } catch (err) {
-        if ((err as Error).message.startsWith('Waiting for run to finish')) {
-            throw new ApifyCallError({ id: run?.id, actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
-        }
-        throw err;
-    }
-
-    if (isRunUnsuccessful(run.status)) {
-        const message = `The actor ${actId} invoked by Apify.call() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
-        throw new ApifyCallError(run, message);
-    }
-
-    // Finish if output is not requested or run haven't finished.
-    if (!fetchOutput || run.status !== ACT_JOB_STATUSES.SUCCEEDED) return run;
-
-    // Fetch output.
-    let getRecordOptions: KeyValueClientGetRecordOptions = {};
-    if (disableBodyParser) getRecordOptions = { buffer: true };
-
-    const actorOutput = await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions);
-    const result: ActorRunWithOutput = { ...run };
-
-    if (actorOutput) {
-        result.output = {
-            body: actorOutput.value,
-            contentType: actorOutput.contentType,
-        };
-    }
-
-    return result;
+    return client.actor(actId).call(input, rest);
 }
 
 export interface CallTaskOptions {
@@ -536,8 +472,7 @@ export async function callTask(taskId: string, input?: Dictionary, options: Call
     }
 
     if (isRunUnsuccessful(run.status)) {
-        // TODO It should be callTask in the message, but I'm keeping it this way not to introduce a breaking change.
-        const message = `The actor task ${taskId} invoked by Apify.call() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
+        const message = `The actor task ${taskId} invoked by Apify.callTask() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
         throw new ApifyCallError(run, message);
     }
 
@@ -602,8 +537,7 @@ export async function metamorph(targetActorId: string, input: unknown, options: 
         input = maybeStringify(input, metamorphOpts);
     }
 
-    // @ts-ignore run has only one argument?
-    await apifyClient.run(runId, actorId).metamorph(targetActorId, input, metamorphOpts);
+    await apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);
 
     // Wait some time for container to be stopped.
     // NOTE: option.customAfterSleepMillis is used in tests

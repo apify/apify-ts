@@ -170,7 +170,6 @@ export class AutoscaledPool {
     // Configurable properties.
     private readonly desiredConcurrencyRatio: number;
     private readonly scaleUpStepRatio: number;
-    // @ts-expect-error TODO: property is never used?
     private readonly scaleDownStepRatio: number;
     private readonly maybeRunIntervalMillis: number;
     private readonly loggingIntervalMillis: number;
@@ -589,7 +588,7 @@ export class AutoscaledPool {
      * @param systemStatus for logging
      */
     protected _scaleDown(systemStatus: SystemInfo): void {
-        const step = Math.ceil(this._desiredConcurrency * this.scaleUpStepRatio);
+        const step = Math.ceil(this._desiredConcurrency * this.scaleDownStepRatio);
         this._desiredConcurrency = Math.max(this._minConcurrency, this._desiredConcurrency - step);
         this.log.debug('scaling down', {
             oldConcurrency: this._desiredConcurrency + step,

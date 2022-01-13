@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
-import type { PaginatedList } from 'apify-client/dist/utils'; // TODO: export this from the client
+import type { PaginatedList } from 'apify-client';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 import log from '../utils_log';
 
@@ -12,9 +12,6 @@ import { Dictionary, Awaitable } from '../typedefs';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;
-
-/** @internal */
-export const LOCAL_FILENAME_DIGITS = 9; // TODO not used anywhere, can we remove it?
 
 const SAFETY_BUFFER_PERCENT = 0.01 / 100; // 0.01%
 
@@ -338,7 +335,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * @default 0
      */
     async forEach(iteratee: DatasetConsumer<Data>, options: DatasetIteratorOptions = {}, index = 0): Promise<void> {
-        // TODO: type the options object properly
         if (!options.offset) options.offset = 0;
         if (options.format && options.format !== 'json') throw new Error('Dataset.forEach/map/reduce() support only a "json" format.');
         if (!options.limit) options.limit = DATASET_ITERATORS_DEFAULT_LIMIT;

@@ -146,7 +146,7 @@ export interface ProxyInfo {
     /**
      * Proxy port.
      */
-    port: string;
+    port: number | string;
 }
 
 /**
@@ -293,10 +293,9 @@ export class ProxyConfiguration {
             url,
             groups,
             countryCode,
-            password: password!, // TODO maybe should be optional in ProxyInfo? or empty string default?
+            password: password ?? '',
             hostname,
-            // TODO should it be really a string in the response, maybe string|number would be better?
-            port: port as unknown as string,
+            port: port!,
         };
     }
 

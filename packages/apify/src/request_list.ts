@@ -7,6 +7,7 @@ import log from './utils_log';
 import { getFirstKey, publicUtils } from './utils';
 import { getValue, setValue } from './storages/key_value_store';
 import { serializeArray, createDeserialize } from './serialization';
+import { Dictionary } from './typedefs';
 
 /** @internal */
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';
@@ -382,8 +383,7 @@ export class RequestList {
             // .pop would reverse the array and .shift is SLOW.
             delete this.sources[i];
 
-            // @ts-ignore
-            if (typeof source === 'object' && source.requestsFromUrl) {
+            if (typeof source === 'object' && (source as Dictionary).requestsFromUrl) {
                 const fetchedRequests = await this._fetchRequestsFromUrl(source as InternalSource);
                 await this._addFetchedRequests(source as InternalSource, fetchedRequests);
             } else {

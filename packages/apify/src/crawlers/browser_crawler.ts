@@ -18,7 +18,7 @@ import { Awaitable, Dictionary } from '../typedefs';
 
 export interface BrowserCrawlingContext<
     Page extends CommonPage = CommonPage,
-    Response = unknown,
+    Response = Dictionary<any>,
     ProvidedController = BrowserController
 > extends CrawlingContext<Response> {
     browserController: ProvidedController;
@@ -479,9 +479,9 @@ export abstract class BrowserCrawler<
      * @todo: This can be also done as a postNavigation hook except the loadedUrl marking.
      */
     protected async _responseHandler(crawlingContext: Context): Promise<void> {
-        const { response, session, request, page } = crawlingContext as any; // FIXME page is not there yet?
+        const { response, session, request, page } = crawlingContext;
 
-        if (this.sessionPool && response) {
+        if (this.sessionPool && response && session) {
             if (typeof response === 'object' && typeof response.status === 'function') {
                 throwOnBlockedRequest(session, response.status());
             } else {
@@ -493,7 +493,7 @@ export abstract class BrowserCrawler<
     }
 
     protected async _extendLaunchContext(_pageId: string, launchContext: LaunchContext): Promise<void> {
-        const launchContextExtends: Record<string, any> = {}; // TODO can we improve this somehow?
+        const launchContextExtends: { session?: Session; proxyInfo?: ProxyInfo } = {};
 
         if (this.sessionPool) {
             launchContextExtends.session = await this.sessionPool.getSession();
@@ -510,8 +510,7 @@ export abstract class BrowserCrawler<
                  * @see https://playwright.dev/docs/api/class-browser/#browser-new-context
                  * @see https://github.com/puppeteer/puppeteer/blob/main/docs/api.md
                  */
-                // @ts-ignore
-                launchContext.launchOptions.ignoreHTTPSErrors = true;
+                (launchContext.launchOptions as Dictionary).ignoreHTTPSErrors = true;
             }
         }
 

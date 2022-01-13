@@ -100,7 +100,7 @@ export interface SessionOptions {
 export class Session {
     readonly id: string;
     private maxAgeSecs: number;
-    private userData: Dictionary;
+    userData: Dictionary;
     private maxErrorScore: number;
     private errorScoreDecrement: number;
     private createdAt: Date;

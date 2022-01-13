@@ -3,7 +3,7 @@ import { jsonStringifyExtended } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
 import { ApifyClient } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
-import { KeyValueStoreClient } from '@apify/storage-local/dist/resource_clients/key_value_store';
+import { KeyValueStoreClient } from '@apify/storage-local/dist/resource_clients/key_value_store'; // TODO expose
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';

@@ -161,7 +161,6 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    // @ts-ignore ow is messing up the types
     const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls || []);
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
@@ -175,7 +174,6 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
     const requests = createRequests(requestOptions, pseudoUrlInstances);
-    // @ts-ignore ow is messing up the types (`requestQueue`)
     return addRequestsToQueueInBatches(requests, requestQueue);
 }
 
@@ -432,7 +430,6 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
 }
 
 /**
- * @todo we should not use `Page` type here
  * @ignore
  */
 async function restoreHistoryNavigationAndSaveCapturedUrls(page: Page, requests: Set<string>): Promise<void> {
