@@ -65,6 +65,9 @@ module.exports = {
                         path: 'packages/dummy',
                     },
                 ],
+                typedocOptions: {
+                    excludeExternals: false,
+                },
             },
         ],
     ],
@@ -74,7 +77,7 @@ module.exports = {
             versionPersistence: 'localStorage',
         },
         navbar: {
-            hideOnScroll: false,
+            hideOnScroll: true,
             title: 'Apify SDK',
             logo: {
                 src: 'img/apify_logo.svg',
