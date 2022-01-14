@@ -1,5 +1,5 @@
 import { addTimeoutToPromise } from '@apify/timeout';
-import { betterSetInterval, betterClearInterval } from '@apify/utilities';
+import { betterSetInterval, betterClearInterval, BetterIntervalID } from '@apify/utilities';
 import { Log } from '@apify/log';
 import ow from 'ow';
 import { Snapshotter, SnapshotterOptions } from './snapshotter';
@@ -191,8 +191,8 @@ export class AutoscaledPool {
     private snapshotter: Snapshotter;
     private systemStatus: SystemStatus;
     private poolPromise!: Promise<unknown>;
-    private autoscaleInterval!: ReturnType<typeof betterSetInterval>;
-    private maybeRunInterval!: ReturnType<typeof betterSetInterval>;
+    private autoscaleInterval!: BetterIntervalID;
+    private maybeRunInterval!: BetterIntervalID;
     private queryingIsTaskReady!: boolean;
     private queryingIsFinished!: boolean;
 
@@ -338,13 +338,11 @@ export class AutoscaledPool {
         await this.snapshotter.start();
 
         // This interval checks the system status and updates the desired concurrency accordingly.
-        // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
         this.autoscaleInterval = betterSetInterval(this._autoscale, this.autoscaleIntervalMillis);
 
         // This is here because if we scale down to let's say 1, then after each promise is finished
         // this._maybeRunTask() doesn't trigger another one. So if that 1 instance gets stuck it results
         // in the actor getting stuck and even after scaling up it never triggers another promise.
-        // @ts-expect-error TODO: The type for the function in betterSetInterval seems wrong
         this.maybeRunInterval = betterSetInterval(this._maybeRunTask, this.maybeRunIntervalMillis);
 
         try {

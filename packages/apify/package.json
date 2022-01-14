@@ -54,7 +54,7 @@
         "@apify/ps-tree": "^1.1.4",
         "@apify/storage-local": "^2.0.1",
         "@apify/timeout": "^0.2.1",
-        "@apify/utilities": "^1.2.2",
+        "@apify/utilities": "^1.2.5",
         "@types/mime-types": "^2.1.1",
         "@types/stream-json": "^1.7.1",
         "apify-client": "^2.0.8-beta.0",

@@ -205,17 +205,18 @@ const FACEBOOK_REGEX_STRING = `(?<!\\w)(?:http(?:s)?:\\/\\/)?(?:www.)?(?:faceboo
 const YOUTUBE_REGEX_STRING = '(?:https?:\\/\\/)?(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch|v|embed|user|c(?:hannel)?)(?:\\.php)?(?:\\?[^ ]*v=|\\/))([a-zA-Z0-9\\-_]+)';
 
 try {
-    // @ts-expect-error tmp is never used, we just need to create the regexps to trigger the validation
-    let tmp = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
-    tmp = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
-    tmp = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
-    tmp = new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
-    tmp = new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
-    tmp = new RegExp(TWITTER_REGEX_STRING, 'ig');
-    tmp = new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
-    tmp = new RegExp(FACEBOOK_REGEX_STRING, 'ig');
-    tmp = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
-    tmp = new RegExp(YOUTUBE_REGEX_STRING, 'ig');
+    /* eslint-disable no-new */
+    new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
+    new RegExp(LINKEDIN_REGEX_STRING, 'ig');
+    new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
+    new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
+    new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
+    new RegExp(TWITTER_REGEX_STRING, 'ig');
+    new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
+    new RegExp(FACEBOOK_REGEX_STRING, 'ig');
+    new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
+    new RegExp(YOUTUBE_REGEX_STRING, 'ig');
+    /* eslint-enable */
 } catch (e) {
     // Older versions of Node don't support negative lookbehind and lookahead expressions.
     // Show warning instead of failing.
