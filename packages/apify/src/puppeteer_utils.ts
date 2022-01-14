@@ -240,7 +240,7 @@ export async function blockRequests(page: Page, options: BlockRequestsOptions = 
 
     const patternsToBlock = [...urlPatterns, ...extraUrlPatterns];
 
-    // @ts-ignore using private `_client` property
+    // @ts-expect-error using private `_client` property
     await page._client.send('Network.setBlockedURLs', { urls: patternsToBlock }); // eslint-disable-line no-underscore-dangle
 }
 

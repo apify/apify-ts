@@ -565,8 +565,7 @@ function createRequestDebugInfo(
         retryCount: request.retryCount,
         errorMessages: request.errorMessages,
         // Puppeteer response has .status() function and NodeJS response, statusCode property.
-        // @ts-ignore how to type this properly? maybe a type guard?
-        statusCode: _.isFunction(response.status) ? response.status() : response.statusCode,
+        statusCode: 'status' in response && _.isFunction(response.status) ? response.status() : (response as IncomingMessage).statusCode,
         ...additionalFields,
     };
 }

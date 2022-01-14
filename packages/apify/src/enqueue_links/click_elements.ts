@@ -170,7 +170,6 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     });
     let requestOptions = createRequestOptions(interceptedRequests);
     if (transformRequestFunction) {
-        // @ts-ignore ow is messing up the types (`transformRequestFunction`), plus the `requestOptions` type is not compatible
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
     const requests = createRequests(requestOptions, pseudoUrlInstances);
@@ -297,33 +296,39 @@ function createFrameNavigatedHandler(page: Page, requests: Set<string>): (frame:
     };
 }
 
+interface ApifyWindow {
+    stateHistory: unknown[][];
+    length: number;
+    state: Dictionary;
+    go(): void;
+    back(): void;
+    forward(): void;
+    pushState(...args: unknown[]): void;
+    replaceState(...args: unknown[]): void;
+}
+
 /**
  * @ignore
  */
 async function preventHistoryNavigation(page: Page): Promise<unknown> {
     /* istanbul ignore next */
     return page.evaluate(() => {
-        // @ts-ignore assign to window
-        window.__originalHistory__ = window.history; // eslint-disable-line no-underscore-dangle
-        // @ts-ignore dark magic
-        delete window.history; // Simple override does not work.
-        // @ts-ignore dark magic
-        window.history = {
+        (window as unknown as Dictionary).__originalHistory__ = window.history; // eslint-disable-line no-underscore-dangle
+        delete (window as unknown as Dictionary).history; // Simple override does not work.
+        (window as unknown as Dictionary).history = {
             stateHistory: [],
             length: 0,
             state: {},
             go() {},
             back() {},
             forward() {},
-            pushState(...args) {
-                // @ts-expect-error Overriding built-in history object
+            pushState(...args: unknown[]) {
                 this.stateHistory.push(args);
             },
-            replaceState(...args) {
-                // @ts-expect-error Overriding built-in history object
+            replaceState(...args: unknown[]) {
                 this.stateHistory.push(args);
             },
-        } as typeof window.history;
+        } as ApifyWindow;
     });
 }
 
@@ -435,17 +440,14 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
 async function restoreHistoryNavigationAndSaveCapturedUrls(page: Page, requests: Set<string>): Promise<void> {
     /* eslint-disable no-shadow */
     /* istanbul ignore next */
-    const stateHistory = await page.evaluate(() => {
-        // @ts-expect-error Custom state history property
-        // eslint-disable-next-line @typescript-eslint/no-shadow
-        const { stateHistory } = window.history;
-        // @ts-expect-error assign to const property
-        window.history = window.__originalHistory__; // eslint-disable-line no-underscore-dangle
+    const state = await page.evaluate(() => {
+        const { stateHistory } = window.history as unknown as ApifyWindow;
+        (window as unknown as Dictionary).history = (window as unknown as Dictionary).__originalHistory__; // eslint-disable-line no-underscore-dangle
         return stateHistory;
     });
-    stateHistory.forEach((args: Parameters<History['pushState']>) => {
+    state.forEach((args) => {
         try {
-            const stateUrl = args[args.length - 1];
+            const stateUrl = args[args.length - 1] as string;
             const url = new URL(stateUrl, page.url()).href;
             requests.add(JSON.stringify({ url }));
         } catch (err) {
