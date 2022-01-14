@@ -221,8 +221,6 @@ export class KeyValueStore {
         // In this case delete the record.
         if (value === null) return this.client.deleteRecord(key);
 
-        // TODO the function mutates optionsCopy, but is also used in actor.js
-        // Remove the mutation when actor.js usages are removed.
         value = maybeStringify(value, optionsCopy);
 
         return this.client.setRecord({
