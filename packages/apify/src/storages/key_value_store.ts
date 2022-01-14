@@ -154,9 +154,6 @@ export class KeyValueStore {
      */
     async getValue<T = unknown>(key: string): Promise<T | null> {
         ow(key, ow.string.nonEmpty);
-
-        // TODO: Perhaps we should add options.contentType or options.asBuffer/asString
-        //   to enforce the representation of value
         const record = await this.client.getRecord(key);
 
         return record?.value as T ?? null;
