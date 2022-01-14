@@ -366,6 +366,7 @@ describe('KeyValueStore remote', () => {
             const mockListKeys = jest.spyOn(store.client, 'listKeys');
             mockListKeys.mockResolvedValueOnce({
                 isTruncated: true,
+                exclusiveStartKey: 'key0',
                 nextExclusiveStartKey: 'key2',
                 items: [
                     { key: 'key1', size: 1 },
@@ -377,6 +378,7 @@ describe('KeyValueStore remote', () => {
 
             mockListKeys.mockResolvedValueOnce({
                 isTruncated: true,
+                exclusiveStartKey: 'key0',
                 nextExclusiveStartKey: 'key4',
                 items: [
                     { key: 'key3', size: 3 },
@@ -388,6 +390,7 @@ describe('KeyValueStore remote', () => {
 
             mockListKeys.mockResolvedValueOnce({
                 isTruncated: false,
+                exclusiveStartKey: 'key0',
                 nextExclusiveStartKey: null,
                 items: [{ key: 'key5', size: 5 }],
                 count: 1,

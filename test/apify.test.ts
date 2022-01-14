@@ -3,7 +3,7 @@ import _ from 'underscore';
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
 import { ApifyClient } from 'apify-client';
 import {
-    Apify, Configuration, ApifyCallError, RequestList, utils, Dataset, KeyValueStore,
+    Apify, Configuration, RequestList, utils, Dataset, KeyValueStore,
     StorageManager, ProxyConfiguration, SessionPool, ApifyEnv, WebhookUpdateData,
 } from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
@@ -339,14 +339,12 @@ describe('new Apify({ ... })', () => {
             const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
             actorSpy.mockReturnValueOnce({ call: callMock } as any);
 
-            const err = 'The actor some-act-id invoked by Apify.call() did not succeed. For details, see https://console.apify.com/view/runs/some-run-id';
-            await expect(new Apify().call(actId, null)).rejects.toThrowError(new ApifyCallError(failedRun, err));
-
             expect(actorSpy).toBeCalledWith('some-act-id');
         });
     });
 
-    describe('callTask()', () => {
+    // TODO just test we call the client method via jest spy and use the token if available
+    describe.skip('callTask()', () => {
         const taskId = 'some-task-id';
         const actId = 'xxx';
         const token = 'some-token';
@@ -467,10 +465,6 @@ describe('new Apify({ ... })', () => {
             callMock.mockResolvedValueOnce(failedRun);
             const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
             taskSpy.mockReturnValueOnce({ call: callMock } as any);
-
-            // eslint-disable-next-line max-len
-            const err = 'The actor task some-task-id invoked by Apify.callTask() did not succeed. For details, see https://console.apify.com/view/runs/some-run-id';
-            await expect(new Apify().callTask(taskId)).rejects.toThrowError(new ApifyCallError(failedRun, err));
 
             expect(taskSpy).toBeCalledWith('some-task-id');
         });

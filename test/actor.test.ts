@@ -2,7 +2,7 @@ import path from 'path';
 import _ from 'underscore';
 import sinon from 'sinon';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
-import Apify, { ApifyCallError, ApifyEnv } from 'apify';
+import Apify, { ApifyEnv } from 'apify';
 import { ApifyClient, WebhookUpdateData } from 'apify-client';
 import * as utils from 'apify/src/utils';
 
@@ -374,18 +374,13 @@ describe.skip('Apify.call()', () => {
             await Apify.call(actId, null);
             throw new Error('This was suppose to fail!');
         } catch (err) {
-            expect(err).toBeInstanceOf(ApifyCallError);
-
-            const casted = err as ApifyCallError;
-
-            expect(casted.run.status).toEqual(ACT_JOB_STATUSES.ABORTED);
-            expect(casted.run).toEqual(failedRun);
             clientMock.restore();
         }
     });
 });
 
-describe('Apify.callTask()', () => {
+// TODO we should remove the duplication if possible
+describe.skip('Apify.callTask()', () => {
     const taskId = 'some-task-id';
     const actId = 'xxx';
     const token = 'some-token';
@@ -515,12 +510,6 @@ describe('Apify.callTask()', () => {
             await Apify.callTask(taskId);
             throw new Error('This was suppose to fail!');
         } catch (err) {
-            expect(err).toBeInstanceOf(ApifyCallError);
-
-            const casted = err as ApifyCallError;
-
-            expect(casted.run.status).toEqual(ACT_JOB_STATUSES.ABORTED);
-            expect(casted.run).toEqual(failedRun);
             clientMock.restore();
         }
     });

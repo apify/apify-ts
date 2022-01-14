@@ -1,15 +1,14 @@
 import ow from 'ow';
 import path from 'path';
 import _ from 'underscore';
-import { ACT_JOB_STATUSES, ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
-import { TaskStartOptions, Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
+import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
+import { Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
 import { addCharsetToContentType, apifyClient, isAtHome, logSystemInfo, newClient, printOutdatedSdkWarning, sleep, snakeCaseToCamelCase } from './utils';
 import { maybeStringify } from './storages/key_value_store';
 import { ActorRunWithOutput, Awaitable, Dictionary } from './typedefs';
-import { ApifyCallError } from './errors';
 import { MetamorphOptions } from './apify';
 
 const METAMORPH_AFTER_SLEEP_MILLIS = 300000;
@@ -306,7 +305,6 @@ export interface CallOptions {
  *
  * The result of the function is an {@link ActorRun} object
  * that contains details about the actor run and its output (if any).
- * If the actor run fails, the function throws the {@link ApifyCallError} exception.
  *
  * If you want to run an actor task rather than an actor, please use the
  * {@link Apify.callTask} function instead.
@@ -332,7 +330,6 @@ export interface CallOptions {
  *  JSON and its content type set to `application/json; charset=utf-8`.
  *  Otherwise the `options.contentType` parameter must be provided.
  * @param [options]
- * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
 export async function call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
     const { token, ...rest } = options;
@@ -403,7 +400,6 @@ export interface CallTaskOptions {
  *
  * The result of the function is an {@link ActorRun} object
  * that contains details about the actor run and its output (if any).
- * If the actor run failed, the function fails with {@link ApifyCallError} exception.
  *
  * Note that an actor task is a saved input configuration and options for an actor.
  * If you want to run an actor directly rather than an actor task, please use the
@@ -429,76 +425,12 @@ export interface CallTaskOptions {
  *  JSON and its content type set to `application/json; charset=utf-8`.
  *  Provided input will be merged with actor task input.
  * @param [options]
- * @throws {ApifyCallError} If the run did not succeed, e.g. if it failed or timed out.
  */
 export async function callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
-    ow(taskId, ow.string);
-    ow(input, ow.optional.object);
-    ow(options, ow.object.exactShape({
-        token: ow.optional.string,
-        memoryMbytes: ow.optional.number.not.negative,
-        timeoutSecs: ow.optional.number.not.negative,
-        build: ow.optional.string,
-        waitSecs: ow.optional.number.not.negative,
-        fetchOutput: ow.optional.boolean,
-        disableBodyParser: ow.optional.boolean,
-        webhooks: ow.optional.array.ofType<WebhookUpdateData>(ow.object),
-    }));
-
-    const {
-        token,
-        fetchOutput = true,
-        disableBodyParser = false,
-        memoryMbytes,
-        timeoutSecs,
-        ...callTaskOpts
-    } = options;
-
-    const castedCallTaskOptions = callTaskOpts as TaskStartOptions;
-
-    castedCallTaskOptions.memory = memoryMbytes;
-    castedCallTaskOptions.timeout = timeoutSecs;
-
+    const { token, ...rest } = options;
     const client = token ? newClient({ token }) : apifyClient;
-    // Start task and wait for run to finish if waitSecs is provided
-    let run;
-    try {
-        run = await client.task(taskId).call(input, castedCallTaskOptions);
-    } catch (err) {
-        if ((err as Error).message.startsWith('Waiting for run to finish')) {
-            throw new ApifyCallError({ id: run?.id, actId: run?.actId }, 'Apify.call() failed, cannot fetch actor run details from the server');
-        }
-        throw err;
-    }
 
-    if (isRunUnsuccessful(run.status)) {
-        const message = `The actor task ${taskId} invoked by Apify.callTask() did not succeed. For details, see https://console.apify.com/view/runs/${run.id}`;
-        throw new ApifyCallError(run, message);
-    }
-
-    // Finish if output is not requested or run haven't finished.
-    if (!fetchOutput || run.status !== ACT_JOB_STATUSES.SUCCEEDED) return run;
-
-    // Fetch output.
-    let getRecordOptions = {} as { buffer: true };
-    if (disableBodyParser) getRecordOptions = { buffer: true };
-
-    const actorOutput = await client.keyValueStore(run.defaultKeyValueStoreId).getRecord('OUTPUT', getRecordOptions);
-    const result: ActorRunWithOutput = { ...run };
-    if (actorOutput) {
-        result.output = {
-            body: actorOutput.value,
-            contentType: actorOutput.contentType,
-        };
-    }
-
-    return result;
-}
-
-function isRunUnsuccessful(status: typeof ACT_JOB_STATUSES[keyof typeof ACT_JOB_STATUSES]) {
-    return status !== ACT_JOB_STATUSES.SUCCEEDED
-        && status !== ACT_JOB_STATUSES.RUNNING
-        && status !== ACT_JOB_STATUSES.READY;
+    return client.task(taskId).call(input, rest);
 }
 
 /**
