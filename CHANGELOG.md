@@ -6,6 +6,7 @@
 - `Apify.waitForRunToFinish()` has been removed, use `ApifyClient.waitForFinish()` instead
 - (internal) `QueueOperationInfo.request` is no longer available
 - (internal) `Request.handledAt` is now string date in ISO format
+- (perf/internal) `Request.inProgress` and `Request.reclaimed` are now `Set`s instead of dictionaries
 
 2.2.2 / 2022/01/xx
 ====================

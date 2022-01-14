@@ -365,8 +365,8 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
  * Helper function that returns the first key from plain object.
  * @ignore
  */
-export function getFirstKey<K extends PropertyKey>(dict: Record<K, unknown>): K | undefined {
-    for (const key in dict) { // eslint-disable-line
+export function getFirstKey<K extends PropertyKey>(dict: Set<K>): K | undefined {
+    for (const key of dict) { // eslint-disable-line
         return key;
     }
 

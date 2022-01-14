@@ -278,19 +278,20 @@ describe('Apify.RequestList', () => {
         expect(request4.url).toBe('https://example.com/4');
         expect(request5.url).toBe('https://example.com/5');
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/1': true,
-                'https://example.com/2': true,
-                'https://example.com/3': true,
-                'https://example.com/4': true,
-                'https://example.com/5': true,
-            },
+            inProgress: [
+                'https://example.com/1',
+                'https://example.com/2',
+                'https://example.com/3',
+                'https://example.com/4',
+                'https://example.com/5',
+            ],
             nextIndex: 5,
             nextUniqueKey: 'https://example.com/6',
         });
         expect(await requestList.isEmpty()).toBe(false);
         expect(await requestList.isFinished()).toBe(false);
-        expect(requestList.inProgress).toMatchObject(requestList.reclaimed);
+        expect(requestList.inProgress.size).toBe(5);
+        expect(requestList.reclaimed.size).toBe(0);
 
         //
         // Mark 1st, 2nd handled
@@ -303,11 +304,11 @@ describe('Apify.RequestList', () => {
         await requestList.reclaimRequest(request4);
 
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/3': true,
-                'https://example.com/4': true,
-                'https://example.com/5': true,
-            },
+            inProgress: [
+                'https://example.com/3',
+                'https://example.com/4',
+                'https://example.com/5',
+            ],
             nextIndex: 5,
             nextUniqueKey: 'https://example.com/6',
         });
@@ -322,10 +323,10 @@ describe('Apify.RequestList', () => {
         await requestList.markRequestHandled(request5);
 
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/3': true,
-                'https://example.com/4': true,
-            },
+            inProgress: [
+                'https://example.com/3',
+                'https://example.com/4',
+            ],
             nextIndex: 5,
             nextUniqueKey: 'https://example.com/6',
         });
@@ -345,9 +346,9 @@ describe('Apify.RequestList', () => {
         await requestList.markRequestHandled(request4);
 
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/3': true,
-            },
+            inProgress: [
+                'https://example.com/3',
+            ],
             nextIndex: 5,
             nextUniqueKey: 'https://example.com/6',
         });
@@ -362,7 +363,7 @@ describe('Apify.RequestList', () => {
         await requestList.markRequestHandled(request3);
 
         expect(requestList.getState()).toEqual({
-            inProgress: {},
+            inProgress: [],
             nextIndex: 5,
             nextUniqueKey: 'https://example.com/6',
         });
@@ -379,9 +380,9 @@ describe('Apify.RequestList', () => {
         expect(request6.url).toBe('https://example.com/6');
         expect(await requestList.fetchNextRequest()).toBe(null);
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/6': true,
-            },
+            inProgress: [
+                'https://example.com/6',
+            ],
             nextIndex: 6,
             nextUniqueKey: null,
         });
@@ -396,9 +397,9 @@ describe('Apify.RequestList', () => {
         await requestList.reclaimRequest(request6);
 
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/6': true,
-            },
+            inProgress: [
+                'https://example.com/6',
+            ],
             nextIndex: 6,
             nextUniqueKey: null,
         });
@@ -414,9 +415,9 @@ describe('Apify.RequestList', () => {
 
         expect(reclaimed6.url).toBe('https://example.com/6');
         expect(requestList.getState()).toEqual({
-            inProgress: {
-                'https://example.com/6': true,
-            },
+            inProgress: [
+                'https://example.com/6',
+            ],
             nextIndex: 6,
             nextUniqueKey: null,
         });
@@ -431,7 +432,7 @@ describe('Apify.RequestList', () => {
         await requestList.markRequestHandled(reclaimed6);
 
         expect(requestList.getState()).toEqual({
-            inProgress: {},
+            inProgress: [],
             nextIndex: 6,
             nextUniqueKey: null,
         });
@@ -602,11 +603,11 @@ describe('Apify.RequestList', () => {
         const state = {
             nextIndex: 2,
             nextUniqueKey: 'https://www.anychart.com',
-            inProgress: {
-                'https://www.ams360.com': true,
-                'https://www.anybus.com': true,
-                'https://www.anychart.com': true,
-            },
+            inProgress: [
+                'https://www.ams360.com',
+                'https://www.anybus.com',
+                'https://www.anychart.com',
+            ],
         };
 
         const requestList = new Apify.RequestList({
