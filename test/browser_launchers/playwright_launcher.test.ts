@@ -154,6 +154,7 @@ describe('Apify.launchPlaywright()', () => {
         let browser;
         const opts = {
             useChrome: true,
+            launchOptions: { timeout: 60e3 },
         };
 
         try {
