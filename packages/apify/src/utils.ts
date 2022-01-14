@@ -362,18 +362,6 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
 }
 
 /**
- * Helper function that returns the first key from plain object.
- * @ignore
- */
-export function getFirstKey<K extends PropertyKey>(dict: Set<K>): K | undefined {
-    for (const key of dict) { // eslint-disable-line
-        return key;
-    }
-
-    return undefined;
-}
-
-/**
  * Gets a typical path to Chrome executable, depending on the current operating system.
  * @ignore
  */
