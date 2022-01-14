@@ -1,7 +1,6 @@
 import ow, { ArgumentError } from 'ow';
-import _ from 'underscore';
 import { ACTOR_EVENT_NAMES_EX } from './constants';
-import { Request, RequestOptions } from './request'; // eslint-disable-line import/no-duplicates
+import { Request, RequestOptions } from './request';
 import { events } from './events';
 import log from './utils_log';
 import { getFirstKey, publicUtils } from './utils';
@@ -231,7 +230,7 @@ export class RequestList {
     /**
      * Array of all requests from all sources, in the order as they appeared in sources.
      * All requests in the array have distinct uniqueKey!
-     * @internal (TODO or should be public maybe?)
+     * @internal
      */
     requests: Request[] = [];
 
@@ -244,23 +243,21 @@ export class RequestList {
     /**
      * Dictionary of requests that were returned by fetchNextRequest().
      * The key is uniqueKey, value is true.
-     * TODO: Change this to Set
-     * @internal (TODO or should be public maybe?)
+     * @internal
      */
-    inProgress: Record<string, boolean> = {};
+    inProgress = new Set<string>();
 
     /**
      * Dictionary of requests for which reclaimRequest() was called.
      * The key is uniqueKey, value is true.
      * Note that reclaimedRequests is always a subset of inProgress!
-     * TODO: Change this to Set
-     * @internal (TODO or should be public maybe?)
+     * @internal
      */
-    reclaimed: Record<string, boolean> = {};
+    reclaimed = new Set<string>();
 
     /**
      * Starts as true because until we handle the first request, the list is effectively persisted by doing nothing.
-     * @internal (TODO or should be public maybe?)
+     * @internal
      */
     isStatePersisted = true;
 
@@ -460,7 +457,7 @@ export class RequestList {
         }
 
         const deleteFromInProgress: string[] = [];
-        _.keys(state.inProgress).forEach((uniqueKey) => {
+        state.inProgress.forEach((uniqueKey) => {
             const index = this.uniqueKeyToIndex[uniqueKey];
             if (typeof index !== 'number') {
                 throw new Error('The state object is not consistent with RequestList. Unknown uniqueKey is present in the state.');
@@ -469,6 +466,9 @@ export class RequestList {
                 deleteFromInProgress.push(uniqueKey);
             }
         });
+
+        this.nextIndex = state.nextIndex;
+        this.inProgress = new Set(state.inProgress);
 
         // WORKAROUND:
         // It happened to some users that state object contained something like:
@@ -487,16 +487,13 @@ export class RequestList {
             this.log.warning('RequestList\'s in-progress field is not consistent, skipping invalid in-progress entries', {
                 deleteFromInProgress,
             });
-            _.each(deleteFromInProgress, (uniqueKey) => {
-                delete state.inProgress[uniqueKey];
-            });
+            for (const uniqueKey of deleteFromInProgress) {
+                this.inProgress.delete(uniqueKey);
+            }
         }
 
-        this.nextIndex = state.nextIndex;
-        this.inProgress = state.inProgress;
-
         // All in-progress requests need to be re-crawled
-        this.reclaimed = _.clone(this.inProgress);
+        this.reclaimed = new Set(this.inProgress);
     }
 
     /**
@@ -533,7 +530,7 @@ export class RequestList {
             nextUniqueKey: this.nextIndex < this.requests.length
                 ? this.requests[this.nextIndex].uniqueKey
                 : null,
-            inProgress: this.inProgress,
+            inProgress: [...this.inProgress],
         };
     }
 
@@ -545,7 +542,7 @@ export class RequestList {
     async isEmpty(): Promise<boolean> {
         this._ensureIsInitialized();
 
-        return !getFirstKey(this.reclaimed) && this.nextIndex >= this.requests.length;
+        return this.reclaimed.size === 0 && this.nextIndex >= this.requests.length;
     }
 
     /**
@@ -554,7 +551,7 @@ export class RequestList {
     async isFinished(): Promise<boolean> {
         this._ensureIsInitialized();
 
-        return !getFirstKey(this.inProgress) && this.nextIndex >= this.requests.length;
+        return this.inProgress.size === 0 && this.nextIndex >= this.requests.length;
     }
 
     /**
@@ -571,7 +568,7 @@ export class RequestList {
         // First return reclaimed requests if any.
         const uniqueKey = getFirstKey(this.reclaimed);
         if (uniqueKey) {
-            delete this.reclaimed[uniqueKey];
+            this.reclaimed.delete(uniqueKey);
             const index = this.uniqueKeyToIndex[uniqueKey];
             return this.requests[index];
         }
@@ -579,7 +576,7 @@ export class RequestList {
         // Otherwise return next request.
         if (this.nextIndex < this.requests.length) {
             const request = this.requests[this.nextIndex];
-            this.inProgress[request.uniqueKey] = true;
+            this.inProgress.add(request.uniqueKey);
             this.nextIndex++;
             this.isStatePersisted = false;
             return request;
@@ -598,7 +595,7 @@ export class RequestList {
         this._ensureInProgressAndNotReclaimed(uniqueKey);
         this._ensureIsInitialized();
 
-        delete this.inProgress[uniqueKey];
+        this.inProgress.delete(uniqueKey);
         this.isStatePersisted = false;
     }
 
@@ -613,7 +610,7 @@ export class RequestList {
         this._ensureInProgressAndNotReclaimed(uniqueKey);
         this._ensureIsInitialized();
 
-        this.reclaimed[uniqueKey] = true;
+        this.reclaimed.add(uniqueKey);
     }
 
     /**
@@ -713,10 +710,10 @@ export class RequestList {
      * Checks that request is not reclaimed and throws an error if so.
      */
     protected _ensureInProgressAndNotReclaimed(uniqueKey: string): void {
-        if (!this.inProgress[uniqueKey]) {
+        if (!this.inProgress.has(uniqueKey)) {
             throw new Error(`The request is not being processed (uniqueKey: ${uniqueKey})`);
         }
-        if (this.reclaimed[uniqueKey]) {
+        if (this.reclaimed.has(uniqueKey)) {
             throw new Error(`The request was already reclaimed (uniqueKey: ${uniqueKey})`);
         }
     }
@@ -745,7 +742,7 @@ export class RequestList {
     handledCount(): number {
         this._ensureIsInitialized();
 
-        return this.nextIndex - _.size(this.inProgress);
+        return this.nextIndex - this.inProgress.size;
     }
 
     /**
@@ -899,8 +896,8 @@ export interface RequestListState {
     /** Key of the next request to be processed. */
     nextUniqueKey: string | null;
 
-    /** An object mapping request keys to a boolean value representing whether they are being processed at the moment. */
-    inProgress: Record<string, boolean>;
+    /** Array of request keys representing those that being processed at the moment. */
+    inProgress: string[];
 
 }
 
