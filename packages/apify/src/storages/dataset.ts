@@ -1,5 +1,4 @@
 import ow from 'ow';
-import _ from 'underscore';
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-client';
 import { ApifyStorageLocal } from '@apify/storage-local';
@@ -58,20 +57,23 @@ export function chunkBySize(items: string[], limitBytes: number): string[] {
     if (!items.length) return [];
     if (items.length === 1) return items;
 
-    let lastChunkBytes = 2; // Add 2 bytes for [] wrapper.
-    const chunks: string[][] = [];
     // Split payloads into buckets of valid size.
-    for (const payload of items) { // eslint-disable-line
+    let lastChunkBytes = 2; // Add 2 bytes for [] wrapper.
+    const chunks: (string | string[])[] = [];
+
+    for (const payload of items) {
         const bytes = Buffer.byteLength(payload);
 
         if (bytes <= limitBytes && (bytes + 2) > limitBytes) {
             // Handle cases where wrapping with [] would fail, but solo object is fine.
-            // @ts-expect-error TODO what is this exactly doing? chunks is a mix of `string` and `string[]`?
             chunks.push(payload);
             lastChunkBytes = bytes;
         } else if (lastChunkBytes + bytes <= limitBytes) {
-            if (!Array.isArray(_.last(chunks))) chunks.push([]); // ensure array
-            _.last(chunks)!.push(payload);
+            // ensure array
+            if (!Array.isArray(chunks[chunks.length - 1])) {
+                chunks.push([]);
+            }
+            (chunks[chunks.length - 1] as string[]).push(payload);
             lastChunkBytes += bytes + 1; // Add 1 byte for ',' separator.
         } else {
             chunks.push([payload]);
