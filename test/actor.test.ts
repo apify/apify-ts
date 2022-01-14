@@ -515,7 +515,8 @@ describe.skip('Apify.callTask()', () => {
     });
 });
 
-describe('Apify.metamorph()', () => {
+// TODO we should remove the duplication if possible
+describe.skip('Apify.metamorph()', () => {
     const runId = 'some-run-id';
     const actorId = 'some-actor-id';
     const targetActorId = 'some-target-actor-id';

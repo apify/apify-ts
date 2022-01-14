@@ -429,7 +429,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on('request', activityHandler);
         page.on('framenavigated', activityHandler);
-        // @ts-expect-error Private / untyped event?
+        // @ts-expect-error browser event
         page.on('targetcreated', newTabTracker);
     });
 }
