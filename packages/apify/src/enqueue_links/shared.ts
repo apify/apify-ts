@@ -2,7 +2,7 @@ import { URL } from 'url';
 import _ from 'underscore';
 import { PseudoUrl } from '../pseudo_url';
 import { Request, RequestOptions } from '../request';
-import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
+import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 
 const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
 
@@ -70,15 +70,7 @@ export function createRequests(requestOptions: (string | RequestOptions)[], pseu
  */
 export function createRequestOptions(sources: (string | Record<string, unknown>)[]): RequestOptions[] {
     return sources
-        .map((src) => {
-            const reqOpts = typeof src === 'string'
-                ? { url: src }
-                : src as { url: string; userData?: Record<string, unknown> };
-            // TODO Remove with v1, there are examples
-            //   which depend on userData existing here.
-            reqOpts.userData = { ...reqOpts.userData };
-            return reqOpts;
-        })
+        .map((src) => (typeof src === 'string' ? { url: src } : src as unknown as RequestOptions))
         .filter(({ url }) => {
             try {
                 return new URL(url).href;

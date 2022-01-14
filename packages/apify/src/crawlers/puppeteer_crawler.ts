@@ -202,7 +202,7 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions, { browserPlu
         ow(options, 'PuppeteerCrawlerOptions', ow.object.exactShape(PuppeteerCrawler.optionsShape));
 
         const {
-            launchContext = {}, // @TODO: should not launcher be inside launchContext
+            launchContext = {},
             browserPoolOptions = {} as BrowserPoolOptions,
             proxyConfiguration,
             ...browserCrawlerOptions
