@@ -443,6 +443,10 @@ export async function callTask(taskId: string, input?: Dictionary, options: Call
  * @param [options]
  */
 export async function metamorph(targetActorId: string, input: unknown, options: MetamorphOptions = {}): Promise<void> {
+    if (!isAtHome()) {
+        throw new Error('metamorph() can be used only on Apify platform');
+    }
+
     const { customAfterSleepMillis = 300_000, ...metamorphOpts } = options;
     const runId = process.env[ENV_VARS.ACTOR_RUN_ID]!;
     await apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);

@@ -266,6 +266,10 @@ export class Apify {
      * @param [options]
      */
     async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
+        if (!this.isAtHome()) {
+            throw new Error('metamorph() can be used only on Apify platform');
+        }
+
         const { customAfterSleepMillis = this.config.get('metamorphAfterSleepMillis'), ...metamorphOpts } = options;
         const runId = this.config.get('actorRunId')!;
         await this.newClient().run(runId).metamorph(targetActorId, input, metamorphOpts);
