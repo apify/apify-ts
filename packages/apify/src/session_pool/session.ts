@@ -22,12 +22,13 @@ const DEFAULT_SESSION_MAX_AGE_SECS = 3000;
  */
 export interface SessionState {
     id: string;
-    cookieJar: CookieJar;
+    cookieJar: CookieJar.Serialized;
     userData: object;
     errorScore: number;
     maxErrorScore: number;
     errorScoreDecrement: number;
     usageCount: number;
+    maxUsageCount: number;
     expiresAt: string;
     createdAt: string;
 }
@@ -223,8 +224,6 @@ export class Session {
     getState(): SessionState {
         return {
             id: this.id,
-            // @ts-expect-error Type 'Serialized' is missing the following properties from type 'CookieJar':
-            // setCookie, setCookieSync, getCookies, getCookiesSync, and 11 more.
             cookieJar: this.cookieJar.toJSON(),
             userData: this.userData,
             maxErrorScore: this.maxErrorScore,
