@@ -269,7 +269,7 @@ describe('Apify.utils.puppeteer', () => {
                     // do nothing
                     }
                 });
-                await page.goto('https://www.wikipedia.org/', { waitUntil: 'networkidle0' });
+                await page.goto('https://www.wikipedia.org/', { waitUntil: 'networkidle0', timeout: 60e3 });
                 await page.close();
                 return downloadedBytes;
             };
