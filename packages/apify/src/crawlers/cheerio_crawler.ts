@@ -13,7 +13,7 @@ import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { parseContentTypeFromResponse } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
-import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions } from './basic_crawler';
+import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions, HandleRequest } from './basic_crawler';
 import { CrawlerExtension } from './crawler_extension';
 import { Request } from '../request';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
@@ -506,8 +506,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
-            // @ts-expect-error Function types are not acting nice
-            handleRequestFunction: handlePageFunction,
+            handleRequestFunction: handlePageFunction as HandleRequest,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
