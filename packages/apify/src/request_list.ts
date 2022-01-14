@@ -3,7 +3,7 @@ import { ACTOR_EVENT_NAMES_EX } from './constants';
 import { Request, RequestOptions } from './request';
 import { events } from './events';
 import log from './utils_log';
-import { getFirstKey, publicUtils } from './utils';
+import { publicUtils } from './utils';
 import { getValue, setValue } from './storages/key_value_store';
 import { serializeArray, createDeserialize } from './serialization';
 import { Dictionary } from './typedefs';
@@ -241,16 +241,13 @@ export class RequestList {
     private uniqueKeyToIndex: Record<string, number> = {};
 
     /**
-     * Dictionary of requests that were returned by fetchNextRequest().
-     * The key is uniqueKey, value is true.
+     * Set of `uniqueKey`s of requests that were returned by fetchNextRequest().
      * @internal
      */
     inProgress = new Set<string>();
 
     /**
-     * Dictionary of requests for which reclaimRequest() was called.
-     * The key is uniqueKey, value is true.
-     * Note that reclaimedRequests is always a subset of inProgress!
+     * Set of `uniqueKey`s of requests for which reclaimRequest() was called.
      * @internal
      */
     reclaimed = new Set<string>();
@@ -566,7 +563,7 @@ export class RequestList {
         this._ensureIsInitialized();
 
         // First return reclaimed requests if any.
-        const uniqueKey = getFirstKey(this.reclaimed);
+        const uniqueKey = this.reclaimed.values().next().value;
         if (uniqueKey) {
             this.reclaimed.delete(uniqueKey);
             const index = this.uniqueKeyToIndex[uniqueKey];
