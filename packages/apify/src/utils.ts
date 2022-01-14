@@ -18,7 +18,7 @@
 import psTree from '@apify/ps-tree';
 import { execSync } from 'child_process';
 import { ApifyClient, ApifyClientOptions } from 'apify-client';
-// @ts-ignore if we enable resolveJsonModule, we end up with `src` folder in `dist`
+// @ts-expect-error if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyClientVersion } from 'apify-client/package.json';
 import { ENV_VARS } from '@apify/consts';
 import cheerio from 'cheerio';
@@ -36,7 +36,7 @@ import rimraf from 'rimraf';
 import { IncomingMessage } from 'http';
 import { HTTPResponse as PuppeteerResponse } from 'puppeteer';
 
-// @ts-ignore if we enable resolveJsonModule, we end up with `src` folder in `dist`
+// @ts-expect-error if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyVersion } from '../package.json';
 import log from './utils_log';
 import { requestAsBrowser } from './utils_request';

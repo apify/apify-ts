@@ -80,19 +80,17 @@ async function handleRequest(request: PuppeteerRequest, interceptRequestHandlers
         Object.assign(accumulatedOverrides, overrides, { headers });
     };
 
-    // @ts-ignore the method is defined as async, but we try to assign a sync method
     request.abort = _.wrap(request.abort.bind(request), (abort, ...args) => {
         wasAborted = true;
 
         return abort(...args);
-    });
+    }) as () => Promise<void>;
 
-    // @ts-ignore the method is defined as async, but we try to assign a sync method
     request.respond = _.wrap(request.respond.bind(request), (respond, ...args) => {
         wasResponded = true;
 
         return respond(...args);
-    });
+    }) as () => Promise<void>;
 
     for (const handler of interceptRequestHandlers) {
         wasContinued = false;
