@@ -45,17 +45,6 @@ describe('log export exposes custom loggers', () => {
     });
 });
 
-describe('utils.addCharsetToContentType()', () => {
-    test('works', () => {
-        expect(utils.addCharsetToContentType('application/json; charset=something')).toBe('application/json; charset=something');
-        expect(utils.addCharsetToContentType('application/json; foo=bar; charset=something')).toBe('application/json; foo=bar; charset=something');
-        expect(utils.addCharsetToContentType('application/json; foo=bar')).toBe('application/json; charset=utf-8; foo=bar');
-        expect(utils.addCharsetToContentType('application/json')).toBe('application/json; charset=utf-8');
-        expect(utils.addCharsetToContentType(null)).toBe(null);
-        expect(utils.addCharsetToContentType(undefined)).toEqual(undefined);
-    });
-});
-
 describe('utils.isDocker()', () => {
     test('works for dockerenv && cgroup', async () => {
         const statStub = sinon

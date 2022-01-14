@@ -119,22 +119,6 @@ export const logSystemInfo = () => {
  */
 export const apifyClient = newClient();
 
-/**
- * Adds charset=utf-8 to given content type if this parameter is missing.
- * @ignore
- */
-export const addCharsetToContentType = (contentType?: string): string | undefined => {
-    if (!contentType) return contentType;
-
-    const parsed = contentTypeParser.parse(contentType);
-
-    if (parsed.parameters.charset) return contentType;
-
-    parsed.parameters.charset = 'utf-8';
-
-    return contentTypeParser.format(parsed);
-};
-
 let isDockerPromiseCache: Promise<boolean>;
 
 const createIsDockerPromise = async () => {

@@ -5,12 +5,12 @@ import { WebhookOptions, CallOptions, CallTaskOptions, getEnv, UserFunc, ApifyEn
 import { initializeEvents, stopEvents } from './events';
 import { StorageManager, StorageManagerOptions } from './storages/storage_manager';
 import { Dataset } from './storages/dataset';
-import { KeyValueStore, RecordOptions, maybeStringify } from './storages/key_value_store';
+import { KeyValueStore, RecordOptions } from './storages/key_value_store';
 import { RequestList, RequestListOptions, REQUESTS_PERSISTENCE_KEY, STATE_PERSISTENCE_KEY } from './request_list';
 import { RequestQueue } from './storages/request_queue';
 import { SessionPool, SessionPoolOptions } from './session_pool/session_pool';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
-import { addCharsetToContentType, logSystemInfo, printOutdatedSdkWarning, publicUtils, sleep } from './utils';
+import { logSystemInfo, printOutdatedSdkWarning, publicUtils, sleep } from './utils';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { Configuration, ConfigurationOptions } from './configuration';
@@ -266,34 +266,12 @@ export class Apify {
      * @param [options]
      */
     async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
-        ow(targetActorId, ow.string);
-        // input can be anything, no reason to validate
-        ow(options, ow.object.exactShape({
-            contentType: ow.optional.string.nonEmpty,
-            build: ow.optional.string,
-            customAfterSleepMillis: ow.optional.number.not.negative,
-        }));
-
-        const {
-            customAfterSleepMillis,
-            ...metamorphOpts
-        } = options;
-
-        const actorId = this.config.get('actorId');
-        const runId = this.config.get('actorRunId');
-        if (!actorId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_ID} must be provided!`);
-        if (!runId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} must be provided!`);
-
-        if (input) {
-            metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType!);
-            input = maybeStringify(input, metamorphOpts);
-        }
-
+        const { customAfterSleepMillis = this.config.get('metamorphAfterSleepMillis'), ...metamorphOpts } = options;
+        const runId = this.config.get('actorRunId')!;
         await this.newClient().run(runId).metamorph(targetActorId, input, metamorphOpts);
 
         // Wait some time for container to be stopped.
-        // NOTE: option.customAfterSleepMillis is used in tests
-        await sleep(customAfterSleepMillis || this.config.get('metamorphAfterSleepMillis'));
+        await sleep(customAfterSleepMillis);
     }
 
     /**

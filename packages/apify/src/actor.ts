@@ -6,12 +6,9 @@ import { Webhook, WebhookEventType, WebhookUpdateData } from 'apify-client';
 import log from './utils_log';
 import { EXIT_CODES } from './constants';
 import { initializeEvents, stopEvents } from './events';
-import { addCharsetToContentType, apifyClient, isAtHome, logSystemInfo, newClient, printOutdatedSdkWarning, sleep, snakeCaseToCamelCase } from './utils';
-import { maybeStringify } from './storages/key_value_store';
+import { apifyClient, isAtHome, logSystemInfo, newClient, printOutdatedSdkWarning, sleep, snakeCaseToCamelCase } from './utils';
 import { ActorRunWithOutput, Awaitable, Dictionary } from './typedefs';
 import { MetamorphOptions } from './apify';
-
-const METAMORPH_AFTER_SLEEP_MILLIS = 300000;
 
 /**
  * Tries to parse a string with date.
@@ -446,34 +443,12 @@ export async function callTask(taskId: string, input?: Dictionary, options: Call
  * @param [options]
  */
 export async function metamorph(targetActorId: string, input: unknown, options: MetamorphOptions = {}): Promise<void> {
-    ow(targetActorId, ow.string);
-    // input can be anything, no reason to validate
-    ow(options, ow.object.exactShape({
-        contentType: ow.optional.string.nonEmpty,
-        build: ow.optional.string,
-        customAfterSleepMillis: ow.optional.number.not.negative,
-    }));
-
-    const {
-        customAfterSleepMillis,
-        ...metamorphOpts
-    } = options;
-
-    const actorId = process.env[ENV_VARS.ACTOR_ID];
-    const runId = process.env[ENV_VARS.ACTOR_RUN_ID];
-    if (!actorId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_ID} must be provided!`);
-    if (!runId) throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} must be provided!`);
-
-    if (input) {
-        metamorphOpts.contentType = addCharsetToContentType(metamorphOpts.contentType!);
-        input = maybeStringify(input, metamorphOpts);
-    }
-
+    const { customAfterSleepMillis = 300_000, ...metamorphOpts } = options;
+    const runId = process.env[ENV_VARS.ACTOR_RUN_ID]!;
     await apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);
 
     // Wait some time for container to be stopped.
-    // NOTE: option.customAfterSleepMillis is used in tests
-    await sleep(customAfterSleepMillis || METAMORPH_AFTER_SLEEP_MILLIS);
+    await sleep(customAfterSleepMillis);
 }
 
 export interface WebhookOptions {
