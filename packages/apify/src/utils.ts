@@ -273,8 +273,7 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
         // Query both root and child processes
         const processes = await psTreePromised(process.pid, true);
 
-        // @ts-expect-error TODO: fixed after typing psTree
-        processes.forEach((rec) => {
+        processes.forEach((rec: Dictionary<string>) => {
             // Skip the 'ps' or 'wmic' commands used by ps-tree to query the processes
             if (rec.COMMAND === 'ps' || rec.COMMAND === 'WMIC.exe') {
                 return;
@@ -492,16 +491,12 @@ function htmlToText(html: string | CheerioRoot): string {
     //  Also, it seems this doesn't work well in CheerioScraper, e.g. htmlToText($)
     //  produces really text with a lot of HTML elements in it. Let's just deprecate this sort of usage,
     //  and make the parameter "htmlOrCheerioElement"
-    /**
-     * @type {cheerio.Root}
-     * @ignore
-     */
     const $ = typeof html === 'function' ? html : cheerio.load(html, { decodeEntities: true });
     let text = '';
 
     // TODO: the type for elems is very annoying to work with.
-    // The correct type is Node[] from cheerio but it needs a lot more casting in each branch, or alternatively,
-    // use the is* methods from domhandler (isText, isTag, isComment, etc.)
+    //  The correct type is Node[] from cheerio but it needs a lot more casting in each branch, or alternatively,
+    //  use the is* methods from domhandler (isText, isTag, isComment, etc.)
     // @ts-expect-error
     const process = (elems) => {
         const len = elems ? elems.length : 0;
