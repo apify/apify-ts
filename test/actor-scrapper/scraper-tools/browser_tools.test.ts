@@ -1,22 +1,23 @@
-const fs = require('fs-extra');
-const path = require('path');
-const sinon = require('sinon');
-const Apify = require('apify');
-
-const browserTools = require('@apify/scraper-tools/browser_tools');
+import { browserTools } from '@apify/scraper-tools';
+import Apify from 'apify';
+import fs from 'fs-extra';
+import path from 'path';
+import sinon from 'sinon';
 
 const { utils: { log } } = Apify;
 
 const LOCAL_STORAGE_DIR = path.join(__dirname, 'tmp');
 
 describe('browserTools.', () => {
-    let browser;
-    before(async () => {
+    let browser: Awaited<ReturnType<typeof Apify['launchPuppeteer']>>;
+
+    beforeEach(async () => {
         fs.ensureDirSync(LOCAL_STORAGE_DIR);
         process.env.APIFY_LOCAL_STORAGE_DIR = LOCAL_STORAGE_DIR;
         browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
     });
-    after(async () => {
+
+    afterEach(async () => {
         fs.removeSync(LOCAL_STORAGE_DIR);
         delete process.env.APIFY_LOCAL_STORAGE_DIR;
         await browser.close();
@@ -26,8 +27,11 @@ describe('browserTools.', () => {
         it('should work', async () => {
             const page = await browser.newPage();
             const handle = await browserTools.createBrowserHandle(page, () => 42);
-            const result = await page.evaluate((browserHandle) => window[browserHandle](), handle);
-            expect(result).to.be.eql(42);
+            const result = await page.evaluate((browserHandle: string) => {
+                // @ts-expect-error We are not extending the window interface but we are extending the object
+                return window[browserHandle]();
+            }, handle);
+            expect(result).toBe(42);
         });
     });
 
@@ -36,43 +40,47 @@ describe('browserTools.', () => {
             const page = await browser.newPage();
 
             const instance = await Apify.openKeyValueStore();
-            const methods = ['getValue', 'setValue'];
+            const methods = ['getValue', 'setValue'] as const;
 
             const handlesMap = await browserTools.createBrowserHandlesForObject(page, instance, methods);
 
-            expect(handlesMap.getValue).to.be.an('object');
-            expect(handlesMap.getValue.value).to.be.a('string');
-            expect(handlesMap.getValue.type).to.be.eql('METHOD');
-            expect(handlesMap.setValue).to.be.an('object');
-            expect(handlesMap.setValue.value).to.be.a('string');
-            expect(handlesMap.setValue.type).to.be.eql('METHOD');
-            expect(handlesMap.setValue.value).not.to.be.eql(handlesMap.getValue.value);
+            expect(typeof handlesMap.getValue).toBe('object');
+            expect(typeof handlesMap.getValue.value).toBe('string');
+            expect(handlesMap.getValue.type).toBe('METHOD');
+            expect(typeof handlesMap.setValue).toBe('object');
+            expect(typeof handlesMap.setValue.value).toBe('string');
+            expect(handlesMap.setValue.type).toBe('METHOD');
+            expect(handlesMap.setValue.value).not.toStrictEqual(handlesMap.getValue.value);
 
-            await page.evaluate(async (setValueHandle) => {
+            await page.evaluate(async (setValueHandle: string) => {
+                // @ts-expect-error We are not extending the window interface but we are extending the object
                 await window[setValueHandle]('123', 'hello', { contentType: 'text/plain' });
             }, handlesMap.setValue.value);
             const value = await instance.getValue('123');
-            expect(value).to.be.eql('hello');
+            expect(value).toBe('hello');
 
             await instance.setValue('321', 'bye', { contentType: 'text/plain' });
-            const valueFromBrowser = await page.evaluate(async (getValueHandle) => {
+            const valueFromBrowser = await page.evaluate(async (getValueHandle: string) => {
+                // @ts-expect-error We are not extending the window interface but we are extending the object
                 return window[getValueHandle]('321');
             }, handlesMap.getValue.value);
-            expect(valueFromBrowser).to.be.eql('bye');
+            expect(valueFromBrowser).toBe('bye');
 
             const nodeContext = {
                 one: await instance.getValue('123'),
                 three: await instance.getValue('321'),
             };
 
-            const browserContext = await page.evaluate(async (gvh) => {
+            const browserContext = await page.evaluate(async (gvh: string) => {
                 return {
+                    // @ts-expect-error We are not extending the window interface but we are extending the object
                     one: await window[gvh]('123'),
+                    // @ts-expect-error We are not extending the window interface but we are extending the object
                     three: await window[gvh]('321'),
                 };
             }, handlesMap.getValue.value);
 
-            expect(nodeContext).to.be.eql(browserContext);
+            expect(nodeContext).toStrictEqual(browserContext);
         });
     });
 
@@ -102,10 +110,10 @@ describe('browserTools.', () => {
                 await new Promise((r) => setTimeout(r, 10));
             });
 
-            expect(debug.withArgs('debug').calledOnce).to.be.eql(true);
-            expect(info.withArgs('info').calledThrice).to.be.eql(true);
-            expect(warning.withArgs('warning').calledOnce).to.be.eql(true);
-            expect(error.withArgs('error').called).to.be.eql(false);
+            expect(debug.withArgs('debug').calledOnce).toBe(true);
+            expect(info.withArgs('info').calledThrice).toBe(true);
+            expect(warning.withArgs('warning').calledOnce).toBe(true);
+            expect(error.withArgs('error').called).toBe(false);
 
             page = await browser.newPage();
             browserTools.dumpConsole(page, { logErrors: true });
@@ -115,7 +123,7 @@ describe('browserTools.', () => {
                 await new Promise((r) => setTimeout(r, 10));
             });
 
-            expect(error.withArgs('error').calledOnce).to.be.eql(true);
+            expect(error.withArgs('error').calledOnce).toBe(true);
 
             await browser.close();
         });

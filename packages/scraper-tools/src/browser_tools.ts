@@ -1,4 +1,4 @@
-import Apify, { Dictionary, utils } from 'apify';
+import Apify, { utils } from 'apify';
 import { Page } from 'puppeteer';
 import { inspect } from 'util';
 import { RESOURCE_LOAD_ERROR_MESSAGE, SNAPSHOT } from './consts';
@@ -29,7 +29,7 @@ export async function createBrowserHandle(page: Page, fun: (...args: unknown[]) 
  * Looks up a property descriptor for the given key in
  * the given object and its prototype chain.
  */
-export function getPropertyDescriptor(target: object, key: string): PropertyDescriptor | null {
+export function getPropertyDescriptor(target: object, key: PropertyKey): PropertyDescriptor | null {
     const descriptor = Reflect.getOwnPropertyDescriptor(target, key);
     if (descriptor) {
         return descriptor;
@@ -47,7 +47,10 @@ export function getPropertyDescriptor(target: object, key: string): PropertyDesc
  *
  * @param getters as TS will build all module methods as getters, we need to whitelist what are actual getters here
  */
-export async function createBrowserHandlesForObject(page: Page, instance: object, properties: string[], getters: string[] = []) {
+export async function createBrowserHandlesForObject<Instance extends object, Keys extends keyof Instance = keyof Instance>(
+    page: Page,
+    instance: Instance, properties: readonly Keys[], getters: readonly PropertyKey[] = [],
+) {
     const promises = properties.map((prop) => {
         const descriptor = getPropertyDescriptor(instance, prop);
         if (!descriptor) {
@@ -72,10 +75,10 @@ export async function createBrowserHandlesForObject(page: Page, instance: object
     });
 
     const props = await Promise.all(promises);
-    return props.reduce<Dictionary<{ value: unknown; type: 'METHOD' | 'VALUE' | 'GETTER' }>>((mappings, { name, value, type }) => {
+    return props.reduce((mappings, { name, value, type }) => {
         mappings[name] = { value, type };
         return mappings;
-    }, {});
+    }, {} as { [K in Keys]: { value: Instance[K] extends (...args: any[]) => any ? string : Instance[K]; type: 'METHOD' | 'VALUE' | 'GETTER' } });
 }
 
 export interface DumpConsoleOptions {

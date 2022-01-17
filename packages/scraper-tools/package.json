@@ -42,6 +42,6 @@
         "@types/fs-extra": "^9.0.13",
         "@types/puppeteer": "^5.4.4",
         "apify": "file:../apify",
-        "puppeteer": "^9.1.1"
+        "puppeteer": "^10"
     }
 }
