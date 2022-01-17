@@ -6,7 +6,7 @@
 ### Breaking changes:
 - `Apify.call()` is now just a shortcut for running `ApifyClient.actor(actorId).call(input, options)`, while also taking the token inside env vars into account
 - `Apify.callTask()` is now just a shortcut for running `ApifyClient.task(taskId).call(input, options)`, while also taking the token inside env vars into account
-- `Apify.metamorph()` is now just a shortcut for running `ApifyClient.task(taskId).call(input, options)`, while also taking the ACTOR_RUN_ID inside env vars into account
+- `Apify.metamorph()` is now just a shortcut for running `ApifyClient.task(taskId).metamorph(input, options)`, while also taking the ACTOR_RUN_ID inside env vars into account
 - `Apify.waitForRunToFinish()` has been removed, use `ApifyClient.waitForFinish()` instead
 - (internal) `QueueOperationInfo.request` is no longer available
 - (internal) `Request.handledAt` is now string date in ISO format
