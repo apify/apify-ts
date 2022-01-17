@@ -1,9 +1,16 @@
+/* eslint-disable max-classes-per-file */
 /* istanbul ignore next */
+
+// TODO: properly type this file, mostly copy paste from context.ts in scraper-tools
+// @ts-nocheck
+
+import type { Dictionary, KeyValueStore, RequestOptions, RequestQueueOperationOptions } from 'apify';
+
 /**
  * Command to be evaluated for Browser side code injection.
  * @param apifyNamespace
  */
-module.exports = (apifyNamespace) => {
+export function createBundle(apifyNamespace: string) {
     (function (global, namespace) {
         if (typeof window[namespace] !== 'object') window[namespace] = {};
         /**
@@ -15,7 +22,7 @@ module.exports = (apifyNamespace) => {
          * tools.createBrowserHandlesForObject function.
          */
         class NodeProxy {
-            constructor(config) {
+            constructor(config: Dictionary<{ value: unknown; type: 'METHOD' | 'VALUE' | 'GETTER' }>) {
                 if (!config || typeof config !== 'object') {
                     throw new Error('NodeProxy: Parameter config of type Object must be provided.');
                 }
@@ -23,12 +30,15 @@ module.exports = (apifyNamespace) => {
                 Object.entries(config)
                     .forEach(([key, { value, type }]) => {
                         if (type === 'METHOD') {
-                            this[key] = (...args) => global[value](...args);
+                            // @ts-expect-error
+                            this[key] = (...args: unknown[]) => global[value](...args);
                         } else if (type === 'GETTER') {
                             Object.defineProperty(this, key, {
+                                // @ts-expect-error
                                 get: () => global[value](),
                             });
                         } else if (type === 'VALUE') {
+                            // @ts-expect-error
                             this[key] = value;
                         } else {
                             throw new Error(`Unsupported function type: ${type} for function: ${key}.`);
@@ -40,9 +50,8 @@ module.exports = (apifyNamespace) => {
         /**
          * Exposed factory.
          * @param config
-         * @return {NodeProxy}
          */
-        global[namespace].createNodeProxy = (config) => new NodeProxy(config);
+        global[namespace].createNodeProxy = (config: Dictionary<{ value: unknown; type: 'METHOD' | 'VALUE' | 'GETTER' }>) => new NodeProxy(config);
 
         const setup = Symbol('crawler-setup');
         const internalState = Symbol('request-internal-state');
@@ -57,14 +66,8 @@ module.exports = (apifyNamespace) => {
          * but should not be exposed to the user thus they are hidden
          * using a Symbol to prevent the user from easily accessing
          * and manipulating them.
-         *
-         * @param {Object} options
-         * @param {Object} options.crawlerSetup
-         * @param {Object} options.browserHandles
-         * @param {Object} options.pageFunctionArguments
          */
         class Context {
-            /* eslint-disable class-methods-use-this */
             constructor(options) {
                 const {
                     crawlerSetup,
@@ -116,12 +119,12 @@ module.exports = (apifyNamespace) => {
                 this.waitFor = this.waitFor.bind(this);
             }
 
-            async getValue(...args) {
-                return this[internalState].keyValueStore.getValue(...args);
+            getValue<T>(...args: Parameters<KeyValueStore['getValue']>) {
+                return this[internalState].keyValueStore.getValue<T>(...args);
             }
 
-            async setValue(...args) {
-                return this[internalState].keyValueStore.setValue(...args);
+            setValue<T>(...args: Parameters<KeyValueStore['setValue']>) {
+                return this[internalState].keyValueStore.setValue<T>(...args as [key: string, value: T | null, options?: RecordOptions]);
             }
 
             async saveSnapshot() {
@@ -134,7 +137,7 @@ module.exports = (apifyNamespace) => {
                 return global[handle]();
             }
 
-            async enqueueRequest(requestOpts = {}, options = {}) {
+            async enqueueRequest(requestOpts: RequestOptions = {} as RequestOptions, options: RequestQueueOperationOptions = {}) {
                 const defaultRequestOpts = {
                     useExtendedUniqueKey: true,
                     keepUrlFragment: this.input.keepUrlFragments,
@@ -155,7 +158,7 @@ module.exports = (apifyNamespace) => {
                 return this[internalState].requestQueue.addRequest(newRequest, options);
             }
 
-            async waitFor(selectorOrNumberOrFunction, options = {}) {
+            async waitFor(selectorOrNumberOrFunction: string | number | ((...args: unknown[]) => unknown), options = {}) {
                 if (!options || typeof options !== 'object') throw new Error('Parameter options must be an Object');
                 const type = typeof selectorOrNumberOrFunction;
                 if (type === 'string') return this._waitForSelector(selectorOrNumberOrFunction, options);
@@ -177,29 +180,34 @@ module.exports = (apifyNamespace) => {
                 }
             }
 
-            async _waitForMillis(millis) {
+            async _waitForMillis(millis: number) {
                 return new Promise((res) => setTimeout(res, millis));
             }
 
-            async _waitForFunction(predicate, options = {}) {
+            async _waitForFunction(predicate: () => boolean, options: PoolOptions = {}) {
                 try {
                     await this._poll(predicate, options);
                 } catch (err) {
-                    if (/timeout of \d+ms exceeded/.test(err.message)) {
-                        throw new Error(`Timeout Error: waiting for function failed: ${err.message}`);
+                    const casted = err as Error;
+                    if (/timeout of \d+ms exceeded/.test(casted.message)) {
+                        throw new Error(`Timeout Error: waiting for function failed: ${casted.message}`);
                     }
                     throw err;
                 }
             }
 
-            async _poll(predicate, options = {}) {
+            async _poll(predicate: () => boolean, options: PoolOptions = {}) {
                 const {
                     pollingIntervalMillis = 50,
                     timeoutMillis = 20000,
                 } = options;
-                return new Promise((resolve, reject) => {
-                    const handler = () => {
-                        return predicate() ? resolve() : setTimeout(handler);
+                return new Promise<void>((resolve, reject) => {
+                    const handler = (): void => {
+                        if (predicate()) {
+                            resolve();
+                        } else {
+                            setTimeout(handler);
+                        }
                     };
                     const pollTimeout = setTimeout(handler, pollingIntervalMillis);
                     setTimeout(() => {
@@ -220,3 +228,8 @@ module.exports = (apifyNamespace) => {
         };
     }(window, apifyNamespace));
 };
+
+export interface PoolOptions {
+    pollingIntervalMillis?: number;
+    timeoutMillis?: number;
+}

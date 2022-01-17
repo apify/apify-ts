@@ -30,10 +30,7 @@ import { EnqueueLinksOptions } from 'apify/dist/utils';
 import { GlobalStore } from './global_store';
 import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts';
 import SCHEMA from '../../INPUT_SCHEMA.json';
-
-// TODO: decide how we build bundle.browser
-// eslint-disable-next-line
-const createBundle = require('./bundle.browser');
+import { createBundle } from './bundle.browser';
 
 const SESSION_STORE_NAME = 'APIFY-WEB-SCRAPER-SESSION-STORE';
 
