@@ -5,6 +5,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
 import Hightlights from '../components/Highlights';
+import PropTypes from 'prop-types';
 
 function Hero() {
     return (
@@ -65,6 +66,52 @@ function Features() {
     );
 }
 
+const example = `const Apify = require('apify');
+
+Apify.main(async () => {
+    const requestQueue = await Apify.openRequestQueue();
+    await requestQueue.addRequest({ url: 'https://www.iana.org/' });
+
+    const crawler = new Apify.PuppeteerCrawler({
+        requestQueue,
+        handlePageFunction: async ({ request, page }) => {
+            const title = await page.title();
+            ${'console.log(`Tilte of ${request.url}`: ${title});'}
+            await Apify.utils.enqueueLinks({
+                requestQueue,
+                page,
+                pseudoUrls: [
+                    'https://www.iana.org/[.*]',
+                ],
+            });
+        },
+    });
+});`;
+
+function Code({ value }) {
+    return (
+        <pre>{value}</pre>
+    );
+}
+
+Code.propTypes = {
+    value: PropTypes.string,
+};
+
+function ActorExample() {
+    return (
+        <section className="container">
+            <h2>Try it out</h2>
+            <p>Install Apify SDK into a Node.js project. You must have Node.js 10 or higher installed.</p>
+            <Code value="npm install puppeteer" />
+            <p>Copy the following code into a file in the project, for example <code>main.js</code>:</p>
+            <Code value={example} />
+            <p>Execute the following command in the project's folder and watch it recursively crawl IANA with Puppeteer and Chromium.</p>
+            <Code value="node main.js" />
+        </section>
+    );
+}
+
 export default function Home() {
     const { siteConfig } = useDocusaurusContext();
     return (
@@ -74,6 +121,7 @@ export default function Home() {
             <Hero />
             <Hightlights />
             <Features />
+            <ActorExample />
         </Layout>
     );
 }

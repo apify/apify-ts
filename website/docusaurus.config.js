@@ -139,7 +139,7 @@ module.exports = {
                             to: 'docs/examples/crawl-multiple-urls',
                         },
                         {
-                            label: 'API Reference',
+                            label: 'API reference',
                             to: 'docs/api/apify',
                         },
                     ],
@@ -148,6 +148,10 @@ module.exports = {
                     title: 'Community',
                     items: [
                         // { label: "User Showcase", to: "users" }
+                        {
+                            label: 'Discord',
+                            href: 'https://discord.com/invite/jyEM2PRvMU',
+                        },
                         {
                             label: 'Stack Overflow',
                             href: 'https://stackoverflow.com/questions/tagged/apify',
@@ -190,6 +194,8 @@ module.exports = {
             logo: {
                 src: 'img/apify_logo.svg',
                 href: '/',
+                width: '60px',
+                height: '60px',
             },
         },
         algolia: {

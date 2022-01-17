@@ -13,6 +13,20 @@
   --ifm-link-color: hsl(214, 84%, 50%);
   --ifm-link-hover-decoration: none;
   --ifm-heading-margin-top: var(--ifm-heading-margin-bottom);
+  --ifm-navbar-item-padding-horizontal: 1.75rem;
+  --ifm-code-padding-horizontal: 0.4rem;
+  --ifm-code-padding-vertical: 0.2rem;
+  --ifm-footer-background-color: #1a1b22;
+  --ifm-footer-title-color: #f2f3fb;
+  --ifm-footer-link-color: #f2f3fb;
+}
+
+.footer__bottom a {
+    opacity: 0.75;
+}
+
+.footer__copyright {
+    color: var(--ifm-footer-title-color);
 }
 
 .navbar__title {
