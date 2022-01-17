@@ -7,11 +7,17 @@ import { RequestMetadata } from './tools';
 export interface CrawlerSetupOptions {
     rawInput: string;
     env: ApifyEnv;
-    // TODO: This doesn't seem to be used in any of the scrapers
-    globalStore: Map<string, unknown>;
+    globalStore: Map<string, unknown> | MapLike<string, unknown>;
     requestQueue: RequestQueue;
     keyValueStore: KeyValueStore;
     customData: unknown;
+}
+
+export interface MapLike<K, V> extends Omit<Map<K, V>, 'values' | 'keys' | 'entries'| 'set'> {
+    keys: () => K[];
+    values: () => V[];
+    entries: () => [K, V][];
+    set: (key: K, value: V) => MapLike<K, V>;
 }
 
 export interface ContextOptions {
@@ -46,7 +52,7 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
     public readonly input: any;
     public readonly env: ApifyEnv;
     public readonly customData: unknown;
-    public readonly globalStore: Map<string, unknown>;
+    public readonly globalStore: Map<string, unknown> | MapLike<string, unknown>;
 
     constructor(options: Options) {
         const {

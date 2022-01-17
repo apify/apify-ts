@@ -55,6 +55,8 @@ export interface ProxyConfigurationOptions {
      */
     apifyProxyCountry?: string;
 
+    useApifyProxy?: boolean;
+
     /**
      * An array of custom proxy URLs to be rotated.
      * Custom proxies are not compatible with Apify Proxy and an attempt to use both
@@ -523,9 +525,7 @@ export class ProxyConfiguration {
  * { useApifyProxy: false }
  * ```
  */
-export async function createProxyConfiguration(
-    proxyConfigurationOptions: ProxyConfigurationOptions & { useApifyProxy?: boolean } = {},
-): Promise<ProxyConfiguration | undefined> {
+export async function createProxyConfiguration(proxyConfigurationOptions: ProxyConfigurationOptions = {}): Promise<ProxyConfiguration | undefined> {
     // Compatibility fix for Input UI where proxy: None returns { useApifyProxy: false }
     // Without this, it would cause proxy to use the zero config / auto mode.
     const { useApifyProxy, ...options } = proxyConfigurationOptions;

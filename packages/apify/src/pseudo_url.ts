@@ -148,3 +148,7 @@ export class PseudoUrl {
         return new Request(options);
     }
 }
+
+export type PseudoUrlObject = Pick<RequestOptions, 'headers' | 'method' | 'payload' | 'userData'> & {
+    purl: string | RegExp;
+}

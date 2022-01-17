@@ -5,7 +5,7 @@ export interface CrawlerSetup {
     createCrawler: () => Promise<BasicCrawler>;
 }
 
-export type CrawlerSetupConstructor = new (input: unknown) => CrawlerSetup;
+export type CrawlerSetupConstructor = new (input: any) => CrawlerSetup;
 
 export function runActor(CrawlerSetup: CrawlerSetupConstructor) {
     Apify.main(async () => {

@@ -1,5 +1,5 @@
 import Ajv, { AnySchema } from 'ajv';
-import { Dictionary, Request, Session, utils } from 'apify';
+import { Dictionary, PuppeteerCookie, Request, Session, utils } from 'apify';
 import { randomBytes as callbackRandomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -35,7 +35,7 @@ export function evalFunctionOrThrow(funcString: string): (...args: unknown[]) =>
  * @param hooksString
  * @param paramName
  */
-export function evalFunctionArrayOrThrow(hooksString: string, paramName: string): ((...args: unknown[]) => unknown)[] {
+export function evalFunctionArrayOrThrow(hooksString: string, paramName: string): ((...args: unknown[]) => any)[] {
     let arr;
 
     try {
@@ -105,7 +105,7 @@ export function ensureMetaData(request: Request) {
 export function createDatasetPayload(
     request: Request,
     response: Parameters<typeof utils['createRequestDebugInfo']>[1],
-    pageFunctionResult: Dictionary | Dictionary[],
+    pageFunctionResult?: Dictionary | Dictionary[],
     isError = false,
 ) {
     // Null and undefined do not prevent the payload
@@ -155,7 +155,7 @@ export function isPlainObject(item: unknown): item is Record<string, unknown> {
  * Attempts to load Page Function from disk if it's not available
  * on INPUT.
  */
-export function maybeLoadPageFunctionFromDisk(input: Dictionary, root: string) {
+export function maybeLoadPageFunctionFromDisk(input: Dictionary<any>, root: string) {
     if (input.pageFunction) return;
 
     const pageFunctionPath = join(root, PAGE_FUNCTION_FILENAME);
@@ -198,7 +198,7 @@ export function logPerformance(request: Request, title: string, hrtime: [number,
  * format and finds if any of them are missing from
  * the session cookies for a given URL.
  */
-export function getMissingCookiesFromSession(session: Session, cookies: { name: string }[], url: string) {
+export function getMissingCookiesFromSession(session: Session, cookies: PuppeteerCookie[], url: string) {
     const sessionCookies = session.getPuppeteerCookies(url);
     return cookies.filter((c) => {
         const sessionHasCookie = sessionCookies.some((sc) => sc.name === c.name);

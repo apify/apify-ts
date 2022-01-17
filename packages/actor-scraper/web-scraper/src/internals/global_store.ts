@@ -3,37 +3,33 @@
  * to retain data through page navigations and browser instances. It limits Map's functionality
  * because it's currently impossible for functions and object references to cross Node-Browser threshold.
  */
-class GlobalStore extends Map {
-    /* eslint-disable class-methods-use-this */
-    get(key) {
+export class GlobalStore<V> extends Map<string, V> {
+    override get(key: string) {
         if (typeof key !== 'string') throw new Error('GlobalStore#get parameter "key" must be a string.');
         return super.get(key);
     }
 
-    set(key, value) {
+    override set(key: string, value: V) {
         if (typeof key !== 'string') throw new Error('GlobalStore#set parameter "key" must be a string.');
         return super.set(key, value);
     }
 
-    forEach() {
+    override forEach(): never {
         throw new Error('GlobalStore#forEach function is not available due to underlying technology limitations.');
     }
 
-    values() {
+    // @ts-expect-error Overriding return type
+    override values() {
         return Array.from(super.values());
     }
 
-    keys() {
+    // @ts-expect-error Overriding return type
+    override keys() {
         return Array.from(super.keys());
     }
 
-    entries() {
+    // @ts-expect-error Overriding return type
+    override entries() {
         return Array.from(super.entries());
     }
-
-    get size() {
-        return super.size;
-    }
 }
-
-module.exports = GlobalStore;

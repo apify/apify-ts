@@ -1,83 +1,101 @@
-const Apify = require('apify');
-const { URL } = require('url');
-const contentType = require('content-type');
-const {
+import Apify, {
+    ApifyEnv,
+    AutoscaledPool,
+    Awaitable,
+    Dataset,
+    Dictionary,
+    HandleFailedRequestInput,
+    KeyValueStore,
+    PuppeteerCrawlContext,
+    PuppeteerCrawler,
+    PuppeteerCrawlerOptions,
+    Request,
+    RequestList,
+    RequestQueue,
+} from 'apify';
+import { URL } from 'url';
+import contentType from 'content-type';
+import {
     tools,
     browserTools,
-    constants: { META_KEY, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, PROXY_ROTATION_NAMES, SESSION_MAX_USAGE_COUNTS },
-} = require('@apify/scraper-tools');
-const DevToolsServer = require('devtools-server');
+    constants as scraperToolsConstants,
+    CrawlerSetupOptions,
+    createContext,
+} from '@apify/scraper-tools';
+// TODO: type devtools module
+// @ts-ignore
+import DevToolsServer from 'devtools-server';
+import { HTTPResponse, Page, Serializable } from 'puppeteer';
+import { EnqueueLinksOptions } from 'apify/dist/utils';
+import { GlobalStore } from './global_store';
+import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts';
+import SCHEMA from '../../INPUT_SCHEMA.json';
 
-const { CHROME_DEBUGGER_PORT } = require('./consts');
+// TODO: decide how we build bundle.browser
+// eslint-disable-next-line
 const createBundle = require('./bundle.browser');
-const SCHEMA = require('../INPUT_SCHEMA');
-const GlobalStore = require('./global_store');
 
 const SESSION_STORE_NAME = 'APIFY-WEB-SCRAPER-SESSION-STORE';
-const RUN_MODES = {
-    PRODUCTION: 'PRODUCTION',
-    DEVELOPMENT: 'DEVELOPMENT',
-};
-const BREAKPOINT_LOCATIONS = {
-    NONE: 'NONE',
-    BEFORE_GOTO: 'BEFORE_GOTO',
-    BEFORE_PAGE_FUNCTION: 'BEFORE_PAGE_FUNCTION',
-    AFTER_PAGE_FUNCTION: 'AFTER_PAGE_FUNCTION',
-};
+
 const MAX_CONCURRENCY_IN_DEVELOPMENT = 1;
 
 const { utils: { log, puppeteer } } = Apify;
+const { SESSION_MAX_USAGE_COUNTS, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, META_KEY } = scraperToolsConstants;
 
-/**
- * Replicates the INPUT_SCHEMA with JavaScript types for quick reference
- * and IDE type check integration.
- *
- * @typedef {Object} Input
- * @property {string} runMode
- * @property {Object[]} startUrls
- * @property {Object[]} pseudoUrls
- * @property {string} linkSelector
- * @property {boolean} keepUrlFragments
- * @property {string} pageFunction
- * @property {string} preNavigationHooks
- * @property {string} postNavigationHooks
- * @property {Object} proxyConfiguration
- * @property {boolean} debugLog
- * @property {boolean} browserLog
- * @property {boolean} injectJQuery
- * @property {boolean} injectUnderscore
- * @property {boolean} downloadMedia
- * @property {boolean} downloadCss
- * @property {number} maxRequestRetries
- * @property {number} maxPagesPerCrawl
- * @property {number} maxResultsPerCrawl
- * @property {number} maxCrawlingDepth
- * @property {number} maxConcurrency
- * @property {number} pageLoadTimeoutSecs
- * @property {number} pageFunctionTimeoutSecs
- * @property {Object} customData
- * @property {Array} initialCookies
- * @property {Array} waitUntil
- * @property {boolean} useChrome
- * @property {boolean} useStealth
- * @property {boolean} ignoreCorsAndCsp
- * @property {boolean} ignoreSslErrors
- * @property {string} proxyRotation
- * @property {string} sessionPoolName
- * @property {string} breakpointLocation
- * @property {string} datasetName
- * @property {string} keyValueStoreName
- * @property {string} requestQueueName
- */
+interface PageContext {
+    apifyNamespace: string;
+    skipLinks: boolean;
+    timers: {
+        start: [number, number];
+        navStart?: [number, number];
+    };
+    browserHandles?: Awaited<ReturnType<CrawlerSetup['_injectBrowserHandles']>>;
+}
+
+interface Output {
+    pageFunctionResult?: Dictionary;
+    pageFunctionError?: tools.ErrorLike;
+    requestFromBrowser: Request;
+}
 
 /**
  * Holds all the information necessary for constructing a crawler
  * instance and creating a context for a pageFunction invocation.
  */
-class CrawlerSetup {
-    /* eslint-disable class-methods-use-this */
-    constructor(input) {
-        this.name = 'Web Scraper';
+export class CrawlerSetup implements CrawlerSetupOptions {
+    name = 'Web Scraper';
+    rawInput: string;
+    env: ApifyEnv;
+    /**
+     * Used to store data that persist navigations
+     */
+    globalStore = new GlobalStore<unknown>();
+    requestQueue: Apify.RequestQueue;
+    keyValueStore: Apify.KeyValueStore;
+    customData: unknown;
+    input: Input;
+    maxSessionUsageCount: number;
+    evaledPreNavigationHooks: ((...args: unknown[]) => Awaitable<void>)[];
+    evaledPostNavigationHooks: ((...args: unknown[]) => Awaitable<void>)[];
+
+    /**
+     * Used to store page specific data.
+     */
+    pageContexts = new WeakMap<Page, PageContext>();
+
+    blockedUrlPatterns: string[] = [];
+    isDevRun: boolean;
+    datasetName?: string;
+    keyValueStoreName?: string;
+    requestQueueName?: string;
+
+    crawler!: PuppeteerCrawler;
+    requestList!: RequestList;
+    dataset!: Dataset;
+    pagesOutputted!: number;
+    private initPromise: Promise<void>;
+
+    constructor(input: Input) {
         // Set log level early to prevent missed messages.
         if (input.debugLog) log.setLevel(log.LEVELS.DEBUG);
 
@@ -90,9 +108,6 @@ class CrawlerSetup {
         // Validate INPUT if not running on Apify Cloud Platform.
         if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
 
-        /**
-         * @type {Input}
-         */
         this.input = input;
         this.env = Apify.getEnv();
 
@@ -101,14 +116,17 @@ class CrawlerSetup {
             if (!tools.isPlainObject(purl)) throw new Error('The pseudoUrls Array must only contain Objects.');
             if (purl.userData && !tools.isPlainObject(purl.userData)) throw new Error('The userData property of a pseudoUrl must be an Object.');
         });
+
         this.input.initialCookies.forEach((cookie) => {
             if (!tools.isPlainObject(cookie)) throw new Error('The initialCookies Array must only contain Objects.');
         });
+
         this.input.waitUntil.forEach((event) => {
             if (!/^(domcontentloaded|load|networkidle2|networkidle0)$/.test(event)) {
                 throw new Error('Navigation wait until events must be valid. See tooltip.');
             }
         });
+
         // solving proxy rotation settings
         this.maxSessionUsageCount = SESSION_MAX_USAGE_COUNTS[this.input.proxyRotation];
 
@@ -126,22 +144,16 @@ class CrawlerSetup {
             this.evaledPostNavigationHooks = [];
         }
 
-        // Used to store page specific data.
-        this.pageContexts = new WeakMap();
-
-        // Used to store data that persist navigations
-        this.globalStore = new GlobalStore();
-
         // Excluded resources
-        this.blockedUrlPatterns = [];
         if (!this.input.downloadMedia) {
-            this.blockedUrlPatterns = [...this.blockedUrlPatterns,
-                '.jpg', '.jpeg', '.png', '.svg', '.gif', '.webp', '.webm', '.ico', '.woff', '.eot',
-            ];
+            this.blockedUrlPatterns = ['.jpg', '.jpeg', '.png', '.svg', '.gif', '.webp', '.webm', '.ico', '.woff', '.eot'];
         }
-        if (!this.input.downloadCss) this.blockedUrlPatterns.push('.css');
 
-        this.isDevRun = this.input.runMode === RUN_MODES.DEVELOPMENT;
+        if (!this.input.downloadCss) {
+            this.blockedUrlPatterns.push('.css');
+        }
+
+        this.isDevRun = this.input.runMode === RunMode.Development;
 
         // Named storages
         this.datasetName = this.input.datasetName;
@@ -149,39 +161,39 @@ class CrawlerSetup {
         this.requestQueueName = this.input.requestQueueName;
 
         // Initialize async operations.
-        this.crawler = null;
-        this.requestList = null;
-        this.requestQueue = null;
-        this.dataset = null;
-        this.keyValueStore = null;
+        this.crawler = null!;
+        this.requestList = null!;
+        this.requestQueue = null!;
+        this.dataset = null!;
+        this.keyValueStore = null!;
         this.initPromise = this._initializeAsync();
     }
 
-    async _initializeAsync() {
+    private async _initializeAsync() {
         // RequestList
         const startUrls = this.input.startUrls.map((req) => {
             req.useExtendedUniqueKey = true;
             req.keepUrlFragment = this.input.keepUrlFragments;
             return req;
         });
-        this.requestList = await Apify.openRequestList('WEB_SCRAPER', startUrls);
+
+        this.requestList = await RequestList.open('WEB_SCRAPER', startUrls);
 
         // RequestQueue
-        this.requestQueue = await Apify.openRequestQueue(this.requestQueueName);
+        this.requestQueue = await RequestQueue.open(this.requestQueueName);
 
         // Dataset
-        this.dataset = await Apify.openDataset(this.datasetName);
-        const { itemsCount } = await this.dataset.getInfo();
-        this.pagesOutputted = itemsCount || 0;
+        this.dataset = await Dataset.open(this.datasetName);
+        const info = await this.dataset.getInfo();
+        this.pagesOutputted = info?.itemCount ?? 0;
 
         // KeyValueStore
-        this.keyValueStore = await Apify.openKeyValueStore(this.keyValueStoreName);
+        this.keyValueStore = await KeyValueStore.open(this.keyValueStoreName);
     }
 
     /**
      * Resolves to a `PuppeteerCrawler` instance.
      * constructor.
-     * @returns {Promise<PuppeteerCrawler>}
      */
     async createCrawler() {
         await this.initPromise;
@@ -190,7 +202,7 @@ class CrawlerSetup {
         if (this.input.ignoreCorsAndCsp) args.push('--disable-web-security');
         if (this.isDevRun) args.push(`--remote-debugging-port=${CHROME_DEBUGGER_PORT}`);
 
-        const options = {
+        const options: PuppeteerCrawlerOptions = {
             handlePageFunction: this._handlePageFunction.bind(this),
             requestList: this.requestList,
             requestQueue: this.requestQueue,
@@ -210,7 +222,7 @@ class CrawlerSetup {
                         }
 
                         const devToolsServer = new DevToolsServer({
-                            containerHost: new URL(process.env.APIFY_CONTAINER_URL).host,
+                            containerHost: new URL(process.env.APIFY_CONTAINER_URL!).host,
                             devToolsServerPort: process.env.APIFY_CONTAINER_PORT,
                             chromeRemoteDebuggingPort: CHROME_DEBUGGER_PORT,
                         });
@@ -240,11 +252,11 @@ class CrawlerSetup {
 
         this._createNavigationHooks(options);
 
-        if (this.input.proxyRotation === PROXY_ROTATION_NAMES.UNTIL_FAILURE) {
-            options.sessionPoolOptions.maxPoolSize = 1;
+        if (this.input.proxyRotation === ProxyRotation.UntilFailure) {
+            options.sessionPoolOptions!.maxPoolSize = 1;
         }
         if (this.isDevRun) {
-            options.browserPoolOptions.retireBrowserAfterPageCount = Infinity;
+            options.browserPoolOptions!.retireBrowserAfterPageCount = Infinity;
         }
 
         this.crawler = new Apify.PuppeteerCrawler(options);
@@ -253,15 +265,12 @@ class CrawlerSetup {
         return this.crawler;
     }
 
-    /**
-     * @private
-     */
-    _createNavigationHooks(options) {
-        options.preNavigationHooks.push(async ({ request, page, session }, gotoOptions) => {
+    private _createNavigationHooks(options: PuppeteerCrawlerOptions) {
+        options.preNavigationHooks!.push(async ({ request, page, session }, gotoOptions) => {
             const start = process.hrtime();
 
             // Create a new page context with a new random key for Apify namespace.
-            const pageContext = {
+            const pageContext: PageContext = {
                 apifyNamespace: await tools.createRandomHash(),
                 skipLinks: false,
                 timers: { start },
@@ -309,23 +318,25 @@ class CrawlerSetup {
             if (this.isDevRun) {
                 const cdpClient = await page.target().createCDPSession();
                 await cdpClient.send('Debugger.enable');
-                if (this.input.breakpointLocation === BREAKPOINT_LOCATIONS.BEFORE_GOTO) {
+                if (this.input.breakpointLocation === BreakpointLocation.BeforeGoto) {
                     await cdpClient.send('Debugger.pause');
                 }
             }
 
             pageContext.timers.navStart = process.hrtime();
-            gotoOptions.timeout = this.input.pageLoadTimeoutSecs * 1000;
-            gotoOptions.waitUntil = this.input.waitUntil;
+            if (gotoOptions) {
+                gotoOptions.timeout = this.input.pageLoadTimeoutSecs * 1000;
+                gotoOptions.waitUntil = this.input.waitUntil;
+            }
         });
 
-        options.preNavigationHooks.push(...this.evaledPreNavigationHooks);
-        options.postNavigationHooks.push(...this.evaledPostNavigationHooks);
+        options.preNavigationHooks!.push(...this.evaledPreNavigationHooks);
+        options.postNavigationHooks!.push(...this.evaledPostNavigationHooks);
 
-        options.postNavigationHooks.push(async ({ request, page, response }) => {
+        options.postNavigationHooks!.push(async ({ request, page, response }) => {
             await this._waitForLoadEventWhenXml(page, response);
-            const pageContext = this.pageContexts.get(page);
-            tools.logPerformance(request, 'gotoFunction NAVIGATION', pageContext.timers.navStart);
+            const pageContext = this.pageContexts.get(page)!;
+            tools.logPerformance(request, 'gotoFunction NAVIGATION', pageContext.timers.navStart!);
 
             const delayStart = process.hrtime();
             await this._assertNamespace(page, pageContext.apifyNamespace);
@@ -339,11 +350,11 @@ class CrawlerSetup {
         });
     }
 
-    _handleFailedRequestFunction({ request }) {
+    private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
-        return this._handleResult(request, {}, null, true);
+        return this._handleResult(request, undefined, undefined, true);
     }
 
     /**
@@ -355,13 +366,11 @@ class CrawlerSetup {
      *
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
-     * @param {Object} crawlingContext
-     * @returns {Promise<void>}
      */
-    async _handlePageFunction(crawlingContext) {
+    private async _handlePageFunction(crawlingContext: PuppeteerCrawlContext) {
         const { request, response, page, crawler, proxyInfo } = crawlingContext;
         const start = process.hrtime();
-        const pageContext = this.pageContexts.get(page);
+        const pageContext = this.pageContexts.get(page)!;
 
         /**
          * PRE-PROCESSING
@@ -400,27 +409,30 @@ class CrawlerSetup {
          */
         tools.logPerformance(request, 'handlePageFunction PREPROCESSING', start);
 
-        if (this.isDevRun && this.input.breakpointLocation === BREAKPOINT_LOCATIONS.BEFORE_PAGE_FUNCTION) {
+        if (this.isDevRun && this.input.breakpointLocation === BreakpointLocation.BeforePageFunction) {
             await page.evaluate(async () => { debugger; }); // eslint-disable-line no-debugger
         }
+
         const startUserFn = process.hrtime();
 
         const namespace = pageContext.apifyNamespace;
-        const output = await page.evaluate(async (ctxOpts, namespc) => {
-            /* eslint-disable no-shadow */
-            const context = window[namespc].createContext(ctxOpts);
-            const output = {};
+        const output = await page.evaluate(async (ctxOpts: typeof contextOptions, namespc: string) => {
+            const context: ReturnType<typeof createContext>['context'] = window[namespc].createContext(ctxOpts);
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            const output = {} as Output;
             try {
                 output.pageFunctionResult = await window[namespc].pageFunction(context);
             } catch (err) {
-                output.pageFunctionError = Object.getOwnPropertyNames(err)
+                const casted = err as Error;
+                output.pageFunctionError = (Object.getOwnPropertyNames(casted) as (keyof Error)[])
                     .reduce((memo, name) => {
-                        memo[name] = err[name];
+                        memo[name] = casted[name]!;
                         return memo;
-                    }, {});
+                    }, {} as { [K in keyof Error]: Error[K] });
             }
+
             // This needs to be added after pageFunction has run.
-            output.requestFromBrowser = context.request;
+            output.requestFromBrowser = context.request as Request;
 
             /**
              * Since Dates cannot travel back to Node and Puppeteer does not use .toJSON
@@ -428,19 +440,19 @@ class CrawlerSetup {
              * ourselves, but that exposes us to overridden .toJSON in the target websites.
              * This hack is not ideal, but it avoids both problems.
              */
-            function replaceAllDatesInObjectWithISOStrings(obj) {
+            function replaceAllDatesInObjectWithISOStrings(obj: Output) {
                 for (const [key, value] of Object.entries(obj)) {
                     if (value instanceof Date && typeof value.toISOString === 'function') {
-                        obj[key] = value.toISOString();
+                        Reflect.set(obj, key, value.toISOString());
                     } else if (value && typeof value === 'object') {
-                        replaceAllDatesInObjectWithISOStrings(value);
+                        replaceAllDatesInObjectWithISOStrings(value as Output);
                     }
                 }
                 return obj;
             }
 
             return replaceAllDatesInObjectWithISOStrings(output);
-        }, contextOptions, namespace);
+        }, contextOptions as unknown as Serializable, namespace);
 
         tools.logPerformance(request, 'handlePageFunction USER FUNCTION', startUserFn);
         const finishUserFn = process.hrtime();
@@ -469,30 +481,31 @@ class CrawlerSetup {
         tools.logPerformance(request, 'handlePageFunction POSTPROCESSING', finishUserFn);
         tools.logPerformance(request, 'handlePageFunction EXECUTION', start);
 
-        if (this.isDevRun && this.input.breakpointLocation === BREAKPOINT_LOCATIONS.AFTER_PAGE_FUNCTION) {
+        if (this.isDevRun && this.input.breakpointLocation === BreakpointLocation.AfterPageFunction) {
             await page.evaluate(async () => { debugger; }); // eslint-disable-line no-debugger
         }
     }
 
-    async _handleMaxResultsPerCrawl(autoscaledPool) {
+    private async _handleMaxResultsPerCrawl(autoscaledPool?: AutoscaledPool) {
         if (!this.input.maxResultsPerCrawl || this.pagesOutputted < this.input.maxResultsPerCrawl) return false;
+        if (!autoscaledPool) return false;
         log.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
         await autoscaledPool.abort();
         return true;
     }
 
-    async _handleLinks(page, request) {
+    private async _handleLinks(page: Page, request: Request) {
         if (!(this.input.linkSelector && this.requestQueue)) return;
         const start = process.hrtime();
 
-        const currentDepth = request.userData[META_KEY].depth;
+        const currentDepth = (request.userData![META_KEY] as tools.RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
         if (hasReachedMaxDepth) {
             log.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
             return;
         }
 
-        const enqueueOptions = {
+        const enqueueOptions: EnqueueLinksOptions = {
             page,
             selector: this.input.linkSelector,
             pseudoUrls: this.input.pseudoUrls,
@@ -515,7 +528,7 @@ class CrawlerSetup {
         tools.logPerformance(request, 'handleLinks EXECUTION', start);
     }
 
-    async _handleResult(request, response, pageFunctionResult, isError) {
+    private async _handleResult(request: Request, response: HTTPResponse | undefined, pageFunctionResult?: Dictionary, isError?: boolean) {
         const start = process.hrtime();
         const payload = tools.createDatasetPayload(request, response, pageFunctionResult, isError);
         await this.dataset.pushData(payload);
@@ -523,11 +536,12 @@ class CrawlerSetup {
         tools.logPerformance(request, 'handleResult EXECUTION', start);
     }
 
-    async _assertNamespace(page, namespace) {
+    private async _assertNamespace(page: Page, namespace: string) {
         try {
-            await page.waitForFunction((nmspc) => !!window[nmspc], { timeout: this.input.pageLoadTimeoutSecs * 1000 }, namespace);
+            await page.waitForFunction((nmspc: string) => !!window[nmspc], { timeout: this.input.pageLoadTimeoutSecs * 1000 }, namespace);
         } catch (err) {
-            if (err.stack.startsWith('TimeoutError')) {
+            const casted = err as Error;
+            if (casted.stack!.startsWith('TimeoutError')) {
                 throw new Error('Injection of environment into the browser context timed out. '
                     + 'If this persists even after retries, try increasing the Page load timeout input setting.');
             } else {
@@ -536,7 +550,7 @@ class CrawlerSetup {
         }
     }
 
-    async _waitForLoadEventWhenXml(page, response) {
+    private async _waitForLoadEventWhenXml(page: Page, response?: HTTPResponse) {
         // Response can sometimes be null.
         if (!response) return;
 
@@ -553,7 +567,8 @@ class CrawlerSetup {
             const timeout = this.input.pageLoadTimeoutSecs * 1000;
             await page.waitForFunction(() => document.readyState === 'complete', { timeout });
         } catch (err) {
-            if (err.stack.startsWith('TimeoutError')) {
+            const casted = err as Error;
+            if (casted.stack!.startsWith('TimeoutError')) {
                 throw new Error('Parsing of XML in the page timed out. If you\'re expecting a large XML file, '
                     + ' such as a site map, try increasing the Page load timeout input setting.');
             } else {
@@ -562,7 +577,7 @@ class CrawlerSetup {
         }
     }
 
-    async _injectBrowserHandles(page, pageContext) {
+    private async _injectBrowserHandles(page: Page, pageContext: PageContext) {
         const saveSnapshotP = browserTools.createBrowserHandle(page, () => browserTools.saveSnapshot({ page }));
         const skipLinksP = browserTools.createBrowserHandle(page, () => { pageContext.skipLinks = true; });
         const globalStoreP = browserTools.createBrowserHandlesForObject(
@@ -598,13 +613,12 @@ class CrawlerSetup {
             globalStore,
             log: logHandle,
             keyValueStore,
+            requestQueue,
         };
-        if (requestQueue) handles.requestQueue = requestQueue;
+
         return handles;
     }
 }
-
-module.exports = CrawlerSetup;
 
 function logDevRunWarning() {
     log.warning(`
