@@ -4,7 +4,7 @@ const versions = require('./versions.json');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
-    title: 'Apify',
+    title: 'Apify SDK',
     tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js.',
     url: 'https://apify.github.io',
     baseUrl: '/apify-ts/',
