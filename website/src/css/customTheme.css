@@ -1,9 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap');
+
 :root {
   --ifm-color-primary-lightest: #387AEF;
   --ifm-color-primary-lighter: #1965EC;
   --ifm-color-primary-light: #1360E7;
-  --ifm-color-primary: #1157D2;
-  --ifm-color-primary-dark: #0F4EBD;
+  --ifm-color-primary: #1672eb;
+  --ifm-color-primary-dark: #fafbfc;
   --ifm-color-primary-darker: #0E4AB3;
   --ifm-color-primary-darkest: #0C3D93;
+  --ifm-font-family-base: 'Be Vietnam Pro';
+  --ifm-font-color-base: #242736;
+  --ifm-link-color: hsl(214, 84%, 50%);
+  --ifm-link-hover-decoration: none;
+  --ifm-heading-margin-top: var(--ifm-heading-margin-bottom);
+}
+
+.navbar__title {
+    /* Replaced by SVG */
+    display: none;
+}
+
+.navbar__inner {
+    /* .container */
+    margin: 0 auto;
+    max-width: var(--ifm-container-width-xl);
+    padding: 0 var(--ifm-spacing-horizontal);
+    width: 100%;
+}
+
+.navbar__item {
+    font-weight: 600;
 }

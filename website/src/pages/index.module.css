@@ -10,6 +10,10 @@
   overflow: hidden;
 }
 
+.heroBanner {
+    text-align: left;
+}
+
 @media screen and (max-width: 966px) {
   .heroBanner {
     padding: 2rem;
@@ -20,4 +24,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.tagline {
+    font-weight: 700;
+    font-size: 38px;
+    text-align: left;
+}
+
+.tagline span {
+    color: var(--ifm-color-primary);
+}
+
+.getStarted {
+    background-color: hsl(214, 84%, 50%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.getStarted:hover {
+    color: white;
+    background-color: hsl(214, 84%, 60%);
+}
+
+.seeExamples {
+    border: 1px solid hsl(229, 0%, 87%);
+    background-color: white;
+    color: var(--ifm-font-family-base);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.seeExamples:hover {
+    background-color: hsl(229, 0%, 95%);
+    color: var(--ifm-font-color-base);
+}
+
+.heroButtons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.features > * {
+    margin: 2em 0;
 }
