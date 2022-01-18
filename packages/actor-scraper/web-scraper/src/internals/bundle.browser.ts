@@ -1,10 +1,10 @@
 /* eslint-disable max-classes-per-file */
 /* istanbul ignore next */
 
-// TODO: properly type this file, mostly copy paste from context.ts in scraper-tools
-// @ts-nocheck
-
-import type { Dictionary, KeyValueStore, RequestOptions, RequestQueueOperationOptions } from 'apify';
+import type { CrawlerSetupOptions, constants, RequestMetadata } from '@apify/scraper-tools';
+import type { ApifyEnv, Dictionary, KeyValueStore, RecordOptions, Request, RequestOptions, RequestQueue, RequestQueueOperationOptions, utils } from 'apify';
+import { Input } from './consts';
+import { GlobalStore } from './global_store';
 
 /**
  * Command to be evaluated for Browser side code injection.
@@ -68,7 +68,20 @@ export function createBundle(apifyNamespace: string) {
          * and manipulating them.
          */
         class Context {
-            constructor(options) {
+            [setup]: BrowserCrawlerSetup;
+            [internalState]: InternalState;
+            input: Input;
+            env: ApifyEnv;
+            customData: unknown;
+            response: ProvidedResponse;
+            request: Request;
+            globalStore: GlobalStore<unknown>;
+            log: typeof utils.log;
+
+            jQuery: any;
+            underscoreJs: any;
+
+            constructor(options: ContextOptions) {
                 const {
                     crawlerSetup,
                     browserHandles,
@@ -89,12 +102,12 @@ export function createBundle(apifyNamespace: string) {
                 this.input = JSON.parse(crawlerSetup.rawInput);
                 this.env = { ...crawlerSetup.env };
                 this.customData = crawlerSetup.customData;
-                this.response = pageFunctionArguments.response;
-                this.request = pageFunctionArguments.request;
+                this.response = pageFunctionArguments.response as ProvidedResponse;
+                this.request = pageFunctionArguments.request as Request;
                 // Functions are not converted so we need to add them this way
                 // to not be enumerable and thus not polluting the object.
                 Reflect.defineProperty(this.request, 'pushErrorMessage', {
-                    value(errorOrMessage) {
+                    value(this: Request, errorOrMessage: Error) {
                         // It's a simplified fake of the original function.
                         const msg = (errorOrMessage && errorOrMessage.message) || `${errorOrMessage}`;
                         this.errorMessages.push(msg);
@@ -120,20 +133,20 @@ export function createBundle(apifyNamespace: string) {
             }
 
             getValue<T>(...args: Parameters<KeyValueStore['getValue']>) {
-                return this[internalState].keyValueStore.getValue<T>(...args);
+                return this[internalState].keyValueStore!.getValue<T>(...args);
             }
 
             setValue<T>(...args: Parameters<KeyValueStore['setValue']>) {
-                return this[internalState].keyValueStore.setValue<T>(...args as [key: string, value: T | null, options?: RecordOptions]);
+                return this[internalState].keyValueStore!.setValue<T>(...args as [key: string, value: T | null, options?: RecordOptions]);
             }
 
             async saveSnapshot() {
-                const handle = this[internalState].browserHandles.saveSnapshot;
+                const handle = this[internalState].browserHandles.saveSnapshot as string;
                 return global[handle]();
             }
 
             async skipLinks() {
-                const handle = this[internalState].browserHandles.skipLinks;
+                const handle = this[internalState].browserHandles.skipLinks as string;
                 return global[handle]();
             }
 
@@ -149,32 +162,33 @@ export function createBundle(apifyNamespace: string) {
                 const defaultUserData = {
                     [metaKey]: {
                         parentRequestId: this.request.id || this.request.uniqueKey,
-                        depth: this.request.userData[metaKey].depth + 1,
+                        depth: (this.request.userData![metaKey] as RequestMetadata).depth + 1,
                     },
                 };
 
                 newRequest.userData = { ...defaultUserData, ...requestOpts.userData };
 
-                return this[internalState].requestQueue.addRequest(newRequest, options);
+                return this[internalState].requestQueue!.addRequest(newRequest, options);
             }
 
-            async waitFor(selectorOrNumberOrFunction: string | number | ((...args: unknown[]) => unknown), options = {}) {
+            async waitFor(selectorOrNumberOrFunction: string | number | ((...args: unknown[]) => boolean), options = {}) {
                 if (!options || typeof options !== 'object') throw new Error('Parameter options must be an Object');
                 const type = typeof selectorOrNumberOrFunction;
-                if (type === 'string') return this._waitForSelector(selectorOrNumberOrFunction, options);
-                if (type === 'number') return this._waitForMillis(selectorOrNumberOrFunction);
-                if (type === 'function') return this._waitForFunction(selectorOrNumberOrFunction, options);
+                if (type === 'string') return this._waitForSelector(selectorOrNumberOrFunction as string, options);
+                if (type === 'number') return this._waitForMillis(selectorOrNumberOrFunction as number);
+                if (type === 'function') return this._waitForFunction(selectorOrNumberOrFunction as (...args: unknown[]) => boolean, options);
                 throw new Error('Parameter selectorOrNumberOrFunction must be one of the said types.');
             }
 
-            async _waitForSelector(selector, options = {}) {
+            async _waitForSelector(selector: string, options = {}) {
                 try {
                     await this._poll(() => {
                         return !!global.document.querySelector(selector);
                     }, options);
                 } catch (err) {
-                    if (/timeout of \d+ms exceeded/.test(err.message)) {
-                        throw new Error(`Timeout Error: waiting for selector failed: ${err.message}`);
+                    const casted = err as Error;
+                    if (/timeout of \d+ms exceeded/.test(casted.message)) {
+                        throw new Error(`Timeout Error: waiting for selector failed: ${casted.message}`);
                     }
                     throw err;
                 }
@@ -220,16 +234,37 @@ export function createBundle(apifyNamespace: string) {
 
         /**
          * Exposed factory.
-         * @param {Object} options
-         * @returns {Context}
          */
-        global[namespace].createContext = (options) => {
+        global[namespace].createContext = (options: ContextOptions) => {
             return new Context(options);
         };
     }(window, apifyNamespace));
 };
 
-export interface PoolOptions {
+interface PoolOptions {
     pollingIntervalMillis?: number;
     timeoutMillis?: number;
+}
+
+interface InternalState {
+    browserHandles: Dictionary<string | Record<string, { value: unknown; type: 'METHOD' | 'VALUE' | 'GETTER' }>>;
+    requestQueue: RequestQueue | null;
+    keyValueStore: KeyValueStore | null;
+}
+
+interface ContextOptions {
+    crawlerSetup: BrowserCrawlerSetup;
+    browserHandles: InternalState['browserHandles'];
+    pageFunctionArguments: Dictionary<unknown>;
+}
+
+interface ProvidedResponse {
+    status: number;
+    headers: Dictionary<string>;
+}
+
+interface BrowserCrawlerSetup extends CrawlerSetupOptions {
+    injectJQuery?: boolean;
+    injectUnderscore?: boolean;
+    META_KEY: typeof constants.META_KEY;
 }

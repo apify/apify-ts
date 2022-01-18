@@ -66,6 +66,7 @@ export * from './storages/dataset';
 export * from './storages/storage_manager';
 export * from './storages/key_value_store';
 export * as utils from './utils';
+export { EnqueueLinksOptions } from './enqueue_links/enqueue_links';
 export * from './request_list';
 export * from './request';
 export * from './pseudo_url';

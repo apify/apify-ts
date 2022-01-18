@@ -4,6 +4,7 @@ import Apify, {
     Awaitable,
     Dataset,
     Dictionary,
+    EnqueueLinksOptions,
     HandleFailedRequestInput,
     KeyValueStore,
     PuppeteerCrawlContext,
@@ -26,7 +27,6 @@ import {
 // @ts-ignore
 import DevToolsServer from 'devtools-server';
 import { HTTPResponse, Page, Serializable } from 'puppeteer';
-import { EnqueueLinksOptions } from 'apify/dist/utils';
 import { GlobalStore } from './global_store';
 import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts';
 import SCHEMA from '../../INPUT_SCHEMA.json';
