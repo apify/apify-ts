@@ -34,7 +34,7 @@ RUN echo "NPM version:" && npm --version
 
 # Install default dependencies, print versions of everything
 RUN npm --quiet set progress=false \
-	&& npm install \
+	&& npm install --no-optional \
 	&& echo "Installed NPM packages:" \
 	&& (npm list || true)
 

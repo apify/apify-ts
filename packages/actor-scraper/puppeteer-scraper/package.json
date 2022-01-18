@@ -2,7 +2,8 @@
   "name": "actor-puppeteer-scraper",
   "version": "2.0.0",
   "description": "Crawl web pages using Apify, headless Chrome and Puppeteer",
-  "main": "main.js",
+  "main": "dist/main.js",
+  "type": "module",
   "dependencies": {
     "@apify/scraper-tools": "^1.0.0",
     "apify": "^2.2.1",
@@ -10,26 +11,30 @@
   },
   "devDependencies": {
     "@apify/scraper-tools": "file:../../scraper-tools",
-    "markdown-toc": "^1.2.0"
+    "@apify/tsconfig": "^0.1.0",
+    "markdown-toc": "^1.2.0",
+    "typescript": "^4.5.4"
   },
   "scripts": {
-    "start": "node main.js",
+    "start": "node dist/main.js",
+    "build": "tsc",
     "build-toc": "./node_modules/.bin/markdown-toc README.md -i",
     "lint": "eslint src test"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apifytech/actor-scraper"
+    "url": "https://github.com/apify/apify-ts"
   },
   "author": {
     "name": "Apify Technologies",
     "email": "support@apify.com",
     "url": "https://apify.com"
   },
+  "private": true,
   "contributors": [
     "Marek Trunkat <marek@apify.com>",
     "Ondra Urban <ondra@apify.com>"
   ],
   "license": "Apache-2.0",
-  "homepage": "https://github.com/apifytech/actor-scraper"
+  "homepage": "https://github.com/apify/apify-ts"
 }

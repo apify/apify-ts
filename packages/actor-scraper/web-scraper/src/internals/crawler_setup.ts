@@ -1,3 +1,9 @@
+import {
+    browserTools,
+    constants as scraperToolsConstants,
+    CrawlerSetupOptions,
+    createContext, tools,
+} from '@apify/scraper-tools';
 import Apify, {
     ApifyEnv,
     AutoscaledPool,
@@ -14,23 +20,16 @@ import Apify, {
     RequestList,
     RequestQueue,
 } from 'apify';
-import { URL } from 'url';
 import contentType from 'content-type';
-import {
-    tools,
-    browserTools,
-    constants as scraperToolsConstants,
-    CrawlerSetupOptions,
-    createContext,
-} from '@apify/scraper-tools';
 // TODO: type devtools module
 // @ts-ignore
 import DevToolsServer from 'devtools-server';
 import { HTTPResponse, Page, Serializable } from 'puppeteer';
-import { GlobalStore } from './global_store';
-import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts';
+import { URL } from 'url';
 import SCHEMA from '../../INPUT_SCHEMA.json';
 import { createBundle } from './bundle.browser';
+import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts';
+import { GlobalStore } from './global_store';
 
 const SESSION_STORE_NAME = 'APIFY-WEB-SCRAPER-SESSION-STORE';
 
@@ -292,7 +291,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
                 if (cookiesToSet && cookiesToSet.length) {
                     // setting initial cookies that are not already in the session and page
                     // TODO: We can remove the condition when there is an option to define blocked status codes in sessionPool
-                    if (session) session.setPuppeteerCookies(cookiesToSet, request.url);
+                    session?.setPuppeteerCookies(cookiesToSet, request.url);
                     await page.setCookie(...cookiesToSet);
                 }
             }
@@ -525,7 +524,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         tools.logPerformance(request, 'handleLinks EXECUTION', start);
     }
 
-    private async _handleResult(request: Request, response: HTTPResponse | undefined, pageFunctionResult?: Dictionary, isError?: boolean) {
+    private async _handleResult(request: Request, response?: HTTPResponse, pageFunctionResult?: Dictionary, isError?: boolean) {
         const start = process.hrtime();
         const payload = tools.createDatasetPayload(request, response, pageFunctionResult, isError);
         await this.dataset.pushData(payload);
