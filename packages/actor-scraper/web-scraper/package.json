@@ -5,13 +5,14 @@
   "main": "dist/main.js",
   "type": "module",
   "dependencies": {
-    "@apify/scraper-tools": "^0.4.4",
+    "@apify/scraper-tools": "^1.0.0",
     "apify": "^2.2.1",
     "content-type": "^1.0.4",
     "devtools-server": "^0.0.2",
     "puppeteer": "*"
   },
   "devDependencies": {
+    "@apify/scraper-tools": "file:../../scraper-tools",
     "@apify/tsconfig": "^0.1.0",
     "@types/jest": "^27.4.0",
     "jest": "^27.4.7",

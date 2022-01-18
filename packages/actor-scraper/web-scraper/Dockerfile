@@ -11,7 +11,7 @@ RUN echo "NPM version:" && npm --version
 
 # Install default dependencies, print versions of everything
 RUN npm --quiet set progress=false \
-	&& NODE_ENV=development npm install \
+	&& npm install && npm install typescript \
 	&& echo "Installed NPM packages:" \
 	&& (npm list || true)
 
