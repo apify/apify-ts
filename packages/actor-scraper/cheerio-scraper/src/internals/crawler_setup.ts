@@ -1,60 +1,69 @@
-const Apify = require('apify');
-const cheerio = require('cheerio');
-const {
+import { CrawlerSetupOptions,
     tools,
     createContext,
-    constants: { META_KEY, SESSION_MAX_USAGE_COUNTS, PROXY_ROTATION_NAMES },
-} = require('@apify/scraper-tools');
-
-const SCHEMA = require('../INPUT_SCHEMA');
+    constants as scraperToolsConstants,
+    RequestMetadata,
+} from '@apify/scraper-tools';
+import Apify, {
+    ApifyEnv,
+    RequestQueue,
+    KeyValueStore,
+    Awaitable,
+    CheerioCrawler,
+    RequestList,
+    Dataset,
+    ProxyConfiguration,
+    CheerioCrawlerOptions,
+    PrepareRequestInputs,
+    HandleFailedRequestInput,
+    Dictionary,
+    CheerioCrawlingContext,
+    AutoscaledPool,
+    Request,
+} from 'apify';
+import cheerio, { CheerioAPI } from 'cheerio';
+import { IncomingMessage } from 'http';
+import SCHEMA from '../../INPUT_SCHEMA.json';
+import { Input, ProxyRotation } from './consts';
 
 const { utils: { log } } = Apify;
+const { SESSION_MAX_USAGE_COUNTS, META_KEY } = scraperToolsConstants;
 
 const MAX_EVENT_LOOP_OVERLOADED_RATIO = 0.9;
 const SESSION_STORE_NAME = 'APIFY-CHEERIO-SCRAPER-SESSION-STORE';
 
 /**
- * Replicates the INPUT_SCHEMA with JavaScript types for quick reference
- * and IDE type check integration.
- *
- * @typedef {Object} Input
- * @property {Object[]} startUrls
- * @property {Object[]} pseudoUrls
- * @property {string} linkSelector
- * @property {boolean} keepUrlFragments
- * @property {string} pageFunction
- * @property {string} preNavigationHooks
- * @property {string} postNavigationHooks
- * @property {string} prepareRequestFunction
- * @property {Object} proxyConfiguration
- * @property {boolean} debugLog
- * @property {boolean} ignoreSslErrors
- * @property {number} maxRequestRetries
- * @property {number} maxPagesPerCrawl
- * @property {number} maxResultsPerCrawl
- * @property {number} maxCrawlingDepth
- * @property {number} maxConcurrency
- * @property {number} pageLoadTimeoutSecs
- * @property {number} pageFunctionTimeoutSecs
- * @property {Object} customData
- * @property {Array} initialCookies
- * @property {string} proxyRotation
- * @property {string} sessionPoolName
- * @property {string} suggestResponseEncoding
- * @property {boolean} forceResponseEncoding
- * @property {string} datasetName
- * @property {string} keyValueStoreName
- * @property {string} requestQueueName
- */
-
-/**
  * Holds all the information necessary for constructing a crawler
  * instance and creating a context for a pageFunction invocation.
  */
-class CrawlerSetup {
-    /* eslint-disable class-methods-use-this */
-    constructor(input) {
-        this.name = 'Cheerio Scraper';
+export class CrawlerSetup implements CrawlerSetupOptions {
+    name = 'Cheerio Scraper';
+    rawInput: string;
+    env: ApifyEnv;
+    /**
+     * Used to store data that persist navigations
+     */
+    globalStore = new Map();
+    requestQueue: RequestQueue;
+    keyValueStore: KeyValueStore;
+    customData: unknown;
+    input: Input;
+    maxSessionUsageCount: number;
+    evaledPageFunction: (...args: unknown[]) => unknown;
+    evaledPreNavigationHooks: ((...args: unknown[]) => Awaitable<void>)[];
+    evaledPostNavigationHooks: ((...args: unknown[]) => Awaitable<void>)[];
+    datasetName?: string;
+    keyValueStoreName?: string;
+    requestQueueName?: string;
+
+    crawler!: CheerioCrawler;
+    requestList!: RequestList;
+    dataset!: Dataset;
+    pagesOutputted!: number;
+    proxyConfiguration?: ProxyConfiguration;
+    private initPromise: Promise<void>;
+
+    constructor(input: Input) {
         // Set log level early to prevent missed messages.
         if (input.debugLog) log.setLevel(log.LEVELS.DEBUG);
 
@@ -67,9 +76,6 @@ class CrawlerSetup {
         // Validate INPUT if not running on Apify Cloud Platform.
         if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
 
-        /**
-         * @type {Input}
-         */
         this.input = input;
         this.env = Apify.getEnv();
 
@@ -78,6 +84,7 @@ class CrawlerSetup {
             if (!tools.isPlainObject(purl)) throw new Error('The pseudoUrls Array must only contain Objects.');
             if (purl.userData && !tools.isPlainObject(purl.userData)) throw new Error('The userData property of a pseudoUrl must be an Object.');
         });
+
         this.input.initialCookies.forEach((cookie) => {
             if (!tools.isPlainObject(cookie)) throw new Error('The initialCookies Array must only contain Objects.');
         });
@@ -87,11 +94,6 @@ class CrawlerSetup {
 
         // Functions need to be evaluated.
         this.evaledPageFunction = tools.evalFunctionOrThrow(this.input.pageFunction);
-
-        if (this.input.prepareRequestFunction) {
-            this.evaledPrepareRequestFunction = tools.evalFunctionOrThrow(this.input.prepareRequestFunction);
-            log.deprecated('`prepareRequestFunction` is deprecated, use `pre/postNavigationHooks` instead');
-        }
 
         if (this.input.preNavigationHooks) {
             this.evaledPreNavigationHooks = tools.evalFunctionArrayOrThrow(this.input.preNavigationHooks, 'preNavigationHooks');
@@ -105,43 +107,41 @@ class CrawlerSetup {
             this.evaledPostNavigationHooks = [];
         }
 
-        // Used to store data that persist navigations
-        this.globalStore = new Map();
-
         // Named storages
         this.datasetName = this.input.datasetName;
         this.keyValueStoreName = this.input.keyValueStoreName;
         this.requestQueueName = this.input.requestQueueName;
 
         // Initialize async operations.
-        this.crawler = null;
-        this.requestList = null;
-        this.requestQueue = null;
-        this.dataset = null;
-        this.keyValueStore = null;
-        this.proxyConfiguration = null;
+        this.crawler = null!;
+        this.requestList = null!;
+        this.requestQueue = null!;
+        this.dataset = null!;
+        this.keyValueStore = null!;
+        this.proxyConfiguration = null!;
         this.initPromise = this._initializeAsync();
     }
 
-    async _initializeAsync() {
+    private async _initializeAsync() {
         // RequestList
         const startUrls = this.input.startUrls.map((req) => {
             req.useExtendedUniqueKey = true;
             req.keepUrlFragment = this.input.keepUrlFragments;
             return req;
         });
-        this.requestList = await Apify.openRequestList('CHEERIO_SCRAPER', startUrls);
+
+        this.requestList = await RequestList.open('CHEERIO_SCRAPER', startUrls);
 
         // RequestQueue
-        this.requestQueue = await Apify.openRequestQueue(this.requestQueueName);
+        this.requestQueue = await RequestQueue.open(this.requestQueueName);
 
         // Dataset
-        this.dataset = await Apify.openDataset(this.datasetName);
-        const { itemsCount } = await this.dataset.getInfo();
-        this.pagesOutputted = itemsCount || 0;
+        this.dataset = await Dataset.open(this.datasetName);
+        const info = await this.dataset.getInfo();
+        this.pagesOutputted = info?.itemCount ?? 0;
 
         // KeyValueStore
-        this.keyValueStore = await Apify.openKeyValueStore(this.keyValueStoreName);
+        this.keyValueStore = await KeyValueStore.open(this.keyValueStoreName);
 
         // Proxy configuration
         this.proxyConfiguration = await Apify.createProxyConfiguration(this.input.proxyConfiguration);
@@ -149,12 +149,11 @@ class CrawlerSetup {
 
     /**
      * Resolves to a `CheerioCrawler` instance.
-     * @returns {Promise<CheerioCrawler>}
      */
     async createCrawler() {
         await this.initPromise;
 
-        const options = {
+        const options: CheerioCrawlerOptions = {
             proxyConfiguration: this.proxyConfiguration,
             handlePageFunction: this._handlePageFunction.bind(this),
             preNavigationHooks: this.evaledPreNavigationHooks,
@@ -188,8 +187,8 @@ class CrawlerSetup {
             },
         };
 
-        if (this.input.proxyRotation === PROXY_ROTATION_NAMES.UNTIL_FAILURE) {
-            options.sessionPoolOptions.maxPoolSize = 1;
+        if (this.input.proxyRotation === ProxyRotation.UntilFailure) {
+            options.sessionPoolOptions!.maxPoolSize = 1;
         }
 
         if (this.input.suggestResponseEncoding) {
@@ -205,41 +204,32 @@ class CrawlerSetup {
         return this.crawler;
     }
 
-    async _prepareRequestFunction({ request, session, proxyInfo }) {
+    private async _prepareRequestFunction({ request, session }: PrepareRequestInputs) {
         // Normalize headers
         request.headers = Object
-            .entries(request.headers)
+            .entries(request.headers ?? {})
             .reduce((newHeaders, [key, value]) => {
                 newHeaders[key.toLowerCase()] = value;
                 return newHeaders;
-            }, {});
+            }, {} as Dictionary<string>);
 
         // Add initial cookies, if any.
         if (this.input.initialCookies && this.input.initialCookies.length) {
-            const cookiesToSet = tools.getMissingCookiesFromSession(session, this.input.initialCookies, request.url);
-            if (cookiesToSet && cookiesToSet.length) {
+            const cookiesToSet = session
+                ? tools.getMissingCookiesFromSession(session, this.input.initialCookies, request.url)
+                : this.input.initialCookies;
+            if (cookiesToSet?.length) {
                 // setting initial cookies that are not already in the session and page
-                session.setPuppeteerCookies(cookiesToSet, request.url);
+                session?.setPuppeteerCookies(cookiesToSet, request.url);
             }
         }
-
-        if (this.evaledPrepareRequestFunction) {
-            try {
-                const { customData } = this.input;
-                await this.evaledPrepareRequestFunction({ request, session, proxyInfo, Apify, customData });
-            } catch (err) {
-                log.error('User provided Prepare request function failed.');
-                throw err;
-            }
-        }
-        return request;
     }
 
-    _handleFailedRequestFunction({ request }) {
+    private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
-        return this._handleResult(request, {}, null, true);
+        return this._handleResult(request, undefined, undefined, true);
     }
 
     /**
@@ -251,12 +241,10 @@ class CrawlerSetup {
      *
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
-     * @param {Object} crawlingContext
-     * @returns {Function}
      */
-    async _handlePageFunction(crawlingContext) {
-        const { request, response, $ } = crawlingContext;
-        const pageFunctionArguments = {};
+    private async _handlePageFunction(crawlingContext: CheerioCrawlingContext) {
+        const { request, response, $, crawler } = crawlingContext;
+        const pageFunctionArguments: Dictionary = {};
 
         // We must use properties and descriptors not to trigger getters / setters.
         const props = Object.getOwnPropertyDescriptors(crawlingContext);
@@ -267,8 +255,8 @@ class CrawlerSetup {
 
         pageFunctionArguments.cheerio = cheerio;
         pageFunctionArguments.response = {
-            status: response.statusCode,
-            headers: response.headers,
+            status: response!.statusCode,
+            headers: response!.headers,
         };
 
         Object.defineProperties(this, Object.getOwnPropertyDescriptors(pageFunctionArguments));
@@ -281,7 +269,7 @@ class CrawlerSetup {
         tools.ensureMetaData(request);
 
         // Abort the crawler if the maximum number of results was reached.
-        const aborted = await this._handleMaxResultsPerCrawl();
+        const aborted = await this._handleMaxResultsPerCrawl(crawler.autoscaledPool);
         if (aborted) return;
 
         // Setup and create Context.
@@ -312,19 +300,20 @@ class CrawlerSetup {
         if (!state.skipLinks && $) await this._handleLinks($, request);
 
         // Save the `pageFunction`s result to the default dataset.
-        await this._handleResult(request, response, pageFunctionResult);
+        await this._handleResult(request, response, pageFunctionResult as Dictionary);
     }
 
-    async _handleMaxResultsPerCrawl(autoscaledPool) {
+    private async _handleMaxResultsPerCrawl(autoscaledPool?: AutoscaledPool) {
         if (!this.input.maxResultsPerCrawl || this.pagesOutputted < this.input.maxResultsPerCrawl) return false;
+        if (!autoscaledPool) return false;
         log.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
         await autoscaledPool.abort();
         return true;
     }
 
-    async _handleLinks($, request) {
+    private async _handleLinks($: CheerioAPI, request: Request) {
         if (!(this.input.linkSelector && this.requestQueue)) return;
-        const currentDepth = request.userData[META_KEY].depth;
+        const currentDepth = (request.userData![META_KEY] as RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
         if (hasReachedMaxDepth) {
             log.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
@@ -351,11 +340,9 @@ class CrawlerSetup {
         });
     }
 
-    async _handleResult(request, response, pageFunctionResult, isError) {
+    private async _handleResult(request: Request, response?: IncomingMessage, pageFunctionResult?: Dictionary, isError?: boolean) {
         const payload = tools.createDatasetPayload(request, response, pageFunctionResult, isError);
         await this.dataset.pushData(payload);
         this.pagesOutputted++;
     }
 }
-
-module.exports = CrawlerSetup;

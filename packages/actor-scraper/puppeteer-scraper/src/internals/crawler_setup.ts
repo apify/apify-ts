@@ -3,9 +3,9 @@ import Apify, {
     ApifyEnv,
     AutoscaledPool,
     Awaitable,
-    Dataset,
-    EnqueueLinksOptions,
+    Dataset, Dictionary,
     EnqueueLinksByClickingElementsOptions,
+    EnqueueLinksOptions,
     HandleFailedRequestInput,
     KeyValueStore,
     PuppeteerCrawlContext,
@@ -14,16 +14,15 @@ import Apify, {
     Request,
     RequestList,
     RequestQueue,
-    Dictionary,
 } from 'apify';
 import { HTTPResponse, Page } from 'puppeteer';
 import SCHEMA from '../../INPUT_SCHEMA.json';
-import { Input } from './consts';
+import { Input, ProxyRotation } from './consts';
 
 const SESSION_STORE_NAME = 'APIFY-PUPPETEER-SCRAPER-SESSION-STORE';
 
 const { utils: { log, puppeteer } } = Apify;
-const { META_KEY, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, SESSION_MAX_USAGE_COUNTS, PROXY_ROTATION_NAMES } = scraperToolsConstants;
+const { META_KEY, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, SESSION_MAX_USAGE_COUNTS } = scraperToolsConstants;
 
 /**
  * Holds all the information necessary for constructing a crawler
@@ -74,9 +73,6 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // Validate INPUT if not running on Apify Cloud Platform.
         if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
 
-        /**
-         * @type {Input}
-         */
         this.input = input;
         this.env = Apify.getEnv();
 
@@ -212,7 +208,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
         this._createNavigationHooks(options);
 
-        if (this.input.proxyRotation === PROXY_ROTATION_NAMES.UNTIL_FAILURE) {
+        if (this.input.proxyRotation === ProxyRotation.UntilFailure) {
             options.sessionPoolOptions!.maxPoolSize = 1;
         }
 
