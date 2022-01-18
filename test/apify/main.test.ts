@@ -4,7 +4,7 @@ import * as ApifyWithWildcard from 'apify/src/index';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const Apify: typeof import('apify') = require('../packages/apify/src');
+const Apify: typeof import('apify') = require('../../packages/apify/src');
 
 describe('Apify module', () => {
     test('import Apify from \'apify\' - should fail', () => {

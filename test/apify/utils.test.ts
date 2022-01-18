@@ -872,7 +872,7 @@ describe('addTimeoutToPromise()', () => {
 describe('utils.printOutdatedSdkWarning()', () => {
     let logMock: SinonMock;
 
-    const currentVersion = require('../package.json').version; // eslint-disable-line
+    const currentVersion = require('../../packages/apify/package.json').version; // eslint-disable-line
 
     beforeEach(() => {
         logMock = sinon.mock(log);

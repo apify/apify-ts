@@ -18,18 +18,15 @@ export class GlobalStore<V> extends Map<string, V> {
         throw new Error('GlobalStore#forEach function is not available due to underlying technology limitations.');
     }
 
-    // @ts-expect-error Overriding return type
     override values() {
-        return Array.from(super.values());
+        return Array.from(super.values()) as any;
     }
 
-    // @ts-expect-error Overriding return type
     override keys() {
-        return Array.from(super.keys());
+        return Array.from(super.keys()) as any;
     }
 
-    // @ts-expect-error Overriding return type
     override entries() {
-        return Array.from(super.entries());
+        return Array.from(super.entries()) as any;
     }
 }

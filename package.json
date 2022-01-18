@@ -46,7 +46,7 @@
         "postinstall": "npx husky install",
         "prepublishOnly": "npx lerna run copy",
         "clean": "lerna run clean",
-        "build": "lerna run build --sort",
+        "build": "lerna run build",
         "test": "jest --silent",
         "coverage": "jest --coverage",
         "release": "npm run build && lerna version patch && lerna publish from-package --contents dist",

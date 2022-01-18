@@ -11,7 +11,7 @@ import {
 import Apify, { Dictionary } from 'apify';
 import { StorageManager } from 'apify/src/storages/storage_manager';
 
-jest.mock('../../packages/apify/src/storages/storage_manager');
+jest.mock('../../../packages/apify/src/storages/storage_manager');
 
 describe('dataset', () => {
     beforeEach(async () => {
