@@ -1,29 +1,34 @@
-const Apify = require('apify');
-const createBundle = require('../src/bundle.browser');
+import Apify from 'apify';
+import { Browser, Page } from 'puppeteer';
+import { createBundle } from '../src/internals/bundle.browser';
 
 const NAMESPACE = 'Apify';
 
 describe('Bundle', () => {
-    let browser;
-    let page;
+    let browser: Browser;
+    let page: Page;
+
     beforeAll(async () => {
         browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
     });
+
     afterAll(async () => {
         await browser.close();
     });
+
     beforeEach(async () => {
         page = await browser.newPage();
         await page.evaluateOnNewDocument(createBundle, NAMESPACE);
     });
+
     afterEach(async () => {
         await page.close();
     });
+
     describe('Context', () => {
         const CONTEXT_OPTIONS = {
             crawlerSetup: {
                 rawInput: '{}',
-
             },
             browserHandles: {
                 apify: {},
@@ -34,13 +39,15 @@ describe('Bundle', () => {
                 request: {},
             },
         };
+
         beforeEach(async () => {
             await page.goto('about:chrome');
-            await page.waitForFunction((namespace) => !!window[namespace], {}, NAMESPACE);
-            await page.evaluate((namespace, contextOptions) => {
+            await page.waitForFunction((namespace: string) => !!window[namespace], {}, NAMESPACE);
+            await page.evaluate((namespace: string, contextOptions) => {
                 window.contextInstance = window[namespace].createContext(contextOptions);
             }, NAMESPACE, CONTEXT_OPTIONS);
         });
+
         describe('waitFor', () => {
             it('should work with a number', async () => {
                 const millis = await page.evaluate(async () => {
@@ -51,6 +58,7 @@ describe('Bundle', () => {
                 });
                 expect(millis).toBeGreaterThan(9);
             });
+
             it('should work with a selector', async () => {
                 const millis = await page.evaluate(async () => {
                     const ctx = window.contextInstance;
@@ -65,6 +73,7 @@ describe('Bundle', () => {
                 });
                 expect(millis).toBeGreaterThan(9);
             });
+
             it('should work with a function', async () => {
                 const millis = await page.evaluate(async () => {
                     const ctx = window.contextInstance;
