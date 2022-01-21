@@ -22,12 +22,13 @@ import Apify, {
     Request,
 } from 'apify';
 import cheerio, { CheerioAPI } from 'cheerio';
+import { readFile } from 'fs/promises';
 import { IncomingMessage } from 'http';
-import SCHEMA from '../../INPUT_SCHEMA.json';
-import { Input, ProxyRotation } from './consts';
+import { Input, ProxyRotation } from './consts.js';
 
 const { utils: { log } } = Apify;
 const { SESSION_MAX_USAGE_COUNTS, META_KEY } = scraperToolsConstants;
+const SCHEMA = JSON.parse(await readFile('../../INPUT_SCHEMA.json', 'utf8'));
 
 const MAX_EVENT_LOOP_OVERLOADED_RATIO = 0.9;
 const SESSION_STORE_NAME = 'APIFY-CHEERIO-SCRAPER-SESSION-STORE';

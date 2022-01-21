@@ -2,7 +2,8 @@ import {
     browserTools,
     constants as scraperToolsConstants,
     CrawlerSetupOptions,
-    createContext, tools,
+    createContext,
+    tools,
 } from '@apify/scraper-tools';
 import Apify, {
     ApifyEnv,
@@ -24,12 +25,12 @@ import contentType from 'content-type';
 // TODO: type devtools module
 // @ts-ignore
 import DevToolsServer from 'devtools-server';
+import { readFile } from 'fs/promises';
 import { HTTPResponse, Page, Serializable } from 'puppeteer';
 import { URL } from 'url';
-import SCHEMA from '../../INPUT_SCHEMA.json';
-import { createBundle } from './bundle.browser';
-import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts';
-import { GlobalStore } from './global_store';
+import { createBundle } from './bundle.browser.js';
+import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts.js';
+import { GlobalStore } from './global_store.js';
 
 const SESSION_STORE_NAME = 'APIFY-WEB-SCRAPER-SESSION-STORE';
 
@@ -37,6 +38,7 @@ const MAX_CONCURRENCY_IN_DEVELOPMENT = 1;
 
 const { utils: { log, puppeteer } } = Apify;
 const { SESSION_MAX_USAGE_COUNTS, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, META_KEY } = scraperToolsConstants;
+const SCHEMA = JSON.parse(await readFile('../../INPUT_SCHEMA.json', 'utf8'));
 
 interface PageContext {
     apifyNamespace: string;

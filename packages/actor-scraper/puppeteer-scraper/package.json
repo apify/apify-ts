@@ -17,7 +17,7 @@
 	},
 	"scripts": {
 		"start": "node dist/main.js",
-		"build": "tsc",
+		"build": "npx rimraf dist && tsc",
 		"build-toc": "./node_modules/.bin/markdown-toc README.md -i",
 		"lint": "eslint src test"
 	},
