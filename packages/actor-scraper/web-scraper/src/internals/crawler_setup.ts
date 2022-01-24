@@ -25,9 +25,9 @@ import contentType from 'content-type';
 // TODO: type devtools module
 // @ts-ignore
 import DevToolsServer from 'devtools-server';
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
 import { HTTPResponse, Page, Serializable } from 'puppeteer';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { createBundle } from './bundle.browser.js';
 import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts.js';
 import { GlobalStore } from './global_store.js';
@@ -38,7 +38,7 @@ const MAX_CONCURRENCY_IN_DEVELOPMENT = 1;
 
 const { utils: { log, puppeteer } } = Apify;
 const { SESSION_MAX_USAGE_COUNTS, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, META_KEY } = scraperToolsConstants;
-const SCHEMA = JSON.parse(await readFile('../../INPUT_SCHEMA.json', 'utf8'));
+const SCHEMA = JSON.parse(await readFile(new URL('../../INPUT_SCHEMA.json', import.meta.url), 'utf8'));
 
 interface PageContext {
     apifyNamespace: string;

@@ -5,8 +5,13 @@
     "engines": {
         "node": ">=15.10.0"
     },
-    "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
     "keywords": [
         "apify",
         "headless",
@@ -40,7 +45,7 @@
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy && npm run fixApifyExport",
         "clean": "rimraf ./dist",
-        "compile": "tsc -p tsconfig.build.json",
+        "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
         "copy": "ts-node -T ../../scripts/copy.ts",
         "fixApifyExport": "ts-node -T ../../scripts/temp_fix_apify_exports.ts"
     },

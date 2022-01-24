@@ -15,15 +15,16 @@ import Apify, {
     RequestList,
     RequestQueue,
 } from 'apify';
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
 import { HTTPResponse, Page } from 'puppeteer';
+import { URL } from 'node:url';
 import { Input, ProxyRotation } from './consts.js';
 
 const SESSION_STORE_NAME = 'APIFY-PUPPETEER-SCRAPER-SESSION-STORE';
 
 const { utils: { log, puppeteer } } = Apify;
 const { META_KEY, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, SESSION_MAX_USAGE_COUNTS } = scraperToolsConstants;
-const SCHEMA = JSON.parse(await readFile('../../INPUT_SCHEMA.json', 'utf8'));
+const SCHEMA = JSON.parse(await readFile(new URL('../../INPUT_SCHEMA.json', import.meta.url), 'utf8'));
 
 /**
  * Holds all the information necessary for constructing a crawler
