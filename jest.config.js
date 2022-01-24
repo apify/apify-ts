@@ -13,6 +13,7 @@ module.exports = {
     ],
     moduleNameMapper: {
         '^apify$': '<rootDir>/packages/apify/src',
+        '^@apify/scraper-tools$': '<rootDir>/packages/scraper-tools/src',
     },
     modulePathIgnorePatterns: [
         'dist/package.json',

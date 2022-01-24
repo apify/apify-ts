@@ -1,0 +1,52 @@
+{
+    "name": "@apify/scraper-tools",
+    "version": "1.0.0",
+    "description": "Tools shared by Apify actor-scrapers.",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "author": {
+        "name": "Apify Technologies",
+        "email": "support@apify.com",
+        "url": "https://apify.com"
+    },
+    "contributors": [
+        "Marek Trunkat <marek@apify.com>",
+        "Ondra Urban <ondra@apify.com>"
+    ],
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/apify/apify-js"
+    },
+    "homepage": "https://github.com/apify/apify-js",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "npm run clean && npm run compile && npm run copy",
+        "clean": "rimraf ./dist",
+        "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
+        "copy": "ts-node -T ../../scripts/copy.ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "ajv": "^8.8.2",
+        "content-type": "^1.0.4"
+    },
+    "peerDependencies": {
+        "apify": ">=2.x || >=2.1.1-beta.0"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^9.0.13",
+        "@types/puppeteer": "^5.4.4",
+        "apify": "file:../apify",
+        "puppeteer": "^10"
+    }
+}

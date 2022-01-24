@@ -1,6 +1,6 @@
 import { URL } from 'url';
 import _ from 'underscore';
-import { PseudoUrl } from '../pseudo_url';
+import { PseudoUrl, PseudoUrlObject } from '../pseudo_url';
 import { Request, RequestOptions } from '../request';
 import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 
@@ -14,7 +14,7 @@ const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
  */
 const enqueueLinksPseudoUrlCache = new Map();
 
-export type PseudoUrlInput = string | RegExp | PseudoUrl | { purl: string | RegExp };
+export type PseudoUrlInput = string | RegExp | PseudoUrl | PseudoUrlObject;
 
 /**
  * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function.

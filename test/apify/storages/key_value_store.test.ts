@@ -9,7 +9,7 @@ import Apify, {
 } from 'apify';
 import { StorageManager } from 'apify/src/storages/storage_manager';
 
-jest.mock('../../packages/apify/src/storages/storage_manager');
+jest.mock('../../../packages/apify/src/storages/storage_manager');
 
 describe('KeyValueStore remote', () => {
     beforeEach(async () => {

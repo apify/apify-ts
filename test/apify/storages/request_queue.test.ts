@@ -8,7 +8,7 @@ import {
 } from 'apify/src/storages/request_queue';
 import { StorageManager } from 'apify/src/storages/storage_manager';
 
-jest.mock('../../packages/apify/src/storages/storage_manager');
+jest.mock('../../../packages/apify/src/storages/storage_manager');
 
 describe('RequestQueue remote', () => {
     beforeEach(() => {
