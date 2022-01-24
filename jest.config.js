@@ -14,6 +14,12 @@ module.exports = {
     moduleNameMapper: {
         '^apify$': '<rootDir>/packages/apify/src',
         '^@apify/scraper-tools$': '<rootDir>/packages/scraper-tools/src',
+        '^crawlers$': '<rootDir>/packages/crawlers/src',
+        '^@crawlers/cheerio$': '<rootDir>/packages/cheerio-crawler/src',
+        '^@crawlers/browser$': '<rootDir>/packages/browser-crawler/src',
+        '^@crawlers/playwright$': '<rootDir>/packages/playwright-crawler/src',
+        '^@crawlers/puppeteer$': '<rootDir>/packages/puppeteer-crawler/src',
+        '^@crawlers/(.*)$': '<rootDir>/packages/$1/src',
     },
     modulePathIgnorePatterns: [
         'dist/package.json',

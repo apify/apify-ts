@@ -1,7 +1,7 @@
 import express from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { requestAsBrowser, RequestAsBrowserOptions } from 'apify/src/utils_request';
+import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlers/core';
 import { startExpressAppPromise } from './_helper';
 
 const CONTENT = 'CONTENT';

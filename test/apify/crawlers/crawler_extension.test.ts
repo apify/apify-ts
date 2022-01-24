@@ -1,4 +1,4 @@
-import { CrawlerExtension } from 'apify/src/crawlers/crawler_extension';
+import { CrawlerExtension } from '@crawlers/core';
 
 describe('CrawlerExtension', () => {
     test('should work', () => {

@@ -1,22 +1,17 @@
 import fs from 'fs';
 import path from 'path';
-// TODO: no types
-// @ts-expect-error
+// @ts-expect-error no types
 import proxy from 'proxy';
 import http, { Server } from 'http';
 import util from 'util';
-// TODO: no types
-// @ts-expect-error
+// @ts-expect-error no types
 import portastic from 'portastic';
-// TODO: no types
-// @ts-expect-error
+// @ts-expect-error no types
 import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
-import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
-import Apify, { Dictionary } from 'apify';
-import * as utils from 'apify/src/utils';
+import { BrowserLauncher, Dictionary, launchPuppeteer } from '@crawlers/core';
 import { AddressInfo } from 'net';
 import { Browser, Page } from 'puppeteer';
 import { startExpressAppPromise } from '../_helper';
@@ -98,41 +93,41 @@ afterAll(async () => {
     if (proxyServer) await util.promisify(proxyServer.close).bind(proxyServer)();
 }, 5000);
 
-describe('Apify.launchPuppeteer()', () => {
+describe('launchPuppeteer()', () => {
     test('throws on invalid args', async () => {
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPuppeteer('some non-object')).rejects.toThrow(Error);
+        await expect(launchPuppeteer('some non-object')).rejects.toThrow(Error);
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPuppeteer(1234)).rejects.toThrow(Error);
+        await expect(launchPuppeteer(1234)).rejects.toThrow(Error);
 
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPuppeteer({ proxyUrl: 234 })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: 234 })).rejects.toThrow(Error);
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPuppeteer({ proxyUrl: {} })).rejects.toThrow(Error);
-        await expect(Apify.launchPuppeteer({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
-        await expect(Apify.launchPuppeteer({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPuppeteer({ proxyUrl: 'socks4://user:pass@example.com:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPuppeteer({ proxyUrl: 'socks5://user:pass@example.com:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPuppeteer({ proxyUrl: ' something really bad' })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: {} })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: 'socks4://user:pass@example.com:1234' })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: 'socks5://user:pass@example.com:1234' })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ proxyUrl: ' something really bad' })).rejects.toThrow(Error);
 
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPuppeteer({ launchOptions: { args: 'wrong args' } })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ launchOptions: { args: 'wrong args' } })).rejects.toThrow(Error);
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPuppeteer({ launchOptions: { args: [12, 34] } })).rejects.toThrow(Error);
+        await expect(launchPuppeteer({ launchOptions: { args: [12, 34] } })).rejects.toThrow(Error);
     });
 
     test('supports non-HTTP proxies without authentication', async () => {
         const closePromises = [];
-        const browser1 = await Apify.launchPuppeteer({ proxyUrl: 'socks4://example.com:1234' });
+        const browser1 = await launchPuppeteer({ proxyUrl: 'socks4://example.com:1234' });
         closePromises.push(browser1.close());
 
-        const browser2 = await Apify.launchPuppeteer({ proxyUrl: 'socks5://example.com:1234' });
+        const browser2 = await launchPuppeteer({ proxyUrl: 'socks5://example.com:1234' });
         closePromises.push(browser2.close());
 
-        const browser3 = await Apify.launchPuppeteer({ proxyUrl: 'https://example.com:1234' });
+        const browser3 = await launchPuppeteer({ proxyUrl: 'https://example.com:1234' });
         closePromises.push(browser3.close());
 
-        const browser4 = await Apify.launchPuppeteer({ proxyUrl: 'HTTP://example.com:1234' });
+        const browser4 = await launchPuppeteer({ proxyUrl: 'HTTP://example.com:1234' });
         closePromises.push(browser4.close());
         await Promise.all(closePromises);
     });
@@ -141,8 +136,7 @@ describe('Apify.launchPuppeteer()', () => {
         let browser: Browser;
         let page: Page;
 
-        return Apify
-            .launchPuppeteer()
+        return launchPuppeteer()
             .then((createdBrowser) => {
                 browser = createdBrowser;
 
@@ -165,7 +159,7 @@ describe('Apify.launchPuppeteer()', () => {
         // Test headless parameter
         process.env[ENV_VARS.HEADLESS] = '0';
 
-        return Apify.launchPuppeteer({
+        return launchPuppeteer({
             launchOptions: { headless: true },
             proxyUrl: `http://username:password@127.0.0.1:${proxyPort}`,
         })
@@ -198,7 +192,7 @@ describe('Apify.launchPuppeteer()', () => {
             launchOptions: { headless: true },
         };
 
-        return Apify.launchPuppeteer(opts)
+        return launchPuppeteer(opts)
             .then((result) => {
                 browser = result;
             })
@@ -219,7 +213,7 @@ describe('Apify.launchPuppeteer()', () => {
     });
 
     test('supports useChrome option', async () => {
-        const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
+        const spy = jest.spyOn(BrowserLauncher.prototype as any, '_getTypicalChromeExecutablePath');
 
         let browser;
         const opts = {
@@ -228,7 +222,7 @@ describe('Apify.launchPuppeteer()', () => {
         };
 
         try {
-            browser = await Apify.launchPuppeteer(opts);
+            browser = await launchPuppeteer(opts);
             const page = await browser.newPage();
 
             // Add a test to go to an actual domain because we've seen issues
@@ -240,9 +234,9 @@ describe('Apify.launchPuppeteer()', () => {
             expect(title).toBe('Example Domain');
             expect(version).toMatch('Chrome');
             expect(version).not.toMatch('Chromium');
-            expect(spy.calledOnce).toBe(true);
+            expect(spy).toBeCalledTimes(1);
         } finally {
-            spy.restore();
+            spy.mockRestore();
             if (browser) await browser.close();
         }
     });
@@ -253,7 +247,7 @@ describe('Apify.launchPuppeteer()', () => {
         someProps.props = someProps;
         let browser;
         try {
-            browser = await Apify.launchPuppeteer({
+            browser = await launchPuppeteer({
                 launcher: {
                     launch: async () => {
                         return {
@@ -274,7 +268,7 @@ describe('Apify.launchPuppeteer()', () => {
     test('supports useIncognitoPages: true', async () => {
         let browser;
         try {
-            browser = await Apify.launchPuppeteer({
+            browser = await launchPuppeteer({
                 useIncognitoPages: true,
                 launchOptions: { headless: true },
             });
@@ -291,7 +285,7 @@ describe('Apify.launchPuppeteer()', () => {
     test('supports useIncognitoPages: false', async () => {
         let browser;
         try {
-            browser = await Apify.launchPuppeteer({
+            browser = await launchPuppeteer({
                 useIncognitoPages: false,
                 launchOptions: { headless: true },
             });
@@ -310,7 +304,7 @@ describe('Apify.launchPuppeteer()', () => {
 
         let browser;
         try {
-            browser = await Apify.launchPuppeteer({
+            browser = await launchPuppeteer({
                 useIncognitoPages: false,
                 launchOptions: {
                     userDataDir,

@@ -1,19 +1,9 @@
-import {
-    ENV_VARS,
-    MAX_PAYLOAD_SIZE_BYTES,
-} from '@apify/consts';
-import { apifyClient } from 'apify/src/utils';
-import {
-    Dataset,
-    checkAndSerialize,
-    chunkBySize,
-} from 'apify/src/storages/dataset';
-import Apify, { Dictionary } from 'apify';
-import { StorageManager } from 'apify/src/storages/storage_manager';
-
-jest.mock('../../../packages/apify/src/storages/storage_manager');
+import { ENV_VARS, MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
+import { Dataset, StorageManager, checkAndSerialize, chunkBySize, Dictionary, Configuration, pushData } from '@crawlers/core';
 
 describe('dataset', () => {
+    const apifyClient = Configuration.getDefaultClient();
+
     beforeEach(async () => {
         jest.clearAllMocks();
     });
@@ -24,23 +14,11 @@ describe('dataset', () => {
         test('openDataset should open storage', async () => {
             const datasetName = 'abc';
             const options = { forceCloud: true };
-            // This test uses and explains Jest mocking. Under import statements,
-            // the StorageManager is immediately mocked. This replaces the class
-            // with an observable. We can now call functions that use the class
-            // and observe how they interact with StorageManager.
-            await Apify.openDataset(datasetName, options);
-            // Apify.openRequestQueue creates an instance of StorageManager.
-            // Here we check that the constructor was really called once.
-            expect(StorageManager).toHaveBeenCalledTimes(1);
-            // Jest gives you access to newly created instances of the class.
-            // Here we grab the StorageManager instance openRequestQueue created.
-            // @ts-expect-error Mocked manager, see line 27-30
-            const mockStorageManagerInstance = StorageManager.mock.instances[0];
-            // And here we get a reference to the specific instance's function mock.
-            const mockOpenStorage = mockStorageManagerInstance.openStorage;
-            // Finally, we test that the function was called with expected args.
-            expect(mockOpenStorage).toHaveBeenCalledWith(datasetName, options);
-            expect(mockOpenStorage).toHaveBeenCalledTimes(1);
+            const mockOpenStorage = jest.spyOn(StorageManager.prototype, 'openStorage');
+            mockOpenStorage.mockResolvedValueOnce(jest.fn());
+            await Dataset.open(datasetName, options);
+            expect(mockOpenStorage).toBeCalledTimes(1);
+            expect(mockOpenStorage).toBeCalledWith(datasetName, options);
         });
 
         test('should work', async () => {
@@ -55,8 +33,8 @@ describe('dataset', () => {
 
             await dataset.pushData({ foo: 'bar' });
 
-            expect(mockPushItems).toHaveBeenCalledTimes(1);
-            expect(mockPushItems).toHaveBeenCalledWith(
+            expect(mockPushItems).toBeCalledTimes(1);
+            expect(mockPushItems).toBeCalledWith(
                 JSON.stringify({ foo: 'bar' }),
             );
 
@@ -69,8 +47,8 @@ describe('dataset', () => {
                 { foo: 'restaurant' },
             ]);
 
-            expect(mockPushItems2).toHaveBeenCalledTimes(2);
-            expect(mockPushItems2).toHaveBeenCalledWith(
+            expect(mockPushItems2).toBeCalledTimes(2);
+            expect(mockPushItems2).toBeCalledWith(
                 JSON.stringify([{ foo: 'hotel;' }, { foo: 'restaurant' }]),
             );
 
@@ -80,7 +58,7 @@ describe('dataset', () => {
 
             await dataset.drop();
 
-            expect(mockDelete).toHaveBeenCalledTimes(1);
+            expect(mockDelete).toBeCalledTimes(1);
             expect(mockDelete).toHaveBeenLastCalledWith();
         });
 
@@ -101,7 +79,7 @@ describe('dataset', () => {
                 { bar: half },
             ]);
 
-            expect(mockPushItems).toHaveBeenCalledTimes(2);
+            expect(mockPushItems).toBeCalledTimes(2);
             expect(mockPushItems).toHaveBeenNthCalledWith(1, JSON.stringify([{ foo: half }]));
             expect(mockPushItems).toHaveBeenNthCalledWith(2, JSON.stringify([{ bar: half }]));
         });
@@ -125,7 +103,7 @@ describe('dataset', () => {
 
             await dataset.pushData(data);
 
-            expect(mockPushItems).toHaveBeenCalledTimes(2);
+            expect(mockPushItems).toBeCalledTimes(2);
             expect(mockPushItems).toHaveBeenNthCalledWith(1, expectedFirst);
             expect(mockPushItems).toHaveBeenNthCalledWith(2, expectedSecond);
         });
@@ -259,7 +237,7 @@ describe('dataset', () => {
             mockListItems.mockResolvedValueOnce(secondResolve);
 
             const restoreAndVerify = () => {
-                expect(mockListItems).toHaveBeenCalledTimes(2);
+                expect(mockListItems).toBeCalledTimes(2);
                 expect(mockListItems).toHaveBeenNthCalledWith(1, {
                     limit: 2,
                     offset: 0,
@@ -418,7 +396,7 @@ describe('dataset', () => {
                 limit: 2,
             });
 
-            expect(mockListItems).toHaveBeenCalledTimes(2);
+            expect(mockListItems).toBeCalledTimes(2);
             expect(mockListItems).toHaveBeenNthCalledWith(1, {
                 limit: 2,
                 offset: 0,
@@ -439,10 +417,12 @@ describe('dataset', () => {
             process.env[ENV_VARS.TOKEN] = 'xxx';
 
             process.env[ENV_VARS.DEFAULT_DATASET_ID] = '';
-            await expect(Apify.pushData({ something: 123 })).rejects.toThrow(Error);
+            await expect(pushData({ something: 123 })).rejects.toThrow(Error);
+
+            Configuration.resetGlobalState();
 
             delete process.env[ENV_VARS.DEFAULT_DATASET_ID];
-            await expect(Apify.pushData({ something: 123 })).rejects.toThrow(Error);
+            await expect(pushData({ something: 123 })).rejects.toThrow(Error);
 
             delete process.env[ENV_VARS.TOKEN];
         });

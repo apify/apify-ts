@@ -1,8 +1,4 @@
-import sinon from 'sinon';
-import { Statistics } from 'apify/src/crawlers/statistics';
-import Apify, { Dictionary } from 'apify';
-import { events } from 'apify/src/events';
-import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
+import { Statistics, Dictionary, events, ACTOR_EVENT_NAMES_EX, Configuration } from '@crawlers/core';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('Statistics', () => {
@@ -10,26 +6,23 @@ describe('Statistics', () => {
         return Math.round(jobCount / (totalTickMillis / 1000 / 60));
     };
 
-    let clock: sinon.SinonFakeTimers;
     let stats: Statistics;
     let localStorageEmulator: LocalStorageDirEmulator;
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();
+        jest.useFakeTimers();
     });
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
-        clock = sinon.useFakeTimers();
+        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
         stats = new Statistics();
     });
 
     afterEach(async () => {
         events.removeAllListeners(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
-        clock.restore();
         stats = null;
-        clock = null;
     });
 
     afterAll(async () => {
@@ -53,9 +46,9 @@ describe('Statistics', () => {
 
         test('should persist the state to KV and load again', async () => {
             const startedAt = 1000;
-            clock.tick(startedAt);
+            jest.advanceTimersByTime(startedAt);
             stats.startJob(0);
-            clock.tick(100);
+            jest.advanceTimersByTime(100);
             stats.finishJob(0);
 
             await stats.startCapturing();
@@ -119,10 +112,10 @@ describe('Statistics', () => {
             await stats.startCapturing();
 
             stats.startJob(1);
-            clock.tick(100);
+            jest.advanceTimersByTime(100);
             stats.finishJob(1);
 
-            clock.tick(1000);
+            jest.advanceTimersByTime(1000);
 
             expect(stats.toJSON()).toEqual({
                 crawlerRuntimeMillis: 2200,
@@ -147,7 +140,7 @@ describe('Statistics', () => {
                 statsPersistedAt: toISOString(startedAt + 1200),
             });
 
-            clock.tick(10000);
+            jest.advanceTimersByTime(10000);
 
             expect(stats.calculate()).toEqual({
                 crawlerRuntimeMillis: 12200,
@@ -177,14 +170,14 @@ describe('Statistics', () => {
 
         test('on persistState event', async () => {
             stats.startJob(0);
-            clock.tick(100);
+            jest.advanceTimersByTime(100);
             stats.finishJob(0);
 
             await stats.startCapturing(); // keyValueStore is initialized here
 
             const state = stats.toJSON();
             // @ts-expect-error Accessing private prop
-            const spy = sinon.spy(stats.keyValueStore, 'setValue');
+            const setValueSpy = jest.spyOn(stats.keyValueStore, 'setValue');
 
             events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
 
@@ -193,15 +186,16 @@ describe('Statistics', () => {
             const { retryHistogram, finished, failed, ...rest } = stats.calculate();
 
             // @ts-expect-error Accessing private prop
-            expect(spy.getCall(0).args).toEqual([stats.persistStateKey, { ...state, ...rest }]);
+            expect(setValueSpy).toBeCalledWith(stats.persistStateKey, { ...state, ...rest });
+            setValueSpy.mockRestore();
         }, 2000);
     });
 
     test('should finish a job', () => {
         stats.startJob(0);
-        clock.tick(1);
+        jest.advanceTimersByTime(1);
         stats.finishJob(0);
-        clock.tick(1);
+        jest.advanceTimersByTime(1);
         const current = stats.calculate();
         expect(current).toEqual({
             crawlerRuntimeMillis: 2,
@@ -216,9 +210,9 @@ describe('Statistics', () => {
 
     test('should fail a job', () => {
         stats.startJob(0);
-        clock.tick(0);
+        jest.advanceTimersByTime(0);
         stats.failJob(0);
-        clock.tick(1);
+        jest.advanceTimersByTime(1);
         const current = stats.calculate();
         expect(current).toEqual({
             crawlerRuntimeMillis: 1,
@@ -257,17 +251,17 @@ describe('Statistics', () => {
 
     test('should return correct stats for multiple parallel jobs', () => {
         stats.startJob(0);
-        clock.tick(1);
+        jest.advanceTimersByTime(1);
         stats.startJob(1);
-        clock.tick(1);
+        jest.advanceTimersByTime(1);
         stats.startJob(2);
-        clock.tick(2);
+        jest.advanceTimersByTime(2);
         stats.finishJob(1); // runtime: 3ms
-        clock.tick(1); // since startedAt: 5ms
+        jest.advanceTimersByTime(1); // since startedAt: 5ms
         stats.failJob(0); // runtime: irrelevant
-        clock.tick(10);
+        jest.advanceTimersByTime(10);
         stats.finishJob(2); // runtime: 13ms
-        clock.tick(10); // since startedAt: 25ms
+        jest.advanceTimersByTime(10); // since startedAt: 25ms
 
         const current = stats.calculate();
         expect(current).toEqual({
@@ -289,17 +283,18 @@ describe('Statistics', () => {
     test('should regularly log stats', async () => {
         const logged: [string, Dictionary?][] = [];
         // @ts-expect-error Accessing private prop
-        sinon.stub(stats.log, 'info').callsFake((...args) => {
+        const infoSpy = jest.spyOn(stats.log, 'info');
+        infoSpy.mockImplementation((...args) => {
             logged.push(args);
         });
 
         stats.startJob(0);
-        clock.tick(1);
+        jest.advanceTimersByTime(1);
         stats.finishJob(0);
         await stats.startCapturing();
-        clock.tick(50000);
+        jest.advanceTimersByTime(50000);
         expect(logged).toHaveLength(0);
-        clock.tick(10001);
+        jest.advanceTimersByTime(10001);
         expect(logged).toHaveLength(1);
         expect(logged[0][0]).toBe('Statistics');
         expect(logged[0][1]).toEqual({
@@ -313,7 +308,7 @@ describe('Statistics', () => {
             retryHistogram: [1],
         });
         await stats.stopCapturing();
-        clock.tick(60001);
+        jest.advanceTimersByTime(60001);
         expect(logged).toHaveLength(1);
         expect(logged[0][0]).toBe('Statistics');
         expect(logged[0][1]).toEqual({
@@ -326,12 +321,13 @@ describe('Statistics', () => {
             requestsTotal: 1,
             retryHistogram: [1],
         });
+        infoSpy.mockRestore();
     });
 
     test('should reset stats', async () => {
         await stats.startCapturing();
         stats.startJob(1);
-        clock.tick(3);
+        jest.advanceTimersByTime(3);
         stats.finishJob(1);
         expect(stats.state.requestsFinished).toEqual(1);
         expect(stats.requestRetryHistogram).toEqual([1]);

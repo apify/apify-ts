@@ -1,6 +1,5 @@
 import { Cookie } from 'tough-cookie';
-import { getCookiesFromResponse } from 'apify/src/session_pool/session_utils';
-import { Dictionary } from 'apify';
+import { getCookiesFromResponse, Dictionary } from '@crawlers/core';
 
 describe('getCookiesFromResponse', () => {
     test('should parse cookies if set-cookie is array', () => {

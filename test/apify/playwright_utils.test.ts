@@ -1,12 +1,11 @@
 import playwright from 'playwright';
 import express from 'express';
-import Apify from 'apify';
+import log from '@apify/log';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
+import { Configuration, Request, playwrightUtils } from '@crawlers/core';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
-
-const { utils: { log } } = Apify;
 
 const HOSTNAME = '127.0.0.1';
 let port: number;
@@ -47,7 +46,7 @@ describe('Apify.utils.playwright', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
     });
 
     afterAll(async () => {
@@ -60,7 +59,7 @@ describe('Apify.utils.playwright', () => {
 
         try {
             const page = await browser.newPage();
-            const request = new Apify.Request({
+            const request = new Request({
                 url: `http://${HOSTNAME}:${port}/foo`,
                 method: 'POST',
                 headers: {
@@ -69,7 +68,7 @@ describe('Apify.utils.playwright', () => {
                 payload: '{ "foo": "bar" }',
             });
 
-            const response = await Apify.utils.playwright.gotoExtended(page, request);
+            const response = await playwrightUtils.gotoExtended(page, request);
 
             const { method, headers, bodyLength } = JSON.parse(await response.text());
             expect(method).toBe('POST');

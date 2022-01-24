@@ -1,10 +1,11 @@
 import * as cheerio from 'cheerio';
-import Apify, {
+import {
     CheerioCrawler,
     CheerioHandlePage,
     CheerioHandlePageInputs,
     RequestList,
-} from 'apify';
+    Request,
+} from '@crawlers/core';
 
 describe('CheerioCrawler TS', () => {
     describe('CheerioHandlePage', () => {
@@ -19,7 +20,7 @@ describe('CheerioCrawler TS', () => {
                 json: null as any,
                 proxyInfo: null as any,
                 session: null as any,
-                request: new Apify.Request({ url: ' http://www.test1234.com' }),
+                request: new Request({ url: ' http://www.test1234.com' }),
                 contentType: { type: 'text/html', encoding: 'utf-8' },
                 response: null as any,
                 crawler: null as any,

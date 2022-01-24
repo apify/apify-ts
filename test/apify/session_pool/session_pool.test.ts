@@ -1,6 +1,5 @@
-import Apify, { SessionPool, openSessionPool, events, Session, entries } from 'apify';
-import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
-import { Log } from 'apify/src/utils_log';
+import { SessionPool, openSessionPool, events, Session, entries, KeyValueStore, Configuration, ACTOR_EVENT_NAMES_EX } from '@crawlers/core';
+import { Log } from '@apify/log';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('SessionPool - testing session pool', () => {
@@ -13,8 +12,8 @@ describe('SessionPool - testing session pool', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
-        sessionPool = await Apify.openSessionPool();
+        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        sessionPool = await openSessionPool();
     });
 
     afterEach(async () => {
@@ -86,7 +85,7 @@ describe('SessionPool - testing session pool', () => {
 
     describe('should retrieve session', () => {
         test('should retrieve session with correct shape', async () => {
-            sessionPool = await Apify.openSessionPool({ sessionOptions: { maxAgeSecs: 100, maxUsageCount: 10 } });
+            sessionPool = await openSessionPool({ sessionOptions: { maxAgeSecs: 100, maxUsageCount: 10 } });
             const session = await sessionPool.getSession();
             expect(sessionPool.sessions.length).toBe(1);
             expect(session.id).toBeDefined();
@@ -154,7 +153,7 @@ describe('SessionPool - testing session pool', () => {
         await sessionPool.getSession();
         await sessionPool.persistState();
 
-        const kvStore = await Apify.openKeyValueStore();
+        const kvStore = await KeyValueStore.open();
         const sessionPoolSaved = await kvStore.getValue<ReturnType<SessionPool['getState']>>(sessionPool.persistStateKey);
 
         entries(sessionPoolSaved).forEach(([key, value]) => {
@@ -273,7 +272,7 @@ describe('SessionPool - testing session pool', () => {
     });
 
     test('should restore persisted maxUsageCount of recreated sessions', async () => {
-        sessionPool = await Apify.openSessionPool({ maxPoolSize: 1, sessionOptions: { maxUsageCount: 66 } });
+        sessionPool = await openSessionPool({ maxPoolSize: 1, sessionOptions: { maxUsageCount: 66 } });
         await sessionPool.getSession();
         await sessionPool.persistState();
         const loadedSessionPool = new SessionPool({ maxPoolSize: 1, sessionOptions: { maxUsageCount: 88 } });
@@ -289,7 +288,7 @@ describe('SessionPool - testing session pool', () => {
         const persistStateKey = 'TEST-KEY';
         const persistStateKeyValueStoreId = 'TEST-VALUE-STORE';
 
-        const newSessionPool = await Apify.openSessionPool({
+        const newSessionPool = await openSessionPool({
             maxPoolSize: 1,
             persistStateKeyValueStoreId,
             persistStateKey,
@@ -297,7 +296,7 @@ describe('SessionPool - testing session pool', () => {
 
         await newSessionPool.teardown();
 
-        const kvStore = await Apify.openKeyValueStore(newSessionPool.persistStateKeyValueStoreId);
+        const kvStore = await KeyValueStore.open(newSessionPool.persistStateKeyValueStoreId);
         const state = await kvStore.getValue(newSessionPool.persistStateKey);
 
         expect(newSessionPool.persistStateKeyValueStoreId).toBeDefined();
@@ -316,7 +315,7 @@ describe('SessionPool - testing session pool', () => {
             expect(sessionPool2 instanceof SessionPool).toBe(true);
             return new Session({ sessionPool: sessionPool2 });
         };
-        const newSessionPool = await Apify.openSessionPool({ createSessionFunction });
+        const newSessionPool = await openSessionPool({ createSessionFunction });
         const session = await newSessionPool.getSession();
         expect(isCalled).toBe(true);
         expect(session.constructor.name).toBe('Session');
@@ -335,7 +334,7 @@ describe('SessionPool - testing session pool', () => {
     });
 
     test('should be able to add session instance and create new session with provided sessionOptions with addSession() ', async () => {
-        const session = new Apify.Session({ sessionPool, id: 'test-session-instance' });
+        const session = new Session({ sessionPool, id: 'test-session-instance' });
         await sessionPool.addSession(session);
 
         await sessionPool.addSession({ id: 'test-session' });

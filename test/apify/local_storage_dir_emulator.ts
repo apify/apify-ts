@@ -1,11 +1,8 @@
+import log from '@apify/log';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { LOCAL_STORAGE_SUBDIRS, LOCAL_ENV_VARS, ENV_VARS } from '@apify/consts';
 import fs from 'fs-extra';
 import path from 'path';
-import { utils } from 'apify';
-import cacheContainer from 'apify/src/cache_container';
-
-const { log } = utils;
 
 const LOCAL_EMULATION_DIR = path.join(__dirname, '..', 'tmp', 'local-emulation-dir');
 
@@ -27,7 +24,8 @@ class LocalStorageDirEmulator {
     localStorageDirs: string[] = [];
 
     async init(dirName = cryptoRandomObjectId(10)) {
-        cacheContainer.clearAllCaches();
+        // TODO was this actually needed? cache instances are now inside the storage manager and should be freed once the manager is freed
+        // cacheContainer.clearAllCaches();
         const localStorageDir = path.resolve(LOCAL_EMULATION_DIR, dirName);
         await fs.ensureDir(localStorageDir);
         // prepare structure

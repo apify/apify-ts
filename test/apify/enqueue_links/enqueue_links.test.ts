@@ -1,12 +1,10 @@
 import cheerio from 'cheerio';
-import Apify, { CheerioRoot, Request, RequestOptions } from 'apify';
-import { apifyClient } from 'apify/src/utils';
-import { enqueueLinks } from 'apify/src/enqueue_links/enqueue_links';
-import { RequestQueue } from 'apify/src/storages/request_queue';
+import { CheerioRoot, Configuration, Request, RequestOptions, RequestQueue, enqueueLinks, launchPuppeteer, launchPlaywright, PseudoUrl } from '@crawlers/core';
+import log from '@apify/log';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
 
-const { utils: { log } } = Apify;
+const apifyClient = Configuration.getDefaultClient();
 
 const HTML = `
 <html>
@@ -45,14 +43,14 @@ describe('enqueueLinks()', () => {
     });
 
     describe.each([
-        ['launchPuppeteer'],
-        ['launchPlaywright'],
-    ] as const)('using %s', (launchName) => {
+        [launchPuppeteer],
+        [launchPlaywright],
+    ] as const)('using %s', (method) => {
         let browser: PuppeteerBrowser | PlaywrightBrowser;
         let page: PuppeteerPage | PlaywrightPage;
 
         beforeEach(async () => {
-            browser = await Apify[launchName]({ launchOptions: { headless: true } }) as PlaywrightBrowser | PuppeteerBrowser;
+            browser = await method({ launchOptions: { headless: true } }) as PlaywrightBrowser | PuppeteerBrowser;
             page = await browser.newPage();
             await page.setContent(HTML);
         });
@@ -101,8 +99,8 @@ describe('enqueueLinks()', () => {
             };
 
             const pseudoUrls = [
-                new Apify.PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
-                new Apify.PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
             await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
@@ -314,9 +312,9 @@ describe('enqueueLinks()', () => {
             };
 
             const pseudoUrls = [
-                new Apify.PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
                 null,
-                new Apify.PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
             try {
@@ -349,11 +347,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             const pseudoUrls = [
-                new Apify.PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
-                new Apify.PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await Apify.utils.enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
 
             expect(enqueued).toHaveLength(3);
 
@@ -379,8 +377,8 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             const pseudoUrls = [
-                new Apify.PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
-                new Apify.PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
             await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
@@ -583,9 +581,9 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             const pseudoUrls = [
-                new Apify.PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
                 null,
-                new Apify.PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
             try {

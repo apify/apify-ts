@@ -1,10 +1,4 @@
-import { Session } from 'apify/src/session_pool/session';
-import { SessionPool } from 'apify/src/session_pool/session_pool';
-import { ProxyConfiguration } from 'apify/src/proxy_configuration';
-import { EVENT_SESSION_RETIRED } from 'apify/src/session_pool/events';
-import { STATUS_CODES_BLOCKED } from 'apify/src/constants';
-
-import Apify, { Dictionary, entries } from 'apify';
+import { Session, SessionPool, ProxyConfiguration, EVENT_SESSION_RETIRED, STATUS_CODES_BLOCKED, Dictionary, entries, sleep } from '@crawlers/core';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool: SessionPool;
@@ -54,7 +48,7 @@ describe('Session - testing session behaviour ', () => {
 
     test('should expire session', async () => {
         session = new Session({ maxAgeSecs: 1 / 100, sessionPool });
-        await Apify.utils.sleep(101);
+        await sleep(101);
         expect(session.isExpired()).toBe(true);
         expect(session.isUsable()).toBe(false);
     });

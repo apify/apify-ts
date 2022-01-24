@@ -1,15 +1,14 @@
 import { ENV_VARS } from '@apify/consts';
-import sinon from 'sinon';
-import log from 'apify/src/utils_log';
-import Apify, {
+import log from '@apify/log';
+import {
+    Configuration,
     ProxyConfiguration,
-    PuppeteerCookie,
+    PuppeteerCookie, PuppeteerCrawler,
     PuppeteerGoToOptions,
     PuppeteerHandlePage,
     PuppeteerHandlePageFunctionParam,
-    Request,
-} from 'apify';
-import * as utils from 'apify/src/utils';
+    Request, RequestList, RequestQueue, Session, sleep,
+} from '@crawlers/core';
 import { createServer, Server } from 'http';
 import { Server as ProxyChainServer } from 'proxy-chain';
 import { promisify } from 'util';
@@ -22,7 +21,7 @@ describe('PuppeteerCrawler', () => {
     let prevEnvHeadless: string;
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
-    let requestList: Apify.RequestList;
+    let requestList: RequestList;
     let servers: ProxyChainServer[];
     let target: Server;
 
@@ -51,9 +50,9 @@ describe('PuppeteerCrawler', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
         const sources = ['http://example.com/'];
-        requestList = await Apify.openRequestList(`sources-${Math.random() * 10000}`, sources);
+        requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });
 
     afterAll(async () => {
@@ -77,7 +76,7 @@ describe('PuppeteerCrawler', () => {
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
         const processed: Request[] = [];
         const failed: Request[] = [];
-        const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
+        const requestListLarge = new RequestList({ sources: sourcesLarge });
         const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
             await page.waitForSelector('title');
             expect(response.status()).toBe(200);
@@ -85,7 +84,7 @@ describe('PuppeteerCrawler', () => {
             processed.push(request);
         };
 
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList: requestListLarge,
             minConcurrency: 1,
             maxConcurrency: 1,
@@ -111,7 +110,7 @@ describe('PuppeteerCrawler', () => {
     test('should override goto timeout with gotoTimeoutSecs ', async () => {
         const timeoutSecs = 10;
         let options: PuppeteerGoToOptions;
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -138,7 +137,7 @@ describe('PuppeteerCrawler', () => {
         };
         jest.spyOn(functions, 'gotoFunction');
         jest.spyOn(functions, 'handlePageFunction');
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -157,7 +156,7 @@ describe('PuppeteerCrawler', () => {
     test('should override goto timeout with navigationTimeoutSecs ', async () => {
         const timeoutSecs = 10;
         let options: PuppeteerGoToOptions;
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -177,7 +176,7 @@ describe('PuppeteerCrawler', () => {
 
     test('should throw if launchOptions.proxyUrl is supplied', async () => {
         try {
-            new Apify.PuppeteerCrawler({ //eslint-disable-line
+            new PuppeteerCrawler({ //eslint-disable-line
                 requestList,
                 maxRequestRetries: 0,
                 maxConcurrency: 1,
@@ -195,9 +194,9 @@ describe('PuppeteerCrawler', () => {
 
     // FIXME: I have no idea why but this test hangs
     test.skip('supports useChrome option', async () => {
-        const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
+        // const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
         // @ts-expect-error
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({ //eslint-disable-line
+        const puppeteerCrawler = new PuppeteerCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -210,8 +209,8 @@ describe('PuppeteerCrawler', () => {
             handlePageFunction: () => {},
         });
 
-        expect(spy.calledOnce).toBe(true);
-        spy.restore();
+        // expect(spy.calledOnce).toBe(true);
+        // spy.restore();
     });
 
     test('supports userAgent option', async () => {
@@ -224,7 +223,7 @@ describe('PuppeteerCrawler', () => {
         };
         let loadedUserAgent;
 
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -240,17 +239,17 @@ describe('PuppeteerCrawler', () => {
     });
 
     test('timeout via preNavigationHooks will abort the page function as early as possible (gh #1216)', async () => {
-        const requestQueue = await Apify.openRequestQueue();
+        const requestQueue = await RequestQueue.open();
         await requestQueue.addRequest({ url: 'http://www.example.com' });
         const handlePageFunction = jest.fn();
 
-        const crawler = new Apify.PuppeteerCrawler({
+        const crawler = new PuppeteerCrawler({
             requestQueue,
             handlePageTimeoutSecs: 0.005,
             navigationTimeoutSecs: 0.005,
             preNavigationHooks: [
                 async () => {
-                    await Apify.utils.sleep(20);
+                    await sleep(20);
                 },
             ],
             handlePageFunction,
@@ -292,18 +291,18 @@ describe('PuppeteerCrawler', () => {
     });
 
     test('timeout in preLaunchHooks will abort the page function as early as possible (gh #1216)', async () => {
-        const requestQueue = await Apify.openRequestQueue();
+        const requestQueue = await RequestQueue.open();
         await requestQueue.addRequest({ url: 'http://www.example.com' });
         const handlePageFunction = jest.fn();
 
-        const crawler = new Apify.PuppeteerCrawler({
+        const crawler = new PuppeteerCrawler({
             requestQueue,
             navigationTimeoutSecs: 0.005,
             browserPoolOptions: {
                 preLaunchHooks: [
                     async () => {
                         // Do some async work that's longer than navigationTimeoutSecs
-                        await Apify.utils.sleep(20);
+                        await sleep(20);
                     },
                 ],
             },
@@ -358,13 +357,13 @@ describe('PuppeteerCrawler', () => {
         let pageCookies;
         let sessionCookies;
 
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             useSessionPool: true,
             persistCookiesPerSession: true,
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {
-                    const session = new Apify.Session({ sessionPool });
+                    const session = new Session({ sessionPool });
                     session.setPuppeteerCookies(cookies, 'http://www.example.com');
                     return session;
                 },
@@ -392,8 +391,8 @@ describe('PuppeteerCrawler', () => {
                 `http://127.0.0.4:${servers[2].port}`,
             ],
         });
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
-            requestList: await Apify.openRequestList(null, [
+        const puppeteerCrawler = new PuppeteerCrawler({
+            requestList: await RequestList.open(null, [
                 { url: `${serverUrl}/?q=1` },
                 { url: `${serverUrl}/?q=2` },
                 { url: `${serverUrl}/?q=3` },
@@ -432,7 +431,7 @@ describe('PuppeteerCrawler', () => {
 
         const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
 
-        const requestListLarge = new Apify.RequestList({
+        const requestListLarge = new RequestList({
             sources: [
                 { url: `${serverUrl}/?q=1` },
                 { url: `${serverUrl}/?q=2` },
@@ -449,7 +448,7 @@ describe('PuppeteerCrawler', () => {
             4: 0,
         };
 
-        const puppeteerCrawler = new Apify.PuppeteerCrawler({
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList: requestListLarge,
             useSessionPool: true,
             launchContext: {

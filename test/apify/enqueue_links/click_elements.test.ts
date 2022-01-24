@@ -1,6 +1,13 @@
-import Apify, { Request, RequestOptions } from 'apify';
-import { RequestQueue } from 'apify/src/storages/request_queue';
-import { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } from 'apify/src/enqueue_links/click_elements';
+import {
+    Request,
+    RequestQueue,
+    RequestOptions,
+    clickElements,
+    clickElementsAndInterceptNavigationRequests,
+    isTargetRelevant,
+    launchPuppeteer,
+    puppeteerUtils,
+} from '@crawlers/core';
 import { Browser, Page, Target } from 'puppeteer';
 
 describe('enqueueLinksByClickingElements()', () => {
@@ -8,7 +15,7 @@ describe('enqueueLinksByClickingElements()', () => {
     let page: Page;
 
     beforeAll(async () => {
-        browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        browser = await launchPuppeteer({ launchOptions: { headless: true } });
     });
 
     afterAll(async () => {
@@ -36,7 +43,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
 
         await page.setContent(html);
-        await Apify.utils.puppeteer.enqueueLinksByClickingElements({
+        await puppeteerUtils.enqueueLinksByClickingElements({
             page,
             requestQueue,
             selector: 'a',
@@ -188,25 +195,22 @@ describe('enqueueLinksByClickingElements()', () => {
             expect(pageContent).toMatch('onclick="return window.location = ');
         });
 
-        test(
-            'should save the hash when changing it with window.location',
-            async () => {
-                const html = `
+        test('should save the hash when changing it with window.location', async () => {
+            const html = `
     <html>
         <body>
             <div onclick="return window.location = '#foo'">div</div>
         </body>
     </html>
             `;
-                await page.goto('https://example.com');
-                await page.setContent(html);
-                const interceptedRequests = await clickElementsAndInterceptNavigationRequests(getOpts());
-                expect(interceptedRequests).toHaveLength(1);
-                expect(interceptedRequests[0].url).toBe('https://example.com/#foo');
-                const pageContent = await page.content();
-                expect(pageContent).toMatch('onclick="return window.location = ');
-            },
-        );
+            await page.goto('https://example.com');
+            await page.setContent(html);
+            const interceptedRequests = await clickElementsAndInterceptNavigationRequests(getOpts());
+            expect(interceptedRequests).toHaveLength(1);
+            expect(interceptedRequests[0].url).toBe('https://example.com/#foo');
+            const pageContent = await page.content();
+            expect(pageContent).toMatch('onclick="return window.location = ');
+        });
 
         test('should prevent reload from cache with window.reload()', async () => {
             const html = `

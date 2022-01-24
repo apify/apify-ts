@@ -1,14 +1,22 @@
 import { ENV_VARS } from '@apify/consts';
 import playwright from 'playwright';
-import log from 'apify/src/utils_log';
-import Apify, { PlaywrightGotoOptions, PlaywrightHandlePageFunction, PlaywrightHandlePageFunctionParam, Request } from 'apify';
+import log from '@apify/log';
+import {
+    Configuration,
+    PlaywrightCrawler,
+    PlaywrightGotoOptions,
+    PlaywrightHandlePageFunction,
+    PlaywrightHandlePageFunctionParam,
+    Request,
+    RequestList,
+} from '@crawlers/core';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {
     let prevEnvHeadless: string;
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
-    let requestList: Apify.RequestList;
+    let requestList: RequestList;
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -19,9 +27,9 @@ describe('PlaywrightCrawler', () => {
     });
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
         const sources = ['http://example.com/'];
-        requestList = await Apify.openRequestList(`sources-${Math.random() * 10000}`, sources);
+        requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });
     afterAll(async () => {
         log.setLevel(logLevel);
@@ -43,14 +51,14 @@ describe('PlaywrightCrawler', () => {
             const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
             const processed: Request[] = [];
             const failed: Request[] = [];
-            const requestListLarge = new Apify.RequestList({ sources: sourcesLarge });
+            const requestListLarge = new RequestList({ sources: sourcesLarge });
             const handlePageFunction = async ({ page, request, response }: Parameters<PlaywrightHandlePageFunction>[0]) => {
                 expect(response.status()).toBe(200);
                 request.userData.title = await page.title();
                 processed.push(request);
             };
 
-            const playwrightCrawler = new Apify.PlaywrightCrawler({
+            const playwrightCrawler = new PlaywrightCrawler({
                 launchContext: {
                     launcher: playwright[browser],
                 },
@@ -80,7 +88,7 @@ describe('PlaywrightCrawler', () => {
     test('should override goto timeout with gotoTimeoutSecs', async () => {
         const timeoutSecs = 10;
         let options: PlaywrightGotoOptions;
-        const playwrightCrawler = new Apify.PlaywrightCrawler({ //eslint-disable-line
+        const playwrightCrawler = new PlaywrightCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -109,7 +117,7 @@ describe('PlaywrightCrawler', () => {
         };
         jest.spyOn(functions, 'gotoFunction');
         jest.spyOn(functions, 'handlePageFunction');
-        const playwrightCrawler = new Apify.PlaywrightCrawler({ //eslint-disable-line
+        const playwrightCrawler = new PlaywrightCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -128,7 +136,7 @@ describe('PlaywrightCrawler', () => {
     test('should override goto timeout with navigationTimeoutSecs', async () => {
         const timeoutSecs = 10;
         let options: PlaywrightGotoOptions;
-        const playwrightCrawler = new Apify.PlaywrightCrawler({
+        const playwrightCrawler = new PlaywrightCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,

@@ -1,6 +1,5 @@
-import log from 'apify/src/utils_log';
-import { SystemStatus } from 'apify/src/autoscaling/system_status';
-import { Snapshotter } from 'apify/src/autoscaling/snapshotter';
+import log from '@apify/log';
+import { Snapshotter, SystemStatus } from '@crawlers/core';
 
 describe('SystemStatus', () => {
     let logLevel: number;
