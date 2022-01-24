@@ -55,7 +55,6 @@ const testMain = async ({ userFunc, exitCode }: { userFunc?: (sdk?: Actor) => vo
                 expect(exitSpy).toBeCalledWith(exitCode);
             });
     } finally {
-        console.log(exitSpy.mock.calls);
         expect(exitSpy).toBeCalledWith(exitCode);
         exitSpy.mockRestore();
     }

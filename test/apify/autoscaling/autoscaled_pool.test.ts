@@ -273,7 +273,6 @@ describe('AutoscaledPool', () => {
             const runTaskFunction = async () => {
                 counter++;
                 await sleep(1);
-                // console.log('AFTER SLEEP');
                 if (counter > 20) throw new Error('some-promise-error');
             };
 

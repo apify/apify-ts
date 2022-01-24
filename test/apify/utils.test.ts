@@ -349,7 +349,6 @@ describe('getMemoryInfo()', () => {
 
         try {
             const data = await getMemoryInfo();
-            console.log(readFileSpy.mock.calls);
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,

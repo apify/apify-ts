@@ -66,12 +66,10 @@ beforeAll(() => {
                 if (!auth) {
                     // optimization: don't invoke the child process if no
                     // "Proxy-Authorization" header was given
-                    // console.log('not Proxy-Authorization');
                     return fn(null, false);
                 }
                 const parsed = basicAuthParser(auth);
                 const isEqual = _.isEqual(parsed, proxyAuth);
-                // console.log('Parsed "Proxy-Authorization": parsed: %j expected: %j : %s', parsed, proxyAuth, isEqual);
                 if (isEqual) wasProxyCalled = true;
                 fn(null, isEqual);
             };
