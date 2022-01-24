@@ -253,8 +253,8 @@ describe('BasicCrawler', () => {
         expect(failed['http://example.com/2'].retryCount).toBe(3);
         expect(failed['http://example.com/3'].errorMessages).toHaveLength(4);
         expect(failed['http://example.com/3'].retryCount).toBe(3);
-        expect(_.values(failed)).toHaveLength(3);
-        expect(_.values(processed)).toHaveLength(0);
+        expect(Object.values(failed)).toHaveLength(3);
+        expect(Object.values(processed)).toHaveLength(0);
         expect(await requestList.isFinished()).toBe(true);
         expect(await requestList.isEmpty()).toBe(true);
         errors.forEach((error) => expect(error).toBeInstanceOf(Error));

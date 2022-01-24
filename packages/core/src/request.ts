@@ -2,7 +2,7 @@ import { normalizeUrl } from '@apify/utilities';
 import crypto, { BinaryLike } from 'crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
-import { AllowedHttpMethods } from 'apify-client/dist/resource_clients/request_queue';
+import { AllowedHttpMethods } from 'apify-client';
 import defaultLog from './utils_log';
 import { keys } from './typedefs';
 

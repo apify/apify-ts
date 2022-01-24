@@ -1,8 +1,7 @@
 import ow from 'ow';
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { BrowserController, BrowserPool, BrowserPoolHooks, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
-import type { BrowserPlugin, CommonPage } from 'browser-pool/dist/abstract-classes/browser-plugin'; // TODO expose
-import type { InferBrowserPluginArray } from 'browser-pool/dist/utils'; // TODO expose
+import type { BrowserPlugin, CommonPage, InferBrowserPluginArray } from 'browser-pool';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { EVENT_SESSION_RETIRED } from '../session_pool/events';
 import { validators } from '../validators';
@@ -529,12 +528,9 @@ export abstract class BrowserCrawler<
             };
 
             this.sessionPool.on(EVENT_SESSION_RETIRED, listener);
-            console.log('removeListener', browserController.listeners(BROWSER_CONTROLLER_EVENTS.BROWSER_CLOSED));
             browserController.on(BROWSER_CONTROLLER_EVENTS.BROWSER_CLOSED, () => {
-                console.log('browser closed');
                 return this.sessionPool!.removeListener(EVENT_SESSION_RETIRED, listener);
             });
-            console.log('removeListener', browserController.listeners(BROWSER_CONTROLLER_EVENTS.BROWSER_CLOSED));
         }
     }
 
