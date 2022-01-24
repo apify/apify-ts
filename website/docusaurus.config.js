@@ -81,6 +81,7 @@ module.exports = {
             title: 'Apify',
             logo: {
                 src: 'img/apify_sdk.svg',
+                srcDark: 'img/apify_sdk_white.svg',
             },
             items: [
                 {

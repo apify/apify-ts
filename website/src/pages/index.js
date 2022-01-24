@@ -30,8 +30,8 @@ function Hero() {
                             </div>
                         </div>
                     </div>
-                    <div className="col col--5">
-                        <img src={require('../../static/img/API.png').default} />
+                    <div className="col col--5" style={{ textAlign: 'center' }}>
+                        <img src={require('../../static/img/API.png').default} className={clsx(styles.hideSmall)} />
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@ function Features() {
         <section className={clsx('container', styles.features)}>
             <div className="row">
                 <div className="col col--6">
-                    <img src={require('../../static/img/chrome_scrape.gif').default} />
+                    <img src={require('../../static/img/chrome_scrape.gif').default} className={clsx(styles.hideSmall)} />
                 </div>
                 <div className="col col--4">
                     <h2>Easy crawling</h2>
@@ -59,7 +59,7 @@ function Features() {
                 </div>
                 <div className="col col--2"></div>
                 <div className="col col--6">
-                    <img src={require('../../static/img/source_code.png').default} />
+                    <img src={require('../../static/img/source_code.png').default} style={{ border: '1px solid white' }} className={clsx(styles.hideSmall)} />
                 </div>
             </div>
         </section>

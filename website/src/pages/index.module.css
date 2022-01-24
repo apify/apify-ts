@@ -4,10 +4,10 @@
  */
 
 .heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+    padding: 4rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
 .heroBanner {
@@ -15,21 +15,36 @@
 }
 
 @media screen and (max-width: 966px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+    .heroBanner {
+        padding: 2rem;
+    }
 }
 
 .buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tagline {
     font-weight: 700;
     font-size: 38px;
     text-align: left;
+}
+
+@media only screen and (max-device-width: 736px) {
+    .tagline {
+        font-size: 26px;
+    }
+
+    .heroButtons {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .hideSmall {
+        display: none;
+    }
 }
 
 .tagline span {
@@ -49,9 +64,12 @@
     background-color: hsl(214, 84%, 60%);
 }
 
+html[data-theme='dark'] .seeExamples {
+    border-color: #585E76;
+}
+
 .seeExamples {
-    border: 1px solid hsl(229, 0%, 87%);
-    background-color: white;
+    border: 2px solid #CFD4EB;
     color: var(--ifm-font-family-base);
     padding: 12px 20px;
     border-radius: 8px;
@@ -59,14 +77,19 @@
 }
 
 .seeExamples:hover {
-    background-color: hsl(229, 0%, 95%);
     color: var(--ifm-font-color-base);
+    background-color: hsl(229, 41%, 97%);
+}
+
+html[data-theme='dark'] .seeExamples:hover {
+    background-color: hsla(214, 0%, 95%, 10%);
 }
 
 .heroButtons {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
 }
 
 .features > * {
