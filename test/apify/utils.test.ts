@@ -335,14 +335,13 @@ describe('getMemoryInfo()', () => {
         const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
         isDockerSpy.mockResolvedValueOnce(true);
 
-        const accessSpy = jest.spyOn(fs, 'readFile');
+        const accessSpy = jest.spyOn(fs, 'access');
         // @ts-expect-error sinon doesn't pick up certain FS overloads
         accessSpy.mockImplementation((_file: string, _mode: unknown, callback: (err: string) => void) => callback('error'));
 
         const readFileSpy = jest.spyOn(fs, 'readFile');
         // @ts-expect-error jest doesn't pick up certain FS overloads
         readFileSpy.mockImplementation((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
-            console.log('wat', filePath);
             if (filePath === '/sys/fs/cgroup/memory.max') callback(null, '333\n');
             else if (filePath === '/sys/fs/cgroup/memory.current') callback(null, '111\n');
             else throw new Error('Invalid path');
