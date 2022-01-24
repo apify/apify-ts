@@ -17,7 +17,7 @@ function Hero() {
                             <p className={styles.tagline}>
                                 The scalable <span>web crawling</span>,<br />
                                 <span>scraping</span> and <span>automation library</span><br />
-                                for JavaScript/Node.js.
+                                for JavaScript/Node.js
                             </p>
                         </div>
                         <div className="row">

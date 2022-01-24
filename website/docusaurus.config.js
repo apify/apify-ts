@@ -5,7 +5,7 @@ const versions = require('./versions.json');
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
     title: 'Apify SDK',
-    tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js.',
+    tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js',
     url: 'https://apify.github.io',
     baseUrl: '/apify-ts/',
     organizationName: 'apify',
@@ -107,6 +107,20 @@ module.exports = {
                 {
                     type: 'docsVersionDropdown',
                     position: 'right',
+                },
+                {
+                    to: 'api',
+                    type: 'dropdown',
+                    label: versions[0],
+                    position: 'right',
+                    items: [
+                        { label: 'Next', to: 'api/next' },
+                        ...versions.map((version, i) => ({
+                            label: version,
+                            to: i === 0 ? 'api' : `api/${version}`,
+                            exact: true,
+                        })),
+                    ],
                 },
                 {
                     type: 'search',
