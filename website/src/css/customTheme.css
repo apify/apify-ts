@@ -1,9 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap');
+
+html[data-theme='dark'] {
+    --ifm-navbar-background-color: #191a22;
+    --ifm-background-color: #191a22;
+    --ifm-background-surface-color: #242736;
+
+    --ifm-font-color-base: #f2f3fb;
+
+    --ifm-pre-background: #242736;
+
+    --ifm-footer-background-color: #242736;
+}
+
 :root {
-  --ifm-color-primary-lightest: #387AEF;
-  --ifm-color-primary-lighter: #1965EC;
-  --ifm-color-primary-light: #1360E7;
-  --ifm-color-primary: #1157D2;
-  --ifm-color-primary-dark: #0F4EBD;
-  --ifm-color-primary-darker: #0E4AB3;
-  --ifm-color-primary-darkest: #0C3D93;
+    --ifm-font-family-base: 'Be Vietnam Pro', sans-serif;
+    --ifm-font-weight-semibold: 600;
+    --ifm-font-color-base: #242736;
+
+    --ifm-navbar-item-padding-horizontal: 1.75rem;
+    --ifm-navbar-shadow: none;
+
+    --ifm-heading-margin-top: var(--ifm-heading-margin-bottom);
+    --ifm-hero-background-color: transparent;
+
+    --ifm-code-background: var(--ifm-pre-background) !important;
+    --ifm-code-padding-horizontal: 0.4rem;
+    --ifm-code-padding-vertical: 0.2rem;
+
+    --ifm-color-primary-lightest: #5d9df1;
+    --ifm-color-primary-lighter: #3a87ee;
+    --ifm-color-primary-light: #2e80ed;
+    --ifm-color-primary: #1672eb;
+    --ifm-color-primary-dark: #1266d5;
+    --ifm-color-primary-darker: #1161c9;
+    --ifm-color-primary-darkest: #0e50a6;
+
+    --ifm-link-color: hsl(214, 84%, 50%);
+    --ifm-link-hover-color: hsl(214, 84%, 65%);
+    --ifm-link-hover-decoration: none;
+
+    --ifm-footer-background-color: #1a1b22;
+    --ifm-footer-title-color: #f2f3fb;
+    --ifm-footer-link-color: #f2f3fb;
+}
+
+.footer__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.footer__bottom a {
+    opacity: 0.75;
+}
+
+.footer__copyright {
+    color: var(--ifm-footer-title-color);
+}
+
+.navbar__title {
+    /* Replaced by SVG */
+    display: none;
+}
+
+.navbar__inner {
+    /* .container */
+    margin: 0 auto;
+    max-width: var(--ifm-container-width-xl);
+    padding: 0 var(--ifm-spacing-horizontal);
+    width: 100%;
+}
+
+.DocSearch-Button {
+    border-radius: 6px !important;
+    font-weight: var(--ifm-font-weight-semibold) !important;
+
+    /* Annoying, but needed */
+    /* https://stackoverflow.com/questions/26140050/why-is-font-family-not-inherited-in-button-tags-automatically/26140154 */
+    font-family: inherit;
 }

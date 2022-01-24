@@ -4,24 +4,111 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
-import HomepageFeatures from '../components/HomepageFeatures';
+import Hightlights from '../components/Highlights';
+import PropTypes from 'prop-types';
 
-function HomepageHeader() {
-    const { siteConfig } = useDocusaurusContext();
+function Hero() {
     return (
-        <header className={clsx('hero hero--primary', styles.heroBanner)}>
+        <header className={clsx('hero container', styles.heroBanner)}>
             <div className="container">
-                <h1 className="hero__title">{siteConfig.title}</h1>
-                <p className="hero__subtitle">{siteConfig.tagline}</p>
-                <div className={styles.buttons}>
-                    <Link
-                        className="button button--secondary button--lg"
-                        to="/docs/intro">
-                        Docusaurus Tutorial - 5min ⏱️
-                    </Link>
+                <div className="row">
+                    <div className="col col--7">
+                        <div className="row">
+                            <p className={styles.tagline}>
+                                The scalable <span>web crawling</span>,<br />
+                                <span>scraping</span> and <span>automation library</span><br />
+                                for JavaScript/Node.js.
+                            </p>
+                        </div>
+                        <div className="row">
+                            <div className="col col--9">
+                                <div className={styles.heroButtons}>
+                                    <Link to="docs/guides/getting-started" className={styles.getStarted}>Get Started</Link>
+                                    <Link to="docs/examples/basic-crawler" className={styles.seeExamples}>See examples</Link>
+                                    <iframe src="https://ghbtns.com/github-btn.html?user=apify&repo=apify-ts&type=star&count=true&size=large" frameBorder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col col--5" style={{ textAlign: 'center' }}>
+                        <img src={require('../../static/img/API.png').default} className={clsx(styles.hideSmall)} />
+                    </div>
                 </div>
             </div>
         </header>
+    );
+}
+
+function Features() {
+    return (
+        <section className={clsx('container', styles.features)}>
+            <div className="row">
+                <div className="col col--6">
+                    <img src={require('../../static/img/chrome_scrape.gif').default} className={clsx(styles.hideSmall)} />
+                </div>
+                <div className="col col--4">
+                    <h2>Easy crawling</h2>
+                    <p>There are three main classes that you can use to start crawling the web in no time. Need to crawl plain HTML? Use the blazing fast CheerioCrawler. For complex websites that use React, Vue or other front-end javascript libraries and require JavaScript execution, spawn a headless browser with PlaywrightCrawler or PuppeteerCrawler.</p>
+                </div>
+                <div className="col col--2"></div>
+            </div>
+            <div className="row">
+                <div className="col col--4">
+                    <h2>Powerful tools</h2>
+                    <p>All the crawlers are automatically scaled based on available system resources using the AutoscaledPool class. When you run your code on the Apify Platform, you can also take advantage of a pool of proxies to avoid detection. For data storage, you can use the Dataset, KeyValueStore and RequestQueue classes.</p>
+                </div>
+                <div className="col col--2"></div>
+                <div className="col col--6">
+                    <img src={require('../../static/img/source_code.png').default} style={{ border: '1px solid white' }} className={clsx(styles.hideSmall)} />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+const example = `const Apify = require('apify');
+
+Apify.main(async () => {
+    const requestQueue = await Apify.openRequestQueue();
+    await requestQueue.addRequest({ url: 'https://www.iana.org/' });
+
+    const crawler = new Apify.PuppeteerCrawler({
+        requestQueue,
+        handlePageFunction: async ({ request, page }) => {
+            const title = await page.title();
+            ${'console.log(`Tilte of ${request.url}`: ${title});'}
+            await Apify.utils.enqueueLinks({
+                requestQueue,
+                page,
+                pseudoUrls: [
+                    'https://www.iana.org/[.*]',
+                ],
+            });
+        },
+    });
+});`;
+
+function Code({ value }) {
+    return (
+        <pre>{value}</pre>
+    );
+}
+
+Code.propTypes = {
+    value: PropTypes.string,
+};
+
+function ActorExample() {
+    return (
+        <section className="container">
+            <h2>Try it out</h2>
+            <p>Install Apify SDK into a Node.js project. You must have Node.js 10 or higher installed.</p>
+            <Code value="npm install puppeteer" />
+            <p>Copy the following code into a file in the project, for example <code>main.js</code>:</p>
+            <Code value={example} />
+            <p>Execute the following command in the project's folder and watch it recursively crawl IANA with Puppeteer and Chromium.</p>
+            <Code value="node main.js" />
+        </section>
     );
 }
 
@@ -29,12 +116,12 @@ export default function Home() {
     const { siteConfig } = useDocusaurusContext();
     return (
         <Layout
-            title={`Hello from ${siteConfig.title}`}
+            title={siteConfig.title}
             description="Description will go into a meta tag in <head />">
-            <HomepageHeader />
-            <main>
-                <HomepageFeatures />
-            </main>
+            <Hero />
+            <Hightlights />
+            <Features />
+            <ActorExample />
         </Layout>
     );
 }
