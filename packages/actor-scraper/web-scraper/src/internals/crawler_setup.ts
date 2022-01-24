@@ -341,7 +341,6 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
             // Inject selected libraries
             if (this.input.injectJQuery) await puppeteer.injectJQuery(page);
-            if (this.input.injectUnderscore) await puppeteer.injectUnderscore(page);
 
             tools.logPerformance(request, 'gotoFunction INJECTION DELAY', delayStart);
             tools.logPerformance(request, 'gotoFunction EXECUTION', pageContext.timers.start);
@@ -388,7 +387,6 @@ export class CrawlerSetup implements CrawlerSetupOptions {
                 env: this.env,
                 customData: this.input.customData,
                 injectJQuery: this.input.injectJQuery,
-                injectUnderscore: this.input.injectUnderscore,
                 META_KEY,
             },
             browserHandles: pageContext.browserHandles,

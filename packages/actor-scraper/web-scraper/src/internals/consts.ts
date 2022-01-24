@@ -21,7 +21,6 @@ export interface Input {
     preNavigationHooks?: string;
     postNavigationHooks?: string;
     injectJQuery: boolean;
-    injectUnderscore: boolean;
     proxyConfiguration: ProxyConfigurationOptions;
     proxyRotation: ProxyRotation;
     sessionPoolName?: string;

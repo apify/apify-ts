@@ -79,7 +79,6 @@ export function createBundle(apifyNamespace: string) {
             log: typeof utils.log;
 
             jQuery: any;
-            underscoreJs: any;
 
             constructor(options: ContextOptions) {
                 const {
@@ -121,7 +120,6 @@ export function createBundle(apifyNamespace: string) {
 
                 // Browser side libraries
                 if (this[setup].injectJQuery) this.jQuery = global.jQuery.noConflict(true);
-                if (this[setup].injectUnderscore) this.underscoreJs = global._.noConflict();
 
                 // Bind this to allow destructuring off context in pageFunction.
                 this.getValue = this.getValue.bind(this);
@@ -265,6 +263,5 @@ interface ProvidedResponse {
 
 interface BrowserCrawlerSetup extends CrawlerSetupOptions {
     injectJQuery?: boolean;
-    injectUnderscore?: boolean;
     META_KEY: typeof constants.META_KEY;
 }
