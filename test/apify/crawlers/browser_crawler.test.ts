@@ -3,8 +3,7 @@
 import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
 import sinon from 'sinon';
-import { BrowserPool, PuppeteerPlugin, BROWSER_POOL_EVENTS } from 'browser-pool';
-import { OperatingSystemsName } from 'browser-pool/dist/fingerprinting/types';
+import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from 'browser-pool';
 import puppeteer from 'puppeteer';
 import log from '@apify/log';
 import {

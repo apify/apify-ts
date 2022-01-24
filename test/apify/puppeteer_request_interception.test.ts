@@ -2,7 +2,7 @@ import express from 'express';
 import { launchPuppeteer, puppeteerUtils, sleep } from '@crawlers/core';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { HTTPRequest } from 'browser-pool/dist/puppeteer/puppeteer-proxy-per-page';
+import { HTTPRequest } from 'puppeteer';
 import { startExpressAppPromise } from './_helper';
 
 const { addInterceptRequestHandler, removeInterceptRequestHandler } = puppeteerUtils;
