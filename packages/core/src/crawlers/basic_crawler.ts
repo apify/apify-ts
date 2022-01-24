@@ -1,7 +1,6 @@
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
-import { defaults } from 'underscore';
 import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
 import { Log } from '@apify/log';
 import { IncomingMessage } from 'http';
@@ -407,9 +406,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
             log,
         };
 
-        // this.autoscaledPoolOptions = { ...autoscaledPoolOptions, ...basicCrawlerAutoscaledPoolConfiguration };
-        // TODO ensure this works the same
-        this.autoscaledPoolOptions = defaults({}, basicCrawlerAutoscaledPoolConfiguration, autoscaledPoolOptions);
+        this.autoscaledPoolOptions = { ...autoscaledPoolOptions, ...basicCrawlerAutoscaledPoolConfiguration };
         this.isRunningPromise = undefined;
 
         // Attach a listener to handle migration and aborting events gracefully.

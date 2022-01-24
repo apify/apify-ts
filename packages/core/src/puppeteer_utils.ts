@@ -35,7 +35,6 @@ import { Dictionary } from './typedefs';
 import { Request } from './request';
 
 const jqueryPath = require.resolve('jquery');
-const underscorePath = require.resolve('underscore');
 const readFilePromised = util.promisify(fs.readFile);
 
 const MAX_INJECT_FILE_CACHE_SIZE = 10;
@@ -157,30 +156,6 @@ export async function injectFile(page: Page, filePath: string, options: InjectFi
 export function injectJQuery(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     return injectFile(page, jqueryPath, { surviveNavigations: true });
-}
-
-/**
- * Injects the [Underscore](https://underscorejs.org/) library into a Puppeteer page.
- *
- * Beware that the injected Underscore object will be set to the `window._` variable and thus it might cause conflicts with
- * libraries included by the page that use the same variable name.
- * This can affect functionality of page's scripts.
- *
- * The injected Underscore will survive page navigations and reloads.
- *
- * **Example usage:**
- * ```javascript
- * await Apify.utils.puppeteer.injectUnderscore(page);
- * const escapedHtml = await page.evaluate(() => {
- *   return _.escape('<h1>Hello</h1>');
- * });
- * ```
- *
- * @param page Puppeteer [Page](https://github.com/puppeteer/puppeteer/blob/master/docs/api.md#class-page) object.
- */
-export function injectUnderscore(page: Page): Promise<unknown> {
-    ow(page, ow.object.validate(validators.browserPage));
-    return injectFile(page, underscorePath, { surviveNavigations: true });
 }
 
 /**
@@ -639,7 +614,6 @@ export {
 export const puppeteerUtils = {
     injectFile,
     injectJQuery,
-    injectUnderscore,
     enqueueLinksByClickingElements,
     blockRequests,
     blockResources,

@@ -1,4 +1,3 @@
-import { defaults } from 'underscore';
 import { Page, Browser } from 'puppeteer';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import globalLog from '../utils_log';
@@ -58,7 +57,7 @@ const alreadyWrapped = Symbol('alreadyWrapped');
  */
 export function applyStealthToBrowser(browser: Browser, options: StealthOptions): Browser {
     const modifiedBrowser = browser;
-    const opts = defaults(options, DEFAULT_STEALTH_OPTIONS);
+    const opts = { ...DEFAULT_STEALTH_OPTIONS, ...options };
     const defaultContext = browser.defaultBrowserContext();
     const contextPrototype = Object.getPrototypeOf(defaultContext);
 

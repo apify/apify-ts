@@ -145,30 +145,6 @@ describe('Apify.puppeteerUtils', () => {
             }
         });
 
-        test('injectUnderscore()', async () => {
-            const browser = await method(launchContext);
-
-            try {
-                const page = await browser.newPage();
-                await page.goto('about:blank');
-
-                const result1 = await page.evaluate(() => {
-                    return { isDefined: window._ !== undefined };
-                });
-                expect(result1).toEqual({ isDefined: false });
-
-                await puppeteerUtils.injectUnderscore(page);
-                const result2 = await page.evaluate(() => {
-                /* global _ */
-                    // @ts-ignore
-                    return { isDefined: _.isEmpty({}) };
-                });
-                expect(result2).toEqual({ isDefined: true });
-            } finally {
-                await browser.close();
-            }
-        });
-
         describe('blockRequests()', () => {
             let browser: Browser = null;
             beforeAll(async () => {
