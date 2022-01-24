@@ -27,7 +27,7 @@ module.exports = {
     ],
     globals: {
         'ts-jest': {
-            tsconfig: 'test/apify/tsconfig.json',
+            tsconfig: 'test/tsconfig.json',
         },
     },
 };

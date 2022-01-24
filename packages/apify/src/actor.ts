@@ -299,7 +299,7 @@ export class Actor {
             ...metamorphOpts
         } = options;
         const runId = this.config.get('actorRunId')!;
-        await this.newClient().run(runId).metamorph(targetActorId, input, metamorphOpts);
+        await this.apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);
 
         // Wait some time for container to be stopped.
         await sleep(customAfterSleepMillis);
@@ -331,7 +331,7 @@ export class Actor {
             return undefined;
         }
 
-        const runId = process.env[ENV_VARS.ACTOR_RUN_ID];
+        const runId = this.config.get('actorRunId');
         if (!runId) {
             throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
         }
