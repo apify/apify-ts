@@ -48,6 +48,7 @@
         "clean": "lerna run clean",
         "build": "lerna run build",
         "test": "jest --silent",
+        "test:e2e": "node test/e2e/run.mjs",
         "coverage": "jest --coverage",
         "release": "npm run build && lerna version patch && lerna publish from-package --contents dist",
         "lint": "eslint packages/*/src test",
