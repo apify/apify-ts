@@ -84,9 +84,6 @@ jobs:
             - name: Install Dependencies
               run: npm ci
 
-            - name: Build
-              run: npm run ci:build
-
             - name: ESLint
               run: npm run lint
 
