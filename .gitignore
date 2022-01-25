@@ -14,7 +14,6 @@ pids
 .idea
 .vscode
 yarn.lock
-package-lock.json
 tmp
 jsconfig.json
 types
@@ -25,3 +24,4 @@ docs/examples
 .docusaurus
 tsconfig.tsbuildinfo
 apify_storage
+.turbo
