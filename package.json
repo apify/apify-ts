@@ -36,6 +36,7 @@
         "prepublishOnly": "turbo run copy",
         "clean": "turbo run clean",
         "build": "turbo run build",
+        "ci:build": "turbo run build --cache-dir=\".turbo\"",
         "test": "jest --silent",
         "test:e2e": "node test/e2e/run.mjs",
         "coverage": "jest --coverage",
