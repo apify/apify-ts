@@ -10,6 +10,7 @@ import fs from 'fs-extra';
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
     green: (text) => `\x1B[32m${text}\x1B[39m`,
+    grey: wrap((text) => `\x1B[90m${text}\x1B[39m`),
 };
 
 export function getStorage(url) {
@@ -53,11 +54,11 @@ export async function waitForFinish(dir) {
     }
 }
 
-export function expect(a, b, message) {
-    if (a === b) {
-        console.log(colors.green(`Assertion passed: ${message}`));
+export function expect(bool, message) {
+    if (bool) {
+        console.log(`[assertion] passed: ${message}`);
     } else {
-        console.log(colors.red(`Assertion failed: ${message}`));
+        console.log(`[assertion] failed: ${message}`);
         process.exit(1);
     }
 }
