@@ -67,6 +67,5 @@ await run(import.meta.url, 'cheerio-scraper', {
 });
 
 const stats = await getStats(import.meta.url);
-// TODO use range here - numbers of requests goes up and down from run to run due to maxPagesPerCrawl
-expect(stats.requestsFinished, 757, 'All requests finished');
+expect(stats.requestsFinished > 700, 'All requests finished');
 process.exit(0);
