@@ -10,7 +10,8 @@ import fs from 'fs-extra';
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
     green: (text) => `\x1B[32m${text}\x1B[39m`,
-    grey: wrap((text) => `\x1B[90m${text}\x1B[39m`),
+    grey: (text) => `\x1B[90m${text}\x1B[39m`,
+    yellow: (text) => `\x1B[33m${text}\x1B[39m`,
 };
 
 export function getStorage(url) {

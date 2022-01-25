@@ -15,6 +15,7 @@ async function run() {
             continue;
         }
 
+        const now = Date.now();
         const worker = new Worker(fileURLToPath(import.meta.url), {
             workerData: dir.name,
             stdout: true,
@@ -24,11 +25,12 @@ async function run() {
 
             if (match) {
                 const c = match[1] === 'passed' ? colors.green : colors.red;
-                console.log(`[${dir.name}] ${match[2]}: ${c(match[1])}`);
+                console.log(`${colors.yellow(`[${dir.name}]`)} ${match[2]}: ${c(match[1])}`);
             }
         });
         worker.on('exit', (code) => {
-            console.log(`Test ${dir.name} finished with ${code === 0 ? 'success' : 'failure'}`);
+            const took = (Date.now() - now) / 1000;
+            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
         });
     }
 }
