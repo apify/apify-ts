@@ -17,7 +17,7 @@
 	},
 	"scripts": {
         "start": "node dist/main.js",
-        "build": "npx rimraf dist && tsc",
+        "build": "rimraf dist && tsc",
 		"build-toc": "./node_modules/.bin/markdown-toc README.md -i",
 		"test": "nyc --reporter=html --reporter=text mocha --timeout 60000 --recursive",
 		"lint": "eslint src test"
