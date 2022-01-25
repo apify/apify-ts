@@ -24,35 +24,68 @@ jobs:
                 node-version: [ 15, 16, 17 ]
 
         steps:
-            -   name: Cancel Workflow Action
-                uses: styfle/cancel-workflow-action@0.9.1
-                with:
-                    access_token: ${{ github.token }}
+            - name: Cancel Workflow Action
+              uses: styfle/cancel-workflow-action@0.9.1
+              with:
+                access_token: ${{ github.token }}
 
-            -   uses: actions/checkout@v2
-            -   name: Use Node.js ${{ matrix.node-version }}
-                uses: actions/setup-node@v2
-                with:
-                    node-version: ${{ matrix.node-version }}
-            -   name: Install Dependencies
-                run: npm install --force
-            -   name: Run Tests
-                run: npm test
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v2
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'npm'
+                  cache-dependency-path: 'package-lock.json'
+
+            - name: Turbo cache
+              id: turbo-cache
+              uses: actions/cache@v2
+              with:
+                path: .turbo
+                key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+                restore-keys: |
+                  turbo-${{ github.job }}-${{ github.ref_name }}-
+
+            - name: Install Dependencies
+              run: npm ci
+
+            - name: Build
+              run: npm run build --cache-dir=".turbo"
+
+            - name: Tests
+              run: npm test
 
     lint:
         name: Lint
         runs-on: ubuntu-latest
 
         steps:
-            -   uses: actions/checkout@v2
-            -   name: Use Node.js 16
-                uses: actions/setup-node@v2
-                with:
-                    node-version: 16
-            -   name: Install Dependencies
-                run: npm install --force
-            -   name: Run Linter
-                run: npm run lint
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v2
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'npm'
+                  cache-dependency-path: 'package-lock.json'
+
+            - name: Turbo cache
+              id: turbo-cache
+              uses: actions/cache@v2
+              with:
+                path: .turbo
+                key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+                restore-keys: |
+                  turbo-${{ github.job }}-${{ github.ref_name }}-
+
+            - name: Install Dependencies
+              run: npm ci
+
+            - name: ESLint
+              run: npm run lint --cache-dir=".turbo"
 
     # The deploy job is long but there are only 2 important parts. NPM publish
     # and triggering of docker image builds in the apify-actor-docker repo.
