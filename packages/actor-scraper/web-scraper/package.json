@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "node dist/main.js",
-    "build": "npx rimraf dist && tsc",
+    "build": "rimraf dist && tsc",
     "build-toc": "markdown-toc README.md -i",
     "test": "jest",
     "lint": "eslint src test"
