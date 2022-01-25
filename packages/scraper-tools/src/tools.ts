@@ -1,4 +1,4 @@
-import Ajv, { AnySchema } from 'ajv';
+import Ajv from 'ajv';
 import { Dictionary, PuppeteerCookie, Request, Session, utils } from 'apify';
 import { randomBytes as callbackRandomBytes } from 'crypto';
 import { readFileSync } from 'fs';
@@ -59,7 +59,7 @@ export function evalFunctionArrayOrThrow(hooksString: string, paramName: string)
 /**
  * Validates the INPUT using the AJV library against the schema.
  */
-export function checkInputOrThrow(input: unknown, schema: AnySchema) {
+export function checkInputOrThrow(input: unknown, schema: Dictionary) {
     const ajv = new Ajv({ allErrors: true, useDefaults: true });
     const valid = ajv.validate(schema, input);
     if (!valid) throw new Error(`Invalid input:\n${JSON.stringify(ajv.errors, null, 2)}`);
