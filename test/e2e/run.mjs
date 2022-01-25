@@ -18,7 +18,7 @@ async function run() {
     for (const dir of dirs) {
         console.log('wat', dir.name);
         const worker = new Worker(fileURLToPath(import.meta.url), {
-            workerData: dir.name,
+            workerData: dir.name.trim(),
             stdout: true,
         });
         // worker.on('message', (args) => console.log('on message', args));
@@ -37,7 +37,7 @@ async function run() {
 if (isMainThread) {
     await run();
 } else {
-    const script = `${source}/${workerData}/test.mjs`;
+    const script = `${source}/${workerData.trim()}/test.mjs`;
     console.log('Running test', colors.green(script));
     await import(script);
     // parentPort.postMessage(parse(script));
