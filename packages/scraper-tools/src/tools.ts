@@ -54,7 +54,7 @@ export function evalFunctionArrayOrThrow(hooksString: string, paramName: string)
     }
 
     return arr;
-};
+}
 
 /**
  * Validates the INPUT using the AJV library against the schema.
@@ -63,7 +63,7 @@ export function checkInputOrThrow(input: unknown, schema: AnySchema) {
     const ajv = new Ajv({ allErrors: true, useDefaults: true });
     const valid = ajv.validate(schema, input);
     if (!valid) throw new Error(`Invalid input:\n${JSON.stringify(ajv.errors, null, 2)}`);
-};
+}
 
 export interface RequestMetadata {
     depth: number;
@@ -90,7 +90,7 @@ export function ensureMetaData(request: Request) {
     if (typeof metadata !== 'object') {
         throw new Error(`Request ${request.id} contains invalid metadata value.`);
     }
-};
+}
 
 /**
  * Merges the result of the page function, that may be a single object
@@ -129,7 +129,7 @@ export function createDatasetPayload(
     };
 
     return result.map<Dictionary & typeof meta>((item) => ({ ...item, ...meta }));
-};
+}
 
 /**
  * Creates a 12 byte random hash encoded as base64
@@ -140,7 +140,7 @@ export async function createRandomHash() {
         .toString('base64')
         .replace(/[+/=]/g, 'x') // Remove invalid chars.
         .replace(/^\d/, 'a'); // Ensure first char is not a digit.
-};
+}
 
 /**
  * Checks whether an item is a plain object,
@@ -165,7 +165,7 @@ export function maybeLoadPageFunctionFromDisk(input: Dictionary<any>, root: stri
     } catch (err) {
         utils.log.exception(err as Error, 'Page Function load from disk failed.');
     }
-};
+}
 
 export interface ErrorLike {
     message?: string;
@@ -180,7 +180,7 @@ export function createError(obj: ErrorLike = {}) {
     const error = new Error(obj.message);
     error.stack = obj.stack;
     return error;
-};
+}
 
 export function logPerformance(request: Request, title: string, hrtime: [number, number]) {
     if (utils.log.getLevel() !== utils.log.LEVELS.PERF) return;
@@ -191,7 +191,7 @@ export function logPerformance(request: Request, title: string, hrtime: [number,
     const millis = micros / 1000;
 
     utils.log.perf(`${request.id} ${title} took ${Math.round(millis)} ms.`);
-};
+}
 
 /**
  * Accepts an array of cookies in a { name, value }
@@ -204,4 +204,4 @@ export function getMissingCookiesFromSession(session: Session, cookies: Puppetee
         const sessionHasCookie = sessionCookies.some((sc) => sc.name === c.name);
         return !sessionHasCookie;
     });
-};
+}

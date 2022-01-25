@@ -24,7 +24,8 @@ import Apify, {
 import cheerio, { CheerioAPI } from 'cheerio';
 import { readFile } from 'node:fs/promises';
 import { IncomingMessage } from 'node:http';
-import { URL } from 'node:url';
+import { dirname } from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
 import { Input, ProxyRotation } from './consts.js';
 
 const { utils: { log } } = Apify;
@@ -73,7 +74,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         this.rawInput = JSON.stringify(input);
 
         // Attempt to load page function from disk if not present on input.
-        tools.maybeLoadPageFunctionFromDisk(input, __dirname);
+        tools.maybeLoadPageFunctionFromDisk(input, dirname(fileURLToPath(import.meta.url)));
 
         // Validate INPUT if not running on Apify Cloud Platform.
         if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);

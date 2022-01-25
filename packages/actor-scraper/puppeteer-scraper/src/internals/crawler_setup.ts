@@ -17,7 +17,8 @@ import Apify, {
 } from 'apify';
 import { readFile } from 'node:fs/promises';
 import { HTTPResponse, Page } from 'puppeteer';
-import { URL } from 'node:url';
+import { dirname } from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
 import { Input, ProxyRotation } from './consts.js';
 
 const SESSION_STORE_NAME = 'APIFY-PUPPETEER-SCRAPER-SESSION-STORE';
@@ -70,7 +71,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         this.rawInput = JSON.stringify(input);
 
         // Attempt to load page function from disk if not present on input.
-        tools.maybeLoadPageFunctionFromDisk(input, __dirname);
+        tools.maybeLoadPageFunctionFromDisk(input, dirname(fileURLToPath(import.meta.url)));
 
         // Validate INPUT if not running on Apify Cloud Platform.
         if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);

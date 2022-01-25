@@ -27,7 +27,8 @@ import contentType from 'content-type';
 import DevToolsServer from 'devtools-server';
 import { readFile } from 'node:fs/promises';
 import { HTTPResponse, Page, Serializable } from 'puppeteer';
-import { URL } from 'node:url';
+import { dirname } from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
 import { createBundle } from './bundle.browser.js';
 import { BreakpointLocation, CHROME_DEBUGGER_PORT, Input, ProxyRotation, RunMode } from './consts.js';
 import { GlobalStore } from './global_store.js';
@@ -101,7 +102,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         this.rawInput = JSON.stringify(input);
 
         // Attempt to load page function from disk if not present on input.
-        tools.maybeLoadPageFunctionFromDisk(input, __dirname);
+        tools.maybeLoadPageFunctionFromDisk(input, dirname(fileURLToPath(import.meta.url)));
 
         // Validate INPUT if not running on Apify Cloud Platform.
         if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
