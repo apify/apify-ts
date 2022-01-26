@@ -1,20 +1,18 @@
 import { browserTools } from '@apify/scraper-tools';
-import Apify from 'apify';
+import { launchPuppeteer, KeyValueStore, logUtils } from '@crawlers/core';
 import fs from 'fs-extra';
 import path from 'path';
 import sinon from 'sinon';
 
-const { utils: { log } } = Apify;
-
 const LOCAL_STORAGE_DIR = path.join(__dirname, 'tmp');
 
 describe('browserTools.', () => {
-    let browser: Awaited<ReturnType<typeof Apify['launchPuppeteer']>>;
+    let browser: Awaited<ReturnType<typeof launchPuppeteer>>;
 
     beforeEach(async () => {
         fs.ensureDirSync(LOCAL_STORAGE_DIR);
         process.env.APIFY_LOCAL_STORAGE_DIR = LOCAL_STORAGE_DIR;
-        browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        browser = await launchPuppeteer({ launchOptions: { headless: true } });
     });
 
     afterEach(async () => {
@@ -39,7 +37,7 @@ describe('browserTools.', () => {
         it('should work', async () => {
             const page = await browser.newPage();
 
-            const instance = await Apify.openKeyValueStore();
+            const instance = await KeyValueStore.open();
             const methods = ['getValue', 'setValue'] as const;
 
             const handlesMap = await browserTools.createBrowserHandlesForObject(page, instance, methods);
@@ -92,10 +90,10 @@ describe('browserTools.', () => {
         it('should work', async () => {
             let page = await browser.newPage();
 
-            const debug = sinon.spy(log, 'debug');
-            const info = sinon.spy(log, 'info');
-            const warning = sinon.spy(log, 'warning');
-            const error = sinon.spy(log, 'error');
+            const debug = sinon.spy(logUtils, 'debug');
+            const info = sinon.spy(logUtils, 'info');
+            const warning = sinon.spy(logUtils, 'warning');
+            const error = sinon.spy(logUtils, 'error');
 
             browserTools.dumpConsole(page);
             await page.evaluate(async () => {

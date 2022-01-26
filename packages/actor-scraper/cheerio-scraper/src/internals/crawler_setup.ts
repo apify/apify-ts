@@ -6,8 +6,6 @@ import {
     tools,
 } from '@apify/scraper-tools';
 import {
-    Actor,
-    ApifyEnv,
     AutoscaledPool,
     Awaitable,
     CheerioCrawler,
@@ -25,7 +23,8 @@ import {
     Request,
     RequestList,
     RequestQueue,
-} from 'apify';
+} from '@crawlers/core';
+import { Actor, ApifyEnv } from 'apify';
 import cheerio, { CheerioAPI } from 'cheerio';
 import { readFile } from 'node:fs/promises';
 import { IncomingMessage } from 'node:http';

@@ -6,10 +6,12 @@
     "type": "module",
 	"dependencies": {
 		"@apify/scraper-tools": "^1.0.0",
+		"@crawlers/core": "^2.2.2",
 		"apify": "^2.2.1"
 	},
 	"devDependencies": {
 		"@apify/scraper-tools": "file:../../scraper-tools",
+		"@crawlers/core": "file:../../core",
 		"markdown-toc": "^1.2.0"
 	},
 	"peerDependencies": {
