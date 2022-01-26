@@ -19,7 +19,6 @@ await run(import.meta.url, 'cheerio-scraper', {
 
         if (label === 'START') {
             log.info('Store opened!');
-            // Do some stuff later.
         }
 
         if (label === 'DETAIL') {
@@ -27,7 +26,6 @@ await run(import.meta.url, 'cheerio-scraper', {
             log.info(`Scraping ${url}`);
             await skipLinks();
 
-            // Do some scraping.
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
             const title = $('header h1').text();
             const description = $('header span.actor-description').text();

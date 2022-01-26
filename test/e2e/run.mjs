@@ -6,6 +6,9 @@ import { colors } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
+process.env.APIFY_LOG_LEVEL = 0; // switch off logs for better test results visibility
+process.env.APIFY_HEADLESS = 1; // run browser in headless mode (default on platform)
+
 async function run() {
     const paths = await readdir(basePath, { withFileTypes: true })
     const dirs = paths.filter(dirent => dirent.isDirectory());

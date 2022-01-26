@@ -2,26 +2,20 @@ import { getStats, run, expect } from '../tools.mjs';
 
 await run(import.meta.url, 'web-scraper', {
     runMode: 'PRODUCTION',
-    startUrls: [
-        { url: 'https://apify.com' },
-    ],
+    startUrls: [{ url: 'https://apify.com' }],
     keepUrlFragments: false,
-    pseudoUrls: [
-        {
-            purl: 'https://apify.com[(/[\\w-]+)?]',
-        },
-    ],
+    pseudoUrls: [{ purl: 'https://apify.com[(/[\\w-]+)?]' }],
     pageFunction: async function pageFunction(context) {
         const $ = context.jQuery;
+
         const pageTitle = $('title').first().text();
         context.log.info(`URL: ${context.request.url}, TITLE: ${pageTitle}`);
+
         context.enqueueRequest({ url: 'http://www.example.com' });
 
         return { url: context.request.url, pageTitle };
     },
-    proxyConfiguration: {
-        useApifyProxy: false,
-    },
+    proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
     forceResponseEncoding: false,
     ignoreSslErrors: false,

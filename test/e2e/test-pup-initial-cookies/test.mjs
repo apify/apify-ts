@@ -1,30 +1,25 @@
 import { getStats, run, expect } from '../tools.mjs';
 
-await run(import.meta.url, 'cheerio-scraper', {
+await run(import.meta.url, 'puppeteer-scraper', {
     startUrls: [{
         url: 'https://api.apify.com/v2/browser-info',
-        method: 'GET',
+        method: 'GET'
     }],
+    linkSelector: 'a',
     keepUrlFragments: false,
-    linkSelector: 'a[href]',
     pageFunction: async function pageFunction(context) {
-        const { log, json, input } = context;
+        const { page, input, log } = context;
 
-        const { initialCookies } = input;
+        const initialCookies = input.initialCookies;
         const initialCookiesLength = initialCookies.length;
 
-        const cookieString = json.headers.cookie;
-        const pageCookies = cookieString.split(";").map(cookie => {
-            const name = cookie.split("=")[0].trim();
-            const value = cookie.split("=")[1].trim();
-            return { name, value };
-        });
+        const pageCookies = await page.cookies();
 
         log.info('Checking cookies names and values...');
         let numberOfSameCookies = 0;
         pageCookies.forEach(cookieObject => {
             initialCookies.forEach(initialCookieObject => {
-                if (cookieObject.name === initialCookieObject.name && cookieObject.value === initialCookieObject.value) {
+                if(cookieObject.name === initialCookieObject.name && cookieObject.value === initialCookieObject.value) {
                     numberOfSameCookies++;
                 }
             })
@@ -34,15 +29,14 @@ await run(import.meta.url, 'cheerio-scraper', {
             throw new Error(`The number of the page cookies doeas not match the defined initial cookies number. Number of wrong cookies is ${initialCookiesLength - numberOfSameCookies}`);
         }
 
-        context.log.info('All cookies were successfully checked.');
+        log.info('All cookies were successfully checked.');
+
     },
     proxyConfiguration: { useApifyProxy: false },
-    additionalMimeTypes: ['application/json'],
-    debugLog: false,
-    ignoreSslErrors: false,
+    proxyRotation: 'RECOMMENDED',
     initialCookies: [{
         name: 'test',
-        value: 'testing cookies',
+        value: 'testing cookies'
     }, {
         name: 'store',
         value: 'value store'
@@ -50,6 +44,15 @@ await run(import.meta.url, 'cheerio-scraper', {
         name: 'market_place',
         value: 'value market place'
     }],
+    useChrome: false,
+    useStealth: false,
+    ignoreSslErrors: false,
+    ignoreCorsAndCsp: false,
+    downloadMedia: true,
+    downloadCss: true,
+    waitUntil: ['networkidle2'],
+    debugLog: false,
+    browserLog: false
 });
 
 const stats = await getStats(import.meta.url);

@@ -28,7 +28,6 @@ await run(import.meta.url, 'cheerio-scraper', {
         async function handleDetail({ request, log, $ }) {
             const { url } = request;
             log.info(`Scraping ${url}`);
-            // Do some scraping.
             const title = $('title').text();
             return { url, title };
         }

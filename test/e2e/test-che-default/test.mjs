@@ -1,34 +1,20 @@
 import { getStats, run, expect } from '../tools.mjs';
 
 await run(import.meta.url, 'cheerio-scraper', {
-    startUrls: [
-        { url: 'https://apify.com' },
-    ],
+    startUrls: [{ url: 'https://apify.com' }],
     keepUrlFragments: false,
-    pseudoUrls: [
-        {
-            purl: 'https://apify.com[(/[\\w-]+)?]',
-        },
-    ],
+    pseudoUrls: [{ purl: 'https://apify.com[(/[\\w-]+)?]' }],
     linkSelector: 'a',
     pageFunction: async function pageFunction(context) {
-        const {
-            $,
-            request,
-            log
-        } = context;
-        const pageTitle = $('title')
-            .first()
-            .text();
-        log.info(`URL: ${request.url} TITLE: ${pageTitle}`);
-        return {
-            url: request.url,
-            pageTitle,
-        };
+        const { $, request, log } = context;
+        const { url } = request;
+
+        const pageTitle = $('title').first().text();
+        log.info(`URL: ${url} TITLE: ${pageTitle}`);
+
+        return { url, pageTitle };
     },
-    proxyConfiguration: {
-        useApifyProxy: false,
-    },
+    proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
     forceResponseEncoding: false,
     ignoreSslErrors: false,

@@ -1,18 +1,18 @@
 import { getStats, run, expect } from '../tools.mjs';
 
-await run(import.meta.url, 'cheerio-scraper', {
+await run(import.meta.url, 'puppeteer-scraper', {
     startUrls: [{
         url: 'https://badssl.com/',
         method: 'GET',
         userData: { label: 'START' },
     }],
-    keepUrlFragments: false,
     pseudoUrls: [{
         purl: 'https://[.+].badssl.com/',
         method: 'GET',
         userData: { label: 'DETAIL' },
     }],
     linkSelector: '.group a.bad',
+    keepUrlFragments: false,
     pageFunction: async function pageFunction(context) {
         const { request: { userData: { label } } } = context;
 
@@ -21,23 +21,30 @@ await run(import.meta.url, 'cheerio-scraper', {
             case 'DETAIL': return handleDetail(context);
         }
 
-        async function handleStart({ log, waitFor, $ }) {
+        async function handleStart({ log }) {
             log.info('Bad ssl page opened!');
         }
 
-        async function handleDetail({ request, log, $ }) {
+        async function handleDetail({ request, log, page }) {
             const { url } = request;
             log.info(`Scraping ${url}`);
-            const title = $('title').text();
+            const title = await page.title();
             return { url, title };
         }
     },
     proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
-    debugLog: false,
-    ignoreSslErrors: true
+    useChrome: false,
+    useStealth: false,
+    ignoreSslErrors: false,
+    ignoreCorsAndCsp: false,
+    downloadMedia: true,
+    downloadCss: true,
+    waitUntil: ['networkidle2'],
+    debugLog: true,
+    browserLog: false
 });
 
 const stats = await getStats(import.meta.url);
-expect(stats.requestsFinished > 20, 'All requests finished');
+expect(stats.requestsFinished > 5, 'All requests finished');
 process.exit(0);
