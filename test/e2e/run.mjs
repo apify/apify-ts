@@ -33,7 +33,7 @@ async function run() {
         });
         worker.on('exit', (code) => {
             const took = (Date.now() - now) / 1000;
-            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
+            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
         });
     }
 }
