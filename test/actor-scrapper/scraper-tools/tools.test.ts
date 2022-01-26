@@ -1,10 +1,10 @@
-import Apify from 'apify';
+import { Request } from '@crawlers/core';
 import { tools, constants } from '@apify/scraper-tools';
 
 describe('tools.', () => {
     describe('ensureMetaData()', () => {
         it('should work', () => {
-            const request = new Apify.Request({ url: 'https://www.example.com' });
+            const request = new Request({ url: 'https://www.example.com' });
             tools.ensureMetaData(request);
 
             expect(typeof request.userData[constants.META_KEY]).toBe('object');
