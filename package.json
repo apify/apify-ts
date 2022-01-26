@@ -121,9 +121,5 @@
         "ua-parser-js": "^1.0.1",
         "underscore": "^1.13.2",
         "why-is-node-running": "^2.2.0"
-    },
-    "dependencies": {
-        "@crawlers/core": "file:packages/core",
-        "actor-cheerio-scraper": "file:packages/actor-scraper/cheerio-scraper"
     }
 }
