@@ -5,18 +5,23 @@ import {
     createContext,
     tools,
 } from '@apify/scraper-tools';
-import Apify, {
+import {
+    Actor,
     ApifyEnv,
     AutoscaledPool,
     Awaitable,
+    createProxyConfiguration,
     Dataset,
     Dictionary,
+    enqueueLinks,
     EnqueueLinksOptions,
     HandleFailedRequestInput,
     KeyValueStore,
+    logUtils,
     PuppeteerCrawlContext,
     PuppeteerCrawler,
     PuppeteerCrawlerOptions,
+    puppeteerUtils,
     Request,
     RequestList,
     RequestQueue,
@@ -36,8 +41,6 @@ import { GlobalStore } from './global_store.js';
 const SESSION_STORE_NAME = 'APIFY-WEB-SCRAPER-SESSION-STORE';
 
 const MAX_CONCURRENCY_IN_DEVELOPMENT = 1;
-
-const { utils: { log, puppeteer } } = Apify;
 const { SESSION_MAX_USAGE_COUNTS, DEFAULT_VIEWPORT, DEVTOOLS_TIMEOUT_SECS, META_KEY } = scraperToolsConstants;
 const SCHEMA = JSON.parse(await readFile(new URL('../../INPUT_SCHEMA.json', import.meta.url), 'utf8'));
 
@@ -69,8 +72,8 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Used to store data that persist navigations
      */
     globalStore = new GlobalStore<unknown>();
-    requestQueue: Apify.RequestQueue;
-    keyValueStore: Apify.KeyValueStore;
+    requestQueue: RequestQueue;
+    keyValueStore: KeyValueStore;
     customData: unknown;
     input: Input;
     maxSessionUsageCount: number;
@@ -96,7 +99,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
     constructor(input: Input) {
         // Set log level early to prevent missed messages.
-        if (input.debugLog) log.setLevel(log.LEVELS.DEBUG);
+        if (input.debugLog) logUtils.setLevel(logUtils.LEVELS.DEBUG);
 
         // Keep this as string to be immutable.
         this.rawInput = JSON.stringify(input);
@@ -105,10 +108,10 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         tools.maybeLoadPageFunctionFromDisk(input, dirname(fileURLToPath(import.meta.url)));
 
         // Validate INPUT if not running on Apify Cloud Platform.
-        if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
+        if (!Actor.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
 
         this.input = input;
-        this.env = Apify.getEnv();
+        this.env = Actor.getEnv();
 
         // Validations
         this.input.pseudoUrls.forEach((purl) => {
@@ -212,7 +215,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             maxConcurrency: this.isDevRun ? MAX_CONCURRENCY_IN_DEVELOPMENT : this.input.maxConcurrency,
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
-            proxyConfiguration: await Apify.createProxyConfiguration(this.input.proxyConfiguration),
+            proxyConfiguration: await createProxyConfiguration(this.input.proxyConfiguration),
             browserPoolOptions: {
                 preLaunchHooks: [
                     async () => {
@@ -258,7 +261,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             options.browserPoolOptions!.retireBrowserAfterPageCount = Infinity;
         }
 
-        this.crawler = new Apify.PuppeteerCrawler(options);
+        this.crawler = new PuppeteerCrawler(options);
 
         if (this.isDevRun) logDevRunWarning();
         return this.crawler;
@@ -281,7 +284,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
             // Prevent download of stylesheets and media, unless selected otherwise
             if (this.blockedUrlPatterns.length) {
-                await puppeteer.blockRequests(page, {
+                await puppeteerUtils.blockRequests(page, {
                     urlPatterns: this.blockedUrlPatterns,
                 });
             }
@@ -341,7 +344,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             await this._assertNamespace(page, pageContext.apifyNamespace);
 
             // Inject selected libraries
-            if (this.input.injectJQuery) await puppeteer.injectJQuery(page);
+            if (this.input.injectJQuery) await puppeteerUtils.injectJQuery(page);
 
             tools.logPerformance(request, 'gotoFunction INJECTION DELAY', delayStart);
             tools.logPerformance(request, 'gotoFunction EXECUTION', pageContext.timers.start);
@@ -351,7 +354,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
-        log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
+        logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
         return this._handleResult(request, undefined, undefined, true);
     }
 
@@ -486,7 +489,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private async _handleMaxResultsPerCrawl(autoscaledPool?: AutoscaledPool) {
         if (!this.input.maxResultsPerCrawl || this.pagesOutputted < this.input.maxResultsPerCrawl) return false;
         if (!autoscaledPool) return false;
-        log.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
+        logUtils.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
         await autoscaledPool.abort();
         return true;
     }
@@ -498,7 +501,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         const currentDepth = (request.userData![META_KEY] as tools.RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
         if (hasReachedMaxDepth) {
-            log.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
+            logUtils.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
             return;
         }
 
@@ -520,7 +523,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             },
         };
 
-        await Apify.utils.enqueueLinks(enqueueOptions);
+        await enqueueLinks(enqueueOptions);
 
         tools.logPerformance(request, 'handleLinks EXECUTION', start);
     }
@@ -585,7 +588,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         );
         const logP = browserTools.createBrowserHandlesForObject(
             page,
-            log,
+            logUtils,
             ['LEVELS', 'setLevel', 'getLevel', 'debug', 'info', 'warning', 'error', 'exception'],
         );
         const requestQueueP = this.requestQueue
@@ -618,7 +621,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 }
 
 function logDevRunWarning() {
-    log.warning(`
+    logUtils.warning(`
 *****************************************************************
 *          Web Scraper is running in DEVELOPMENT MODE!          *
 *       Concurrency is limited, sessionPool is not available,   *

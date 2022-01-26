@@ -1,4 +1,4 @@
-import Apify, { BasicCrawler, utils } from 'apify';
+import { Actor, BasicCrawler, logUtils } from 'apify';
 
 export interface CrawlerSetup {
     name: string;
@@ -8,18 +8,18 @@ export interface CrawlerSetup {
 export type CrawlerSetupConstructor = new (input: any) => CrawlerSetup;
 
 export function runActor(CrawlerSetup: CrawlerSetupConstructor) {
-    Apify.main(async () => {
-        utils.log.debug('Reading INPUT.');
-        const input = await Apify.getInput();
+    Actor.main(async () => {
+        logUtils.debug('Reading INPUT.');
+        const input = await Actor.getInput();
         if (!input) throw new Error('INPUT cannot be empty!');
 
         // Get crawler setup and startup options.
         const setup = new CrawlerSetup(input);
-        utils.log.info(`Configuring ${setup.name}.`);
+        logUtils.info(`Configuring ${setup.name}.`);
         const crawler = await setup.createCrawler();
 
-        utils.log.info('Configuration completed. Starting the scrape.');
+        logUtils.info('Configuration completed. Starting the scrape.');
         await crawler.run();
-        utils.log.info(`${setup.name} finished.`);
+        logUtils.info(`${setup.name} finished.`);
     });
 }

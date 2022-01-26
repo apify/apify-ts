@@ -577,7 +577,7 @@ export * from './enqueue_links/enqueue_links';
 
 // TODO move this elsewhere or rename
 export * as requestUtils from './utils_request';
-export * as logUtils from './utils_log';
+export { default as logUtils } from './utils_log';
 export * as socialUtils from './utils_social';
 export * as playwrightUtils from './playwright_utils';
 export * as puppeteerUtils from './puppeteer_utils';

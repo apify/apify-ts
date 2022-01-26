@@ -1,4 +1,4 @@
-import Apify, { utils } from 'apify';
+import { Actor, logUtils } from 'apify';
 import { Page } from 'puppeteer';
 import { inspect } from 'util';
 import { RESOURCE_LOAD_ERROR_MESSAGE, SNAPSHOT } from './consts';
@@ -117,7 +117,7 @@ export function dumpConsole(page: Page, options: DumpConsoleOptions = {}) {
         if (hasJSHandles) {
             const msgPromises = msg.args().map((jsh) => {
                 return jsh.jsonValue()
-                    .catch((e) => utils.log.exception(e, `Stringification of console.${msgType} in browser failed.`));
+                    .catch((e) => logUtils.exception(e, `Stringification of console.${msgType} in browser failed.`));
             });
             message = (await Promise.all(msgPromises))
                 .map((m) => inspect(m))
@@ -126,10 +126,10 @@ export function dumpConsole(page: Page, options: DumpConsoleOptions = {}) {
             message = msg.text();
         }
 
-        if (msgType in utils.log) {
-            utils.log[msgType as 'info'](message);
+        if (msgType in logUtils) {
+            logUtils[msgType as 'info'](message);
         } else {
-            utils.log.info(message);
+            logUtils.info(message);
         }
     });
 }
@@ -154,23 +154,23 @@ export async function saveSnapshot({ page, body, contentType, json }: SnapshotOp
     // Throttle snapshots.
     const now = Date.now();
     if (now - lastSnapshotTimestamp < SNAPSHOT.TIMEOUT_SECS * 1000) {
-        utils.log.warning('Aborting saveSnapshot(). It can only be invoked once '
+        logUtils.warning('Aborting saveSnapshot(). It can only be invoked once '
             + `in ${SNAPSHOT.TIMEOUT_SECS} secs to prevent database overloading.`);
         return;
     }
     lastSnapshotTimestamp = now;
 
     if (json) {
-        await Apify.setValue(SNAPSHOT.KEYS.BODY, json);
+        await Actor.setValue(SNAPSHOT.KEYS.BODY, json);
     } else if (body && contentType) {
-        await Apify.setValue(SNAPSHOT.KEYS.BODY, body, { contentType });
+        await Actor.setValue(SNAPSHOT.KEYS.BODY, body, { contentType });
     } else if (page) {
         const htmlP = page.content();
         const screenshotP = page.screenshot();
         const [html, screenshot] = await Promise.all([htmlP, screenshotP]);
         await Promise.all([
-            Apify.setValue(SNAPSHOT.KEYS.BODY, html, { contentType: 'text/html' }),
-            Apify.setValue(SNAPSHOT.KEYS.SCREENSHOT, screenshot, { contentType: 'image/png' }),
+            Actor.setValue(SNAPSHOT.KEYS.BODY, html, { contentType: 'text/html' }),
+            Actor.setValue(SNAPSHOT.KEYS.SCREENSHOT, screenshot, { contentType: 'image/png' }),
         ]);
     } else {
         throw new Error('One of parameters "page" or "json" or "body" with "contentType" must be provided.');

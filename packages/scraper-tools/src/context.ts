@@ -1,4 +1,15 @@
-import Apify, { ApifyEnv, Dictionary, KeyValueStore, RecordOptions, RequestQueue, utils, RequestOptions, RequestQueueOperationOptions, Request } from 'apify';
+import {
+    Actor,
+    ApifyEnv,
+    Dictionary,
+    KeyValueStore,
+    logUtils,
+    RecordOptions,
+    Request,
+    RequestOptions,
+    RequestQueue,
+    RequestQueueOperationOptions,
+} from 'apify';
 import contentTypeParser, { MediaType } from 'content-type';
 import { saveSnapshot, SnapshotOptions } from './browser_tools';
 import { META_KEY } from './consts';
@@ -47,8 +58,8 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
     private readonly [setup]: CrawlerSetupOptions;
     private readonly [internalState]: InternalState;
 
-    public readonly Apify = Apify;
-    public readonly log = utils.log;
+    public readonly Actor = Actor;
+    public readonly log = logUtils;
     public readonly input: any;
     public readonly env: ApifyEnv;
     public readonly customData: unknown;

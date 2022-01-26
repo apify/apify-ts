@@ -67,4 +67,10 @@ import log, { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText } fro
 Object.assign(log, { Log, LogLevel, Logger, LoggerJson, LoggerText });
 
 export { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText };
-export default log;
+export default log as typeof log & {
+    Log: typeof Log;
+    LogLevel: typeof LogLevel;
+    Logger: typeof Logger;
+    LoggerJson: typeof LoggerJson;
+    LoggerText: typeof LoggerText;
+};

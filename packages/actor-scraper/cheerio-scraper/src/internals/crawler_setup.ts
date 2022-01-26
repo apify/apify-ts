@@ -1,25 +1,30 @@
-import { CrawlerSetupOptions,
-    tools,
-    createContext,
+import {
     constants as scraperToolsConstants,
+    CrawlerSetupOptions,
+    createContext,
     RequestMetadata,
+    tools,
 } from '@apify/scraper-tools';
-import Apify, {
+import {
+    Actor,
     ApifyEnv,
-    RequestQueue,
-    KeyValueStore,
+    AutoscaledPool,
     Awaitable,
     CheerioCrawler,
-    RequestList,
-    Dataset,
-    ProxyConfiguration,
     CheerioCrawlerOptions,
-    PrepareRequestInputs,
-    HandleFailedRequestInput,
-    Dictionary,
     CheerioCrawlingContext,
-    AutoscaledPool,
+    createProxyConfiguration,
+    Dataset,
+    Dictionary,
+    enqueueLinks,
+    HandleFailedRequestInput,
+    KeyValueStore,
+    logUtils,
+    PrepareRequestInputs,
+    ProxyConfiguration,
     Request,
+    RequestList,
+    RequestQueue,
 } from 'apify';
 import cheerio, { CheerioAPI } from 'cheerio';
 import { readFile } from 'node:fs/promises';
@@ -28,7 +33,6 @@ import { dirname } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { Input, ProxyRotation } from './consts.js';
 
-const { utils: { log } } = Apify;
 const { SESSION_MAX_USAGE_COUNTS, META_KEY } = scraperToolsConstants;
 const SCHEMA = JSON.parse(await readFile(new URL('../../INPUT_SCHEMA.json', import.meta.url), 'utf8'));
 
@@ -68,7 +72,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
     constructor(input: Input) {
         // Set log level early to prevent missed messages.
-        if (input.debugLog) log.setLevel(log.LEVELS.DEBUG);
+        if (input.debugLog) logUtils.setLevel(logUtils.LEVELS.DEBUG);
 
         // Keep this as string to be immutable.
         this.rawInput = JSON.stringify(input);
@@ -77,10 +81,10 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         tools.maybeLoadPageFunctionFromDisk(input, dirname(fileURLToPath(import.meta.url)));
 
         // Validate INPUT if not running on Apify Cloud Platform.
-        if (!Apify.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
+        if (!Actor.isAtHome()) tools.checkInputOrThrow(input, SCHEMA);
 
         this.input = input;
-        this.env = Apify.getEnv();
+        this.env = Actor.getEnv();
 
         // Validations
         this.input.pseudoUrls.forEach((purl) => {
@@ -147,7 +151,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         this.keyValueStore = await KeyValueStore.open(this.keyValueStoreName);
 
         // Proxy configuration
-        this.proxyConfiguration = await Apify.createProxyConfiguration(this.input.proxyConfiguration);
+        this.proxyConfiguration = await createProxyConfiguration(this.input.proxyConfiguration);
     }
 
     /**
@@ -202,7 +206,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             }
         }
 
-        this.crawler = new Apify.CheerioCrawler(options);
+        this.crawler = new CheerioCrawler(options);
 
         return this.crawler;
     }
@@ -231,7 +235,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
-        log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
+        logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
         return this._handleResult(request, undefined, undefined, true);
     }
 
@@ -309,7 +313,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private async _handleMaxResultsPerCrawl(autoscaledPool?: AutoscaledPool) {
         if (!this.input.maxResultsPerCrawl || this.pagesOutputted < this.input.maxResultsPerCrawl) return false;
         if (!autoscaledPool) return false;
-        log.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
+        logUtils.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
         await autoscaledPool.abort();
         return true;
     }
@@ -319,11 +323,11 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         const currentDepth = (request.userData![META_KEY] as RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
         if (hasReachedMaxDepth) {
-            log.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
+            logUtils.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
             return;
         }
 
-        await Apify.utils.enqueueLinks({
+        await enqueueLinks({
             $,
             selector: this.input.linkSelector,
             pseudoUrls: this.input.pseudoUrls,
