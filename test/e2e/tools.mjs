@@ -5,6 +5,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import fs from 'fs-extra';
 
 export const colors = {
@@ -27,6 +28,26 @@ export async function getStats(url) {
     }
 
     return fs.readJSON(path);
+}
+
+export async function getDatasetItems(url) {
+    const dir = getStorage(url);
+    const datasetPath = join(dir, 'datasets/default/');
+
+    const dirents = await readdir(datasetPath, { withFileTypes: true });
+    const fileNames = dirents.filter(dirent => dirent.isFile());
+
+    const datasetItems = [];
+    for (const fileName of fileNames) {
+        const filePath = join(datasetPath, fileName.name);
+        const datasetItem = await fs.readJSON(filePath);
+        if (!isItemHidden(datasetItem)) {
+            datasetItems.push(datasetItem);
+        }
+
+    }
+
+    return datasetItems;
 }
 
 export async function run(url, scraper, input) {
@@ -62,4 +83,13 @@ export function expect(bool, message) {
         console.log(`[assertion] failed: ${message}`);
         process.exit(1);
     }
+}
+
+function isItemHidden (item) {
+    for (const key of Object.keys(item)) {
+        if (!key.startsWith('#')) {
+            return false;
+        }
+    }
+    return true;
 }

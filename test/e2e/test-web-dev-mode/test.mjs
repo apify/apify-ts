@@ -1,4 +1,4 @@
-import { getStats, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
 
 process.env.APIFY_CONTAINER_URL = 'https://localhost'; // TODO: assign for local tests only
 process.env.APIFY_CONTAINER_PORT = '8000'; // TODO: assign for local tests only
@@ -56,4 +56,8 @@ await run(import.meta.url, 'web-scraper', {
 
 const stats = await getStats(import.meta.url);
 expect(stats.requestsFinished > 5, 'All requests finished');
+
+const datasetItems = await getDatasetItems(import.meta.url);
+expect(datasetItems.length >= 5, 'Minimum number of dataset items');
+
 process.exit(0);

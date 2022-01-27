@@ -1,4 +1,4 @@
-import { getStats, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
 
 // TODO apify token/proxy password needed to run locally
 
@@ -48,4 +48,8 @@ await run(import.meta.url, 'web-scraper', {
 
 const stats = await getStats(import.meta.url);
 expect(stats.requestsFinished === 5, 'All requests finished');
+
+const datasetItems = await getDatasetItems(import.meta.url);
+expect(datasetItems.length >= 5, 'Minimum number of dataset items');
+
 process.exit(0);

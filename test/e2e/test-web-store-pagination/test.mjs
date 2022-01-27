@@ -1,4 +1,4 @@
-import { getStats, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
 
 await run(import.meta.url, 'web-scraper', {
     runMode: 'PRODUCTION',
@@ -79,4 +79,9 @@ await run(import.meta.url, 'web-scraper', {
 
 const stats = await getStats(import.meta.url);
 expect(stats.requestsFinished > 700, 'All requests finished');
+
+const datasetItems = await getDatasetItems(import.meta.url);
+expect(datasetItems.length > 700, 'Minimum number of dataset items');
+expect(datasetItems.length < 1000, 'Maximum number of dataset items');
+
 process.exit(0);
