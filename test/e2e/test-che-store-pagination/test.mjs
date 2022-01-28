@@ -1,4 +1,4 @@
-import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
 await run(import.meta.url, 'cheerio-scraper', {
     startUrls: [{
@@ -70,6 +70,10 @@ expect(stats.requestsFinished > 700, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 700, 'Minimum number of dataset items');
+await new Promise((resolve) => setTimeout(resolve, 100));
 expect(datasetItems.length < 1000, 'Maximum number of dataset items');
+await new Promise((resolve) => setTimeout(resolve, 100));
+expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
+    'Dataset items validation');
 
 process.exit(0);

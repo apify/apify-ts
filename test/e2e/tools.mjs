@@ -1,5 +1,5 @@
 import { Configuration, setValue } from '../../packages/apify/dist/index.mjs';
-import { purgeLocalStorage } from '../../packages/apify/dist/utils.js';
+import { purgeLocalStorage, URL_NO_COMMAS_REGEX } from '../../packages/apify/dist/utils.js';
 import { join } from 'path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -83,6 +83,37 @@ export function expect(bool, message) {
         console.log(`[assertion] failed: ${message}`);
         process.exit(1);
     }
+}
+
+export function validateDataset(items, schema = []) {
+    for (const item of items) {
+        if (!item.hasOwnProperty('url') || !item.url.match(URL_NO_COMMAS_REGEX)) {
+            return false;
+        }
+
+        const modifiedDateIndex = schema.indexOf('modifiedDate');
+        if (modifiedDateIndex !== -1) {
+            if (!item.hasOwnProperty('modifiedDate') || Number.isNaN(Date.parse(item.modifiedDate))) {
+                return false;
+            }
+            schema.splice(modifiedDateIndex, 1);
+        }
+
+        const runCountIndex = schema.indexOf('runCount');
+        if (runCountIndex !== -1) {
+            if (!item.hasOwnProperty('runCount') || !Number.isInteger(item.runCount)) {
+                return false;
+            }
+            schema.splice(runCountIndex, 1);
+        }
+
+        for (const propName of schema) {
+            if (!item.hasOwnProperty(propName) || typeof item[propName] !== 'string') {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 function isItemHidden (item) {

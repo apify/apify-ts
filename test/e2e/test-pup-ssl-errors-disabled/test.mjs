@@ -1,4 +1,4 @@
-import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
 await run(import.meta.url, 'puppeteer-scraper', {
     startUrls: [{
@@ -50,5 +50,7 @@ expect(stats.requestsFinished > 5, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 5, 'Minimum number of dataset items');
+await new Promise((resolve) => setTimeout(resolve, 100));
+expect(validateDataset(datasetItems, ['title']), 'Dataset items validation');
 
 process.exit(0);

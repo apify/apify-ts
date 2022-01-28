@@ -1,4 +1,4 @@
-import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
 // TODO apify token/proxy password needed to run locally
 
@@ -51,5 +51,7 @@ expect(stats.requestsFinished === 5, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length >= 5, 'Minimum number of dataset items');
+await new Promise((resolve) => setTimeout(resolve, 100));
+expect(validateDataset(datasetItems, ['clientIp']), 'Dataset items validation');
 
 process.exit(0);

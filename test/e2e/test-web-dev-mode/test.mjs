@@ -1,4 +1,4 @@
-import { getStats, getDatasetItems, run, expect } from '../tools.mjs';
+import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
 process.env.APIFY_CONTAINER_URL = 'https://localhost'; // TODO: assign for local tests only
 process.env.APIFY_CONTAINER_PORT = '8000'; // TODO: assign for local tests only
@@ -59,5 +59,7 @@ expect(stats.requestsFinished > 5, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length >= 5, 'Minimum number of dataset items');
+await new Promise((resolve) => setTimeout(resolve, 100));
+expect(validateDataset(datasetItems, ['text']), 'Dataset items validation');
 
 process.exit(0);
