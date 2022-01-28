@@ -35,7 +35,6 @@ describe('CheerioCrawler TS', () => {
                 expect(inputs.$!('a').attr('href')).toEqual('#');
             };
 
-            // @ts-expect-error
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const crawlerX = new CheerioCrawler({
                 handlePageFunction: x,
@@ -52,7 +51,6 @@ describe('CheerioCrawler TS', () => {
                 expect($!('a').attr('href')).toEqual('#');
             };
 
-            // @ts-expect-error
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const crawler = new CheerioCrawler({
                 handlePageFunction: y,
@@ -73,7 +71,6 @@ describe('CheerioCrawler TS', () => {
                 expect($!('a').attr('href')).toEqual('#');
             };
 
-            // @ts-expect-error
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const crawler = new CheerioCrawler({
                 handlePageFunction: z,

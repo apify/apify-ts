@@ -236,7 +236,6 @@ describe('ProxyConfiguration', () => {
                 return proxyUrls[Math.floor(Math.random() * proxyUrls.length)];
             };
             try {
-                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     groups: ['GROUP1'],
@@ -248,7 +247,6 @@ describe('ProxyConfiguration', () => {
             }
 
             try {
-                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     groups: ['GROUP1'],
@@ -266,7 +264,6 @@ describe('ProxyConfiguration', () => {
                 return proxyUrls[Math.floor(Math.random() * proxyUrls.length)];
             };
             try {
-                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls,
@@ -280,7 +277,6 @@ describe('ProxyConfiguration', () => {
 
         test('should throw proxyUrls array is empty', async () => {
             try {
-                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls: [],
@@ -293,7 +289,6 @@ describe('ProxyConfiguration', () => {
 
         test('should throw invalid custom URL form', async () => {
             try {
-                // @ts-expect-error
                 // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls: ['http://proxy.com:1111*invalid_url'],

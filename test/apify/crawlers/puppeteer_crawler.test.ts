@@ -1,6 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import {
+    BrowserLauncher,
     Configuration,
     ProxyConfiguration,
     PuppeteerCookie, PuppeteerCrawler,
@@ -192,10 +193,10 @@ describe('PuppeteerCrawler', () => {
         expect.hasAssertions();
     });
 
-    // FIXME: I have no idea why but this test hangs
+    // FIXME: ~I have no idea why but this test hangs~
+    //  -> it hangs because we need to teardown the crawler
     test.skip('supports useChrome option', async () => {
         // const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
-        // @ts-expect-error
         const puppeteerCrawler = new PuppeteerCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,

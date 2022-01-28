@@ -644,14 +644,12 @@ describe('BrowserCrawler', () => {
 
             const stub = sinon.stub(requestUtils, 'requestAsBrowser').callsFake(fakeCall);
             const proxyConfiguration = await createProxyConfiguration();
-            const generatedProxyUrl = new URL(await proxyConfiguration.newUrl()).href;
+            const generatedProxyUrl = new URL(proxyConfiguration.newUrl()).href;
             let browserProxy;
 
             const browserCrawler = new BrowserCrawlerTest({
                 browserPoolOptions: {
                     browserPlugins: [puppeteerPlugin],
-                    // TODO: correct the interface used for BrowserPoolOptions
-                    // @ts-expect-error Wrong interface used
                     postLaunchHooks: [(pageId, browserController) => {
                         browserProxy = browserController.launchContext.proxyUrl;
                     }],
