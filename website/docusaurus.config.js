@@ -59,10 +59,18 @@ module.exports = {
                 packages: [
                     {
                         path: 'packages/apify',
-                        entry: 'src/exports.ts',
                     },
                     {
-                        path: 'packages/dummy',
+                        path: 'packages/core',
+                    },
+                    {
+                        path: 'packages/cheerio-crawler',
+                    },
+                    {
+                        path: 'packages/puppeteer-crawler',
+                    },
+                    {
+                        path: 'packages/playwright-crawler',
                     },
                 ],
                 typedocOptions: {
