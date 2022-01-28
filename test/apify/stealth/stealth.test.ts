@@ -2,8 +2,7 @@
 
 import scanner from 'fpscanner';
 import path from 'path';
-
-import Apify from 'apify';
+import { Configuration, launchPuppeteer, PuppeteerCrawler, puppeteerUtils, RequestList } from '@crawlers/core';
 import { Browser, Page } from 'puppeteer';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
@@ -12,7 +11,7 @@ const pathToHTML = path.join(__dirname, 'test_html.html');
 const testUrl = `file://${pathToHTML}`;
 
 const getFingerPrint = async (page: Page) => {
-    await Apify.utils.puppeteer.injectFile(page, fingerPrintPath);
+    await puppeteerUtils.injectFile(page, fingerPrintPath);
 
     // @ts-expect-error Evaluated method
     return page.evaluate(() => fpCollect.generateFingerprint());
@@ -28,7 +27,7 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Apify.Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
     });
 
     afterAll(async () => {
@@ -37,8 +36,8 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
 
     test('it works in PuppeteerCrawler', async () => {
         expect.assertions(1);
-        const requestList = await Apify.openRequestList(null, [testUrl]);
-        const crawler = new Apify.PuppeteerCrawler({
+        const requestList = await RequestList.open(null, [testUrl]);
+        const crawler = new PuppeteerCrawler({
             requestList,
             launchContext: {
                 stealth: true,
@@ -62,7 +61,7 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
         jest.setTimeout(60_000);
 
         beforeEach(async () => {
-            browser = await Apify.launchPuppeteer({
+            browser = await launchPuppeteer({
                 stealth: true,
                 useChrome: true,
                 launchOptions: {

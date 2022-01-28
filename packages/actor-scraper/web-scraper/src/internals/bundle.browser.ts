@@ -2,7 +2,7 @@
 /* istanbul ignore next */
 
 import type { CrawlerSetupOptions, constants, RequestMetadata } from '@apify/scraper-tools';
-import type { ApifyEnv, Dictionary, KeyValueStore, RecordOptions, Request, RequestOptions, RequestQueue, RequestQueueOperationOptions, utils } from 'apify';
+import type { ApifyEnv, Dictionary, KeyValueStore, logUtils, RecordOptions, Request, RequestOptions, RequestQueue, RequestQueueOperationOptions } from 'apify';
 import { Input } from './consts';
 import { GlobalStore } from './global_store';
 
@@ -76,7 +76,7 @@ export function createBundle(apifyNamespace: string) {
             response: ProvidedResponse;
             request: Request;
             globalStore: GlobalStore<unknown>;
-            log: typeof utils.log;
+            log: typeof logUtils;
 
             jQuery: any;
 

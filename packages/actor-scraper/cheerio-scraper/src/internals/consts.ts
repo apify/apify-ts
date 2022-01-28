@@ -1,4 +1,4 @@
-import { Dictionary, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions, Session } from 'apify';
+import { Dictionary, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions, Session } from '@crawlers/core';
 
 /**
  * Replicates the INPUT_SCHEMA with JavaScript types for quick reference

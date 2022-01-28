@@ -1,24 +1,24 @@
 import util from 'util';
 import { normalizeUrl } from '@apify/utilities';
-import Apify, { hashPayload } from 'apify/src';
+import { Request, hashPayload } from '@crawlers/core';
 
 describe('Apify.Request', () => {
     test('should not accept invalid values', () => {
         // @ts-expect-error
-        expect(() => new Apify.Request({ url: 1 })).toThrowError();
-        expect(() => new Apify.Request({ url: 'https://example.com' })).not.toThrowError();
+        expect(() => new Request({ url: 1 })).toThrowError();
+        expect(() => new Request({ url: 'https://example.com' })).not.toThrowError();
         // @ts-expect-error
-        expect(() => new Apify.Request({ url: 'https://example.com', method: 1 })).toThrowError();
+        expect(() => new Request({ url: 'https://example.com', method: 1 })).toThrowError();
         // @ts-expect-error
-        expect(() => new Apify.Request({ url: 'https://example.com', headers: 'x' })).toThrowError();
+        expect(() => new Request({ url: 'https://example.com', headers: 'x' })).toThrowError();
         // @ts-expect-error
-        expect(() => new Apify.Request({ url: 'https://example.com', foo: 'invalid-property' })).toThrowError();
+        expect(() => new Request({ url: 'https://example.com', foo: 'invalid-property' })).toThrowError();
     });
 
     test('should create unique key based on url for GET requests', () => {
         const url = 'https://user:pass@website.com/a/vb/c /d?q=1&q=kjnjkn$lkn#lkmlkml';
         const normalizedUrl = normalizeUrl(url);
-        const request = new Apify.Request({ url });
+        const request = new Request({ url });
 
         expect(request.uniqueKey).toEqual(normalizedUrl);
         expect(request.uniqueKey).not.toEqual(request.url);
@@ -29,7 +29,7 @@ describe('Apify.Request', () => {
         const payload = JSON.stringify({ foo: 'bar' });
         const payloadHash = hashPayload(payload);
         const normalizedUrl = normalizeUrl(url);
-        const request = new Apify.Request({ url, method: 'post', payload, useExtendedUniqueKey: true });
+        const request = new Request({ url, method: 'post', payload, useExtendedUniqueKey: true });
 
         const uniqueKey = `POST(${payloadHash}):${normalizedUrl}`;
 
@@ -57,15 +57,15 @@ describe('Apify.Request', () => {
             handledAt: new Date().toISOString(),
         };
         // @ts-expect-error handledAt and other props are internal
-        expect(new Apify.Request(data)).toMatchObject(data);
+        expect(new Request(data)).toMatchObject(data);
 
         data.handledAt = (new Date()).toISOString();
         // @ts-ignore
-        expect(typeof (new Apify.Request(data)).handledAt).toBe('string');
+        expect(typeof (new Request(data)).handledAt).toBe('string');
     });
 
     test('should allow to push error messages', () => {
-        const request = new Apify.Request({ url: 'http://example.com' });
+        const request = new Request({ url: 'http://example.com' });
 
         expect(request.errorMessages).toEqual([]);
 
@@ -121,8 +121,8 @@ describe('Apify.Request', () => {
     });
 
     test('should not allow to have a GET request with payload', () => {
-        expect(() => new Apify.Request({ url: 'http://example.com', payload: 'foo' })).toThrowError();
-        expect(() => new Apify.Request({ url: 'http://example.com', payload: 'foo', method: 'POST' })).not.toThrowError();
+        expect(() => new Request({ url: 'http://example.com', payload: 'foo' })).toThrowError();
+        expect(() => new Request({ url: 'http://example.com', payload: 'foo', method: 'POST' })).not.toThrowError();
     });
 
     // TODO would be nice to have a test like this, but it's flaky in CI so I'm disabling it.
@@ -130,7 +130,7 @@ describe('Apify.Request', () => {
     test.skip('should have acceptable request creation time', () => {
         const requests = [];
         const start = Date.now();
-        for (let i = 0; i < 1000; i++) requests.push(new Apify.Request({ url: `https://example.com/${i}` }));
+        for (let i = 0; i < 1000; i++) requests.push(new Request({ url: `https://example.com/${i}` }));
         const durationMillis = Date.now() - start;
         // Under normal load, the Requests are created in ~25-30ms
         // In tests the load is high, so we only check if it doesn't

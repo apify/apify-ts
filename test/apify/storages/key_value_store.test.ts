@@ -1,17 +1,9 @@
-import {
-    ENV_VARS,
-} from '@apify/consts';
-import { apifyClient } from 'apify/src/utils';
-import Apify, {
-    Dictionary,
-    KeyValueStore,
-    maybeStringify,
-} from 'apify';
-import { StorageManager } from 'apify/src/storages/storage_manager';
-
-jest.mock('../../../packages/apify/src/storages/storage_manager');
+import { ENV_VARS } from '@apify/consts';
+import { Dictionary, KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlers/core';
 
 describe('KeyValueStore remote', () => {
+    const apifyClient = Configuration.getDefaultClient();
+
     beforeEach(async () => {
         jest.clearAllMocks();
     });
@@ -19,23 +11,11 @@ describe('KeyValueStore remote', () => {
     test('openKeyValueStore should open storage', async () => {
         const storeName = 'abc';
         const options = { forceCloud: true };
-        // This test uses and explains Jest mocking. Under import statements,
-        // the StorageManager is immediately mocked. This replaces the class
-        // with an observable. We can now call functions that use the class
-        // and observe how they interact with StorageManager.
-        await Apify.openKeyValueStore(storeName, options);
-        // Apify.openRequestQueue creates an instance of StorageManager.
-        // Here we check that the constructor was really called once.
-        expect(StorageManager).toHaveBeenCalledTimes(1);
-        // Jest gives you access to newly created instances of the class.
-        // Here we grab the StorageManager instance openRequestQueue created.
-        // @ts-expect-error Mocked manager, see line 22-25
-        const mockStorageManagerInstance = StorageManager.mock.instances[0];
-        // And here we get a reference to the specific instance's function mock.
-        const mockOpenStorage = mockStorageManagerInstance.openStorage;
-        // Finally, we test that the function was called with expected args.
-        expect(mockOpenStorage).toHaveBeenCalledWith(storeName, options);
-        expect(mockOpenStorage).toHaveBeenCalledTimes(1);
+        const mockOpenStorage = jest.spyOn(StorageManager.prototype, 'openStorage');
+        mockOpenStorage.mockResolvedValueOnce(jest.fn());
+        await KeyValueStore.open(storeName, options);
+        expect(mockOpenStorage).toBeCalledTimes(1);
+        expect(mockOpenStorage).toBeCalledWith(storeName, options);
     });
 
     test('should work', async () => {
@@ -56,8 +36,8 @@ describe('KeyValueStore remote', () => {
 
         await store.setValue('key-1', record);
 
-        expect(mockSetRecord).toHaveBeenCalledTimes(1);
-        expect(mockSetRecord).toHaveBeenCalledWith({
+        expect(mockSetRecord).toBeCalledTimes(1);
+        expect(mockSetRecord).toBeCalledWith({
             key: 'key-1',
             value: recordStr,
             contentType: 'application/json; charset=utf-8',
@@ -75,8 +55,8 @@ describe('KeyValueStore remote', () => {
 
         const response = await store.getValue('key-1');
 
-        expect(mockGetRecord).toHaveBeenCalledTimes(1);
-        expect(mockGetRecord).toHaveBeenCalledWith('key-1');
+        expect(mockGetRecord).toBeCalledTimes(1);
+        expect(mockGetRecord).toBeCalledWith('key-1');
         expect(response).toEqual(record);
 
         // Delete Record
@@ -87,8 +67,8 @@ describe('KeyValueStore remote', () => {
 
         await store.setValue('key-1', null);
 
-        expect(mockDeleteRecord).toHaveBeenCalledTimes(1);
-        expect(mockDeleteRecord).toHaveBeenCalledWith('key-1');
+        expect(mockDeleteRecord).toBeCalledTimes(1);
+        expect(mockDeleteRecord).toBeCalledWith('key-1');
 
         // Drop store
         const mockDelete = jest
@@ -98,7 +78,7 @@ describe('KeyValueStore remote', () => {
 
         await store.drop();
 
-        expect(mockDelete).toHaveBeenCalledTimes(1);
+        expect(mockDelete).toBeCalledTimes(1);
         expect(mockDelete).toHaveBeenLastCalledWith();
     });
 
@@ -224,8 +204,8 @@ describe('KeyValueStore remote', () => {
 
             await store.setValue('key-1', 'xxxx', { contentType: 'text/plain; charset=utf-8' });
 
-            expect(mockSetRecord).toHaveBeenCalledTimes(1);
-            expect(mockSetRecord).toHaveBeenCalledWith({
+            expect(mockSetRecord).toBeCalledTimes(1);
+            expect(mockSetRecord).toBeCalledWith({
                 key: 'key-1',
                 value: 'xxxx',
                 contentType: 'text/plain; charset=utf-8',
@@ -248,8 +228,8 @@ describe('KeyValueStore remote', () => {
 
             await store.setValue('key-1', record);
 
-            expect(mockSetRecord).toHaveBeenCalledTimes(1);
-            expect(mockSetRecord).toHaveBeenCalledWith({
+            expect(mockSetRecord).toBeCalledTimes(1);
+            expect(mockSetRecord).toBeCalledWith({
                 key: 'key-1',
                 value: recordStr,
                 contentType: 'application/json; charset=utf-8',
@@ -269,8 +249,8 @@ describe('KeyValueStore remote', () => {
 
             await store.setValue('key-1', 'xxxx', { contentType: 'text/plain; charset=utf-8' });
 
-            expect(mockSetRecord).toHaveBeenCalledTimes(1);
-            expect(mockSetRecord).toHaveBeenCalledWith({
+            expect(mockSetRecord).toBeCalledTimes(1);
+            expect(mockSetRecord).toBeCalledWith({
                 key: 'key-1',
                 value: 'xxxx',
                 contentType: 'text/plain; charset=utf-8',
@@ -291,8 +271,8 @@ describe('KeyValueStore remote', () => {
             const value = Buffer.from('some text value');
             await store.setValue('key-1', value, { contentType: 'image/jpeg; charset=something' });
 
-            expect(mockSetRecord).toHaveBeenCalledTimes(1);
-            expect(mockSetRecord).toHaveBeenCalledWith({
+            expect(mockSetRecord).toBeCalledTimes(1);
+            expect(mockSetRecord).toBeCalledWith({
                 key: 'key-1',
                 value,
                 contentType: 'image/jpeg; charset=something',
@@ -402,7 +382,7 @@ describe('KeyValueStore remote', () => {
                 results.push([key, index, info]);
             }, { exclusiveStartKey: 'key0' });
 
-            expect(mockListKeys).toHaveBeenCalledTimes(3);
+            expect(mockListKeys).toBeCalledTimes(3);
             expect(mockListKeys).toHaveBeenNthCalledWith(1, { exclusiveStartKey: 'key0' });
             expect(mockListKeys).toHaveBeenNthCalledWith(2, { exclusiveStartKey: 'key2' });
             expect(mockListKeys).toHaveBeenNthCalledWith(3, { exclusiveStartKey: 'key4' });

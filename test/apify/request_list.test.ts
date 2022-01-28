@@ -1,14 +1,9 @@
-import _ from 'underscore';
-import sinon from 'sinon';
-import Apify, { KeyValueStore } from 'apify';
-import log from 'apify/src/utils_log';
-import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
-import { deserializeArray } from 'apify/src/serialization';
-import * as utils from 'apify/src/utils';
-import * as requestUtils from 'apify/src/utils_request';
+import { shuffle } from 'underscore';
+import { KeyValueStore, RequestList, ACTOR_EVENT_NAMES_EX, deserializeArray, Request, sleep, events, requestUtils } from '@crawlers/core';
+import log from '@apify/log';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
-describe('Apify.RequestList', () => {
+describe('RequestList', () => {
     let ll: number;
     let localStorageEmulator: LocalStorageDirEmulator;
     beforeAll(() => {
@@ -28,7 +23,7 @@ describe('Apify.RequestList', () => {
     });
 
     test('should not accept to pages with same uniqueKey', async () => {
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources: [
                 { url: 'https://example.com/1' },
                 { url: 'https://example.com/1#same' },
@@ -53,8 +48,8 @@ describe('Apify.RequestList', () => {
     });
 
     test('must be initialized before using any of the methods', async () => {
-        const requestList = new Apify.RequestList({ sources: [{ url: 'https://example.com' }] });
-        const requestObj = new Apify.Request({ url: 'https://example.com' });
+        const requestList = new RequestList({ sources: [{ url: 'https://example.com' }] });
+        const requestObj = new Request({ url: 'https://example.com' });
 
         await expect(requestList.isEmpty()).rejects.toThrow();
         await expect(requestList.isFinished()).rejects.toThrow();
@@ -87,7 +82,7 @@ describe('Apify.RequestList', () => {
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
-        const originalList = new Apify.RequestList({ sources });
+        const originalList = new RequestList({ sources });
         await originalList.initialize();
 
         const r1 = await originalList.fetchNextRequest(); // 1
@@ -102,7 +97,7 @@ describe('Apify.RequestList', () => {
         await originalList.markRequestHandled(r4);
         await originalList.reclaimRequest(r5);
 
-        const newList = new Apify.RequestList({
+        const newList = new RequestList({
             sources: sourcesCopy,
             state: originalList.getState(),
         });
@@ -118,7 +113,7 @@ describe('Apify.RequestList', () => {
     });
 
     test('should correctly load list from hosted files in correct order', async () => {
-        const mock = sinon.mock(utils.publicUtils);
+        const spy = jest.spyOn(RequestList.prototype as any, '_downloadListOfUrls');
         const list1 = [
             'https://example.com',
             'https://google.com',
@@ -128,18 +123,10 @@ describe('Apify.RequestList', () => {
             'https://another.com',
             'https://page.com',
         ];
+        spy.mockImplementationOnce(() => new Promise((resolve) => setTimeout(resolve(list1) as any, 100)) as any);
+        spy.mockResolvedValueOnce(list2);
 
-        mock.expects('downloadListOfUrls')
-            .once()
-            .withArgs({ url: 'http://example.com/list-1', urlRegExp: undefined })
-            .returns(new Promise((resolve) => setTimeout(resolve(list1) as any, 100)));
-
-        mock.expects('downloadListOfUrls')
-            .once()
-            .withArgs({ url: 'http://example.com/list-2', urlRegExp: undefined })
-            .returns(Promise.resolve(list2));
-
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources: [
                 { method: 'GET', requestsFromUrl: 'http://example.com/list-1' },
                 { method: 'POST', requestsFromUrl: 'http://example.com/list-2' },
@@ -154,22 +141,20 @@ describe('Apify.RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'POST', url: list2[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'POST', url: list2[1] });
 
-        mock.verify();
-        mock.restore();
+        expect(spy).toBeCalledTimes(2);
+        expect(spy).toBeCalledWith({ url: 'http://example.com/list-1', urlRegExp: undefined });
+        expect(spy).toBeCalledWith({ url: 'http://example.com/list-2', urlRegExp: undefined });
+        spy.mockRestore();
     });
 
     test('should use regex parameter to parse urls', async () => {
-        const mock = sinon.mock(requestUtils);
+        const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const listStr = 'kjnjkn"https://example.com/a/b/c?q=1#abc";,"HTTP://google.com/a/b/c";dgg:dd';
         const listArr = ['https://example.com', 'HTTP://google.com'];
-
-        mock.expects('requestAsBrowser')
-            .once()
-            .withArgs({ url: 'http://example.com/list-1', encoding: 'utf8' })
-            .resolves({ body: listStr });
+        spy.mockResolvedValue({ body: listStr } as any);
 
         const regex = /(https:\/\/example.com|HTTP:\/\/google.com)/g;
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources: [
                 {
                     method: 'GET',
@@ -184,12 +169,12 @@ describe('Apify.RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[1] });
 
-        mock.verify();
-        mock.restore();
+        expect(spy).toBeCalledWith({ url: 'http://example.com/list-1', encoding: 'utf8' });
+        spy.mockRestore();
     });
 
     test('should fix gdoc sharing url in `requestsFromUrl` automatically (GH issue #639)', async () => {
-        const mock = sinon.mock(requestUtils);
+        const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const list = [
             'https://example.com',
             'https://google.com',
@@ -205,12 +190,9 @@ describe('Apify.RequestList', () => {
         ];
         const correctUrl = 'https://docs.google.com/spreadsheets/d/11UGSBOSXy5Ov2WEP9nr4kSIxQJmH18zh-5onKtBsovU/gviz/tq?tqx=out:csv';
 
-        mock.expects('requestAsBrowser')
-            .exactly(wrongUrls.length)
-            .withArgs({ url: correctUrl, encoding: 'utf8' })
-            .resolves({ body: JSON.stringify(list) });
+        spy.mockResolvedValueOnce({ body: JSON.stringify(list) } as any);
 
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources: wrongUrls.map((requestsFromUrl) => ({ requestsFromUrl })),
         });
 
@@ -220,18 +202,15 @@ describe('Apify.RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[1] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[2] });
 
-        mock.verify();
-        mock.restore();
+        expect(spy).toBeCalledWith({ url: correctUrl, encoding: 'utf8' });
+        spy.mockRestore();
     });
 
     test('should handle requestsFromUrl with no URLs', async () => {
-        const mock = sinon.mock(utils.publicUtils);
-        mock.expects('downloadListOfUrls')
-            .once()
-            .withArgs({ url: 'http://example.com/list-1', urlRegExp: undefined })
-            .returns(Promise.resolve([]));
+        const spy = jest.spyOn(RequestList.prototype as any, '_downloadListOfUrls');
+        spy.mockResolvedValueOnce([]);
 
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources: [
                 {
                     method: 'GET',
@@ -244,12 +223,13 @@ describe('Apify.RequestList', () => {
 
         expect(await requestList.fetchNextRequest()).toBe(null);
 
-        mock.verify();
-        mock.restore();
+        expect(spy).toBeCalledTimes(1);
+        expect(spy).toBeCalledWith({ url: 'http://example.com/list-1', urlRegExp: undefined });
+        spy.mockRestore();
     });
 
     test('should correctly handle reclaimed pages', async () => {
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources: [
                 { url: 'https://example.com/1' },
                 { url: 'https://example.com/2' },
@@ -458,7 +438,7 @@ describe('Apify.RequestList', () => {
         };
         const optsCopy = JSON.parse(JSON.stringify(opts));
 
-        const requestList = new Apify.RequestList(opts);
+        const requestList = new RequestList(opts);
         await requestList.initialize();
         expect(requestList.isStatePersisted).toBe(true);
 
@@ -468,8 +448,8 @@ describe('Apify.RequestList', () => {
 
         // Persist state.
         setValueSpy.mockResolvedValueOnce();
-        Apify.events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
-        await utils.sleep(1);
+        events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        await sleep(5);
         expect(requestList.isStatePersisted).toBe(true);
 
         // Do some other changes and persist it again.
@@ -478,8 +458,8 @@ describe('Apify.RequestList', () => {
         await requestList.markRequestHandled(request2);
         expect(requestList.isStatePersisted).toBe(false);
         setValueSpy.mockResolvedValueOnce();
-        Apify.events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
-        await utils.sleep(1);
+        events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        await sleep(5);
         expect(requestList.isStatePersisted).toBe(true);
 
         // Reclaim event doesn't change the state.
@@ -489,7 +469,7 @@ describe('Apify.RequestList', () => {
         // Now initiate new request list from saved state and check that it's same as state
         // of original request list.
         getValueSpy.mockResolvedValueOnce(requestList.getState());
-        const requestList2 = new Apify.RequestList(optsCopy);
+        const requestList2 = new RequestList(optsCopy);
         await requestList2.initialize();
         expect(requestList2.getState()).toEqual(requestList.getState());
     });
@@ -510,7 +490,7 @@ describe('Apify.RequestList', () => {
             persistRequestsKey: PERSIST_REQUESTS_KEY,
         };
 
-        const requestList = new Apify.RequestList(opts);
+        const requestList = new RequestList(opts);
         expect(requestList.areRequestsPersisted).toBe(false);
 
         // Expect an attempt to load sources.
@@ -535,7 +515,7 @@ describe('Apify.RequestList', () => {
 
         getValueSpy.mockResolvedValueOnce(persistedRequests);
 
-        const requestList2 = new Apify.RequestList(opts2);
+        const requestList2 = new RequestList(opts2);
         expect(requestList2.areRequestsPersisted).toBe(false);
 
         // Now initialize new request list from saved sources and check that
@@ -549,7 +529,7 @@ describe('Apify.RequestList', () => {
         const PERSIST_REQUESTS_KEY = 'some-key';
         const getValueSpy = jest.spyOn(KeyValueStore.prototype, 'getValue');
         const setValueSpy = jest.spyOn(KeyValueStore.prototype, 'setValue');
-        const publicUtilsMock = sinon.mock(utils.publicUtils);
+        const spy = jest.spyOn(RequestList.prototype as any, '_downloadListOfUrls');
         let persistedRequests;
 
         const opts = {
@@ -563,23 +543,15 @@ describe('Apify.RequestList', () => {
         };
 
         const urlsFromTxt = ['http://example.com/3', 'http://example.com/4'];
+        spy.mockResolvedValueOnce(urlsFromTxt);
 
-        const requestList = new Apify.RequestList(opts);
+        const requestList = new RequestList(opts);
         expect(requestList.areRequestsPersisted).toBe(false);
 
-        // Expect an attempt to load sources.
         getValueSpy.mockResolvedValueOnce(null);
-
-        // Expect persist sources.
         setValueSpy.mockImplementationOnce(async (_key, value) => {
             persistedRequests = value;
         });
-
-        // Expect downloadListOfUrls returns list of URLs
-        publicUtilsMock.expects('downloadListOfUrls')
-            .once()
-            .withArgs({ url: 'http://example.com/list-urls.txt', urlRegExp: undefined })
-            .returns(Promise.resolve(urlsFromTxt));
 
         await requestList.initialize();
         expect(requestList.areRequestsPersisted).toBe(true);
@@ -587,7 +559,9 @@ describe('Apify.RequestList', () => {
         expect(requestList.requests).toHaveLength(5);
         expect(requests).toEqual(requestList.requests);
 
-        publicUtilsMock.verify();
+        expect(spy).toBeCalledTimes(1);
+        expect(spy).toBeCalledWith({ url: 'http://example.com/list-urls.txt', urlRegExp: undefined });
+        spy.mockRestore();
     });
 
     test('handles correctly inconsistent inProgress fields in state', async () => {
@@ -610,7 +584,7 @@ describe('Apify.RequestList', () => {
             ],
         };
 
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources,
             state,
         });
@@ -618,14 +592,14 @@ describe('Apify.RequestList', () => {
         await requestList.initialize();
 
         // Get requests from list
-        let reqs: Apify.Request[] = [];
+        let reqs: Request[] = [];
         for (let i = 0; i < 5; i++) {
             const request = await requestList.fetchNextRequest(); // eslint-disable-line
             if (!request) break;
             reqs.push(request);
         }
 
-        reqs = _.shuffle(reqs);
+        reqs = shuffle(reqs);
 
         for (let i = 0; i < reqs.length; i++) {
             await requestList.reclaimRequest(reqs[i]); // eslint-disable-line
@@ -641,7 +615,7 @@ describe('Apify.RequestList', () => {
             { url: 'https://www.example.com' },
         ];
 
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources,
         });
 
@@ -659,7 +633,7 @@ describe('Apify.RequestList', () => {
             { url: 'https://www.example.com' },
         ];
 
-        const requestList = new Apify.RequestList({
+        const requestList = new RequestList({
             sources,
         });
 
@@ -680,49 +654,46 @@ describe('Apify.RequestList', () => {
         expect(requestList.handledCount()).toBe(2);
     });
 
-    test(
-        'should correctly keep duplicate URLs while keepDuplicateUrls is set',
-        async () => {
-            const sources = [
-                { url: 'https://www.example.com' },
-                { url: 'https://www.example.com' },
-                { url: 'https://www.example.com' },
-                { url: 'https://www.ex2mple.com' },
-            ];
-            const sourcesCopy = JSON.parse(JSON.stringify(sources));
+    test('should correctly keep duplicate URLs while keepDuplicateUrls is set', async () => {
+        const sources = [
+            { url: 'https://www.example.com' },
+            { url: 'https://www.example.com' },
+            { url: 'https://www.example.com' },
+            { url: 'https://www.ex2mple.com' },
+        ];
+        const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
-            let requestList = new Apify.RequestList({
-                sources,
-                keepDuplicateUrls: true,
-            });
+        let requestList = new RequestList({
+            sources,
+            keepDuplicateUrls: true,
+        });
 
-            await requestList.initialize();
-            expect(requestList.length()).toBe(4);
+        await requestList.initialize();
+        expect(requestList.length()).toBe(4);
 
-            log.setLevel(log.LEVELS.INFO);
-            const logStub = sinon.stub(console, 'warn');
+        log.setLevel(log.LEVELS.INFO);
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-            requestList = new Apify.RequestList({
-                sources: sourcesCopy.concat([
-                    { url: 'https://www.example.com', uniqueKey: '123' },
-                    { url: 'https://www.example.com', uniqueKey: '123' },
-                    { url: 'https://www.example.com', uniqueKey: '456' },
-                    { url: 'https://www.ex2mple.com', uniqueKey: '456' },
-                ]),
-                keepDuplicateUrls: true,
-            });
+        requestList = new RequestList({
+            sources: sourcesCopy.concat([
+                { url: 'https://www.example.com', uniqueKey: '123' },
+                { url: 'https://www.example.com', uniqueKey: '123' },
+                { url: 'https://www.example.com', uniqueKey: '456' },
+                { url: 'https://www.ex2mple.com', uniqueKey: '456' },
+            ]),
+            keepDuplicateUrls: true,
+        });
 
-            await requestList.initialize();
-            expect(requestList.length()).toBe(6);
-            expect(logStub.called).toBe(true);
-            expect(logStub.getCall(0).args[0]).toMatch('Check your sources\' unique keys.');
+        await requestList.initialize();
+        expect(requestList.length()).toBe(6);
+        expect(warnSpy).toBeCalled();
+        expect(warnSpy.mock.calls[0][0]).toMatch(`Check your sources' unique keys.`);
 
-            logStub.restore();
-            log.setLevel(log.LEVELS.ERROR);
-        },
-    );
+        warnSpy.mockRestore();
+        log.setLevel(log.LEVELS.ERROR);
+    });
 
-    describe('Apify.openRequestList()', () => {
+    describe('Apify.RequestList.open()', () => {
         test('should work', async () => {
             const getValueSpy = jest.spyOn(KeyValueStore.prototype, 'getValue');
             const setValueSpy = jest.spyOn(KeyValueStore.prototype, 'setValue');
@@ -731,8 +702,8 @@ describe('Apify.RequestList', () => {
             const SDK_KEY = `SDK_${name}`;
             const sources = [{ url: 'https://example.com' }];
 
-            const rl = await Apify.openRequestList(name, sources);
-            expect(rl).toBeInstanceOf(Apify.RequestList);
+            const rl = await RequestList.open(name, sources);
+            expect(rl).toBeInstanceOf(RequestList);
             // @ts-expect-error accessing private var
             expect(rl.persistStateKey.startsWith(SDK_KEY)).toBe(true);
             // @ts-expect-error accessing private var
@@ -753,10 +724,10 @@ describe('Apify.RequestList', () => {
             const name = 'xxx';
             const SDK_KEY = `SDK_${name}`;
             const sources = ['https://example.com'];
-            const requests = sources.map((url) => new Apify.Request({ url }));
+            const requests = sources.map((url) => new Request({ url }));
 
-            const rl = await Apify.openRequestList(name, sources);
-            expect(rl).toBeInstanceOf(Apify.RequestList);
+            const rl = await RequestList.open(name, sources);
+            expect(rl).toBeInstanceOf(RequestList);
             // @ts-expect-error accessing private var
             expect(rl.persistStateKey.startsWith(SDK_KEY)).toBe(true);
             // @ts-expect-error accessing private var
@@ -777,14 +748,14 @@ describe('Apify.RequestList', () => {
             const SDK_KEY = `SDK_${name}`;
             let counter = 0;
             const sources = [{ url: 'https://example.com' }];
-            const requests = sources.map(({ url }) => new Apify.Request({ url, uniqueKey: `${url}-${counter++}` }));
+            const requests = sources.map(({ url }) => new Request({ url, uniqueKey: `${url}-${counter++}` }));
             const options = {
                 keepDuplicateUrls: true,
                 persistStateKey: 'yyy',
             };
 
-            const rl = await Apify.openRequestList(name, sources, options);
-            expect(rl).toBeInstanceOf(Apify.RequestList);
+            const rl = await RequestList.open(name, sources, options);
+            expect(rl).toBeInstanceOf(RequestList);
             // @ts-expect-error accessing private var
             expect(rl.persistStateKey.startsWith(SDK_KEY)).toBe(true);
             // @ts-expect-error accessing private var
@@ -805,10 +776,10 @@ describe('Apify.RequestList', () => {
 
             const name: string = null;
             const sources = [{ url: 'https://example.com' }];
-            const requests = sources.map(({ url }) => new Apify.Request({ url }));
+            const requests = sources.map(({ url }) => new Request({ url }));
 
-            const rl = await Apify.openRequestList(name, sources);
-            expect(rl).toBeInstanceOf(Apify.RequestList);
+            const rl = await RequestList.open(name, sources);
+            expect(rl).toBeInstanceOf(RequestList);
             // @ts-expect-error accessing private var
             expect(rl.persistStateKey == null).toBe(true);
             // @ts-expect-error accessing private var
@@ -831,7 +802,7 @@ describe('Apify.RequestList', () => {
             for (const arg of args) {
                 try {
                     // @ts-ignore
-                    await Apify.openRequestList(...arg);
+                    await RequestList.open(...arg);
                     throw new Error('wrong error');
                 } catch (err) {
                     const e = err as Error;
@@ -868,7 +839,7 @@ describe('Apify.RequestList', () => {
     //     console.log(startingMemory, 'MB');
     //
     //     process.env.APIFY_LOCAL_STORAGE_DIR = 'tmp';
-    //     const rl = new Apify.RequestList({ sources, persistRequestsKey: null });
+    //     const rl = new RequestList({ sources, persistRequestsKey: null });
     //     const instanceMemory = getMemoryInMbytes();
     //     console.log(instanceMemory, 'MB');
     //

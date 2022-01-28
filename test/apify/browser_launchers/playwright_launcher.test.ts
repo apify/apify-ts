@@ -1,23 +1,17 @@
 import fs from 'fs';
 import path from 'path';
-// TODO: no types
-// @ts-expect-error
+// @ts-expect-error no types
 import proxy from 'proxy';
 import http, { Server } from 'http';
 import util from 'util';
-// TODO: no types
-// @ts-expect-error
+// @ts-expect-error no types
 import portastic from 'portastic';
-// TODO: no types
-// @ts-expect-error
+// @ts-expect-error no types
 import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
-import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import Apify from 'apify';
-import * as utils from 'apify/src/utils';
+import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlers/core';
 
-import { PlaywrightLauncher } from 'apify/src/browser_launchers/playwright_launcher';
 import { AddressInfo } from 'net';
 import { Browser, BrowserType } from 'playwright';
 
@@ -45,12 +39,10 @@ beforeAll(() => {
                 if (!auth) {
                     // optimization: don't invoke the child process if no
                     // "Proxy-Authorization" header was given
-                    // console.log('not Proxy-Authorization');
                     return fn(null, false);
                 }
                 const parsed = basicAuthParser(auth);
                 const isEqual = _.isEqual(parsed, proxyAuth);
-                // console.log('Parsed "Proxy-Authorization": parsed: %j expected: %j : %s', parsed, proxyAuth, isEqual);
                 if (isEqual) wasProxyCalled = true;
                 fn(null, isEqual);
             };
@@ -72,42 +64,42 @@ afterAll(async () => {
     if (proxyServer) await util.promisify(proxyServer.close).bind(proxyServer)();
 }, 5000);
 
-describe('Apify.launchPlaywright()', () => {
+describe('launchPlaywright()', () => {
     test('throws on invalid args', async () => {
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPlaywright('some non-object')).rejects.toThrow(Error);
+        await expect(launchPlaywright('some non-object')).rejects.toThrow(Error);
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPlaywright(1234)).rejects.toThrow(Error);
+        await expect(launchPlaywright(1234)).rejects.toThrow(Error);
 
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPlaywright({ proxyUrl: 234 })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: 234 })).rejects.toThrow(Error);
         // @ts-expect-error Validating JS side
-        await expect(Apify.launchPlaywright({ proxyUrl: {} })).rejects.toThrow(Error);
-        await expect(Apify.launchPlaywright({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
-        await expect(Apify.launchPlaywright({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPlaywright({ proxyUrl: 'socks4://user:pass@example.com:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPlaywright({ proxyUrl: 'socks5://user:pass@example.com:1234' })).rejects.toThrow(Error);
-        await expect(Apify.launchPlaywright({ proxyUrl: ' something really bad' })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: {} })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: 'invalidurl' })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: 'invalid://somehost:1234' })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: 'socks4://user:pass@example.com:1234' })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: 'socks5://user:pass@example.com:1234' })).rejects.toThrow(Error);
+        await expect(launchPlaywright({ proxyUrl: ' something really bad' })).rejects.toThrow(Error);
     });
 
     test('supports non-HTTP proxies without authentication', async () => {
         const closePromises = [];
-        const browser1 = await Apify.launchPlaywright({ proxyUrl: 'socks4://example.com:1234' });
+        const browser1 = await launchPlaywright({ proxyUrl: 'socks4://example.com:1234' });
         closePromises.push(browser1.close());
 
-        const browser2 = await Apify.launchPlaywright({ proxyUrl: 'socks5://example.com:1234' });
+        const browser2 = await launchPlaywright({ proxyUrl: 'socks5://example.com:1234' });
         closePromises.push(browser2.close());
 
-        const browser3 = await Apify.launchPlaywright({ proxyUrl: 'https://example.com:1234' });
+        const browser3 = await launchPlaywright({ proxyUrl: 'https://example.com:1234' });
         closePromises.push(browser3.close());
 
-        const browser4 = await Apify.launchPlaywright({ proxyUrl: 'HTTP://example.com:1234' });
+        const browser4 = await launchPlaywright({ proxyUrl: 'HTTP://example.com:1234' });
         closePromises.push(browser4.close());
         await Promise.all(closePromises);
     });
 
     test('opens https://www.example.com', async () => {
-        const browser = await Apify.launchPlaywright();
+        const browser = await launchPlaywright();
         const page = await browser.newPage();
 
         await page.goto('https://www.example.com');
@@ -124,7 +116,7 @@ describe('Apify.launchPlaywright()', () => {
         });
 
         beforeEach(async () => {
-            browser = await Apify.launchPlaywright({
+            browser = await launchPlaywright({
                 launchOptions: { headless: true, timeout: 60e3 },
                 proxyUrl: `http://username:password@127.0.0.1:${proxyPort}`,
             });
@@ -150,7 +142,7 @@ describe('Apify.launchPlaywright()', () => {
     });
 
     test('supports useChrome option', async () => {
-        const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
+        const spy = jest.spyOn(BrowserLauncher.prototype as any, '_getTypicalChromeExecutablePath');
         let browser;
         const opts = {
             useChrome: true,
@@ -158,7 +150,7 @@ describe('Apify.launchPlaywright()', () => {
         };
 
         try {
-            browser = await Apify.launchPlaywright(opts);
+            browser = await launchPlaywright(opts);
             const page = await browser.newPage();
 
             // Add a test to go to an actual domain because we've seen issues
@@ -169,9 +161,9 @@ describe('Apify.launchPlaywright()', () => {
 
             expect(title).toBe('Example Domain');
             expect(version).not.toMatch('Chromium');
-            expect(spy.calledOnce).toBe(true);
+            expect(spy).toBeCalledTimes(1);
         } finally {
-            spy.restore();
+            spy.mockRestore();
             if (browser) await browser.close();
         }
     }, 60e3);
@@ -203,7 +195,9 @@ describe('Apify.launchPlaywright()', () => {
             });
             const plugin = launcher.createBrowserPlugin();
 
-            expect(plugin.launchOptions.executablePath).toBe(utils.getTypicalChromeExecutablePath());
+            // @ts-expect-error private method
+            // eslint-disable-next-line no-underscore-dangle
+            expect(plugin.launchOptions.executablePath).toBe(launcher._getTypicalChromeExecutablePath());
         }, 60e3);
 
         test('allows to be overridden', () => {
@@ -224,7 +218,7 @@ describe('Apify.launchPlaywright()', () => {
             delete process.env.APIFY_DEFAULT_BROWSER_PATH;
             let browser;
             try {
-                browser = await Apify.launchPlaywright();
+                browser = await launchPlaywright();
                 const page = await browser.newPage();
 
                 await page.goto('https://example.com');
@@ -240,7 +234,7 @@ describe('Apify.launchPlaywright()', () => {
     test('supports useIncognitoPages: true', async () => {
         let browser;
         try {
-            browser = await Apify.launchPlaywright({
+            browser = await launchPlaywright({
                 useIncognitoPages: true,
                 launchOptions: { headless: true },
             });
@@ -257,7 +251,7 @@ describe('Apify.launchPlaywright()', () => {
     test('supports useIncognitoPages: false', async () => {
         let browser;
         try {
-            browser = await Apify.launchPlaywright({
+            browser = await launchPlaywright({
                 useIncognitoPages: false,
                 launchOptions: { headless: true },
             });
@@ -276,7 +270,7 @@ describe('Apify.launchPlaywright()', () => {
 
         let browser;
         try {
-            browser = await Apify.launchPlaywright({
+            browser = await launchPlaywright({
                 useIncognitoPages: false,
                 userDataDir,
             });

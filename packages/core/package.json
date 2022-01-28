@@ -1,0 +1,76 @@
+{
+    "name": "@crawlers/core",
+    "version": "2.2.2",
+    "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
+    "engines": {
+        "node": ">=15.10.0"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "keywords": [
+        "apify",
+        "headless",
+        "chrome",
+        "puppeteer",
+        "crawler",
+        "scraper"
+    ],
+    "author": {
+        "name": "Apify",
+        "email": "support@apify.com",
+        "url": "https://apify.com"
+    },
+    "contributors": [
+        "Jan Curn <jan@apify.com>",
+        "Marek Trunkat <marek@apify.com>",
+        "Ondra Urban <ondra@apify.com>"
+    ],
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/apify/apify-js"
+    },
+    "bugs": {
+        "url": "https://github.com/apify/apify-js/issues"
+    },
+    "homepage": "https://sdk.apify.com/",
+    "files": [
+        "build"
+    ],
+    "scripts": {
+        "build": "npm run clean && npm run compile && npm run copy",
+        "clean": "rimraf ./dist",
+        "compile": "tsc -p tsconfig.build.json",
+        "copy": "ts-node -T ../../scripts/copy.ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@apify/consts": "^1.4.2",
+        "@apify/datastructures": "^1.0.1",
+        "@apify/log": "^1.1.6",
+        "@apify/ps-tree": "^1.1.4",
+        "@apify/storage-local": "^2.0.1",
+        "@apify/timeout": "^0.2.1",
+        "@apify/utilities": "^1.2.5",
+        "@types/mime-types": "^2.1.1",
+        "@types/stream-json": "^1.7.1",
+        "apify-client": "^2.0.8-beta.0",
+        "browser-pool": "^3.1.1-beta.1",
+        "cheerio": "1.0.0-rc.10",
+        "content-type": "^1.0.4",
+        "got-scraping": "^3.2.7",
+        "htmlparser2": "^7.0.0",
+        "iconv-lite": "^0.6.3",
+        "jquery": "^3.6.0",
+        "mime-types": "^2.1.34",
+        "ow": "^0.28.0",
+        "proxy-chain": "^2.0.1-beta.0",
+        "rimraf": "^3.0.2",
+        "semver": "^7.3.5",
+        "stream-json": "^1.7.3",
+        "tough-cookie": "^4.0.0",
+        "ws": "^7.5.3"
+    }
+}

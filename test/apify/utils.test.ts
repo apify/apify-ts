@@ -1,6 +1,4 @@
-// eslint-disable-next-line max-classes-per-file
 import sinon, { SinonMock } from 'sinon';
-import _ from 'underscore';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -9,18 +7,19 @@ import semver from 'semver';
 import { ENV_VARS } from '@apify/consts';
 import { addTimeoutToPromise } from '@apify/timeout';
 import { IncomingMessage } from 'http';
-import { Log, LoggerText } from '@apify/log';
-import Apify, { CheerioRoot } from 'apify';
-import * as utils from 'apify/src/utils';
-import log from 'apify/src/utils_log';
-import * as requestUtils from 'apify/src/utils_request';
+import log from '@apify/log';
+import {
+    CheerioRoot, createRequestDebugInfo, downloadListOfUrls, getMemoryInfo, htmlToText, isAtHome, isDocker, launchPuppeteer, parseContentTypeFromResponse,
+    printOutdatedSdkWarning, purgeLocalStorage, Request, RequestAsBrowserResult, requestUtils, publicUtils, sleep, snakeCaseToCamelCase, weightedAvg,
+} from '@crawlers/core';
+import { Actor } from 'apify';
 import * as htmlToTextData from './data/html_to_text_test_data';
 
-describe('utils.newClient()', () => {
+describe('Actor.newClient()', () => {
     test('reads environment variables correctly', () => {
         process.env[ENV_VARS.API_BASE_URL] = 'http://www.example.com:1234/path';
         process.env[ENV_VARS.TOKEN] = 'token';
-        const client = utils.newClient();
+        const client = Actor.newClient();
 
         expect(client.constructor.name).toBe('ApifyClient');
         expect(client.token).toBe('token');
@@ -30,22 +29,23 @@ describe('utils.newClient()', () => {
     test('uses correct default if APIFY_API_BASE_URL is not defined', () => {
         delete process.env[ENV_VARS.API_BASE_URL];
         process.env[ENV_VARS.TOKEN] = 'token';
-        const client = utils.newClient();
+        const client = Actor.newClient();
 
         expect(client.token).toBe('token');
         expect(client.baseUrl).toBe('https://api.apify.com/v2');
     });
 });
 
-describe('log export exposes custom loggers', () => {
-    test('works with log.LoggerText (#1238)', () => {
-        expect(Apify.utils.log).toBeInstanceOf(Log);
-        // @ts-expect-error Property 'LoggerText' does not exist on type 'Log'.
-        expect(Apify.utils.log.LoggerText).toBe(LoggerText);
-    });
-});
+// TODO? or just suggest using `@apify/log` directly? we should probably move the patching there if its still needed in v3
+// describe('log export exposes custom loggers', () => {
+//     test('works with log.LoggerText (#1238)', () => {
+//         expect(Apify.utils.log).toBeInstanceOf(Log);
+//         // @ts-expect-error Property 'LoggerText' does not exist on type 'Log'.
+//         expect(Apify.utils.log.LoggerText).toBe(LoggerText);
+//     });
+// });
 
-describe('utils.isDocker()', () => {
+describe('isDocker()', () => {
     test('works for dockerenv && cgroup', async () => {
         const statStub = sinon
             .stub(fs, 'stat')
@@ -57,7 +57,7 @@ describe('utils.isDocker()', () => {
             // @ts-expect-error sinon doesn't pick up certain FS overloads
             .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... docker ... something'));
 
-        const is = await utils.isDocker(true);
+        const is = await isDocker(true);
 
         expect(is).toBe(true);
         statStub.restore();
@@ -75,7 +75,7 @@ describe('utils.isDocker()', () => {
             // @ts-expect-error sinon doesn't pick up certain FS overloads
             .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... ... something'));
 
-        const is = await utils.isDocker(true);
+        const is = await isDocker(true);
 
         expect(is).toBe(true);
         statStub.restore();
@@ -93,8 +93,7 @@ describe('utils.isDocker()', () => {
             // @ts-expect-error sinon doesn't pick up certain FS overloads
             .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... docker ... something'));
 
-        const is = await utils
-            .isDocker(true);
+        const is = await isDocker(true);
 
         expect(is).toBe(true);
         statStub.restore();
@@ -112,8 +111,7 @@ describe('utils.isDocker()', () => {
             // @ts-expect-error sinon doesn't pick up certain FS overloads
             .callsFake((_filePath, _encoding, callback) => callback(null, 'something ... ... something'));
 
-        const is = await utils
-            .isDocker(true);
+        const is = await isDocker(true);
 
         expect(is).toBe(false);
         statStub.restore();
@@ -121,15 +119,11 @@ describe('utils.isDocker()', () => {
     });
 });
 
-describe('utils.getMemoryInfo()', () => {
+describe('getMemoryInfo()', () => {
     test('works WITHOUT child process outside the container', async () => {
         const osMock = sinon.mock(os);
-        const utilsMock = sinon.mock(utils);
-
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(false));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(false);
 
         osMock
             .expects('freemem')
@@ -142,7 +136,7 @@ describe('utils.getMemoryInfo()', () => {
             .returns(333);
 
         try {
-            const data = await Apify.getMemoryInfo();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
@@ -150,18 +144,14 @@ describe('utils.getMemoryInfo()', () => {
             });
             expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             osMock.verify();
         }
     });
 
     test('works WITHOUT child process inside the container', async () => {
-        const utilsMock = sinon.mock(utils);
-
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(true));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(true);
 
         const accessStub = sinon
             .stub(fs, 'access')
@@ -178,7 +168,7 @@ describe('utils.getMemoryInfo()', () => {
             });
 
         try {
-            const data = await Apify.getMemoryInfo();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
@@ -186,21 +176,19 @@ describe('utils.getMemoryInfo()', () => {
             });
             expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             readFileStub.restore();
             accessStub.restore();
         }
     });
 
+    // this test hangs because we launch the browser, closing is apparently not enough?
     test('works WITH child process outside the container', async () => {
         const osMock = sinon.mock(os);
-        const utilsMock = sinon.mock(utils);
         process.env[ENV_VARS.HEADLESS] = '1';
 
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(false));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(false);
 
         osMock
             .expects('freemem')
@@ -214,8 +202,8 @@ describe('utils.getMemoryInfo()', () => {
 
         let browser;
         try {
-            browser = await Apify.launchPuppeteer();
-            const data = await Apify.getMemoryInfo();
+            browser = await launchPuppeteer();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
@@ -224,21 +212,19 @@ describe('utils.getMemoryInfo()', () => {
             expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
             expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             osMock.verify();
             delete process.env[ENV_VARS.HEADLESS];
-            if (browser) await browser.close();
+            await browser?.close();
         }
     });
 
+    // this test hangs because we launch the browser, closing is apparently not enough?
     test('works WITH child process inside the container', async () => {
-        const utilsMock = sinon.mock(utils);
         process.env[ENV_VARS.HEADLESS] = '1';
 
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(true));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(true);
 
         const accessStub = sinon
             .stub(fs, 'access')
@@ -256,8 +242,8 @@ describe('utils.getMemoryInfo()', () => {
 
         let browser;
         try {
-            browser = await Apify.launchPuppeteer();
-            const data = await Apify.getMemoryInfo();
+            browser = await launchPuppeteer();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
@@ -266,21 +252,17 @@ describe('utils.getMemoryInfo()', () => {
             expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
             expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             readFileStub.restore();
             accessStub.restore();
             delete process.env[ENV_VARS.HEADLESS];
-            if (browser) browser.close();
+            await browser?.close();
         }
     });
 
     test('works with cgroup V1 with LIMITED memory', async () => {
-        const utilsMock = sinon.mock(utils);
-
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(true));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(true);
 
         const accessStub = sinon
             .stub(fs, 'access')
@@ -297,27 +279,23 @@ describe('utils.getMemoryInfo()', () => {
             });
 
         try {
-            const data = await Apify.getMemoryInfo();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
                 usedBytes: 111,
             });
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             readFileStub.restore();
             accessStub.restore();
         }
     });
 
     test('works with cgroup V1 with UNLIMITED memory', async () => {
-        const utilsMock = sinon.mock(utils);
         const osMock = sinon.mock(os);
-
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(true));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(true);
 
         const accessStub = sinon
             .stub(fs, 'access')
@@ -339,14 +317,14 @@ describe('utils.getMemoryInfo()', () => {
             .returns(333);
 
         try {
-            const data = await Apify.getMemoryInfo();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
                 usedBytes: 111,
             });
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             osMock.verify();
             readFileStub.restore();
             accessStub.restore();
@@ -354,49 +332,40 @@ describe('utils.getMemoryInfo()', () => {
     });
 
     test('works with cgroup V2 with LIMITED memory', async () => {
-        const utilsMock = sinon.mock(utils);
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(true);
 
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(true));
+        const accessSpy = jest.spyOn(fs, 'access');
+        // @ts-expect-error sinon doesn't pick up certain FS overloads
+        accessSpy.mockImplementation((_file: string, _mode: unknown, callback: (err: string) => void) => callback('error'));
 
-        const accessStub = sinon
-            .stub(fs, 'access')
-            // @ts-expect-error sinon doesn't pick up certain FS overloads
-            .callsFake((_file: string, _mode: unknown, callback: (err: string) => void) => callback('error'));
-
-        const readFileStub = sinon
-            .stub(fs, 'readFile')
-            // @ts-expect-error sinon doesn't pick up certain FS overloads
-            .callsFake((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
-                if (filePath === '/sys/fs/cgroup/memory.max') callback(null, '333\n');
-                else if (filePath === '/sys/fs/cgroup/memory.current') callback(null, '111\n');
-                else throw new Error('Invalid path');
-            });
+        const readFileSpy = jest.spyOn(fs, 'readFile');
+        // @ts-expect-error jest doesn't pick up certain FS overloads
+        readFileSpy.mockImplementation((filePath: string, _encoding: unknown, callback: (error: Error | null, data: string) => void) => {
+            if (filePath === '/sys/fs/cgroup/memory.max') callback(null, '333\n');
+            else if (filePath === '/sys/fs/cgroup/memory.current') callback(null, '111\n');
+            else throw new Error('Invalid path');
+        });
 
         try {
-            const data = await Apify.getMemoryInfo();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
                 usedBytes: 111,
             });
+            expect(isDockerSpy).toBeCalledTimes(1);
         } finally {
-            utilsMock.verify();
-            readFileStub.restore();
-            accessStub.restore();
+            readFileSpy.mockRestore();
+            accessSpy.mockRestore();
+            isDockerSpy.mockRestore();
         }
     });
 
     test('works with cgroup V2 with UNLIMITED memory', async () => {
-        const utilsMock = sinon.mock(utils);
         const osMock = sinon.mock(os);
-
-        utilsMock
-            .expects('isDocker')
-            .once()
-            .returns(Promise.resolve(true));
+        const isDockerSpy = jest.spyOn(publicUtils, 'isDocker');
+        isDockerSpy.mockResolvedValueOnce(true);
 
         const accessStub = sinon
             .stub(fs, 'access')
@@ -418,14 +387,14 @@ describe('utils.getMemoryInfo()', () => {
             .returns(333);
 
         try {
-            const data = await Apify.getMemoryInfo();
+            const data = await getMemoryInfo();
             expect(data).toMatchObject({
                 totalBytes: 333,
                 freeBytes: 222,
                 usedBytes: 111,
             });
         } finally {
-            utilsMock.verify();
+            isDockerSpy.mockRestore();
             osMock.verify();
             readStub.restore();
             accessStub.restore();
@@ -433,52 +402,52 @@ describe('utils.getMemoryInfo()', () => {
     });
 });
 
-describe('utils.isAtHome()', () => {
+describe('isAtHome()', () => {
     test('works', () => {
-        expect(utils.isAtHome()).toBe(false);
+        expect(isAtHome()).toBe(false);
         process.env[ENV_VARS.IS_AT_HOME] = '1';
-        expect(utils.isAtHome()).toBe(true);
+        expect(isAtHome()).toBe(true);
         delete process.env[ENV_VARS.IS_AT_HOME];
-        expect(utils.isAtHome()).toBe(false);
+        expect(isAtHome()).toBe(false);
     });
 });
 
-describe('utils.weightedAvg()', () => {
+describe('weightedAvg()', () => {
     test('works', () => {
-        expect(utils.weightedAvg([10, 10, 10], [1, 1, 1])).toBe(10);
-        expect(utils.weightedAvg([5, 10, 15], [1, 1, 1])).toBe(10);
-        expect(utils.weightedAvg([10, 10, 10], [0.5, 1, 1.5])).toBe(10);
-        expect(utils.weightedAvg([29, 35, 89], [13, 91, 3])).toEqual(((29 * 13) + (35 * 91) + (89 * 3)) / (13 + 91 + 3));
-        expect(utils.weightedAvg([], [])).toEqual(NaN);
-        expect(utils.weightedAvg([1], [0])).toEqual(NaN);
-        expect(utils.weightedAvg([], [1])).toEqual(NaN);
+        expect(weightedAvg([10, 10, 10], [1, 1, 1])).toBe(10);
+        expect(weightedAvg([5, 10, 15], [1, 1, 1])).toBe(10);
+        expect(weightedAvg([10, 10, 10], [0.5, 1, 1.5])).toBe(10);
+        expect(weightedAvg([29, 35, 89], [13, 91, 3])).toEqual(((29 * 13) + (35 * 91) + (89 * 3)) / (13 + 91 + 3));
+        expect(weightedAvg([], [])).toEqual(NaN);
+        expect(weightedAvg([1], [0])).toEqual(NaN);
+        expect(weightedAvg([], [1])).toEqual(NaN);
     });
 });
 
-describe('Apify.utils.sleep()', () => {
+describe('Apify.sleep()', () => {
     test('works', async () => {
         await Promise.resolve();
-        await Apify.utils.sleep(0);
-        await Apify.utils.sleep();
-        await Apify.utils.sleep(null);
-        await Apify.utils.sleep(-1);
+        await sleep(0);
+        await sleep();
+        await sleep(null);
+        await sleep(-1);
 
         const timeBefore = Date.now();
-        await Apify.utils.sleep(100);
+        await sleep(100);
         const timeAfter = Date.now();
 
         expect(timeAfter - timeBefore).toBeGreaterThanOrEqual(95);
     });
 });
 
-describe('Apify.utils.extractUrls()', () => {
+describe('extractUrls()', () => {
     const SIMPLE_URL_LIST = 'simple_url_list.txt';
     const UNICODE_URL_LIST = 'unicode_url_list.txt';
     const COMMA_URL_LIST = 'unicode+comma_url_list.txt';
     const TRICKY_URL_LIST = 'tricky_url_list.txt';
     const INVALID_URL_LIST = 'invalid_url_list.txt';
 
-    const { extractUrls, URL_WITH_COMMAS_REGEX } = utils.publicUtils;
+    const { extractUrls, URL_WITH_COMMAS_REGEX } = publicUtils;
 
     const getURLData = (filename: string) => {
         const string = fs.readFileSync(path.join(__dirname, 'data', filename), 'utf8');
@@ -624,29 +593,22 @@ describe('Apify.utils.extractUrls()', () => {
     });
 });
 
-describe('Apify.utils.downloadListOfUrls()', () => {
-    const { downloadListOfUrls } = utils.publicUtils;
-    let stub: sinon.SinonStub<[options?: utils.RequestAsBrowserOptions], Promise<utils.RequestAsBrowserResult<unknown>>>;
-    beforeEach(() => {
-        stub = sinon.stub(requestUtils, 'requestAsBrowser');
-    });
-    afterEach(() => {
-        stub.restore();
-    });
-
-    test('downloads a list of URLs', () => {
+describe('downloadListOfUrls()', () => {
+    test('downloads a list of URLs', async () => {
+        const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const text = fs.readFileSync(path.join(__dirname, 'data', 'simple_url_list.txt'), 'utf8');
         const arr = text.trim().split(/[\r\n]+/g).map((u) => u.trim());
-        stub.resolves({ body: text } as requestUtils.RequestAsBrowserResult);
+        spy.mockResolvedValueOnce({ body: text } as RequestAsBrowserResult);
 
-        return expect(downloadListOfUrls({
+        await expect(downloadListOfUrls({
             url: 'http://www.nowhere12345.com',
         })).resolves.toEqual(arr);
+        spy.mockRestore();
     });
 });
 
 const checkHtmlToText = (html: string | CheerioRoot, expectedText: string, hasBody = false) => {
-    const text1 = Apify.utils.htmlToText(html);
+    const text1 = htmlToText(html);
     expect(text1).toEqual(expectedText);
 
     // Test embedding into <body> gives the same result
@@ -666,12 +628,12 @@ const checkHtmlToText = (html: string | CheerioRoot, expectedText: string, hasBo
                 ${html}
             </body>
         </html>`;
-        const text2 = Apify.utils.htmlToText(html2);
+        const text2 = htmlToText(html2);
         expect(text2).toEqual(expectedText);
     }
 };
 
-describe('utils.htmlToText()', () => {
+describe('htmlToText()', () => {
     test('handles invalid args', () => {
         checkHtmlToText(null, '');
         checkHtmlToText('', '');
@@ -749,7 +711,7 @@ describe('utils.htmlToText()', () => {
     });
 });
 
-describe('utils.createRequestDebugInfo()', () => {
+describe('createRequestDebugInfo()', () => {
     test('handles Puppeteer response', () => {
         const request = {
             id: 'some-id',
@@ -760,7 +722,7 @@ describe('utils.createRequestDebugInfo()', () => {
             errorMessages: ['xxx'],
             someThingElse: 'xxx',
             someOther: 'yyy',
-        } as unknown as Apify.Request;
+        } as unknown as Request;
 
         const response = {
             status: () => 201,
@@ -771,7 +733,7 @@ describe('utils.createRequestDebugInfo()', () => {
             foo: 'bar',
         };
 
-        expect(Apify.utils.createRequestDebugInfo(request, response, additionalFields)).toEqual({
+        expect(createRequestDebugInfo(request, response, additionalFields)).toEqual({
             requestId: 'some-id',
             url: 'https://example.com',
             loadedUrl: 'https://example.com',
@@ -793,7 +755,7 @@ describe('utils.createRequestDebugInfo()', () => {
             errorMessages: ['xxx'],
             someThingElse: 'xxx',
             someOther: 'yyy',
-        } as unknown as Apify.Request;
+        } as unknown as Request;
 
         const response = {
             statusCode: 201,
@@ -804,7 +766,7 @@ describe('utils.createRequestDebugInfo()', () => {
             foo: 'bar',
         };
 
-        expect(Apify.utils.createRequestDebugInfo(request, response, additionalFields)).toEqual({
+        expect(createRequestDebugInfo(request, response, additionalFields)).toEqual({
             requestId: 'some-id',
             url: 'https://example.com',
             loadedUrl: 'https://example.com',
@@ -817,7 +779,7 @@ describe('utils.createRequestDebugInfo()', () => {
     });
 });
 
-describe('utils.snakeCaseToCamelCase()', () => {
+describe('snakeCaseToCamelCase()', () => {
     test('should camel case all sneaky cases of snake case', () => {
         const tests = {
             aaa_bbb_: 'aaaBbb',
@@ -826,8 +788,8 @@ describe('utils.snakeCaseToCamelCase()', () => {
             a_1_b_1a: 'a1B1a',
         };
 
-        _.mapObject(tests, (camelCase, snakeCase) => {
-            expect(utils.snakeCaseToCamelCase(snakeCase)).toEqual(camelCase);
+        Object.entries(tests).forEach(([snakeCase, camelCase]) => {
+            expect(snakeCaseToCamelCase(snakeCase)).toEqual(camelCase);
         });
     });
 });
@@ -869,7 +831,7 @@ describe('addTimeoutToPromise()', () => {
     });
 });
 
-describe('utils.printOutdatedSdkWarning()', () => {
+describe('printOutdatedSdkWarning()', () => {
     let logMock: SinonMock;
 
     const currentVersion = require('../../packages/apify/package.json').version; // eslint-disable-line
@@ -886,80 +848,78 @@ describe('utils.printOutdatedSdkWarning()', () => {
     test('should do nothing when ENV_VARS.SDK_LATEST_VERSION is not set', () => {
         delete process.env[ENV_VARS.SDK_LATEST_VERSION];
         logMock.expects('warning').never();
-        utils.printOutdatedSdkWarning();
+        printOutdatedSdkWarning();
     });
 
     test('should do nothing when ENV_VARS.DISABLE_OUTDATED_WARNING is set', () => {
         process.env[ENV_VARS.DISABLE_OUTDATED_WARNING] = '1';
         logMock.expects('warning').never();
-        utils.printOutdatedSdkWarning();
+        printOutdatedSdkWarning();
         delete process.env[ENV_VARS.DISABLE_OUTDATED_WARNING];
     });
 
     test('should correctly work when outdated', () => {
         process.env[ENV_VARS.SDK_LATEST_VERSION] = semver.inc(currentVersion, 'minor');
         logMock.expects('warning').once();
-        utils.printOutdatedSdkWarning();
+        printOutdatedSdkWarning();
         delete process.env[ENV_VARS.SDK_LATEST_VERSION];
     });
 
     test('should correctly work when up to date', () => {
         process.env[ENV_VARS.SDK_LATEST_VERSION] = '0.13.0';
         logMock.expects('warning').never();
-        utils.printOutdatedSdkWarning();
+        printOutdatedSdkWarning();
         delete process.env[ENV_VARS.SDK_LATEST_VERSION];
     });
 });
 
-describe('utils.parseContentTypeFromResponse', () => {
+describe('parseContentTypeFromResponse', () => {
     test('should parse content type from header', () => {
-        const parsed = utils.parseContentTypeFromResponse({ url: 'http://example.com', headers: { 'content-type': 'text/html; charset=utf-8' } } as IncomingMessage);
+        const parsed = parseContentTypeFromResponse({ url: 'http://example.com', headers: { 'content-type': 'text/html; charset=utf-8' } } as IncomingMessage);
         expect(parsed.type).toBe('text/html');
         expect(parsed.charset).toBe('utf-8');
     });
 
     test('should parse content type from file extension', () => {
-        const parsedHtml = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.html?someparam=foo', headers: {} } as IncomingMessage);
+        const parsedHtml = parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.html?someparam=foo', headers: {} } as IncomingMessage);
         expect(parsedHtml.type).toBe('text/html');
         expect(parsedHtml.charset).toBe('utf-8');
 
-        const parsedTxt = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.txt', headers: {} } as IncomingMessage);
+        const parsedTxt = parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file.txt', headers: {} } as IncomingMessage);
         expect(parsedTxt.type).toBe('text/plain');
         expect(parsedTxt.charset).toBe('utf-8');
     });
 
     test('should return default content type for bad content type headers', () => {
-        const parsedWithoutCt = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file', headers: {} } as IncomingMessage);
+        const parsedWithoutCt = parseContentTypeFromResponse({ url: 'http://www.example.com/foo/file', headers: {} } as IncomingMessage);
         expect(parsedWithoutCt.type).toBe('application/octet-stream');
         expect(parsedWithoutCt.charset).toBe('utf-8');
 
-        const parsedBadHeader = utils.parseContentTypeFromResponse({
+        const parsedBadHeader = parseContentTypeFromResponse({
             url: 'http://www.example.com/foo/file.html',
             headers: { 'content-type': 'text/html,text/html' },
         } as IncomingMessage);
         expect(parsedBadHeader.type).toBe('text/html');
         expect(parsedBadHeader.charset).toBe('utf-8');
 
-        const parsedReallyBad = utils.parseContentTypeFromResponse({ url: 'http://www.example.com/foo', headers: { 'content-type': 'crazy-stuff' } } as IncomingMessage);
+        const parsedReallyBad = parseContentTypeFromResponse({ url: 'http://www.example.com/foo', headers: { 'content-type': 'crazy-stuff' } } as IncomingMessage);
         expect(parsedReallyBad.type).toBe('application/octet-stream');
         expect(parsedReallyBad.charset).toBe('utf-8');
     });
 });
 
-describe('utils.purgeLocalStorage()', () => {
+describe('purgeLocalStorage()', () => {
     // Create test folder
     const folder = Date.now().toString(16);
     fs.mkdirSync(folder);
 
     test('should purge local storage by default', async () => {
-        await expect(utils.purgeLocalStorage()).resolves.toBeUndefined();
-
+        await expect(purgeLocalStorage()).resolves.toBeUndefined();
         expect(fs.existsSync('apify_storage')).toBe(false);
     });
 
     test('should purge local storage when passing custom name', async () => {
-        await expect(utils.purgeLocalStorage(folder)).resolves.toBeUndefined();
-
+        await expect(purgeLocalStorage(folder)).resolves.toBeUndefined();
         expect(fs.existsSync(folder)).toBe(false);
     });
 });

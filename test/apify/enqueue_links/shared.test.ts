@@ -1,6 +1,4 @@
-import { PseudoUrl } from 'apify/src/pseudo_url';
-import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches } from 'apify/src/enqueue_links/shared';
-import { Request } from 'apify';
+import { constructPseudoUrlInstances, createRequestOptions, createRequests, addRequestsToQueueInBatches, Request, PseudoUrl } from '@crawlers/core';
 
 describe('Enqueue links shared functions', () => {
     describe('constructPseudoUrlInstances()', () => {

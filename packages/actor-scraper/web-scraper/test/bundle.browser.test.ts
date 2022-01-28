@@ -1,4 +1,4 @@
-import Apify from 'apify';
+import { launchPuppeteer } from '@crawlers/core';
 import { Browser, Page } from 'puppeteer';
 import { createBundle } from '../src/internals/bundle.browser';
 
@@ -9,7 +9,7 @@ describe('Bundle', () => {
     let page: Page;
 
     beforeAll(async () => {
-        browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        browser = await launchPuppeteer({ launchOptions: { headless: true } });
     });
 
     afterAll(async () => {

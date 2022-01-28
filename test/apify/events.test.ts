@@ -1,42 +1,38 @@
 import WebSocket from 'ws';
-import sinon from 'sinon';
 import { ENV_VARS } from '@apify/consts';
-import Apify, { Dictionary } from 'apify';
-import { ACTOR_EVENT_NAMES_EX } from 'apify/src/constants';
-import { sleep } from 'apify/src/utils';
+import { sleep, ACTOR_EVENT_NAMES_EX, Dictionary, events, initializeEvents, stopEvents } from '@crawlers/core';
+import { Actor } from 'apify';
 
-describe('Apify.events', () => {
+describe('events', () => {
     let wss: WebSocket.Server = null;
-    let clock: sinon.SinonFakeTimers;
+
     beforeEach(() => {
         wss = new WebSocket.Server({ port: 9099 });
-        clock = sinon.useFakeTimers();
+        jest.useFakeTimers();
         process.env[ENV_VARS.ACTOR_EVENTS_WS_URL] = 'ws://localhost:9099/someRunId';
         process.env[ENV_VARS.TOKEN] = 'dummy';
     });
     afterEach((done) => {
-        clock.restore();
+        jest.useRealTimers();
         delete process.env[ENV_VARS.ACTOR_EVENTS_WS_URL];
         delete process.env[ENV_VARS.TOKEN];
-        Apify.events.removeAllListeners();
+        events.removeAllListeners();
         wss.close(done);
     });
 
-    test('is there and works as EventEmitter', () => {
-        return new Promise((resolve, reject) => {
+    test('is there and works as EventEmitter', async () => {
+        const arg = await new Promise((resolve, reject) => {
             try {
-                Apify.events.on('foo', resolve);
-                Apify.events.emit('foo', 'test event');
+                events.on('foo', resolve);
+                events.emit('foo', 'test event');
             } catch (e) {
                 reject(e);
             }
-        })
-            .then((arg) => {
-                expect(arg).toBe('test event');
-            });
+        });
+        expect(arg).toBe('test event');
     });
 
-    test('should work in Apify.main()', (done) => {
+    test('should work in main()', (done) => {
         let wsClosed = false;
         const isWsConnected = new Promise((resolve) => {
             wss.on('connection', (ws, req) => {
@@ -59,32 +55,33 @@ describe('Apify.events', () => {
         const eventsReceived: unknown[] = [];
         // Run main and store received events
         expect(wsClosed).toBe(false);
-        Apify.main(async () => {
+        Actor.main(async () => {
             await isWsConnected;
-            Apify.events.on('name-1', (data) => eventsReceived.push(data));
-            clock.tick(150);
-            clock.restore();
+            events.on('name-1', (data) => eventsReceived.push(data));
+            jest.advanceTimersByTime(150);
+            jest.useRealTimers();
             await sleep(10);
         });
 
         // Main will call process.exit() so we must stub it.
-        const stubbedExit = sinon
-            .stub(process, 'exit')
-            .callsFake((async (code: number) => {
-                expect(code).toBe(0);
-                expect(eventsReceived).toEqual([[1, 2, 3], { foo: 'bar' }]);
+        const exitSpy = jest.spyOn(process, 'exit');
+        exitSpy.mockImplementationOnce((code?: number) => {
+            expect(code).toBe(0);
+            expect(eventsReceived).toEqual([[1, 2, 3], { foo: 'bar' }]);
 
-                // Cleanup.
-                stubbedExit.restore();
-                wss.close(async () => {
-                    await sleep(10); // Here must be short sleep to get following line to later tick
-                    expect(wsClosed).toBe(true);
-                    done();
-                });
-            }) as never);
+            // Cleanup.
+            jest.useRealTimers();
+            wss.close(async () => {
+                await sleep(10); // Here must be short sleep to get following line to later tick
+                expect(wsClosed).toBe(true);
+                done();
+            });
+
+            return 0 as never;
+        });
     }, 60e3);
 
-    test('should work without Apify.main()', async () => {
+    test('should work without main()', async () => {
         let wsClosed = false;
         let finish: (value?: unknown) => void;
         const closePromise = new Promise((resolve) => {
@@ -112,17 +109,17 @@ describe('Apify.events', () => {
         const eventsReceived: unknown[] = [];
         // Connect to websocket and receive events.
         expect(wsClosed).toBe(false);
-        await Apify.initializeEvents();
+        await initializeEvents();
         await isWsConnected;
-        Apify.events.on('name-1', (data) => eventsReceived.push(data));
-        clock.tick(150);
-        clock.restore();
+        events.on('name-1', (data) => eventsReceived.push(data));
+        jest.advanceTimersByTime(150);
+        jest.useRealTimers();
         await sleep(10);
 
         expect(eventsReceived).toEqual([[1, 2, 3], { foo: 'bar' }]);
 
         expect(wsClosed).toBe(false);
-        Apify.stopEvents();
+        stopEvents();
         await closePromise;
         expect(wsClosed).toBe(true);
 
@@ -134,12 +131,12 @@ describe('Apify.events', () => {
 
     test('should send persist state events in regular interval', () => {
         const eventsReceived = [];
-        Apify.events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, (data) => eventsReceived.push(data));
-        Apify.initializeEvents();
-        clock.tick(60001);
-        clock.tick(60001);
-        clock.tick(60001);
-        Apify.stopEvents();
+        events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, (data) => eventsReceived.push(data));
+        initializeEvents();
+        jest.advanceTimersByTime(60001);
+        jest.advanceTimersByTime(60001);
+        jest.advanceTimersByTime(60001);
+        stopEvents();
         expect(eventsReceived.length).toBe(3);
     });
 });

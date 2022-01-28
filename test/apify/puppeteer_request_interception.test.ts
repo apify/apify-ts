@@ -1,11 +1,11 @@
 import express from 'express';
-import Apify from 'apify';
+import { launchPuppeteer, puppeteerUtils, sleep } from '@crawlers/core';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { HTTPRequest } from 'browser-pool/dist/puppeteer/puppeteer-proxy-per-page';
+import { HTTPRequest } from 'puppeteer';
 import { startExpressAppPromise } from './_helper';
 
-const { addInterceptRequestHandler, removeInterceptRequestHandler } = Apify.utils.puppeteer;
+const { addInterceptRequestHandler, removeInterceptRequestHandler } = puppeteerUtils;
 
 // Simple page with image, script and stylesheet links.
 const HTML_PAGE = `<html><body>
@@ -41,9 +41,9 @@ afterAll(() => {
     server.close();
 });
 
-describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptRequestHandler()', () => {
+describe('Apify.puppeteerUtils.addInterceptRequestHandler|removeInterceptRequestHandler()', () => {
     test('should allow multiple handlers', async () => {
-        const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 
         const allUrls: string[] = [];
         const loadedUrls: string[] = [];
@@ -88,49 +88,46 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
         ]));
     });
 
-    test(
-        'should not propagate aborted/responded requests to following handlers',
-        async () => {
-            const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
-            const propagatedUrls: string[] = [];
+    test('should not propagate aborted/responded requests to following handlers', async () => {
+        const browser = await launchPuppeteer({ launchOptions: { headless: true } });
+        const propagatedUrls: string[] = [];
 
-            try {
-                const page = await browser.newPage();
+        try {
+            const page = await browser.newPage();
 
-                // Abort images.
-                await addInterceptRequestHandler(page, (request) => {
-                    if (request.resourceType() === 'image') return request.abort();
-                    return request.continue();
-                });
+            // Abort images.
+            await addInterceptRequestHandler(page, (request) => {
+                if (request.resourceType() === 'image') return request.abort();
+                return request.continue();
+            });
 
-                // Respond scripts.
-                await addInterceptRequestHandler(page, (request) => {
-                    if (request.resourceType() === 'script') {
-                        return request.respond({
-                            status: 404,
-                        });
-                    }
-                    return request.continue();
-                });
+            // Respond scripts.
+            await addInterceptRequestHandler(page, (request) => {
+                if (request.resourceType() === 'script') {
+                    return request.respond({
+                        status: 404,
+                    });
+                }
+                return request.continue();
+            });
 
-                // Just collect all URLs propagated to the last handler.
-                await addInterceptRequestHandler(page, (request) => {
-                    propagatedUrls.push(request.url());
-                    return request.continue();
-                });
-                await page.setContent(HTML_PAGE, { waitUntil: 'networkidle0' });
-            } finally {
-                await browser.close();
-            }
+            // Just collect all URLs propagated to the last handler.
+            await addInterceptRequestHandler(page, (request) => {
+                propagatedUrls.push(request.url());
+                return request.continue();
+            });
+            await page.setContent(HTML_PAGE, { waitUntil: 'networkidle0' });
+        } finally {
+            await browser.close();
+        }
 
-            expect(propagatedUrls).toEqual(expect.arrayContaining([
-                'https://example.com/style.css',
-            ]));
-        },
-    );
+        expect(propagatedUrls).toEqual(expect.arrayContaining([
+            'https://example.com/style.css',
+        ]));
+    });
 
     test('should allow to modify request', async () => {
-        const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 
         try {
             const page = await browser.newPage();
@@ -167,13 +164,13 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     });
 
     test('should allow async handler', async () => {
-        const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 
         try {
             const page = await browser.newPage();
 
             await addInterceptRequestHandler(page, async (request) => {
-                await Apify.utils.sleep(100);
+                await sleep(100);
                 return request.continue({
                     method: 'POST',
                 });
@@ -190,7 +187,7 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
 
     describe('internal handleRequest function should return correctly formated headers', () => {
         test('should correctly capitalize headers', async () => {
-            const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+            const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 
             try {
                 const page = await browser.newPage();
@@ -232,9 +229,9 @@ describe('Apify.utils.puppeteer.addInterceptRequestHandler|removeInterceptReques
     });
 });
 
-describe('Apify.utils.puppeteer.removeInterceptRequestHandler()', () => {
+describe('Apify.puppeteerUtils.removeInterceptRequestHandler()', () => {
     test('works', async () => {
-        const browser = await Apify.launchPuppeteer({ launchOptions: { headless: true } });
+        const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 
         const loadedUrls: string[] = [];
 
