@@ -54,7 +54,6 @@
         "@apify/storage-local": "^2.0.1",
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.5",
-        "@crawlers/basic": "^1.0.0",
         "@types/mime-types": "^2.1.1",
         "@types/stream-json": "^1.7.1",
         "apify-client": "^2.0.8-beta.0",
@@ -73,8 +72,5 @@
         "stream-json": "^1.7.3",
         "tough-cookie": "^4.0.0",
         "ws": "^7.5.3"
-    },
-    "devDependencies": {
-        "@crawlers/basic": "file:../basic"
     }
 }

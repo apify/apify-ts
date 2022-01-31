@@ -15,4 +15,4 @@ export * from './request';
 export * from './proxy_configuration';
 export * from './utils';
 // export * as utils from './utils';
-export * as internalValidators from './validators';
+export * from './validators';

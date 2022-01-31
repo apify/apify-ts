@@ -3,7 +3,6 @@ import defaultLog, { Log } from '@apify/log';
 import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import {
-    internalValidators,
     AutoscaledPool,
     AutoscaledPoolOptions,
     Awaitable,
@@ -16,6 +15,7 @@ import {
     SessionPool,
     SessionPoolOptions,
     Statistics,
+    validators,
     type CrawlingContext,
 } from '@crawlers/core';
 import ow, { ArgumentError } from 'ow';
@@ -284,8 +284,8 @@ export class BasicCrawler<Inputs extends BasicCrawlerHandleRequestInputs = Basic
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
 
     protected static optionsShape = {
-        requestList: ow.optional.object.validate(internalValidators.validators.requestList),
-        requestQueue: ow.optional.object.validate(internalValidators.validators.requestQueue),
+        requestList: ow.optional.object.validate(validators.requestList),
+        requestQueue: ow.optional.object.validate(validators.requestQueue),
         // Subclasses override this function instead of passing it
         // in constructor, so this validation needs to apply only
         // if the user creates an instance of BasicCrawler directly.

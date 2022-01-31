@@ -1,7 +1,4 @@
 // TODO check what we want to export based on this file + exports.ts
-
-import { BasicCrawler } from '@crawlers/basic';
-
 import log from './utils_log';
 import { Configuration } from './configuration';
 import { AutoscaledPool } from './autoscaling/autoscaled_pool';
@@ -45,7 +42,7 @@ export {
 
     AutoscaledPool,
 
-    BasicCrawler,
+    // BasicCrawler,
     CheerioCrawler,
 
     pushData,

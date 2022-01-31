@@ -19,6 +19,11 @@
         },
         "clean": {
             "outputs": []
+        },
+        "basic-crawler#build": {
+            "dependsOn": [
+                "core#build"
+            ]
         }
     }
 }
