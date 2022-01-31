@@ -20,9 +20,9 @@
         "clean": {
             "outputs": []
         },
-        "basic-crawler#build": {
+        "@crawlers/basic#build": {
             "dependsOn": [
-                "core#build"
+                "@crawlers/core#build"
             ]
         }
     }
