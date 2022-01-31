@@ -7,7 +7,8 @@
         "node": ">=15.10.0"
     },
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "packages/actor-scraper/*"
     ],
     "keywords": [
         "apify",
