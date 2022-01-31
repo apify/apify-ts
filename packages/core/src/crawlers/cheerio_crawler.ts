@@ -9,11 +9,12 @@ import ow from 'ow';
 import util from 'util';
 import { Method, TimeoutError } from 'got-scraping';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
+import { BasicCrawler, BasicCrawlerHandleFailedRequest, BasicCrawlerOptions, BasicCrawlerHandleRequest } from '@crawlers/basic';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { parseContentTypeFromResponse, RequestAsBrowserResult } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
-import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions, HandleRequest } from './crawler_commons';
+import { CrawlingContext } from './crawler_commons';
 import { CrawlerExtension } from './crawler_extension';
 import { Request } from '../request';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
@@ -202,7 +203,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * See [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/cheerio_crawler.js#L13)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -342,6 +343,7 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
      */
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler;
+    response: IncomingMessage;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
@@ -506,7 +508,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
-            handleRequestFunction: handlePageFunction as HandleRequest,
+            handleRequestFunction: handlePageFunction as BasicCrawlerHandleRequest,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.

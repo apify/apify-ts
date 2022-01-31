@@ -2,6 +2,7 @@ import ow from 'ow';
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { BrowserController, BrowserPool, BrowserPoolHooks, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
 import type { BrowserPlugin, CommonPage, InferBrowserPluginArray } from 'browser-pool';
+import { BasicCrawler, BasicCrawlerOptions, BasicCrawlerHandleFailedRequest } from '@crawlers/basic';
 import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { EVENT_SESSION_RETIRED } from '../session_pool/events';
 import { validators } from '../validators';
@@ -9,7 +10,7 @@ import {
     throwOnBlockedRequest,
     handleRequestTimeout,
 } from './crawler_utils';
-import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './crawler_commons';
+import { CrawlingContext } from './crawler_commons';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';
@@ -19,9 +20,10 @@ export interface BrowserCrawlingContext<
     Page extends CommonPage = CommonPage,
     Response = Dictionary<any>,
     ProvidedController = BrowserController
-> extends CrawlingContext<Response> {
+> extends CrawlingContext {
     browserController: ProvidedController;
     page: Page;
+    response?: Response;
 }
 
 export type BrowserHook<
@@ -114,7 +116,7 @@ export interface BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
 
     /**
      * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.

@@ -1,9 +1,9 @@
 import ow from 'ow';
 import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
+import { BasicCrawlerHandleFailedRequest } from '@crawlers/basic';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
-import { HandleFailedRequest } from './crawler_commons';
 import { DirectNavigationOptions, gotoExtended } from '../playwright_utils';
 import { Dictionary } from '../typedefs';
 
@@ -69,7 +69,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies

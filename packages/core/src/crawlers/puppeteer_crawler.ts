@@ -1,10 +1,10 @@
 import ow from 'ow';
 import { BrowserPoolOptions, PuppeteerPlugin } from 'browser-pool';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
+import { BasicCrawlerHandleFailedRequest } from '@crawlers/basic';
 import { DirectNavigationOptions, gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
-import { HandleFailedRequest } from './crawler_commons';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
 import { Dictionary } from '../typedefs';
 
@@ -86,7 +86,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
 
     /**
      * Options used by {@link launchPuppeteer} to start new Puppeteer instances.
