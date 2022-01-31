@@ -97,5 +97,6 @@
         "ua-parser-js": "^1.0.1",
         "underscore": "^1.13.2",
         "why-is-node-running": "^2.2.0"
-    }
+    },
+    "packageManager": "npm@8.3.1"
 }
