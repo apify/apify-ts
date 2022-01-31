@@ -9,7 +9,7 @@ import {
     throwOnBlockedRequest,
     handleRequestTimeout,
 } from './crawler_utils';
-import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './basic_crawler';
+import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './crawler_commons';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
 import { Session } from '../session_pool/session';

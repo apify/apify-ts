@@ -1,4 +1,4 @@
-export * from './basic_crawler';
+export * from './crawler_commons';
 export * from './browser_crawler';
 export * from './cheerio_crawler';
 export * from './crawler_extension';

@@ -13,7 +13,7 @@ import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
 import { parseContentTypeFromResponse, RequestAsBrowserResult } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
-import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions, HandleRequest } from './basic_crawler';
+import { BasicCrawler, HandleFailedRequest, CrawlingContext, BasicCrawlerOptions, HandleRequest } from './crawler_commons';
 import { CrawlerExtension } from './crawler_extension';
 import { Request } from '../request';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';

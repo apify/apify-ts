@@ -49,7 +49,7 @@
  * @module Apify
  */
 export * from './configuration';
-export * from './crawlers/basic_crawler';
+export * from './crawlers/crawler_commons';
 export * from './crawlers/browser_crawler';
 export * from './crawlers/cheerio_crawler';
 export * from './crawlers/playwright_crawler';

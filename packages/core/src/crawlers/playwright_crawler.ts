@@ -3,7 +3,7 @@ import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
-import { HandleFailedRequest } from './basic_crawler';
+import { HandleFailedRequest } from './crawler_commons';
 import { DirectNavigationOptions, gotoExtended } from '../playwright_utils';
 import { Dictionary } from '../typedefs';
 

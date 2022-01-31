@@ -4,7 +4,7 @@ import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { DirectNavigationOptions, gotoExtended } from '../puppeteer_utils';
 import { applyStealthToBrowser } from '../stealth/stealth';
 import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
-import { HandleFailedRequest } from './basic_crawler';
+import { HandleFailedRequest } from './crawler_commons';
 import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
 import { Dictionary } from '../typedefs';
 
