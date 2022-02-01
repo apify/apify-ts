@@ -45,5 +45,20 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "dependencies": {
+        "@crawlers/browser": "^1.0.0"
+    },
+    "peerDependencies": {
+        "playwright": "^1.11.0"
+    },
+    "peerDependenciesMeta": {
+        "playwright": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@crawlers/browser": "file:../browser-crawler",
+        "playwright": "1.x"
     }
 }

@@ -579,7 +579,7 @@ export * from './enqueue_links/enqueue_links';
 export * as requestUtils from './utils_request';
 export { default as logUtils } from './utils_log';
 export * as socialUtils from './utils_social';
-export * as playwrightUtils from './playwright_utils';
+export * as playwrightUtils from '../../playwright-crawler/src/internals/utils/playwright-utils';
 
 /** @internal */
 export const publicUtils = {
