@@ -2,9 +2,15 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'worker_threads';
-import { colors } from './tools.mjs';
+import { colors, getApifyToken } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
+
+process.env.APIFY_LOG_LEVEL = 0; // switch off logs for better test results visibility
+process.env.APIFY_HEADLESS = 1; // run browser in headless mode (default on platform)
+process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
+process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
+process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 
 async function run() {
     const paths = await readdir(basePath, { withFileTypes: true })
@@ -30,7 +36,7 @@ async function run() {
         });
         worker.on('exit', (code) => {
             const took = (Date.now() - now) / 1000;
-            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
+            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
         });
     }
 }

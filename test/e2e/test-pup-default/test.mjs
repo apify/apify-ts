@@ -1,35 +1,30 @@
 import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
-await run(import.meta.url, 'web-scraper', {
-    runMode: 'PRODUCTION',
+await run(import.meta.url, 'puppeteer-scraper', {
     startUrls: [{ url: 'https://apify.com' }],
-    keepUrlFragments: false,
     pseudoUrls: [{ purl: 'https://apify.com[(/[\\w-]+)?]' }],
+    linkSelector: 'a',
+    keepUrlFragments: false,
     pageFunction: async function pageFunction(context) {
-        const $ = context.jQuery;
+        const { page, request, log } = context;
+        const { url } = request;
 
-        const pageTitle = $('title').first().text();
-        context.log.info(`URL: ${context.request.url}, TITLE: ${pageTitle}`);
+        const pageTitle = await page.title();
+        log.info(`URL: ${url} pageTitle: ${pageTitle}`);
 
-        context.enqueueRequest({ url: 'http://www.example.com' });
-
-        return { url: context.request.url, pageTitle };
+        return { url, pageTitle };
     },
     proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
-    forceResponseEncoding: false,
-    ignoreSslErrors: false,
-    debugLog: false,
-    linkSelector: 'a[href]',
-    injectJQuery: true,
     useChrome: false,
     useStealth: false,
+    ignoreSslErrors: false,
     ignoreCorsAndCsp: false,
     downloadMedia: true,
     downloadCss: true,
     waitUntil: ['networkidle2'],
-    breakpointLocation: 'NONE',
-    browserLog: false,
+    debugLog: false,
+    browserLog: false
 });
 
 const stats = await getStats(import.meta.url);
