@@ -19,8 +19,6 @@ await run(import.meta.url, 'cheerio-scraper', {
     },
     proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
-    // TODO: seems like text/xml works by default (without specifying it in additionalMimeTypes)
-    //  maybe use different page?
     additionalMimeTypes: ['text/xml'],
     forceResponseEncoding: false,
     ignoreSslErrors: false,

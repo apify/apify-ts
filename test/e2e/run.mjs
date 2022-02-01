@@ -2,12 +2,15 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'worker_threads';
-import { colors } from './tools.mjs';
+import { colors, getApifyToken } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
 process.env.APIFY_LOG_LEVEL = 0; // switch off logs for better test results visibility
 process.env.APIFY_HEADLESS = 1; // run browser in headless mode (default on platform)
+process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
+process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'https://localhost';
+process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 
 async function run() {
     const paths = await readdir(basePath, { withFileTypes: true })

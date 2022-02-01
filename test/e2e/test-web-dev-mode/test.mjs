@@ -1,8 +1,5 @@
 import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
-process.env.APIFY_CONTAINER_URL = 'https://localhost'; // TODO: assign for local tests only
-process.env.APIFY_CONTAINER_PORT = '8000'; // TODO: assign for local tests only
-
 await run(import.meta.url, 'web-scraper', {
     runMode: 'DEVELOPMENT',
     startUrls: [{

@@ -1,7 +1,5 @@
 import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
-// TODO apify token/proxy password needed to run locally
-
 await run(import.meta.url, 'web-scraper', {
     runMode: 'PRODUCTION',
     startUrls: [{

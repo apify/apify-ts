@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
+import { homedir } from "os";
 import fs from 'fs-extra';
 
 export const colors = {
@@ -28,6 +29,12 @@ export async function getStats(url) {
     }
 
     return fs.readJSON(path);
+}
+
+export async function getApifyToken() {
+    const authPath = join(homedir(), '.apify', 'auth.json');
+    const { token } = await fs.readJSON(authPath);
+    return token;
 }
 
 export async function getDatasetItems(url) {
