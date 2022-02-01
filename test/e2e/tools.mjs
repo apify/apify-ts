@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { homedir } from "os";
+import { homedir } from 'os';
 import fs from 'fs-extra';
 
 export const colors = {
@@ -33,6 +33,11 @@ export async function getStats(url) {
 
 export async function getApifyToken() {
     const authPath = join(homedir(), '.apify', 'auth.json');
+
+    if (!existsSync(authPath)) {
+        throw new Error('You need to be logged in with your Apify account to run E2E tests. Call "apify login" to fix that.')
+    }
+
     const { token } = await fs.readJSON(authPath);
     return token;
 }
@@ -43,15 +48,15 @@ export async function getDatasetItems(url) {
 
     const dirents = await readdir(datasetPath, { withFileTypes: true });
     const fileNames = dirents.filter(dirent => dirent.isFile());
-
     const datasetItems = [];
+
     for (const fileName of fileNames) {
         const filePath = join(datasetPath, fileName.name);
         const datasetItem = await fs.readJSON(filePath);
+
         if (!isItemHidden(datasetItem)) {
             datasetItems.push(datasetItem);
         }
-
     }
 
     return datasetItems;
@@ -123,7 +128,7 @@ export function validateDataset(items, schema = []) {
     return true;
 }
 
-function isItemHidden (item) {
+function isItemHidden(item) {
     for (const key of Object.keys(item)) {
         if (!key.startsWith('#')) {
             return false;
