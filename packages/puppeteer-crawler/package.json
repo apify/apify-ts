@@ -1,6 +1,6 @@
 {
     "name": "@crawlers/puppeteer",
-    "version": "2.2.2",
+    "version": "1.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
         "node": ">=15.10.0"
@@ -45,5 +45,20 @@
     },
     "publishConfig": {
         "access": "public"
+    },
+    "dependencies": {
+        "@crawlers/browser": "^1.0.0"
+    },
+    "peerDependencies": {
+        "puppeteer": "^9.0.0 || ^10.0.0"
+    },
+    "peerDependenciesMeta": {
+        "puppeteer": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@crawlers/browser": "file:../browser-crawler",
+        "puppeteer": "10.x"
     }
 }

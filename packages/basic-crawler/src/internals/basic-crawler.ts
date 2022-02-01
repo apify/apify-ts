@@ -42,25 +42,11 @@ export interface BasicCrawlerHandleFailedRequestInput extends BasicCrawlerCrawli
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export type BasicCrawlerHandleRequest<Inputs extends BasicCrawlerHandleRequestInputs = BasicCrawlerHandleRequestInputs> = (inputs: Inputs) => Awaitable<void>;
-
-export interface BasicCrawlerHandleRequestInputs {
-    /**
-     * The original {Request} object.
-     * A reference to the underlying {@link AutoscaledPool} class that manages the concurrency of the crawler.
-     * Note that this property is only initialized after calling the {@link BasicCrawler.run} function.
-     * You can use it to change the concurrency settings on the fly,
-     * to pause the crawler by calling {@link AutoscaledPool.pause}
-     * or to abort it by calling {@link AutoscaledPool.abort}.
-     */
-    request: Request;
-    session?: Session;
-    crawler?: BasicCrawler;
-}
+export type BasicCrawlerHandleRequest<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Inputs) => Awaitable<void>;
 
 export type BasicCrawlerHandleFailedRequest = (inputs: BasicCrawlerHandleFailedRequestInput) => Awaitable<void>;
 
-export interface BasicCrawlerOptions<Inputs extends BasicCrawlerHandleRequestInputs = BasicCrawlerHandleRequestInputs> {
+export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
@@ -233,7 +219,7 @@ export interface BasicCrawlerOptions<Inputs extends BasicCrawlerHandleRequestInp
  * ```
  * @category Crawlers
  */
-export class BasicCrawler<Inputs extends BasicCrawlerHandleRequestInputs = BasicCrawlerHandleRequestInputs> {
+export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
     /**
      * Static list of URLs to be processed.
      */
@@ -457,7 +443,7 @@ export class BasicCrawler<Inputs extends BasicCrawlerHandleRequestInputs = Basic
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestFunction(crawlingContext: BasicCrawlerHandleRequestInputs): Promise<void> {
+    protected async _handleRequestFunction(crawlingContext: BasicCrawlerCrawlingContext): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 

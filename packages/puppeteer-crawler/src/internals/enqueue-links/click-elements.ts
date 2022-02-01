@@ -1,20 +1,22 @@
-import ow from 'ow';
-import { URL } from 'url';
-import { Page, HTTPRequest as PuppeteerRequest, Target, Frame } from 'puppeteer';
-import log from '../utils_log';
-import { RequestQueue, QueueOperationInfo } from '../storages/request_queue'; // eslint-disable-line import/named,no-unused-vars
-import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../puppeteer_request_interception';
 import {
-    constructPseudoUrlInstances,
-    createRequests,
     addRequestsToQueueInBatches,
+    constructPseudoUrlInstances,
     createRequestOptions,
-    RequestTransform,
+    createRequests,
+    Dictionary,
+    logUtils,
     PseudoUrlInput,
-} from './shared';
-import { Dictionary } from '../typedefs';
+    QueueOperationInfo,
+    RequestQueue,
+    RequestTransform,
+} from '@crawlers/browser';
+import ow from 'ow';
+import { BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
+import { URL } from 'url';
+import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;
+const log = logUtils.child({ prefix: 'Puppeteer Click Elements' });
 
 export interface EnqueueLinksByClickingElementsOptions {
     /**
@@ -208,8 +210,8 @@ export async function clickElementsAndInterceptNavigationRequests(options: Click
     const onFrameNavigated = createFrameNavigatedHandler(page, uniqueRequests);
 
     await addInterceptRequestHandler(page, onInterceptedRequest);
-    browser.on('targetcreated', onTargetCreated);
-    page.on('framenavigated', onFrameNavigated);
+    browser.on(BrowserEmittedEvents.TargetCreated, onTargetCreated);
+    page.on(PageEmittedEvents.FrameNavigated, onFrameNavigated);
 
     await preventHistoryNavigation(page);
 
@@ -218,8 +220,8 @@ export async function clickElementsAndInterceptNavigationRequests(options: Click
 
     await restoreHistoryNavigationAndSaveCapturedUrls(page, uniqueRequests);
 
-    browser.removeListener('targetcreated', onTargetCreated);
-    page.removeListener('framenavigated', onFrameNavigated);
+    browser.off(BrowserEmittedEvents.TargetCreated, onTargetCreated);
+    page.off(PageEmittedEvents.FrameNavigated, onFrameNavigated);
     await removeInterceptRequestHandler(page, onInterceptedRequest);
 
     const serializedRequests = Array.from(uniqueRequests);
@@ -419,16 +421,16 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         }
 
         function finish() {
-            page.removeListener('request', activityHandler);
-            page.removeListener('framenavigated', activityHandler);
-            page.removeListener('targetcreated', newTabTracker);
+            page.off(PageEmittedEvents.Request, activityHandler);
+            page.off(PageEmittedEvents.FrameNavigated, activityHandler);
+            page.off('targetcreated', newTabTracker);
             resolve();
         }
 
         maxTimeout = setTimeout(maxTimeoutHandler, maxWaitForPageIdleMillis);
         activityHandler(); // We call this once manually in case there would be no requests at all.
-        page.on('request', activityHandler);
-        page.on('framenavigated', activityHandler);
+        page.on(PageEmittedEvents.Request, activityHandler);
+        page.on(PageEmittedEvents.FrameNavigated, activityHandler);
         // @ts-expect-error browser event
         page.on('targetcreated', newTabTracker);
     });

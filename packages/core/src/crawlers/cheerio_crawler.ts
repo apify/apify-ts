@@ -9,8 +9,14 @@ import ow from 'ow';
 import util from 'util';
 import { Method, TimeoutError } from 'got-scraping';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
-import { BasicCrawler, BasicCrawlerHandleFailedRequest, BasicCrawlerOptions, BasicCrawlerHandleRequest } from '@crawlers/basic';
-import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
+import {
+    BasicCrawler,
+    BasicCrawlerHandleFailedRequest,
+    BasicCrawlerOptions,
+    BasicCrawlerHandleRequest,
+    BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+} from '@crawlers/basic';
+import { BrowserCrawlerHandleRequest, GotoFunction, BrowserHook } from '@crawlers/browser';
 import { parseContentTypeFromResponse, RequestAsBrowserResult } from '../utils';
 import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
 import { diffCookies, mergeCookies } from './crawler_utils';
@@ -20,7 +26,6 @@ import { Request } from '../request';
 import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
 import { Session } from '../session_pool/session';
 import { validators } from '../validators';
-import { BrowserHandlePageFunction, GotoFunction, BrowserHook } from './browser_crawler';
 import { Awaitable, entries } from '../typedefs';
 
 /**
@@ -441,7 +446,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      */
     public proxyConfiguration?: ProxyConfiguration;
 
-    protected handlePageFunction!: BrowserHandlePageFunction;
+    protected handlePageFunction!: BrowserCrawlerHandleRequest;
     protected handlePageTimeoutSecs!: number;
     protected handlePageTimeoutMillis: number;
     protected navigationTimeoutMillis!: number;

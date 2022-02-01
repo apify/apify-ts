@@ -1,26 +1,30 @@
-import ow from 'ow';
+import {
+    BrowserCrawler,
+    BrowserCrawlerHandleFailedRequest,
+    BrowserCrawlerHandleRequest,
+    BrowserCrawlerOptions,
+    BrowserCrawlingContext,
+    BrowserHook,
+} from '@crawlers/browser';
+import {
+    Dictionary,
+} from '@crawlers/core';
 import { BrowserPoolOptions, PuppeteerPlugin } from 'browser-pool';
+import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
-import { BasicCrawlerHandleFailedRequest } from '@crawlers/basic';
-import { DirectNavigationOptions, gotoExtended } from '../puppeteer_utils';
-import { applyStealthToBrowser } from '../stealth/stealth';
-import { PuppeteerLauncher, PuppeteerLaunchContext } from '../browser_launchers/puppeteer_launcher';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
-import { Dictionary } from '../typedefs';
+import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
+import { applyStealthToBrowser } from './stealth';
+import { DirectNavigationOptions, gotoExtended } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
 
-export interface PuppeteerCrawlContext extends BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> {
-    crawler: PuppeteerCrawler;
-}
+export type PuppeteerCrawlContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
 
 export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext, PuppeteerGoToOptions>;
 
-export interface PuppeteerHandlePageFunctionParam extends BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> {
-    crawler: PuppeteerCrawler;
-}
+export type PuppeteerHandlePageFunctionParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
 
-export type PuppeteerHandlePage = BrowserHandlePageFunction<PuppeteerHandlePageFunctionParam>;
+export type PuppeteerHandlePage = BrowserCrawlerHandleRequest<PuppeteerHandlePageFunctionParam>;
 
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
@@ -86,7 +90,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
+    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
 
     /**
      * Options used by {@link launchPuppeteer} to start new Puppeteer instances.
@@ -188,7 +192,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  * ```
  * @category Crawlers
  */
-export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions, { browserPlugins: [PuppeteerPlugin] }, PuppeteerCrawlContext> {
+export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
@@ -207,12 +211,14 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions, { browserPlu
             proxyConfiguration,
             ...browserCrawlerOptions
         } = options;
+
         const { stealth = false } = launchContext;
 
         if (launchContext.proxyUrl) {
             throw new Error('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.'
                 + 'Use PuppeteerCrawlerOptions.proxyConfiguration');
         }
+
         const puppeteerLauncher = new PuppeteerLauncher(launchContext);
 
         browserPoolOptions.browserPlugins = [
@@ -223,8 +229,8 @@ export class PuppeteerCrawler extends BrowserCrawler<LaunchOptions, { browserPlu
 
         if (stealth) {
             this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
-                // @TODO: We can do this better now. It is not necessary to override the page.
-                //   we can modify the page in the postPageCreateHook
+                // TODO: We can do this better now. It is not necessary to override the page.
+                // we can modify the page in the postPageCreateHook
                 const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
                 applyStealthToBrowser(browserController.browser, newStealthOptions);
             });

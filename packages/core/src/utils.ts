@@ -571,7 +571,7 @@ export async function purgeLocalStorage(folder?: string): Promise<void> {
     await rimrafp(folder);
 }
 
-// regular re-export as those methods should be part of `utils`
+// // regular re-export as those methods should be part of `utils`
 export * from './utils_request';
 export * from './enqueue_links/enqueue_links';
 
@@ -580,7 +580,6 @@ export * as requestUtils from './utils_request';
 export { default as logUtils } from './utils_log';
 export * as socialUtils from './utils_social';
 export * as playwrightUtils from './playwright_utils';
-export * as puppeteerUtils from './puppeteer_utils';
 
 /** @internal */
 export const publicUtils = {

@@ -1,2 +1,3 @@
 export * from '@crawlers/core';
-export * from './internals/BasicCrawler';
+export * from './internals/basic-crawler';
+export * from './internals/constants';

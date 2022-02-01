@@ -47,10 +47,10 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/core": "^2.2.2",
-        "@crawlers/cheerio": "^2.2.2",
-        "@crawlers/playwright": "^2.2.2",
-        "@crawlers/puppeteer": "^2.2.2"
+        "@crawlers/core": "^1.0.0",
+        "@crawlers/cheerio": "^1.0.0",
+        "@crawlers/playwright": "^1.0.0",
+        "@crawlers/puppeteer": "^1.0.0"
     },
     "peerDependencies": {
         "playwright": "^1.11.0",
