@@ -571,7 +571,7 @@ export async function purgeLocalStorage(folder?: string): Promise<void> {
     await rimrafp(folder);
 }
 
-// // regular re-export as those methods should be part of `utils`
+// regular re-export as those methods should be part of `utils`
 export * from './utils_request';
 export * from './enqueue_links/enqueue_links';
 

@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*", "../puppeteer-crawler/src/internals/enqueue-links/click_elements.ts"]
+  "include": ["src/**/*"]
 }

@@ -42,7 +42,7 @@ const readFilePromised = util.promisify(fs.readFile);
 const MAX_INJECT_FILE_CACHE_SIZE = 10;
 const DEFAULT_BLOCK_REQUEST_URL_PATTERNS = ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip'];
 
-const log = logUtils.child({ prefix: 'PuppeteerUtils' });
+const log = logUtils.child({ prefix: 'Puppeteer Utils' });
 
 export interface DirectNavigationOptions {
     /**
