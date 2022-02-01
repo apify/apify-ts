@@ -1,3 +1,5 @@
+import type { Page } from 'puppeteer';
+
 export * from '@crawlers/browser';
 export * from './internals/puppeteer-crawler';
 export * from './internals/puppeteer-launcher';
@@ -21,3 +23,13 @@ export type {
 
 export * as puppeteerClickElements from './internals/enqueue-links/click-elements';
 export type { EnqueueLinksByClickingElementsOptions } from './internals/enqueue-links/click-elements';
+
+declare module '@crawlers/browser' {
+    export interface EnqueueLinksOptions {
+        /**
+         * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
+         * Either `page` or `$` option must be provided.
+         */
+        page?: Page;
+    }
+}
