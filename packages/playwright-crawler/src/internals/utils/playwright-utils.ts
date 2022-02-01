@@ -27,10 +27,6 @@ import {
     Request,
     Dictionary,
 } from '@crawlers/core';
-// import log from '../../../../core/src/utils_log';
-// import { validators } from '../../../../core/src/validators';
-// import { Request } from '../../../../core/src/request';
-// import { Dictionary } from '../../../../core/src/typedefs';
 
 const log = logUtils.child({ prefix: 'Playwright Utils' });
 
