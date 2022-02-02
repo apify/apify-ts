@@ -31,7 +31,7 @@ import {
     KeyValueStore,
     Request,
     validators,
-} from '@crawlers/browser';
+} from '@crawlers/core';
 
 import { enqueueLinksByClickingElements } from '../enqueue-links/click-elements';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';

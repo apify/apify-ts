@@ -1,32 +1,39 @@
-import { readStreamToString, concatStreamToBuffer } from '@apify/utilities';
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
-import cheerio, { CheerioOptions, load } from 'cheerio';
-import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { DomHandler } from 'htmlparser2';
-import { WritableStream } from 'htmlparser2/lib/WritableStream';
-import iconv from 'iconv-lite';
-import ow from 'ow';
-import util from 'util';
-import { Method, TimeoutError } from 'got-scraping';
-import { IncomingHttpHeaders, IncomingMessage } from 'http';
+import { concatStreamToBuffer, readStreamToString } from '@apify/utilities';
 import {
     BasicCrawler,
     BasicCrawlerHandleFailedRequest,
-    BasicCrawlerOptions,
     BasicCrawlerHandleRequest,
+    BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
-import { BrowserCrawlerHandleRequest, GotoFunction, BrowserHook } from '@crawlers/browser';
-import { parseContentTypeFromResponse, RequestAsBrowserResult } from '../utils';
-import { requestAsBrowser, RequestAsBrowserOptions } from '../utils_request';
-import { diffCookies, mergeCookies } from './crawler_utils';
-import { CrawlingContext } from './crawler_commons';
-import { CrawlerExtension } from './crawler_extension';
-import { Request } from '../request';
-import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
-import { Session } from '../session_pool/session';
-import { validators } from '../validators';
-import { Awaitable, entries } from '../typedefs';
+import {
+    Awaitable,
+    CheerioRoot,
+    CrawlerExtension,
+    CrawlingContext,
+    diffCookies,
+    entries,
+    mergeCookies,
+    parseContentTypeFromResponse,
+    ProxyConfiguration,
+    ProxyInfo,
+    Request,
+    requestAsBrowser,
+    RequestAsBrowserOptions,
+    RequestAsBrowserResult,
+    Session,
+    validators,
+} from '@crawlers/core';
+import cheerio, { CheerioOptions } from 'cheerio';
+import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
+import { Method, TimeoutError } from 'got-scraping';
+import { DomHandler } from 'htmlparser2';
+import { WritableStream } from 'htmlparser2/lib/WritableStream';
+import { IncomingHttpHeaders, IncomingMessage } from 'http';
+import iconv from 'iconv-lite';
+import ow from 'ow';
+import util from 'util';
 
 /**
  * Default mime types, which CheerioScraper supports.
@@ -298,7 +305,10 @@ export interface PrepareRequestInputs {
 }
 
 export type PrepareRequest = (inputs: PrepareRequestInputs) => Awaitable<void>;
-export type CheerioHook<JSONData = unknown> = BrowserHook<CheerioCrawlingContext<JSONData>, RequestAsBrowserOptions>;
+export type CheerioHook<JSONData = unknown> = (
+    crawlingContext: CheerioCrawlingContext<JSONData>,
+    requestAsBrowserOptions: RequestAsBrowserOptions,
+) => Awaitable<void>;
 
 export interface PostResponseInputs {
     /**
@@ -325,7 +335,6 @@ export interface PostResponseInputs {
 }
 
 export type PostResponse = (inputs: PostResponseInputs) => Awaitable<void>;
-export type CheerioRoot = ReturnType<typeof load>;
 
 export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingContext {
     /**
@@ -446,11 +455,9 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
      */
     public proxyConfiguration?: ProxyConfiguration;
 
-    protected handlePageFunction!: BrowserCrawlerHandleRequest;
     protected handlePageTimeoutSecs!: number;
     protected handlePageTimeoutMillis: number;
     protected navigationTimeoutMillis!: number;
-    protected gotoFunction!: GotoFunction;
     protected defaultGotoOptions!: { timeout: number };
     protected preNavigationHooks: CheerioHook<JSONData>[];
     protected postNavigationHooks: CheerioHook<JSONData>[];

@@ -20,7 +20,7 @@ import { execSync } from 'child_process';
 // @ts-expect-error if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyClientVersion } from 'apify-client/package.json';
 import { ENV_VARS } from '@apify/consts';
-import cheerio from 'cheerio';
+import cheerio, { load } from 'cheerio';
 import contentTypeParser from 'content-type';
 import fs from 'fs';
 import mime from 'mime-types';
@@ -40,9 +40,10 @@ import log from './utils_log';
 import { requestAsBrowser } from './utils_request';
 import { Request } from './request';
 import { Dictionary } from './typedefs';
-import { CheerioRoot } from './crawlers/cheerio_crawler';
 
 const rimrafp = util.promisify(rimraf);
+
+export type CheerioRoot = ReturnType<typeof load>;
 
 /**
  * Default regular expression to match URLs in a string that may be plain text, JSON, CSV or other. It supports common URL characters

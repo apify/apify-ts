@@ -12,18 +12,22 @@ import {
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
 import { PseudoUrl } from '../pseudo_url';
 import { validators } from '../validators';
-import { CheerioRoot } from '../crawlers/cheerio_crawler';
+import { CheerioRoot } from '../utils';
 
 export interface EnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
     limit?: number;
+    /**
+     * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
+     * Either `page` or `$` option must be provided.
+     */
+    page?: import('puppeteer').Page | import('playwright').Page;
 
     /**
      * [`Cheerio`](https://github.com/cheeriojs/cheerio) function with loaded HTML.
      * Either `page` or `$` option must be provided.
      */
-    // TODO: This should work like page and get augmented with correct types
-    $?: CheerioRoot; // TODO support cheerio.Selector too
+    $?: CheerioRoot;
 
     /** A request queue to which the URLs will be enqueued. */
     requestQueue: RequestQueue;
@@ -113,10 +117,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         baseUrl,
         pseudoUrls,
         transformRequestFunction,
-    } = options as EnqueueLinksOptions & {
-        page?: { $$eval: (...args: any[]) => any };
-
-    };
+    } = options;
 
     if (!page && !$) {
         throw new ArgumentError('One of the parameters "options.page" or "options.$" must be provided!', enqueueLinks);

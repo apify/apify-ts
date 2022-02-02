@@ -15,7 +15,7 @@ import {
     Dataset,
     Dictionary,
     enqueueLinks,
-    HandleFailedRequestInput,
+    BasicCrawlerHandleFailedRequestInput,
     KeyValueStore,
     logUtils,
     PrepareRequestInputs,
@@ -23,7 +23,7 @@ import {
     Request,
     RequestList,
     RequestQueue,
-} from '@crawlers/core';
+} from 'crawlers';
 import { Actor, ApifyEnv } from 'apify';
 import cheerio, { CheerioAPI } from 'cheerio';
 import { readFile } from 'node:fs/promises';
@@ -231,7 +231,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         }
     }
 
-    private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
+    private _handleFailedRequestFunction({ request }: BasicCrawlerHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);

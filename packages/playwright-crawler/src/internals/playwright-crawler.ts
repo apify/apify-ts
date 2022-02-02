@@ -3,6 +3,8 @@ import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
 import {
     Dictionary,
+} from '@crawlers/core';
+import {
     BrowserCrawler,
     BrowserCrawlerOptions,
     BrowserCrawlingContext,

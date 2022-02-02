@@ -42,7 +42,7 @@ export interface BrowserCrawlingContext<
     crawler: BrowserCrawler;
 }
 
-export interface BrowserCrawlerHandleFailedRequestInput extends Omit<BasicCrawlerHandleFailedRequestInput, 'crawler'> {
+export interface BrowserCrawlerHandleFailedRequestInput extends BasicCrawlerHandleFailedRequestInput {
     crawler: BrowserCrawler;
 }
 
