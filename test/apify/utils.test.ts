@@ -9,9 +9,25 @@ import { addTimeoutToPromise } from '@apify/timeout';
 import { IncomingMessage } from 'http';
 import log from '@apify/log';
 import {
-    CheerioRoot, createRequestDebugInfo, downloadListOfUrls, getMemoryInfo, htmlToText, isAtHome, isDocker, launchPuppeteer, parseContentTypeFromResponse,
-    printOutdatedSdkWarning, purgeLocalStorage, Request, RequestAsBrowserResult, requestUtils, publicUtils, sleep, snakeCaseToCamelCase, weightedAvg,
-} from '@crawlers/core';
+    CheerioRoot,
+    createRequestDebugInfo,
+    downloadListOfUrls,
+    getMemoryInfo,
+    htmlToText,
+    isAtHome,
+    isDocker,
+    launchPuppeteer,
+    parseContentTypeFromResponse,
+    printOutdatedSdkWarning,
+    purgeLocalStorage,
+    Request,
+    RequestAsBrowserResult,
+    requestUtils,
+    publicUtils,
+    sleep,
+    snakeCaseToCamelCase,
+    weightedAvg,
+} from 'crawlers';
 import { Actor } from 'apify';
 import * as htmlToTextData from './data/html_to_text_test_data';
 

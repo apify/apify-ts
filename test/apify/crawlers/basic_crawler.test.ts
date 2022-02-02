@@ -5,8 +5,8 @@ import log from '@apify/log';
 import {
     CrawlingContext,
     Dictionary,
-    HandleFailedRequest,
-    HandleRequest,
+    BasicCrawlerHandleFailedRequest,
+    BasicCrawlerHandleRequest,
     Request,
     QueueOperationInfo,
     RequestQueue,
@@ -14,8 +14,9 @@ import {
     events,
     sleep,
     Configuration,
-    BasicCrawler, KeyValueStore,
-} from '@crawlers/core';
+    BasicCrawler,
+    KeyValueStore,
+} from 'crawlers';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('BasicCrawler', () => {
@@ -44,7 +45,7 @@ describe('BasicCrawler', () => {
 
         const processed: { url: string }[] = [];
         const requestList = new RequestList({ sources });
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             await sleep(10);
             processed.push(_.pick(request, 'url'));
         };
@@ -80,7 +81,7 @@ describe('BasicCrawler', () => {
 
         const processed: { url: string }[] = [];
         const requestList = await RequestList.open('reqList', sources);
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             if (request.url.endsWith('200')) events.emit(event);
             processed.push(_.pick(request, 'url'));
         };
@@ -127,7 +128,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
 
@@ -176,7 +177,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
             request.userData.foo = 'bar';
@@ -228,12 +229,12 @@ describe('BasicCrawler', () => {
         const errors: Error[] = [];
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             await Promise.reject(new Error('some-error'));
             processed[request.url] = request;
         };
 
-        const handleFailedRequestFunction: HandleFailedRequest = async ({ request, error }) => {
+        const handleFailedRequestFunction: BasicCrawlerHandleFailedRequest = async ({ request, error }) => {
             failed[request.url] = request;
             errors.push(error);
         };
@@ -281,7 +282,7 @@ describe('BasicCrawler', () => {
         const requestList = new RequestList({ sources });
         const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
 
@@ -470,7 +471,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: BasicCrawlerHandleRequest = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
             if (request.url === 'http://example.com/2') throw Error();

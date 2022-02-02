@@ -2,7 +2,7 @@
 
 import scanner from 'fpscanner';
 import path from 'path';
-import { Configuration, launchPuppeteer, PuppeteerCrawler, puppeteerUtils, RequestList } from '@crawlers/core';
+import { Configuration, launchPuppeteer, PuppeteerCrawler, puppeteerUtils, RequestList } from '@crawlers/puppeteer';
 import { Browser, Page } from 'puppeteer';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 

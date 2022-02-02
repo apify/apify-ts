@@ -1,5 +1,5 @@
 import cheerio from 'cheerio';
-import { CheerioRoot, Configuration, Request, RequestOptions, RequestQueue, enqueueLinks, launchPuppeteer, launchPlaywright, PseudoUrl } from '@crawlers/core';
+import { CheerioRoot, Configuration, Request, RequestOptions, RequestQueue, enqueueLinks, launchPuppeteer, launchPlaywright, PseudoUrl } from 'crawlers';
 import log from '@apify/log';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';

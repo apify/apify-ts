@@ -9,7 +9,7 @@ import {
     PlaywrightHandlePageFunctionParam,
     Request,
     RequestList,
-} from '@crawlers/core';
+} from '@crawlers/playwright';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {

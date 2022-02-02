@@ -1,15 +1,15 @@
 import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import {
-    BrowserLauncher,
     Configuration,
     ProxyConfiguration,
-    PuppeteerCookie, PuppeteerCrawler,
+    PuppeteerCookie,
+    PuppeteerCrawler,
     PuppeteerGoToOptions,
     PuppeteerHandlePage,
     PuppeteerHandlePageFunctionParam,
     Request, RequestList, RequestQueue, Session, sleep,
-} from '@crawlers/core';
+} from '@crawlers/puppeteer';
 import { createServer, Server } from 'http';
 import { Server as ProxyChainServer } from 'proxy-chain';
 import { promisify } from 'util';

@@ -1,4 +1,5 @@
 import { socialUtils } from '@crawlers/core';
+// TODO: we need to fix the type exports at the top level
 import { SocialHandles } from '@crawlers/core/src/utils_social';
 
 describe('utils.social', () => {
