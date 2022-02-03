@@ -35,7 +35,7 @@ export abstract class BrowserLauncher<
     LaunchOptions = Partial<Parameters<Plugin['launch']>[0]>,
     LaunchResult extends ReturnType<Plugin['launch']> = ReturnType<Plugin['launch']>,
 > {
-    launcher: T;
+    launcher: Plugin['library'];
     proxyUrl?: string;
     useChrome?: boolean;
     launchOptions: Dictionary;

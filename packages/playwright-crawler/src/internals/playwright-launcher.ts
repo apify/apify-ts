@@ -71,7 +71,7 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
         ow(launchContext, 'PlaywrightLauncherOptions', ow.object.exactShape(PlaywrightLauncher.optionsShape));
 
         const {
-            launcher = BrowserLauncher.requireLauncherOrThrow<{ chromium: unknown }>('playwright', 'apify/actor-node-playwright-*').chromium,
+            launcher = BrowserLauncher.requireLauncherOrThrow<typeof import('playwright')>('playwright', 'apify/actor-node-playwright-*').chromium,
         } = launchContext;
 
         const { launchOptions = {}, ...rest } = launchContext;
