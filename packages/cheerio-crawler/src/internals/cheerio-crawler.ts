@@ -2,8 +2,8 @@ import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { concatStreamToBuffer, readStreamToString } from '@apify/utilities';
 import {
     BasicCrawler,
-    BasicCrawlerHandleFailedRequest,
-    BasicCrawlerHandleRequest,
+    HandleFailedRequest,
+    HandleRequest,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
@@ -215,7 +215,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * See [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/cheerio_crawler.js#L13)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
+    handleFailedRequestFunction?: HandleFailedRequest;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -520,7 +520,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
-            handleRequestFunction: handlePageFunction as BasicCrawlerHandleRequest,
+            handleRequestFunction: handlePageFunction as HandleRequest,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.

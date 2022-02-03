@@ -14,7 +14,7 @@ import {
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
     BasicCrawler,
-    BasicCrawlerHandleFailedRequestInput,
+    HandleFailedRequestInput,
     BasicCrawlerOptions,
 } from '@crawlers/basic';
 import {
@@ -42,7 +42,7 @@ export interface BrowserCrawlingContext<
     crawler: BrowserCrawler;
 }
 
-export interface BrowserCrawlerHandleFailedRequestInput extends BasicCrawlerHandleFailedRequestInput {
+export interface BrowserCrawlerHandleFailedRequestInput extends HandleFailedRequestInput {
     crawler: BrowserCrawler;
 }
 

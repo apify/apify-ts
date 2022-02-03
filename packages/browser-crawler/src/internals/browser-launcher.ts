@@ -12,6 +12,15 @@ import {
 } from 'browser-pool';
 
 export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOptions> {
+    /**
+     * If `true` and `executablePath` is not set,
+     * the launcher will launch full Google Chrome browser available on the machine
+     * rather than the bundled Chromium. The path to Chrome executable
+     * is taken from the `APIFY_CHROME_EXECUTABLE_PATH` environment variable if provided,
+     * or defaults to the typical Google Chrome executable location specific for the operating system.
+     * By default, this option is `false`.
+     * @default false
+     */
     useChrome?: boolean;
     launcher?: any;
 }

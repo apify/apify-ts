@@ -12,7 +12,7 @@ import {
     CheerioHandlePageInputs,
     Dictionary,
     entries,
-    BasicCrawlerHandleFailedRequestInput,
+    HandleFailedRequestInput,
     PrepareRequestInputs,
     ProxyInfo,
     Source,
@@ -1178,7 +1178,7 @@ describe('CheerioCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = (crawlingContext: BasicCrawlerHandleFailedRequestInput) => {
+            const handleFailedRequestFunction = (crawlingContext: HandleFailedRequestInput) => {
                 // @ts-expect-error
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);

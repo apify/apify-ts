@@ -24,7 +24,7 @@ export interface BasicCrawlerCrawlingContext extends CrawlingContext {
     crawler: BasicCrawler;
 }
 
-export interface BasicCrawlerHandleFailedRequestInput extends BasicCrawlerCrawlingContext {
+export interface HandleFailedRequestInput extends BasicCrawlerCrawlingContext {
     /**
      * The Error thrown by `handleRequestFunction`.
      */
@@ -42,9 +42,9 @@ export interface BasicCrawlerHandleFailedRequestInput extends BasicCrawlerCrawli
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export type BasicCrawlerHandleRequest<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Inputs) => Awaitable<void>;
+export type HandleRequest<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Inputs) => Awaitable<void>;
 
-export type BasicCrawlerHandleFailedRequest = (inputs: BasicCrawlerHandleFailedRequestInput) => Awaitable<void>;
+export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
 
 export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
     /**
@@ -71,7 +71,7 @@ export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext 
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handleRequestFunction: BasicCrawlerHandleRequest<Inputs>;
+    handleRequestFunction: HandleRequest<Inputs>;
 
     /**
      * Static list of URLs to be processed.
@@ -110,7 +110,7 @@ export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext 
      * [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/basic_crawler.js#L11)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
+    handleFailedRequestFunction?: HandleFailedRequest;
 
     /**
      * Indicates how many times the request is retried if {@link handleRequestFunction} or {@link handlePageFunction} fails.
@@ -256,9 +256,9 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
     autoscaledPool?: AutoscaledPool;
 
     protected log: Log;
-    protected userProvidedHandler: BasicCrawlerHandleRequest;
-    protected failedContextHandler?: BasicCrawlerHandleFailedRequest;
-    protected handleFailedRequestFunction?: BasicCrawlerHandleFailedRequest;
+    protected userProvidedHandler: HandleRequest;
+    protected failedContextHandler?: HandleFailedRequest;
+    protected handleFailedRequestFunction?: HandleFailedRequest;
     protected handleRequestTimeoutMillis: number;
     protected internalTimeoutMillis: number;
     protected maxRequestRetries: number;
@@ -664,11 +664,11 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.url);
             crawlingContext.error = error;
-            await this._handleFailedRequestFunction(crawlingContext as BasicCrawlerHandleFailedRequestInput); // This function prints an error message.
+            await this._handleFailedRequestFunction(crawlingContext as HandleFailedRequestInput); // This function prints an error message.
         }
     }
 
-    protected async _handleFailedRequestFunction(crawlingContext: BasicCrawlerHandleFailedRequestInput): Promise<void> {
+    protected async _handleFailedRequestFunction(crawlingContext: HandleFailedRequestInput): Promise<void> {
         if (this.failedContextHandler) {
             await this.failedContextHandler(crawlingContext);
         } else {
