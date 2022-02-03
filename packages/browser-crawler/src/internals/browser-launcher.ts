@@ -11,7 +11,7 @@ import {
     BrowserPluginOptions,
 } from 'browser-pool';
 
-export interface BrowserLaunchContext<TOptions, Library> extends BrowserPluginOptions<TOptions> {
+export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
     /**
      * If `true` and `executablePath` is not set,
      * the launcher will launch full Google Chrome browser available on the machine
@@ -22,7 +22,7 @@ export interface BrowserLaunchContext<TOptions, Library> extends BrowserPluginOp
      * @default false
      */
     useChrome?: boolean;
-    launcher?: Library;
+    launcher?: Launcher;
 }
 
 /**
