@@ -1,8 +1,10 @@
 import { EventEmitter } from 'events';
 import ow from 'ow';
-import { HTTPRequest, HTTPRequest as PuppeteerRequest, Page } from 'puppeteer'; // eslint-disable-line no-unused-vars
-import log from './utils_log';
-import { Dictionary } from './typedefs';
+import { HTTPRequest, HTTPRequest as PuppeteerRequest, Page } from 'puppeteer';
+import {
+    logUtils,
+    Dictionary,
+} from '@crawlers/browser';
 
 // We use weak maps here so that the content gets discarted after page gets closed.
 const pageInterceptRequestHandlersMap: WeakMap<Page, InterceptHandler[]> = new WeakMap(); // Maps page to an array of request interception handlers.
@@ -197,7 +199,7 @@ export async function addInterceptRequestHandler(page: Page, handler: InterceptH
  * @param page Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
  * @param handler Request interception handler.
  */
-export const removeInterceptRequestHandler = async (page: Page, handler: InterceptHandler): Promise<void> => {
+export async function removeInterceptRequestHandler(page: Page, handler: InterceptHandler): Promise<void> {
     ow(page, ow.object.hasKeys('goto', 'evaluate'));
     ow(handler, ow.function);
 
@@ -221,7 +223,7 @@ export const removeInterceptRequestHandler = async (page: Page, handler: Interce
                         await disableRequestInterception(page);
                         interceptedRequestsInProgress.removeListener('delete', onDelete);
                     } catch (error) {
-                        log.debug('Error while disabling request interception', { error });
+                        logUtils.debug('Error while disabling request interception', { error });
                     }
                 }
             };

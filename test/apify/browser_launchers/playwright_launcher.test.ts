@@ -10,7 +10,7 @@ import portastic from 'portastic';
 import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import { ENV_VARS } from '@apify/consts';
-import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlers/core';
+import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlers/playwright';
 
 import { AddressInfo } from 'net';
 import { Browser, BrowserType } from 'playwright';

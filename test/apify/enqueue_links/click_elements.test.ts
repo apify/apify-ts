@@ -2,13 +2,13 @@ import {
     Request,
     RequestQueue,
     RequestOptions,
-    clickElements,
-    clickElementsAndInterceptNavigationRequests,
-    isTargetRelevant,
+    puppeteerClickElements,
     launchPuppeteer,
     puppeteerUtils,
-} from '@crawlers/core';
+} from '@crawlers/puppeteer';
 import { Browser, Page, Target } from 'puppeteer';
+
+const { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } = puppeteerClickElements;
 
 describe('enqueueLinksByClickingElements()', () => {
     let browser: Browser;

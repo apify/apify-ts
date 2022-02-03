@@ -11,7 +11,7 @@ import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
-import { BrowserLauncher, Dictionary, launchPuppeteer } from '@crawlers/core';
+import { BrowserLauncher, Dictionary, launchPuppeteer } from '@crawlers/puppeteer';
 import { AddressInfo } from 'net';
 import { Browser, Page } from 'puppeteer';
 import { startExpressAppPromise } from '../_helper';

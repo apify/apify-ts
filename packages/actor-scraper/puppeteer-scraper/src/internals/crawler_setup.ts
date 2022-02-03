@@ -7,19 +7,22 @@ import {
     Dataset,
     Dictionary,
     enqueueLinks,
-    EnqueueLinksByClickingElementsOptions,
+
     EnqueueLinksOptions,
-    HandleFailedRequestInput,
     KeyValueStore,
     logUtils,
-    PuppeteerCrawlContext,
-    PuppeteerCrawler,
-    PuppeteerCrawlerOptions,
-    puppeteerUtils,
     Request,
     RequestList,
     RequestQueue,
 } from 'apify';
+import {
+    EnqueueLinksByClickingElementsOptions,
+    BrowserCrawlerHandleFailedRequestInput,
+    PuppeteerCrawlContext,
+    PuppeteerCrawler,
+    PuppeteerCrawlerOptions,
+    puppeteerUtils,
+} from 'crawlers';
 import { readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
@@ -272,7 +275,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         options.postNavigationHooks!.push(...this.evaledPostNavigationHooks);
     }
 
-    private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
+    private _handleFailedRequestFunction({ request }: BrowserCrawlerHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);

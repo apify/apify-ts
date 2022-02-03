@@ -28,7 +28,7 @@ import {
     RequestList,
     createProxyConfiguration,
     requestUtils,
-} from '@crawlers/core';
+} from 'crawlers';
 import { IncomingHttpHeaders, Server } from 'http';
 import { AddressInfo } from 'net';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';

@@ -1,4 +1,5 @@
-import { Actor, BasicCrawler, logUtils } from 'apify';
+import { type BasicCrawler } from '@crawlers/basic';
+import { Actor, logUtils } from 'apify';
 
 export interface CrawlerSetup {
     name: string;

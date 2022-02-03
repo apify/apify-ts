@@ -1,46 +1,30 @@
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
-import { cryptoRandomObjectId } from '@apify/utilities';
-import ow, { ArgumentError } from 'ow';
+import defaultLog, { Log } from '@apify/log';
 import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
-import { Log } from '@apify/log';
-import { IncomingMessage } from 'http';
-import { AutoscaledPool, AutoscaledPoolOptions } from '../autoscaling/autoscaled_pool';
-import { events } from '../events';
-import { openSessionPool, SessionPool, SessionPoolOptions } from '../session_pool/session_pool';
-import { Statistics } from './statistics';
-import defaultLog from '../utils_log';
-import { validators } from '../validators';
-import { ProxyInfo } from '../proxy_configuration';
-import { Request } from '../request';
-import { RequestList } from '../storages/request_list';
-import { RequestQueue } from '../storages/request_queue';
-import { Session } from '../session_pool/session';
-import { Awaitable } from '../typedefs';
+import { cryptoRandomObjectId } from '@apify/utilities';
+import {
+    AutoscaledPool,
+    AutoscaledPoolOptions,
+    Awaitable,
+    events,
+    openSessionPool,
+    Request,
+    RequestList,
+    RequestQueue,
+    Session,
+    SessionPool,
+    SessionPoolOptions,
+    Statistics,
+    validators,
+    type CrawlingContext,
+} from '@crawlers/core';
+import ow, { ArgumentError } from 'ow';
 
-export interface CrawlingContext<Response = IncomingMessage> extends Record<PropertyKey, unknown> {
-    id: string;
-    /**
-     * The original {@link Request} object.
-     */
-    request: Request;
-    session?: Session;
-
-    /**
-     * An object with information about currently used proxy by the crawler
-     * and configured by the {@link ProxyConfiguration} class.
-     */
-    proxyInfo?: ProxyInfo;
-
-    /**
-     * The response returned by the crawler.
-     * For basic crawlers, this is an instance of Node's [http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object.
-     */
-    response?: Response;
-
-    crawler?: BasicCrawler;
+export interface BasicCrawlerCrawlingContext extends CrawlingContext {
+    crawler: BasicCrawler;
 }
 
-export interface HandleFailedRequestInput extends CrawlingContext {
+export interface HandleFailedRequestInput extends BasicCrawlerCrawlingContext {
     /**
      * The Error thrown by `handleRequestFunction`.
      */
@@ -58,7 +42,11 @@ export interface HandleFailedRequestInput extends CrawlingContext {
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export interface BasicCrawlerOptions<Inputs extends HandleRequestInputs = HandleRequestInputs> {
+export type HandleRequest<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Inputs) => Awaitable<void>;
+
+export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
+
+export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
@@ -109,10 +97,10 @@ export interface BasicCrawlerOptions<Inputs extends HandleRequestInputs = Handle
      * The function receives the following object as an argument:
      * ```
      * {
-     * request: Request,
-     * error: Error,
-     * session: Session,
-     * crawler: BasicCrawler,
+     *     request: Request,
+     *     error: Error,
+     *     session: Session,
+     *     crawler: BasicCrawler,
      * }
      * ```
      * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
@@ -231,7 +219,7 @@ export interface BasicCrawlerOptions<Inputs extends HandleRequestInputs = Handle
  * ```
  * @category Crawlers
  */
-export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInputs> {
+export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
     /**
      * Static list of URLs to be processed.
      */
@@ -277,7 +265,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
     protected handledRequestsCount: number;
     protected sessionPoolOptions: SessionPoolOptions;
     protected useSessionPool: boolean;
-    protected crawlingContexts = new Map<string, CrawlingContext>();
+    protected crawlingContexts = new Map<string, BasicCrawlerCrawlingContext>();
     protected isRunningPromise?: Promise<void>;
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
 
@@ -455,7 +443,7 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestFunction(crawlingContext: HandleRequestInputs): Promise<void> {
+    protected async _handleRequestFunction(crawlingContext: BasicCrawlerCrawlingContext): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
@@ -552,12 +540,13 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
         this.stats.startJob(statisticsId);
 
         // Shared crawling context
-        const crawlingContext = {
+        const crawlingContext: BasicCrawlerCrawlingContext = {
             id: cryptoRandomObjectId(10),
             crawler: this,
             request,
             session,
         };
+
         this.crawlingContexts.set(crawlingContext.id, crawlingContext);
 
         try {
@@ -649,7 +638,11 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
     /**
      * Handles errors thrown by user provided handleRequestFunction()
      */
-    protected async _requestFunctionErrorHandler(error: Error, crawlingContext: CrawlingContext, source: RequestList | RequestQueue): Promise<void> {
+    protected async _requestFunctionErrorHandler(
+        error: Error,
+        crawlingContext: BasicCrawlerCrawlingContext,
+        source: RequestList | RequestQueue,
+    ): Promise<void> {
         const { request } = crawlingContext;
         request.pushErrorMessage(error);
 
@@ -722,21 +715,3 @@ export class BasicCrawler<Inputs extends HandleRequestInputs = HandleRequestInpu
         }
     }
 }
-
-export type HandleRequest<Inputs extends HandleRequestInputs = HandleRequestInputs> = (inputs: Inputs) => Awaitable<void>;
-
-export interface HandleRequestInputs {
-    /**
-     * The original {Request} object.
-     * A reference to the underlying {@link AutoscaledPool} class that manages the concurrency of the crawler.
-     * Note that this property is only initialized after calling the {@link BasicCrawler.run} function.
-     * You can use it to change the concurrency settings on the fly,
-     * to pause the crawler by calling {@link AutoscaledPool.pause}
-     * or to abort it by calling {@link AutoscaledPool.abort}.
-     */
-    request: Request;
-    session?: Session;
-    crawler?: BasicCrawler;
-}
-
-export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;

@@ -1,17 +1,20 @@
 import os from 'os';
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
-import { BrowserPluginOptions } from 'browser-pool';
-import { isAtHome } from '../utils';
-import { BrowserPlugin } from './browser_plugin';
-import { Constructor } from '../typedefs';
-import { StealthOptions } from '../stealth/stealth';
+import {
+    Dictionary,
+    Constructor,
+    isAtHome,
+} from '@crawlers/core';
+import {
+    BrowserPlugin,
+    BrowserPluginOptions,
+} from 'browser-pool';
 
-export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOptions> {
-
+export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
     /**
      * If `true` and `executablePath` is not set,
-     * Playwright will launch full Google Chrome browser available on the machine
+     * the launcher will launch full Google Chrome browser available on the machine
      * rather than the bundled Chromium. The path to Chrome executable
      * is taken from the `APIFY_CHROME_EXECUTABLE_PATH` environment variable if provided,
      * or defaults to the typical Google Chrome executable location specific for the operating system.
@@ -19,12 +22,7 @@ export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOp
      * @default false
      */
     useChrome?: boolean;
-
-    /**
-     * By default this function uses `require("playwright").chromium`.
-     * If you want to use a different browser you can pass it by this property as `require("playwright").firefox`
-     */
-    launcher?: any;
+    launcher?: Launcher;
 }
 
 /**
@@ -33,18 +31,19 @@ export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOp
  */
 export abstract class BrowserLauncher<
     Plugin extends BrowserPlugin,
+    Launcher = Plugin['library'],
     T extends Constructor<Plugin> = Constructor<Plugin>,
-    LaunchOptions = Partial<Parameters<Plugin['launch']>[0]>
+    LaunchOptions = Partial<Parameters<Plugin['launch']>[0]>,
+    LaunchResult extends ReturnType<Plugin['launch']> = ReturnType<Plugin['launch']>,
 > {
-    launcher: T;
+    launcher: Launcher;
     proxyUrl?: string;
     useChrome?: boolean;
-    launchOptions: Record<string, any>;
-    otherLaunchContextProps: Record<string, any>;
-    Plugin?: T; // to be provided by child classes;
+    launchOptions: Dictionary;
+    otherLaunchContextProps: Dictionary;
+    // to be provided by child classes;
+    Plugin!: T;
     userAgent?: string;
-    stealth?: boolean;
-    stealthOptions!: StealthOptions;
 
     protected static optionsShape = {
         proxyUrl: ow.optional.string.url,
@@ -74,7 +73,7 @@ export abstract class BrowserLauncher<
     /**
      * All `BrowserLauncher` parameters are passed via an launchContext object.
      */
-    constructor(launchContext: BrowserLaunchContext<LaunchOptions>) {
+    constructor(launchContext: BrowserLaunchContext<LaunchOptions, Launcher>) {
         const {
             launcher,
             proxyUrl,
@@ -86,18 +85,18 @@ export abstract class BrowserLauncher<
         this._validateProxyUrlProtocol(proxyUrl);
 
         // those need to be reassigned otherwise they are {} in types
-        this.launcher = launcher;
+        this.launcher = launcher!;
         this.proxyUrl = proxyUrl;
         this.useChrome = useChrome;
         this.launchOptions = launchOptions;
-        this.otherLaunchContextProps = otherLaunchContextProps;
+        this.otherLaunchContextProps = otherLaunchContextProps as Dictionary;
     }
 
     /**
      * @ignore
      */
     createBrowserPlugin(): Plugin {
-        return new this.Plugin!(this.launcher, {
+        return new this.Plugin(this.launcher, {
             proxyUrl: this.proxyUrl,
             launchOptions: this.createLaunchOptions(),
             ...this.otherLaunchContextProps,
@@ -108,13 +107,14 @@ export abstract class BrowserLauncher<
      * Launches a browser instance based on the plugin.
      * @returns Browser instance.
      */
-    async launch(): Promise<Awaited<ReturnType<Plugin['launch']>>> {
+    launch(): LaunchResult {
         const plugin = this.createBrowserPlugin();
-        const context = await plugin.createLaunchContext();
-        return plugin.launch(context);
+        const context = plugin.createLaunchContext();
+
+        return plugin.launch(context) as LaunchResult;
     }
 
-    createLaunchOptions(): { args?: string[] } & Record<string, unknown> {
+    createLaunchOptions(): { args?: string[] } & Dictionary {
         const launchOptions = {
             ...this.launchOptions,
         };

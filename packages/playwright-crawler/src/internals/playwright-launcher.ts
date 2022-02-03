@@ -1,7 +1,7 @@
 import ow from 'ow';
 import { Browser, BrowserType, LaunchOptions } from 'playwright';
 import { PlaywrightPlugin } from 'browser-pool';
-import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
+import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
 
 /**
  * Apify extends the launch options of Playwright.
@@ -24,7 +24,7 @@ import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
  * }
  * ```
  */
-export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOptions> {
+export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOptions, BrowserType> {
     /** `browserType.launch` [options](https://playwright.dev/docs/api/class-browsertype?_highlight=launch#browsertypelaunchoptions) */
     launchOptions?: LaunchOptions;
 
@@ -71,7 +71,7 @@ export class PlaywrightLauncher extends BrowserLauncher<PlaywrightPlugin> {
         ow(launchContext, 'PlaywrightLauncherOptions', ow.object.exactShape(PlaywrightLauncher.optionsShape));
 
         const {
-            launcher = BrowserLauncher.requireLauncherOrThrow<{ chromium: unknown }>('playwright', 'apify/actor-node-playwright-*').chromium,
+            launcher = BrowserLauncher.requireLauncherOrThrow<typeof import('playwright')>('playwright', 'apify/actor-node-playwright-*').chromium,
         } = launchContext;
 
         const { launchOptions = {}, ...rest } = launchContext;

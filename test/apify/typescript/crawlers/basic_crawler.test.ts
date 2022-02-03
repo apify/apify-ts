@@ -1,4 +1,4 @@
-import { BasicCrawlerOptions } from '@crawlers/core';
+import { BasicCrawlerOptions } from '@crawlers/basic';
 
 describe('BasicCrawler TS', () => {
     describe('generics', () => {

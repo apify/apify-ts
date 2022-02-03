@@ -6,14 +6,12 @@
 	"type": "module",
 	"dependencies": {
 		"@apify/scraper-tools": "^1.0.0",
-		"@crawlers/core": "^2.2.2",
 		"apify": "^2.2.1",
+		"crawlers": "^1.0.0",
 		"puppeteer": "*"
 	},
 	"devDependencies": {
-		"@apify/scraper-tools": "file:../../scraper-tools",
 		"@apify/tsconfig": "^0.1.0",
-		"@crawlers/core": "file:../../core",
 		"markdown-toc": "^1.2.0",
 		"typescript": "^4.5.4"
 	},

@@ -3,7 +3,7 @@ import express from 'express';
 import log from '@apify/log';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { Configuration, Request, playwrightUtils } from '@crawlers/core';
+import { Configuration, Request, playwrightUtils } from '@crawlers/playwright';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 import { startExpressAppPromise } from './_helper';
 

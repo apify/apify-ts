@@ -21,10 +21,14 @@
 
 import ow from 'ow';
 import { Page, Response, Route } from 'playwright';
-import log from './utils_log';
-import { validators } from './validators';
-import { Request } from './request';
-import { Dictionary } from './typedefs';
+import {
+    logUtils,
+    validators,
+    Request,
+    Dictionary,
+} from '@crawlers/core';
+
+const log = logUtils.child({ prefix: 'Playwright Utils' });
 
 export interface DirectNavigationOptions {
     /**
@@ -105,8 +109,3 @@ export async function gotoExtended(page: Page, request: Request, gotoOptions: Di
 
     return page.goto(url, gotoOptions);
 }
-
-/** @internal */
-export const playwrightUtils = {
-    gotoExtended,
-};

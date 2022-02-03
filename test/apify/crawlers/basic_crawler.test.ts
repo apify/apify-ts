@@ -14,8 +14,9 @@ import {
     events,
     sleep,
     Configuration,
-    BasicCrawler, KeyValueStore,
-} from '@crawlers/core';
+    BasicCrawler,
+    KeyValueStore,
+} from 'crawlers';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('BasicCrawler', () => {

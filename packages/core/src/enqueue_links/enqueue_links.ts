@@ -1,8 +1,5 @@
 import ow, { ArgumentError } from 'ow';
 import { URL } from 'url';
-// FIXME this should not be here, or we need to deal with ignore comments as before
-import { Page as PuppeteerPage } from 'puppeteer';
-import { Page as PlaywrightPage } from 'playwright';
 import log from '../utils_log';
 import {
     constructPseudoUrlInstances,
@@ -15,23 +12,22 @@ import {
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
 import { PseudoUrl } from '../pseudo_url';
 import { validators } from '../validators';
-import { CheerioRoot } from '../crawlers/cheerio_crawler';
+import { CheerioRoot } from '../utils';
 
 export interface EnqueueLinksOptions {
-    /**
-     * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) object.
-     * Either `page` or `$` option must be provided.
-     */
-    page?: PuppeteerPage | PlaywrightPage;
-
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
     limit?: number;
+    /**
+     * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
+     * Either `page` or `$` option must be provided.
+     */
+    page?: import('puppeteer').Page | import('playwright').Page;
 
     /**
      * [`Cheerio`](https://github.com/cheeriojs/cheerio) function with loaded HTML.
      * Either `page` or `$` option must be provided.
      */
-    $?: CheerioRoot; // TODO support cheerio.Selector too
+    $?: CheerioRoot;
 
     /** A request queue to which the URLs will be enqueued. */
     requestQueue: RequestQueue;
@@ -126,9 +122,11 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     if (!page && !$) {
         throw new ArgumentError('One of the parameters "options.page" or "options.$" must be provided!', enqueueLinks);
     }
+
     if (page && $) {
         throw new ArgumentError('Only one of the parameters "options.page" or "options.$" must be provided!', enqueueLinks);
     }
+
     ow(options, ow.object.exactShape({
         page: ow.optional.object.hasKeys('goto', 'evaluate'),
         $: ow.optional.function,

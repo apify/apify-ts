@@ -25,20 +25,24 @@ import vm from 'vm';
 import util from 'util';
 import { LruCache } from '@apify/datastructures';
 import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
-import log from './utils_log';
-import { validators } from './validators';
+import {
+    logUtils,
+    Dictionary,
+    KeyValueStore,
+    Request,
+    validators,
+} from '@crawlers/core';
 
-import { enqueueLinksByClickingElements } from './enqueue_links/click_elements';
+import { enqueueLinksByClickingElements } from '../enqueue-links/click-elements';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
-import { KeyValueStore } from './storages/key_value_store';
-import { Dictionary } from './typedefs';
-import { Request } from './request';
 
 const jqueryPath = require.resolve('jquery');
 const readFilePromised = util.promisify(fs.readFile);
 
 const MAX_INJECT_FILE_CACHE_SIZE = 10;
 const DEFAULT_BLOCK_REQUEST_URL_PATTERNS = ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip'];
+
+const log = logUtils.child({ prefix: 'Puppeteer Utils' });
 
 export interface DirectNavigationOptions {
     /**

@@ -1,11 +1,17 @@
 import ow from 'ow';
 import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
-import { PlaywrightLauncher, PlaywrightLaunchContext } from '../browser_launchers/playwright_launcher';
-import { BrowserCrawler, BrowserCrawlerOptions, BrowserCrawlingContext, BrowserHandlePageFunction, BrowserHook } from './browser_crawler';
-import { HandleFailedRequest } from './basic_crawler';
-import { DirectNavigationOptions, gotoExtended } from '../playwright_utils';
-import { Dictionary } from '../typedefs';
+import { Dictionary } from '@crawlers/core';
+import {
+    BrowserCrawler,
+    BrowserCrawlerOptions,
+    BrowserCrawlingContext,
+    BrowserCrawlerHandleRequest,
+    BrowserCrawlerHandleFailedRequest,
+    BrowserHook,
+} from '@crawlers/browser';
+import { PlaywrightLauncher, PlaywrightLaunchContext } from './playwright-launcher';
+import { DirectNavigationOptions, gotoExtended } from './utils/playwright-utils';
 
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
 
@@ -69,7 +75,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -116,17 +122,13 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
 
 export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
 
-export interface PlaywrightCrawlContext extends BrowserCrawlingContext<Page, Response, PlaywrightController> {
-    crawler: PlaywrightCrawler;
-}
+export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, PlaywrightController>
 
 export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
 
-export interface PlaywrightHandlePageFunctionParam extends BrowserCrawlingContext<Page, Response, PlaywrightController> {
-    crawler: PlaywrightCrawler;
-}
+export type PlaywrightHandlePageFunctionParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
 
-export type PlaywrightHandlePageFunction = BrowserHandlePageFunction<PlaywrightHandlePageFunctionParam>;
+export type PlaywrightHandlePageFunction = BrowserCrawlerHandleRequest<PlaywrightHandlePageFunctionParam>;
 
 /**
  * Provides a simple framework for parallel crawling of web pages
@@ -189,7 +191,7 @@ export type PlaywrightHandlePageFunction = BrowserHandlePageFunction<PlaywrightH
  * ```
  * @category Crawlers
  */
-export class PlaywrightCrawler extends BrowserCrawler<LaunchOptions, { browserPlugins: [PlaywrightPlugin] }, PlaywrightCrawlContext> {
+export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [PlaywrightPlugin] }, LaunchOptions, PlaywrightCrawlContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,

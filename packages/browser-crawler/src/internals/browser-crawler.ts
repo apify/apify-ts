@@ -1,35 +1,59 @@
-import ow from 'ow';
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
-import { BrowserController, BrowserPool, BrowserPoolHooks, BrowserPoolOptions, BROWSER_CONTROLLER_EVENTS, LaunchContext } from 'browser-pool';
-import type { BrowserPlugin, CommonPage, InferBrowserPluginArray } from 'browser-pool';
-import { BASIC_CRAWLER_TIMEOUT_BUFFER_SECS } from '../constants';
-import { EVENT_SESSION_RETIRED } from '../session_pool/events';
-import { validators } from '../validators';
 import {
-    throwOnBlockedRequest,
+    Awaitable,
+    CrawlingContext,
+    Dictionary,
     handleRequestTimeout,
-} from './crawler_utils';
-import { BasicCrawler, BasicCrawlerOptions, CrawlingContext, HandleFailedRequest } from './basic_crawler';
-import { ProxyConfiguration, ProxyInfo } from '../proxy_configuration';
-import { BrowserLaunchContext } from '../browser_launchers/browser_launcher';
-import { Session } from '../session_pool/session';
-import { Awaitable, Dictionary } from '../typedefs';
+    ProxyConfiguration,
+    ProxyInfo,
+    Session,
+    throwOnBlockedRequest,
+    validators,
+    EVENT_SESSION_RETIRED,
+} from '@crawlers/core';
+import {
+    BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+    BasicCrawler,
+    HandleFailedRequestInput,
+    BasicCrawlerOptions,
+} from '@crawlers/basic';
+import {
+    BROWSER_CONTROLLER_EVENTS,
+    BrowserController,
+    BrowserPlugin,
+    BrowserPool,
+    BrowserPoolHooks,
+    BrowserPoolOptions,
+    CommonPage,
+    InferBrowserPluginArray,
+    LaunchContext,
+} from 'browser-pool';
+import ow from 'ow';
+import { BrowserLaunchContext } from './browser-launcher';
 
 export interface BrowserCrawlingContext<
     Page extends CommonPage = CommonPage,
     Response = Dictionary<any>,
-    ProvidedController = BrowserController
-> extends CrawlingContext<Response> {
+    ProvidedController = BrowserController,
+> extends CrawlingContext {
     browserController: ProvidedController;
     page: Page;
+    response?: Response;
+    crawler: BrowserCrawler;
 }
+
+export interface BrowserCrawlerHandleFailedRequestInput extends HandleFailedRequestInput {
+    crawler: BrowserCrawler;
+}
+
+export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserCrawlerHandleFailedRequestInput) => Awaitable<void>;
+
+export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
 export type BrowserHook<
     Context = BrowserCrawlingContext,
     GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary
 > = (crawlingContext: Context, gotoOptions: GoToOptions) => Awaitable<void>;
-
-export type BrowserHandlePageFunction<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (context: Context) => Awaitable<void>;
 
 export type GotoFunction<
     Context = BrowserCrawlingContext,
@@ -43,7 +67,7 @@ export interface BrowserCrawlerOptions<
     __BrowserPlugins extends BrowserPlugin[] = InferBrowserPluginArray<InternalBrowserPoolOptions['browserPlugins']>,
     __BrowserControllerReturn extends BrowserController = ReturnType<__BrowserPlugins[number]['createController']>,
     __LaunchContextReturn extends LaunchContext = ReturnType<__BrowserPlugins[number]['createLaunchContext']>
-> extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
+> extends Omit<BasicCrawlerOptions, 'handleRequestFunction' | 'handleFailedRequestFunction'> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -83,7 +107,7 @@ export interface BrowserCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: BrowserHandlePageFunction<Context>;
+    handlePageFunction: BrowserCrawlerHandleRequest<Context>;
 
     /**
      * Timeout in which the function passed as `handlePageFunction` needs to finish, in seconds.
@@ -114,7 +138,7 @@ export interface BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
 
     /**
      * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
@@ -222,8 +246,8 @@ export interface BrowserCrawlerOptions<
  * @category Crawlers
  */
 export abstract class BrowserCrawler<
-    LaunchOptions = Dictionary,
     InternalBrowserPoolOptions extends BrowserPoolOptions = BrowserPoolOptions,
+    LaunchOptions = Dictionary,
     Context extends BrowserCrawlingContext = BrowserCrawlingContext,
     GoToOptions extends Record<PropertyKey, any> = Dictionary
 > extends BasicCrawler<Context> {
@@ -240,9 +264,9 @@ export abstract class BrowserCrawler<
      */
     browserPool: BrowserPool<InternalBrowserPoolOptions>;
 
-    launchContext?: BrowserLaunchContext<LaunchOptions>;
+    launchContext?: BrowserLaunchContext<LaunchOptions, unknown>;
 
-    protected handlePageFunction: BrowserHandlePageFunction<Context>;
+    protected handlePageFunction: BrowserCrawlerHandleRequest<Context>;
     protected handlePageTimeoutSecs: number;
     protected handlePageTimeoutMillis: number;
     protected navigationTimeoutMillis: number;
@@ -289,6 +313,7 @@ export abstract class BrowserCrawler<
             browserPoolOptions,
             preNavigationHooks = [],
             postNavigationHooks = [],
+            handleFailedRequestFunction,
             ...basicCrawlerOptions
         } = options;
 
@@ -296,6 +321,9 @@ export abstract class BrowserCrawler<
             ...basicCrawlerOptions,
             handleRequestFunction: (...args) => this._handleRequestFunction(...args),
             handleRequestTimeoutSecs: navigationTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+            handleFailedRequestFunction: handleFailedRequestFunction
+                ? (...args) => handleFailedRequestFunction(...args as unknown as [BrowserCrawlerHandleFailedRequestInput])
+                : undefined,
         });
 
         // Cookies should be persisted per session only if session pool is used
@@ -328,9 +356,10 @@ export abstract class BrowserCrawler<
             this.persistCookiesPerSession = false;
         }
 
-        const { preLaunchHooks = [], postLaunchHooks = [], ...rest } = browserPoolOptions as any; // TODO hooks from browser pool options?
+        const { preLaunchHooks = [], postLaunchHooks = [], ...rest } = browserPoolOptions;
+
         this.browserPool = new BrowserPool<InternalBrowserPoolOptions>({
-            ...rest,
+            ...rest as any,
             preLaunchHooks: [
                 this._extendLaunchContext.bind(this),
                 ...preLaunchHooks,

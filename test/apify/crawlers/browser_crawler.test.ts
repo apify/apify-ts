@@ -7,9 +7,23 @@ import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS
 import puppeteer from 'puppeteer';
 import log from '@apify/log';
 import {
-    BrowserCrawler, BrowserCrawlingContext, HandleFailedRequestInput, ProxyInfo, PuppeteerGoToOptions, PuppeteerHandlePage, STATUS_CODES_BLOCKED,
-    Request, AutoscaledPool, Session, EVENT_SESSION_RETIRED, Configuration, RequestList, sleep, createProxyConfiguration, requestUtils,
-} from '@crawlers/core';
+    BrowserCrawler,
+    BrowserCrawlingContext,
+    BrowserCrawlerHandleFailedRequestInput,
+    ProxyInfo,
+    PuppeteerGoToOptions,
+    PuppeteerHandlePage,
+    STATUS_CODES_BLOCKED,
+    Request,
+    AutoscaledPool,
+    Session,
+    EVENT_SESSION_RETIRED,
+    Configuration,
+    RequestList,
+    sleep,
+    createProxyConfiguration,
+    requestUtils,
+} from 'crawlers';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 
@@ -795,7 +809,7 @@ describe('BrowserCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = async (crawlingContext: HandleFailedRequestInput) => {
+            const handleFailedRequestFunction = async (crawlingContext: BrowserCrawlerHandleFailedRequestInput) => {
                 expect(crawlingContext).toBe(prepareCrawlingContext);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);

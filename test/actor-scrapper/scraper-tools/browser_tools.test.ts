@@ -1,5 +1,5 @@
 import { browserTools } from '@apify/scraper-tools';
-import { launchPuppeteer, KeyValueStore, logUtils } from '@crawlers/core';
+import { launchPuppeteer, KeyValueStore, logUtils } from '@crawlers/puppeteer';
 import fs from 'fs-extra';
 import path from 'path';
 import sinon from 'sinon';

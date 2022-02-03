@@ -23,7 +23,7 @@ import {
     Request,
     RequestList,
     RequestQueue,
-} from '@crawlers/core';
+} from 'crawlers';
 import { Actor, ApifyEnv } from 'apify';
 import cheerio, { CheerioAPI } from 'cheerio';
 import { readFile } from 'node:fs/promises';

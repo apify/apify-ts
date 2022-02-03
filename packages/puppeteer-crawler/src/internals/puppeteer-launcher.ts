@@ -1,10 +1,12 @@
 import ow from 'ow';
-import { Browser, LaunchOptions } from 'puppeteer';
+import { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from 'browser-pool';
-import { BrowserLaunchContext, BrowserLauncher } from './browser_launcher';
-import { isAtHome } from '../utils';
-import { DEFAULT_USER_AGENT } from '../constants';
-import { applyStealthToBrowser, StealthOptions } from '../stealth/stealth';
+import {
+    isAtHome,
+    DEFAULT_USER_AGENT,
+} from '@crawlers/core';
+import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
+import { applyStealthToBrowser, StealthOptions } from './stealth';
 
 const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
     width: 1366,
@@ -32,7 +34,7 @@ const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
  * }
  * ```
  */
-export interface PuppeteerLaunchContext extends BrowserLaunchContext<LaunchOptions> {
+export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPlugin['launchOptions'], unknown> {
     /**
      *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-puppeteerlaunchoptions)
      */
@@ -90,7 +92,7 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<LaunchOptio
  * `PuppeteerLauncher` is based on the `BrowserLauncher`. It launches `puppeteer` browser instance.
  * @ignore
  */
-export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
+export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown> {
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,
         launcher: ow.optional.object,
@@ -98,6 +100,9 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
         stealth: ow.optional.boolean,
         stealthOptions: ow.optional.object,
     };
+
+    stealth?: boolean;
+    stealthOptions: StealthOptions;
 
     /**
      * All `PuppeteerLauncher` parameters are passed via an launchContext object.
@@ -146,9 +151,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
 
         if (isAtHome()) launchOptions.args.push('--no-sandbox');
 
-        if (launchOptions.defaultViewport === undefined) {
-            launchOptions.defaultViewport = LAUNCH_PUPPETEER_DEFAULT_VIEWPORT;
-        }
+        launchOptions.defaultViewport ??= LAUNCH_PUPPETEER_DEFAULT_VIEWPORT;
 
         // When User-Agent is not set and we're using Chromium or headless mode,
         // it is better to use DEFAULT_USER_AGENT to reduce chance of detection
@@ -161,7 +164,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
             launchOptions.args.push(`--user-agent=${userAgent}`);
         }
 
-        if (this.stealthOptions && this.stealthOptions.hideWebDriver) {
+        if (this.stealthOptions?.hideWebDriver) {
             const idx = launchOptions.args.findIndex((arg) => arg.startsWith('--disable-blink-features='));
             if (idx !== -1) {
                 const arg = launchOptions.args[idx];
