@@ -230,7 +230,7 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
         if (stealth) {
             this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
                 // TODO: We can do this better now. It is not necessary to override the page.
-                // we can modify the page in the postPageCreateHook
+                //  we can modify the page in the postPageCreateHook
                 const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
                 applyStealthToBrowser(browserController.browser, newStealthOptions);
             });
