@@ -1,9 +1,7 @@
 import ow from 'ow';
 import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
-import {
-    Dictionary,
-} from '@crawlers/core';
+import { Dictionary } from '@crawlers/core';
 import {
     BrowserCrawler,
     BrowserCrawlerOptions,
