@@ -63,7 +63,6 @@
         }
     },
     "devDependencies": {
-        "@crawlers/browser": "file:../browser-crawler",
         "puppeteer": "10.x"
     }
 }

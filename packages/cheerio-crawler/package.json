@@ -59,8 +59,5 @@
         "cheerio": "1.0.0-rc.10",
         "htmlparser2": "^7.0.0",
         "iconv-lite": "^0.6.3"
-    },
-    "devDependencies": {
-        "@crawlers/basic": "file:../basic-crawler"
     }
 }

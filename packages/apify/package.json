@@ -53,7 +53,7 @@
         "access": "public"
     },
     "dependencies": {
-        "crawlers": "^2.2.2"
+        "crawlers": "^1.0.0"
     },
     "peerDependencies": {
         "playwright": "^1.11.0",
