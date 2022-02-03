@@ -264,7 +264,7 @@ export abstract class BrowserCrawler<
      */
     browserPool: BrowserPool<InternalBrowserPoolOptions>;
 
-    launchContext?: BrowserLaunchContext<LaunchOptions>;
+    launchContext?: BrowserLaunchContext<LaunchOptions, unknown>;
 
     protected handlePageFunction: BrowserCrawlerHandleRequest<Context>;
     protected handlePageTimeoutSecs: number;

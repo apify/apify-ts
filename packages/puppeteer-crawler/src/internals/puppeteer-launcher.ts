@@ -34,7 +34,7 @@ const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
  * }
  * ```
  */
-export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPlugin['launchOptions']> {
+export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPlugin['launchOptions'], unknown> {
     /**
      *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-puppeteerlaunchoptions)
      */
@@ -92,7 +92,7 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
  * `PuppeteerLauncher` is based on the `BrowserLauncher`. It launches `puppeteer` browser instance.
  * @ignore
  */
-export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin> {
+export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown> {
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,
         launcher: ow.optional.object,

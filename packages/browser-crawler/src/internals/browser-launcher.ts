@@ -11,7 +11,7 @@ import {
     BrowserPluginOptions,
 } from 'browser-pool';
 
-export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOptions> {
+export interface BrowserLaunchContext<TOptions, Library> extends BrowserPluginOptions<TOptions> {
     /**
      * If `true` and `executablePath` is not set,
      * the launcher will launch full Google Chrome browser available on the machine
@@ -22,7 +22,7 @@ export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOp
      * @default false
      */
     useChrome?: boolean;
-    launcher?: any;
+    launcher?: Library;
 }
 
 /**
@@ -31,11 +31,12 @@ export interface BrowserLaunchContext<TOptions> extends BrowserPluginOptions<TOp
  */
 export abstract class BrowserLauncher<
     Plugin extends BrowserPlugin,
+    Launcher = Plugin['library'],
     T extends Constructor<Plugin> = Constructor<Plugin>,
     LaunchOptions = Partial<Parameters<Plugin['launch']>[0]>,
     LaunchResult extends ReturnType<Plugin['launch']> = ReturnType<Plugin['launch']>,
 > {
-    launcher: Plugin['library'];
+    launcher: Launcher;
     proxyUrl?: string;
     useChrome?: boolean;
     launchOptions: Dictionary;
@@ -72,7 +73,7 @@ export abstract class BrowserLauncher<
     /**
      * All `BrowserLauncher` parameters are passed via an launchContext object.
      */
-    constructor(launchContext: BrowserLaunchContext<LaunchOptions>) {
+    constructor(launchContext: BrowserLaunchContext<LaunchOptions, Launcher>) {
         const {
             launcher,
             proxyUrl,
@@ -84,7 +85,7 @@ export abstract class BrowserLauncher<
         this._validateProxyUrlProtocol(proxyUrl);
 
         // those need to be reassigned otherwise they are {} in types
-        this.launcher = launcher;
+        this.launcher = launcher!;
         this.proxyUrl = proxyUrl;
         this.useChrome = useChrome;
         this.launchOptions = launchOptions;

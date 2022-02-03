@@ -24,7 +24,7 @@ import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
  * }
  * ```
  */
-export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOptions> {
+export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOptions, BrowserType> {
     /** `browserType.launch` [options](https://playwright.dev/docs/api/class-browsertype?_highlight=launch#browsertypelaunchoptions) */
     launchOptions?: LaunchOptions;
 
