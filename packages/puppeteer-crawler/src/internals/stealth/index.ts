@@ -6,7 +6,7 @@ import {
 } from '@crawlers/core';
 import * as hidingTricks from './hiding_tricks';
 
-const log = logUtils.child({ prefix: 'Puppeteer Stealth' });
+const log = logUtils.child({ prefix: 'Stealth' });
 
 /**
  * Configuration of stealth tricks for a proper hiding effect all of them should be set to true.
