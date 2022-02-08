@@ -10,6 +10,7 @@ import {
     RequestQueue,
     RequestQueueOperationOptions,
 } from 'apify';
+import { puppeteerUtils } from '@crawlers/puppeteer';
 import contentTypeParser, { MediaType } from 'content-type';
 import { saveSnapshot, SnapshotOptions } from './browser_tools';
 import { META_KEY } from './consts';
@@ -60,6 +61,7 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
 
     public readonly Actor = Actor;
     public readonly log = logUtils;
+    public readonly puppeteerUtils = puppeteerUtils;
     public readonly input: any;
     public readonly env: ApifyEnv;
     public readonly customData: unknown;
