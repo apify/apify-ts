@@ -40,8 +40,8 @@ await run(import.meta.url, 'puppeteer-scraper', {
             }
         }
 
-        async function handleDetail({ request, log, skipLinks, page, Apify }) {
-            await Apify.utils.puppeteer.injectJQuery(page);
+        async function handleDetail({ request, log, skipLinks, page, puppeteerUtils }) {
+            await puppeteerUtils.injectJQuery(page);
 
             const { url } = request;
             log.info(`Scraping ${url}`);
