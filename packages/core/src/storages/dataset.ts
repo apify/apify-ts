@@ -4,7 +4,7 @@ import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-clie
 import { ApifyStorageLocal } from '@apify/storage-local';
 import type { PaginatedList } from 'apify-client';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
-import log from '../utils_log';
+import { log } from '../utils_log';
 
 import { Configuration } from '../configuration';
 import { Dictionary, Awaitable } from '../typedefs';

@@ -1,8 +1,17 @@
 /* eslint-disable max-classes-per-file */
-/* istanbul ignore next */
 
 import type { CrawlerSetupOptions, constants, RequestMetadata } from '@apify/scraper-tools';
-import type { ApifyEnv, Dictionary, KeyValueStore, logUtils, RecordOptions, Request, RequestOptions, RequestQueue, RequestQueueOperationOptions } from 'apify';
+import { Log } from '@apify/log';
+import type { ApifyEnv } from 'apify';
+import type {
+    Dictionary,
+    KeyValueStore,
+    RecordOptions,
+    Request,
+    RequestOptions,
+    RequestQueue,
+    RequestQueueOperationOptions,
+} from '@crawlers/puppeteer';
 import { Input } from './consts';
 import { GlobalStore } from './global_store';
 
@@ -76,7 +85,7 @@ export function createBundle(apifyNamespace: string) {
             response: ProvidedResponse;
             request: Request;
             globalStore: GlobalStore<unknown>;
-            log: typeof logUtils;
+            log: Log;
 
             jQuery: any;
 

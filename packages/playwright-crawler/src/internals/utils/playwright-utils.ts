@@ -21,14 +21,10 @@
 
 import ow from 'ow';
 import { Page, Response, Route } from 'playwright';
-import {
-    logUtils,
-    validators,
-    Request,
-    Dictionary,
-} from '@crawlers/core';
+import log_ from '@apify/log';
+import { validators, Request, Dictionary } from '@crawlers/core';
 
-const log = logUtils.child({ prefix: 'Playwright Utils' });
+const log = log_.child({ prefix: 'Playwright Utils' });
 
 export interface DirectNavigationOptions {
     /**

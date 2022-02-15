@@ -1,5 +1,4 @@
-import { Configuration, setValue } from '../../packages/apify/dist/index.mjs';
-import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/core/dist/index.mjs';
+import { setValue, Configuration, URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/core/dist/index.mjs';
 import { join } from 'path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

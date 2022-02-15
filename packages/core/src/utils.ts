@@ -36,7 +36,7 @@ import { HTTPResponse as PuppeteerResponse } from 'puppeteer';
 
 // @ts-expect-error if we enable resolveJsonModule, we end up with `src` folder in `dist`
 import { version as apifyVersion } from '../package.json';
-import log from './utils_log';
+import { log } from './utils_log';
 import { requestAsBrowser } from './utils_request';
 import { Request } from './request';
 import { Dictionary } from './typedefs';
@@ -578,7 +578,7 @@ export * from './enqueue_links/enqueue_links';
 
 // TODO move this elsewhere or rename
 export * as requestUtils from './utils_request';
-export { default as logUtils } from './utils_log';
+export * from './utils_log';
 export * as socialUtils from './utils_social';
 
 /** @internal */

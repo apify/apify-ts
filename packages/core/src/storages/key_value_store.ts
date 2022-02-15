@@ -400,7 +400,7 @@ export async function getValue<T>(key: string): Promise<T | null> {
  * @param [options] Record options.
  */
 export async function setValue<T>(key: string, value: T, options: RecordOptions = {}): Promise<void> {
-    const store = await openKeyValueStore();
+    const store = await KeyValueStore.open();
 
     return store.setValue(key, value, options);
 }

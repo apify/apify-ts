@@ -1,12 +1,10 @@
 import { EventEmitter } from 'events';
 import ow from 'ow';
 import { HTTPRequest, HTTPRequest as PuppeteerRequest, Page } from 'puppeteer';
-import {
-    logUtils,
-    Dictionary,
-} from '@crawlers/browser';
+import { Dictionary } from '@crawlers/browser';
+import log from '@apify/log';
 
-// We use weak maps here so that the content gets discarted after page gets closed.
+// We use weak maps here so that the content gets discarded after page gets closed.
 const pageInterceptRequestHandlersMap: WeakMap<Page, InterceptHandler[]> = new WeakMap(); // Maps page to an array of request interception handlers.
 const pageInterceptRequestMasterHandlerMap = new WeakMap(); // Maps page to master request interception handler.
 const pageInterceptedRequestsMap = new WeakMap(); // Maps page to a set of its pending intercepted requests.
@@ -223,14 +221,14 @@ export async function removeInterceptRequestHandler(page: Page, handler: Interce
                         await disableRequestInterception(page);
                         interceptedRequestsInProgress.removeListener('delete', onDelete);
                     } catch (error) {
-                        logUtils.debug('Error while disabling request interception', { error });
+                        log.debug('Error while disabling request interception', { error });
                     }
                 }
             };
             interceptedRequestsInProgress.on('delete', onDelete);
         }
     }
-};
+}
 
 async function disableRequestInterception(page: Page): Promise<void> {
     await page.setRequestInterception(false);

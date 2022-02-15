@@ -41,7 +41,8 @@
         "content-type": "^1.0.4"
     },
     "peerDependencies": {
-        "apify": ">=2.x || >=2.1.1-beta.0"
+        "apify": ">=2.x || >=2.1.1-beta.0",
+        "@crawlers/core": ">=1.0.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",

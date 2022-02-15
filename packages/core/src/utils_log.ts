@@ -1,4 +1,6 @@
 /**
+ * BLABLABLABLABLA
+ *
  * The log instance enables level aware logging of messages and we advise
  * to use it instead of `console.log()` and its aliases in most development
  * scenarios.
@@ -64,13 +66,8 @@
 
 import log, { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText } from '@apify/log';
 
+// TODO move this to @apify/log? check if we still need this, probably yes
 Object.assign(log, { Log, LogLevel, Logger, LoggerJson, LoggerText });
 
 export { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText };
-export default log as typeof log & {
-    Log: typeof Log;
-    LogLevel: typeof LogLevel;
-    Logger: typeof Logger;
-    LoggerJson: typeof LoggerJson;
-    LoggerText: typeof LoggerText;
-};
+export { log };

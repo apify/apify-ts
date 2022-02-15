@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
-import { Dictionary, PuppeteerCookie, Request, Session, logUtils, createRequestDebugInfo } from 'apify';
+import { Dictionary, PuppeteerCookie, Request, Session, createRequestDebugInfo } from '@crawlers/core';
+import log from '@apify/log';
 import { randomBytes as callbackRandomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -159,11 +160,11 @@ export function maybeLoadPageFunctionFromDisk(input: Dictionary<any>, root: stri
     if (input.pageFunction) return;
 
     const pageFunctionPath = join(root, PAGE_FUNCTION_FILENAME);
-    logUtils.debug(`Loading Page Function from disk: ${pageFunctionPath}`);
+    log.debug(`Loading Page Function from disk: ${pageFunctionPath}`);
     try {
         input.pageFunction = readFileSync(pageFunctionPath, 'utf8');
     } catch (err) {
-        logUtils.exception(err as Error, 'Page Function load from disk failed.');
+        log.exception(err as Error, 'Page Function load from disk failed.');
     }
 }
 
@@ -183,14 +184,14 @@ export function createError(obj: ErrorLike = {}) {
 }
 
 export function logPerformance(request: Request, title: string, hrtime: [number, number]) {
-    if (logUtils.getLevel() !== logUtils.LEVELS.PERF) return;
+    if (log.getLevel() !== log.LEVELS.PERF) return;
 
     const runtime = process.hrtime(hrtime);
     const nanos = runtime[0] * 1_000_000_000 + runtime[1];
     const micros = nanos / 1000;
     const millis = micros / 1000;
 
-    logUtils.perf(`${request.id} ${title} took ${Math.round(millis)} ms.`);
+    log.perf(`${request.id} ${title} took ${Math.round(millis)} ms.`);
 }
 
 /**

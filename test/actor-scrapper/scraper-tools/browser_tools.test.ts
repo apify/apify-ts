@@ -1,5 +1,6 @@
 import { browserTools } from '@apify/scraper-tools';
-import { launchPuppeteer, KeyValueStore, logUtils } from '@crawlers/puppeteer';
+import { launchPuppeteer, KeyValueStore } from '@crawlers/puppeteer';
+import log from '@apify/log';
 import fs from 'fs-extra';
 import path from 'path';
 import sinon from 'sinon';
@@ -90,10 +91,10 @@ describe('browserTools.', () => {
         it('should work', async () => {
             let page = await browser.newPage();
 
-            const debug = sinon.spy(logUtils, 'debug');
-            const info = sinon.spy(logUtils, 'info');
-            const warning = sinon.spy(logUtils, 'warning');
-            const error = sinon.spy(logUtils, 'error');
+            const debug = sinon.spy(log, 'debug');
+            const info = sinon.spy(log, 'info');
+            const warning = sinon.spy(log, 'warning');
+            const error = sinon.spy(log, 'error');
 
             browserTools.dumpConsole(page);
             await page.evaluate(async () => {

@@ -1,4 +1,4 @@
-import defaultLog from '../utils_log';
+import { log as defaultLog } from '../utils_log';
 
 /**
  * Abstract class with pre-defined method to connect to the Crawlers class by the "use" crawler method.

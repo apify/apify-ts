@@ -1,16 +1,15 @@
+import { Actor, ApifyEnv } from 'apify';
 import {
-    Actor,
-    ApifyEnv,
     Dictionary,
     KeyValueStore,
-    logUtils,
     RecordOptions,
     Request,
     RequestOptions,
     RequestQueue,
     RequestQueueOperationOptions,
-} from 'apify';
+} from '@crawlers/core';
 import { puppeteerUtils } from '@crawlers/puppeteer';
+import log from '@apify/log';
 import contentTypeParser, { MediaType } from 'content-type';
 import { saveSnapshot, SnapshotOptions } from './browser_tools';
 import { META_KEY } from './consts';
@@ -60,7 +59,7 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
     private readonly [internalState]: InternalState;
 
     public readonly Actor = Actor;
-    public readonly log = logUtils;
+    public readonly log = log;
     public readonly puppeteerUtils = puppeteerUtils;
     public readonly input: any;
     public readonly env: ApifyEnv;
@@ -141,7 +140,6 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
 }
 
 // @ts-expect-error -- Extensions actually work but TS complains
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Context<
     Options extends ContextOptions = ContextOptions,
     ExtraFields extends ContextOptions['pageFunctionArguments'] = Options['pageFunctionArguments']

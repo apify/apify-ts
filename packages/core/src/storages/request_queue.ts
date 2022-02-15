@@ -9,7 +9,7 @@ import ow from 'ow';
 import { entries } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { sleep } from '../utils';
-import log from '../utils_log';
+import { log } from '../utils_log';
 import { Request, RequestOptions } from '../request';
 
 const MAX_CACHED_REQUESTS = 1_000_000;

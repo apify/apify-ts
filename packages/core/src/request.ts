@@ -3,7 +3,7 @@ import crypto, { BinaryLike } from 'crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
 import { AllowedHttpMethods } from 'apify-client';
-import defaultLog from './utils_log';
+import { log as defaultLog } from './utils_log';
 import { keys } from './typedefs';
 
 // new properties on the Request object breaks serialization
