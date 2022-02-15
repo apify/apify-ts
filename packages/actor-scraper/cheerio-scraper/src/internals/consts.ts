@@ -1,4 +1,4 @@
-import { Dictionary, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions, Session } from '@crawlers/core';
+import { Dictionary, ProxyConfigurationOptions, PseudoUrlInput, RequestOptions, Session } from '@crawlers/core';
 
 /**
  * Replicates the INPUT_SCHEMA with JavaScript types for quick reference
@@ -6,7 +6,7 @@ import { Dictionary, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions,
  */
 export interface Input {
     startUrls: RequestOptions[];
-    pseudoUrls: PseudoUrlObject[];
+    pseudoUrls: PseudoUrlInput[];
     keepUrlFragments: boolean;
     linkSelector?: string;
     pageFunction: string;

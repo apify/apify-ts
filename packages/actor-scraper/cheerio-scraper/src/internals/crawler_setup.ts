@@ -14,8 +14,7 @@ import {
     createProxyConfiguration,
     Dataset,
     Dictionary,
-    enqueueLinks,
-    HandleFailedRequestInput,
+    CheerioHandleFailedRequestInput,
     KeyValueStore,
     logUtils,
     PrepareRequestInputs,
@@ -25,7 +24,7 @@ import {
     RequestQueue,
 } from 'crawlers';
 import { Actor, ApifyEnv } from 'apify';
-import cheerio, { CheerioAPI } from 'cheerio';
+import cheerio from 'cheerio';
 import { readFile } from 'node:fs/promises';
 import { IncomingMessage } from 'node:http';
 import { dirname } from 'node:path';
@@ -231,7 +230,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         }
     }
 
-    private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
+    private _handleFailedRequestFunction({ request }: CheerioHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
@@ -303,7 +302,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // Enqueue more links if Pseudo URLs, a link selector and cheerio instance are available,
         // unless the user invoked the `skipLinks()` context function
         // or maxCrawlingDepth would be exceeded.
-        if (!state.skipLinks && $) await this._handleLinks($, request);
+        if (!state.skipLinks && $) await this._handleLinks(crawlingContext);
 
         // Save the `pageFunction`s result to the default dataset.
         await this._handleResult(request, response, pageFunctionResult as Dictionary);
@@ -317,7 +316,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return true;
     }
 
-    private async _handleLinks($: CheerioAPI, request: Request) {
+    private async _handleLinks({ request, enqueueLinks }: CheerioCrawlingContext) {
         if (!(this.input.linkSelector && this.requestQueue)) return;
         const currentDepth = (request.userData![META_KEY] as RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
@@ -327,18 +326,16 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         }
 
         await enqueueLinks({
-            $,
             selector: this.input.linkSelector,
             pseudoUrls: this.input.pseudoUrls,
-            requestQueue: this.requestQueue,
             baseUrl: request.loadedUrl,
             transformRequestFunction: (requestOptions) => {
-                requestOptions.userData = {
-                    [META_KEY]: {
-                        parentRequestId: request.id || request.uniqueKey,
-                        depth: currentDepth + 1,
-                    },
+                requestOptions.userData ??= {};
+                requestOptions.userData[META_KEY] = {
+                    parentRequestId: request.id || request.uniqueKey,
+                    depth: currentDepth + 1,
                 };
+
                 requestOptions.useExtendedUniqueKey = true;
                 requestOptions.keepUrlFragment = this.input.keepUrlFragments;
                 return requestOptions;

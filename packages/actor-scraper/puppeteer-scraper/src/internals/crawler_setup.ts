@@ -6,9 +6,6 @@ import {
     Awaitable,
     Dataset,
     Dictionary,
-    enqueueLinks,
-
-    EnqueueLinksOptions,
     KeyValueStore,
     logUtils,
     Request,
@@ -22,11 +19,12 @@ import {
     PuppeteerCrawler,
     PuppeteerCrawlerOptions,
     puppeteerUtils,
+    BrowserCrawlerEnqueueLinksOptions,
 } from 'crawlers';
 import { readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
-import { HTTPResponse, Page } from 'puppeteer';
+import { HTTPResponse } from 'puppeteer';
 import { Input, ProxyRotation } from './consts.js';
 
 const SESSION_STORE_NAME = 'APIFY-PUPPETEER-SCRAPER-SESSION-STORE';
@@ -293,7 +291,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * the data returned from the `pageFunction`.
      */
     private async _handlePageFunction(crawlingContext: PuppeteerCrawlContext) {
-        const { request, response, page, crawler } = crawlingContext;
+        const { request, response, crawler } = crawlingContext;
 
         /**
          * PRE-PROCESSING
@@ -341,7 +339,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // Enqueue more links if Pseudo URLs and a link selector are available,
         // unless the user invoked the `skipLinks()` context function
         // or maxCrawlingDepth would be exceeded.
-        if (!state.skipLinks) await this._handleLinks(page, request);
+        if (!state.skipLinks) await this._handleLinks(crawlingContext);
 
         // Save the `pageFunction`s result to the default dataset.
         await this._handleResult(request, response, pageFunctionResult as Dictionary);
@@ -355,7 +353,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return true;
     }
 
-    private async _handleLinks(page: Page, request: Request) {
+    private async _handleLinks({ request, enqueueLinks }: PuppeteerCrawlContext) {
         if (!this.requestQueue) return;
         const currentDepth = (request.userData![META_KEY] as RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
@@ -364,17 +362,15 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             return;
         }
 
-        const enqueueOptions: EnqueueLinksOptions = {
-            page,
+        const enqueueOptions: BrowserCrawlerEnqueueLinksOptions = {
             pseudoUrls: this.input.pseudoUrls,
-            requestQueue: this.requestQueue,
             transformRequestFunction: (requestOptions) => {
-                requestOptions.userData = {
-                    [META_KEY]: {
-                        parentRequestId: request.id || request.uniqueKey,
-                        depth: currentDepth + 1,
-                    },
+                requestOptions.userData ??= {};
+                requestOptions.userData[META_KEY] = {
+                    parentRequestId: request.id || request.uniqueKey,
+                    depth: currentDepth + 1,
                 };
+
                 requestOptions.useExtendedUniqueKey = true;
                 requestOptions.keepUrlFragment = this.input.keepUrlFragments;
                 return requestOptions;
@@ -384,6 +380,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         if (this.input.linkSelector) {
             await enqueueLinks({ ...enqueueOptions, selector: this.input.linkSelector });
         }
+
         if (this.input.clickableElementsSelector) {
             await puppeteerUtils.enqueueLinksByClickingElements({
                 ...enqueueOptions,

@@ -2,26 +2,29 @@ import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { concatStreamToBuffer, readStreamToString } from '@apify/utilities';
 import {
     BasicCrawler,
-    HandleFailedRequest,
-    HandleRequest,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
 import {
     Awaitable,
+    EnqueueLinksOptions,
     CheerioRoot,
     CrawlerExtension,
+    CrawlerHandleFailedRequestInput,
     CrawlingContext,
     diffCookies,
+    enqueueLinks,
     entries,
     mergeCookies,
     parseContentTypeFromResponse,
     ProxyConfiguration,
     ProxyInfo,
+    QueueOperationInfo,
     Request,
     requestAsBrowser,
     RequestAsBrowserOptions,
     RequestAsBrowserResult,
+    RequestQueue,
     Session,
     validators,
 } from '@crawlers/core';
@@ -50,7 +53,14 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
+export interface CheerioHandleFailedRequestInput<JSONData = unknown> extends CrawlerHandleFailedRequestInput, CheerioHandlePageInputs<JSONData> {}
+
+export type CheerioHandleFailedRequest<JSONData = unknown> = (inputs: CheerioHandleFailedRequestInput<JSONData>) => Awaitable<void>;
+
+export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
+    BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
+    'handleRequestFunction' | 'handleFailedRequestFunction'
+> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
@@ -136,7 +146,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * this function is therefore not supported, because it would create inconsistencies where
      * different parts of SDK would have access to a different {@link Request} instance.
      */
-    prepareRequestFunction?: PrepareRequest;
+    prepareRequestFunction?: PrepareRequest<JSONData>;
 
     /**
      * > This option is deprecated, use `postNavigationHooks` instead.
@@ -168,7 +178,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * ```
      * The response is an instance of Node's http.IncomingMessage object.
      */
-    postResponseFunction?: PostResponse;
+    postResponseFunction?: PostResponse<JSONData>;
 
     /**
      * Timeout in which the function passed as `handlePageFunction` needs to finish, given in seconds.
@@ -215,7 +225,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * See [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/cheerio_crawler.js#L13)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: CheerioHandleFailedRequest<JSONData>;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -285,7 +295,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
     persistCookiesPerSession?: boolean;
 }
 
-export interface PrepareRequestInputs {
+export interface PrepareRequestInputs<JSONData = unknown> {
     /**
      *  Original instance of the {@link Request} object. Must be modified in-place.
      */
@@ -301,16 +311,16 @@ export interface PrepareRequestInputs {
      * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
-    crawler?: CheerioCrawler;
+    crawler?: CheerioCrawler<JSONData>;
 }
 
-export type PrepareRequest = (inputs: PrepareRequestInputs) => Awaitable<void>;
+export type PrepareRequest<JSONData = unknown> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
 export type CheerioHook<JSONData = unknown> = (
     crawlingContext: CheerioCrawlingContext<JSONData>,
     requestAsBrowserOptions: RequestAsBrowserOptions,
 ) => Awaitable<void>;
 
-export interface PostResponseInputs {
+export interface PostResponseInputs<JSONData = unknown> {
     /**
      * stream
      */
@@ -331,10 +341,10 @@ export interface PostResponseInputs {
      * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
-    crawler: CheerioCrawler;
+    crawler: CheerioCrawler<JSONData>;
 }
 
-export type PostResponse = (inputs: PostResponseInputs) => Awaitable<void>;
+export type PostResponse<JSONData = unknown> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
 export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingContext {
     /**
@@ -356,12 +366,14 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
      * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
-    crawler: CheerioCrawler;
+    crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
+    enqueueLinks: (options: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
 export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageInputs<JSONData>) => Awaitable<void>;
+export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls' | 'requestQueue'>;
 
 /**
  * Provides a framework for the parallel crawling of web pages using plain HTTP requests and
@@ -448,7 +460,10 @@ export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageIn
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
+export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
+    CheerioCrawlingContext<JSONData>,
+    CheerioHandleFailedRequestInput<JSONData>
+> {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -466,8 +481,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
     protected ignoreSslErrors: boolean;
     protected suggestResponseEncoding?: string;
     protected forceResponseEncoding?: string;
-    protected prepareRequestFunction?: PrepareRequest;
-    protected postResponseFunction?: PostResponse;
+    protected prepareRequestFunction?: PrepareRequest<JSONData>;
+    protected postResponseFunction?: PostResponse<JSONData>;
     protected readonly supportedMimeTypes: Set<string>;
 
     protected static override optionsShape = {
@@ -520,7 +535,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
-            handleRequestFunction: handlePageFunction as HandleRequest,
+            handleRequestFunction: handlePageFunction,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
@@ -636,6 +651,10 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         crawlingContext.$ = $!;
         crawlingContext.contentType = contentType;
         crawlingContext.response = response;
+        crawlingContext.enqueueLinks = async (enqueueOptions) => {
+            return cheerioCrawlerEnqueueLinks(enqueueOptions, $, await this.getRequestQueue());
+        };
+
         Object.defineProperty(crawlingContext, 'json', {
             get() {
                 if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
@@ -643,6 +662,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
                 return JSON.parse(jsonString);
             },
         });
+
         Object.defineProperty(crawlingContext, 'body', {
             get() {
                 // NOTE: For XML/HTML documents, we don't store the original body and only reconstruct it from Cheerio's DOM.
@@ -935,9 +955,46 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
     }
 }
 
+export async function cheerioCrawlerEnqueueLinks(options: CheerioCrawlerEnqueueLinksOptions, $: CheerioRoot | null, requestQueue?: RequestQueue) {
+    if (!$) {
+        throw new Error('Cannot enqueue links because the DOM is not available.');
+    }
+
+    const urls = extractUrlsFromCheerio($, options.selector ?? 'a', options.baseUrl);
+
+    return enqueueLinks({
+        requestQueue: requestQueue ?? await RequestQueue.open(),
+        urls,
+        ...options,
+    });
+}
+
 interface RequestFunctionOptions {
     request: Request;
     session?: Session;
     proxyUrl?: string;
     requestAsBrowserOptions: RequestAsBrowserOptions;
+}
+
+/**
+ * Extracts URLs from a given Cheerio object.
+ * @todo how to support cheerio.Selector?
+ * @ignore
+ */
+function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: string): string[] {
+    return $(selector)
+        .map((_i, el) => $(el).attr('href'))
+        .get()
+        .filter((href) => !!href)
+        .map((href) => {
+            // Throw a meaningful error when only a relative URL would be extracted instead of waiting for the Request to fail later.
+            const isHrefAbsolute = /^[a-z][a-z0-9+.-]*:/.test(href); // Grabbed this in 'is-absolute-url' package.
+            if (!isHrefAbsolute && !baseUrl) {
+                throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
+                    + 'Use options.baseUrl in utils.enqueueLinks() to automatically resolve relative URLs.');
+            }
+            return baseUrl
+                ? (new URL(href, baseUrl)).href
+                : href;
+        });
 }

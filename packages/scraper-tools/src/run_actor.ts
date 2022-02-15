@@ -1,12 +1,15 @@
-import { type BasicCrawler } from '@crawlers/basic';
 import { Actor, logUtils } from 'apify';
 
 export interface CrawlerSetup {
     name: string;
-    createCrawler: () => Promise<BasicCrawler>;
+    createCrawler: () => Promise<CommonCrawler>;
 }
 
 export type CrawlerSetupConstructor = new (input: any) => CrawlerSetup;
+
+export interface CommonCrawler {
+    run(): Promise<void>;
+}
 
 export function runActor(CrawlerSetup: CrawlerSetupConstructor) {
     Actor.main(async () => {

@@ -12,7 +12,6 @@ import {
     CheerioHandlePageInputs,
     Dictionary,
     entries,
-    HandleFailedRequestInput,
     PrepareRequestInputs,
     ProxyInfo,
     Source,
@@ -28,6 +27,7 @@ import {
     RequestList,
     createProxyConfiguration,
     requestUtils,
+    CheerioHandleFailedRequestInput,
 } from 'crawlers';
 import { IncomingHttpHeaders, Server } from 'http';
 import { AddressInfo } from 'net';
@@ -1178,8 +1178,7 @@ describe('CheerioCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = (crawlingContext: HandleFailedRequestInput) => {
-                // @ts-expect-error
+            const handleFailedRequestFunction = (crawlingContext: CheerioHandleFailedRequestInput) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);

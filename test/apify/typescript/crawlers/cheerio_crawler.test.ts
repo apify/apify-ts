@@ -24,6 +24,7 @@ describe('CheerioCrawler TS', () => {
                 contentType: { type: 'text/html', encoding: 'utf-8' },
                 response: null as any,
                 crawler: null as any,
+                enqueueLinks: null as any,
             };
         });
 

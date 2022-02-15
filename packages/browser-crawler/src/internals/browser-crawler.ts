@@ -1,20 +1,24 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import {
     Awaitable,
+    EnqueueLinksOptions,
+    CrawlerHandleFailedRequestInput,
     CrawlingContext,
     Dictionary,
+    enqueueLinks,
+    EVENT_SESSION_RETIRED,
     handleRequestTimeout,
     ProxyConfiguration,
     ProxyInfo,
+    QueueOperationInfo,
+    RequestQueue,
     Session,
     throwOnBlockedRequest,
     validators,
-    EVENT_SESSION_RETIRED,
 } from '@crawlers/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
     BasicCrawler,
-    HandleFailedRequestInput,
     BasicCrawlerOptions,
 } from '@crawlers/basic';
 import {
@@ -40,15 +44,18 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
+    enqueueLinks: (options: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
-export interface BrowserCrawlerHandleFailedRequestInput extends HandleFailedRequestInput {
+export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
     crawler: BrowserCrawler;
 }
 
 export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserCrawlerHandleFailedRequestInput) => Awaitable<void>;
 
 export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
+
+export type BrowserCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue' | 'urls'>
 
 export type BrowserHook<
     Context = BrowserCrawlingContext,
@@ -463,6 +470,10 @@ export abstract class BrowserCrawler<
         if (!crawlingContext.proxyInfo) {
             crawlingContext.proxyInfo = browserControllerInstance.launchContext.proxyInfo as ProxyInfo;
         }
+
+        crawlingContext.enqueueLinks = async (enqueueOptions) => {
+            return browserCrawlerEnqueueLinks(enqueueOptions, page, await this.getRequestQueue());
+        };
     }
 
     protected async _handleNavigation(crawlingContext: Context) {
@@ -571,4 +582,23 @@ export abstract class BrowserCrawler<
         await this.browserPool.destroy();
         await super.teardown();
     }
+}
+
+export async function browserCrawlerEnqueueLinks(options: BrowserCrawlerEnqueueLinksOptions, page: CommonPage, requestQueue?: RequestQueue) {
+    const urls = await extractUrlsFromPage(page as any, options.selector ?? 'a');
+
+    return enqueueLinks({
+        requestQueue: requestQueue ?? await RequestQueue.open(),
+        urls,
+        ...options,
+    });
+}
+
+/**
+ * Extracts URLs from a given page.
+ * @ignore
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
+    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.href).filter((href) => !!href));
 }
