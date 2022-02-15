@@ -24,6 +24,7 @@ import {
     requestAsBrowser,
     RequestAsBrowserOptions,
     RequestAsBrowserResult,
+    RequestQueue,
     Session,
     validators,
 } from '@crawlers/core';
@@ -641,17 +642,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<CheerioCraw
         crawlingContext.contentType = contentType;
         crawlingContext.response = response;
         crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            if (!$) {
-                throw new Error('Cannot enqueue links because the DOM is not available.');
-            }
-
-            const urls = extractUrlsFromCheerio($, enqueueOptions.selector ?? 'a', enqueueOptions.baseUrl);
-
-            return enqueueLinks({
-                requestQueue: await this.getRequestQueue(),
-                urls,
-                ...enqueueOptions,
-            });
+            return cheerioCrawlerEnqueueLinks(enqueueOptions, $, await this.getRequestQueue());
         };
 
         Object.defineProperty(crawlingContext, 'json', {
@@ -952,6 +943,20 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<CheerioCraw
     private _requestAsBrowser(options: RequestAsBrowserOptions): Promise<RequestAsBrowserResult> {
         return requestAsBrowser(options);
     }
+}
+
+export async function cheerioCrawlerEnqueueLinks(options: CheerioCrawlerEnqueueLinksOptions, $: CheerioRoot | null, requestQueue?: RequestQueue) {
+    if (!$) {
+        throw new Error('Cannot enqueue links because the DOM is not available.');
+    }
+
+    const urls = extractUrlsFromCheerio($, options.selector ?? 'a', options.baseUrl);
+
+    return enqueueLinks({
+        requestQueue: requestQueue ?? await RequestQueue.open(),
+        urls,
+        ...options,
+    });
 }
 
 interface RequestFunctionOptions {

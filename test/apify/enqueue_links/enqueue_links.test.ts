@@ -1,8 +1,19 @@
-import cheerio from 'cheerio';
-import { CheerioRoot, Configuration, Request, RequestOptions, RequestQueue, enqueueLinks, launchPuppeteer, launchPlaywright, PseudoUrl } from 'crawlers';
 import log from '@apify/log';
-import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
+import cheerio from 'cheerio';
+import {
+    browserCrawlerEnqueueLinks,
+    cheerioCrawlerEnqueueLinks,
+    CheerioRoot,
+    Configuration,
+    launchPlaywright,
+    launchPuppeteer,
+    PseudoUrl,
+    Request,
+    RequestOptions,
+    RequestQueue,
+} from 'crawlers';
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
+import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 
 const apifyClient = Configuration.getDefaultClient();
 
@@ -70,7 +81,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ page, limit: 3, selector: '.click', requestQueue });
+            await browserCrawlerEnqueueLinks({ limit: 3, selector: '.click' }, page, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -103,7 +114,7 @@ describe('enqueueLinks()', () => {
                 new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
+            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -130,11 +141,11 @@ describe('enqueueLinks()', () => {
             };
 
             const pseudoUrls = [
-                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' },
+                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
             ];
 
-            await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
+            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -164,7 +175,7 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
+            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -195,7 +206,7 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
+            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -221,7 +232,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ page, selector: '.click', requestQueue });
+            await browserCrawlerEnqueueLinks({ selector: '.click' }, page, requestQueue);
 
             expect(enqueued).toHaveLength(4);
 
@@ -251,7 +262,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls: null });
+            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: null }, page, requestQueue);
 
             expect(enqueued).toHaveLength(4);
 
@@ -281,7 +292,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls: [] });
+            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: [] }, page, requestQueue);
 
             expect(enqueued).toHaveLength(4);
 
@@ -318,7 +329,7 @@ describe('enqueueLinks()', () => {
             ];
 
             try {
-                await enqueueLinks({ page, selector: '.click', requestQueue, pseudoUrls });
+                await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
                 throw new Error('Wrong error.');
             } catch (err) {
                 expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
@@ -351,7 +362,7 @@ describe('enqueueLinks()', () => {
                 new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -381,7 +392,7 @@ describe('enqueueLinks()', () => {
                 new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -407,11 +418,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             const pseudoUrls = [
-                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' },
+                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
             ];
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -440,7 +451,7 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -469,7 +480,7 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
 
             expect(enqueued).toHaveLength(3);
 
@@ -494,7 +505,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ $, selector: '.click', requestQueue });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click' }, $, requestQueue);
 
             expect(enqueued).toHaveLength(4);
 
@@ -523,7 +534,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls: null });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: null }, $, requestQueue);
 
             expect(enqueued).toHaveLength(4);
 
@@ -552,7 +563,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls: [] });
+            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: [] }, $, requestQueue);
 
             expect(enqueued).toHaveLength(4);
 
@@ -587,7 +598,7 @@ describe('enqueueLinks()', () => {
             ];
 
             try {
-                await enqueueLinks({ $, selector: '.click', requestQueue, pseudoUrls });
+                await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
                 throw new Error('Wrong error.');
             } catch (err) {
                 expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
@@ -603,7 +614,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await enqueueLinks({ $, requestQueue, baseUrl: 'http://www.absolute.com/removethis/' });
+            await cheerioCrawlerEnqueueLinks({ baseUrl: 'http://www.absolute.com/removethis/' }, $, requestQueue);
 
             expect(enqueued).toHaveLength(7);
 
@@ -644,7 +655,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             try {
-                await enqueueLinks({ $, requestQueue });
+                await cheerioCrawlerEnqueueLinks({}, $, requestQueue);
                 throw new Error('wrong error');
             } catch (err) {
                 expect((err as Error).message).toMatch('/x/absolutepath');

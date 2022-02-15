@@ -13,6 +13,7 @@ import {
     BaseEnqueueLinksOptions,
     QueueOperationInfo,
     enqueueLinks,
+    RequestQueue,
 } from '@crawlers/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -471,13 +472,7 @@ export abstract class BrowserCrawler<
         }
 
         crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            const urls = await extractUrlsFromPage(page as any, enqueueOptions.selector ?? 'a');
-
-            return enqueueLinks({
-                requestQueue: await this.getRequestQueue(),
-                urls,
-                ...enqueueOptions,
-            });
+            return browserCrawlerEnqueueLinks(enqueueOptions, page, await this.getRequestQueue());
         };
     }
 
@@ -587,6 +582,16 @@ export abstract class BrowserCrawler<
         await this.browserPool.destroy();
         await super.teardown();
     }
+}
+
+export async function browserCrawlerEnqueueLinks(options: BrowserCrawlerEnqueueLinksOptions, page: CommonPage, requestQueue?: RequestQueue) {
+    const urls = await extractUrlsFromPage(page as any, options.selector ?? 'a');
+
+    return enqueueLinks({
+        requestQueue: requestQueue ?? await RequestQueue.open(),
+        urls,
+        ...options,
+    });
 }
 
 /**

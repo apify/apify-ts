@@ -605,10 +605,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
             crawler: this,
             ...options,
             enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {
-                return enqueueLinks({
-                    requestQueue: await this.getRequestQueue(),
-                    ...enqueueOptions,
-                });
+                return basicCrawlerEnqueueLinks(enqueueOptions, await this.getRequestQueue());
             },
         };
 
@@ -747,6 +744,13 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
             await this.sessionPool!.teardown();
         }
     }
+}
+
+export async function basicCrawlerEnqueueLinks(options: BasicCrawlerEnqueueLinksOptions, requestQueue?: RequestQueue) {
+    return enqueueLinks({
+        requestQueue: requestQueue ?? await RequestQueue.open(),
+        ...options,
+    });
 }
 
 export interface CreateContextOptions {
