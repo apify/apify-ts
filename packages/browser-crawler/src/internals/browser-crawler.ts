@@ -1,24 +1,24 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import {
     Awaitable,
+    BaseEnqueueLinksOptions,
+    CrawlerHandleFailedRequestInput,
     CrawlingContext,
     Dictionary,
+    enqueueLinks,
+    EVENT_SESSION_RETIRED,
     handleRequestTimeout,
     ProxyConfiguration,
     ProxyInfo,
+    QueueOperationInfo,
+    RequestQueue,
     Session,
     throwOnBlockedRequest,
     validators,
-    EVENT_SESSION_RETIRED,
-    BaseEnqueueLinksOptions,
-    QueueOperationInfo,
-    enqueueLinks,
-    RequestQueue,
 } from '@crawlers/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
     BasicCrawler,
-    HandleFailedRequestInput,
     BasicCrawlerOptions,
 } from '@crawlers/basic';
 import {
@@ -47,7 +47,7 @@ export interface BrowserCrawlingContext<
     enqueueLinks: (options: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
-export interface BrowserCrawlerHandleFailedRequestInput extends HandleFailedRequestInput {
+export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
     crawler: BrowserCrawler;
 }
 

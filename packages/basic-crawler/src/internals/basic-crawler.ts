@@ -7,6 +7,7 @@ import {
     AutoscaledPoolOptions,
     Awaitable,
     BaseEnqueueLinksOptions,
+    CrawlerHandleFailedRequestInput,
     enqueueLinks,
     events,
     openSessionPool,
@@ -29,11 +30,8 @@ export interface BasicCrawlerCrawlingContext extends CrawlingContext {
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
-export interface HandleFailedRequestInput extends CrawlingContext {
-    /**
-     * The Error thrown by `handleRequestFunction`.
-     */
-    error: Error;
+export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
+    crawler: BasicCrawler<BasicCrawlerCrawlingContext>;
 }
 
 export type BasicCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'requestQueue'>
@@ -51,9 +49,12 @@ const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
 export type HandleRequest<Context extends CrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
-export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
+export type HandleFailedRequest<Inputs extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput> = (inputs: Inputs) => Awaitable<void>;
 
-export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCrawlerCrawlingContext> {
+export interface BasicCrawlerOptions<
+    Context extends CrawlingContext = BasicCrawlerCrawlingContext,
+    ErrorContext extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput
+> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
@@ -117,7 +118,7 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
      * [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/basic_crawler.js#L11)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: HandleFailedRequest<ErrorContext>;
 
     /**
      * Indicates how many times the request is retried if {@link handleRequestFunction} or {@link handlePageFunction} fails.
@@ -226,7 +227,10 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
  * ```
  * @category Crawlers
  */
-export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawlingContext> {
+export class BasicCrawler<
+    Context extends CrawlingContext = BasicCrawlerCrawlingContext,
+    ErrorContext extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput,
+> {
     /**
      * Static list of URLs to be processed.
      */
@@ -264,8 +268,8 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
 
     protected log: Log;
     protected userProvidedHandler: HandleRequest<Context>;
-    protected failedContextHandler?: HandleFailedRequest;
-    protected handleFailedRequestFunction?: HandleFailedRequest;
+    protected failedContextHandler?: HandleFailedRequest<ErrorContext>;
+    protected handleFailedRequestFunction?: HandleFailedRequest<ErrorContext>;
     protected handleRequestTimeoutMillis: number;
     protected internalTimeoutMillis: number;
     protected maxRequestRetries: number;
@@ -302,7 +306,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions<Context>) {
+    constructor(options: BasicCrawlerOptions<Context, ErrorContext>) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {
@@ -553,10 +557,16 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
         this.stats.startJob(statisticsId);
 
         // Shared crawling context
-        const crawlingContext = this._createContext({
+        // @ts-expect-error It is assignable, but TS says otherwise...
+        const crawlingContext: Context = {
+            id: cryptoRandomObjectId(10),
+            crawler: this,
             request,
             session,
-        });
+            enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {
+                return basicCrawlerEnqueueLinks(enqueueOptions, await this.getRequestQueue());
+            },
+        };
 
         this.crawlingContexts.set(crawlingContext.id, crawlingContext);
 
@@ -596,20 +606,6 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
         } finally {
             this.crawlingContexts.delete(crawlingContext.id);
         }
-    }
-
-    protected _createContext(options: CreateContextOptions): Context {
-        // @ts-expect-error It is assignable, but TS says otherwise...
-        const context: Context = {
-            id: cryptoRandomObjectId(10),
-            crawler: this,
-            ...options,
-            enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {
-                return basicCrawlerEnqueueLinks(enqueueOptions, await this.getRequestQueue());
-            },
-        };
-
-        return context;
     }
 
     /**
@@ -689,7 +685,8 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.url);
 
-            const handleFailedErrorContext: HandleFailedRequestInput = {
+            // @ts-expect-error It is assignable, but TS says otherwise...
+            const handleFailedErrorContext: ErrorContext = {
                 ...crawlingContext,
                 error,
             };
@@ -698,7 +695,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawling
         }
     }
 
-    protected async _handleFailedRequestFunction(crawlingContext: HandleFailedRequestInput): Promise<void> {
+    protected async _handleFailedRequestFunction(crawlingContext: ErrorContext): Promise<void> {
         if (this.failedContextHandler) {
             await this.failedContextHandler(crawlingContext);
         } else {

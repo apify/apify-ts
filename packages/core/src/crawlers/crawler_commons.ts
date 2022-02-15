@@ -16,3 +16,10 @@ export interface CrawlingContext extends Record<PropertyKey, unknown> {
      */
     proxyInfo?: ProxyInfo;
 }
+
+export interface CrawlerHandleFailedRequestInput extends CrawlingContext {
+    /**
+     * The Error thrown by `handleRequestFunction`.
+     */
+    error: Error;
+}

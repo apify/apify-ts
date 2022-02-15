@@ -2,7 +2,6 @@ import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { concatStreamToBuffer, readStreamToString } from '@apify/utilities';
 import {
     BasicCrawler,
-    HandleFailedRequest,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
@@ -11,6 +10,7 @@ import {
     BaseEnqueueLinksOptions,
     CheerioRoot,
     CrawlerExtension,
+    CrawlerHandleFailedRequestInput,
     CrawlingContext,
     diffCookies,
     enqueueLinks,
@@ -53,7 +53,14 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCrawlerOptions, 'handleRequestFunction'> {
+export interface CheerioHandleFailedRequestInput<JSONData = unknown> extends CrawlerHandleFailedRequestInput, CheerioHandlePageInputs<JSONData> {}
+
+export type CheerioHandleFailedRequest<JSONData = unknown> = (inputs: CheerioHandleFailedRequestInput<JSONData>) => Awaitable<void>;
+
+export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
+    BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
+    'handleRequestFunction' | 'handleFailedRequestFunction'
+> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
@@ -139,7 +146,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * this function is therefore not supported, because it would create inconsistencies where
      * different parts of SDK would have access to a different {@link Request} instance.
      */
-    prepareRequestFunction?: PrepareRequest;
+    prepareRequestFunction?: PrepareRequest<JSONData>;
 
     /**
      * > This option is deprecated, use `postNavigationHooks` instead.
@@ -171,7 +178,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * ```
      * The response is an instance of Node's http.IncomingMessage object.
      */
-    postResponseFunction?: PostResponse;
+    postResponseFunction?: PostResponse<JSONData>;
 
     /**
      * Timeout in which the function passed as `handlePageFunction` needs to finish, given in seconds.
@@ -218,7 +225,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
      * See [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/cheerio_crawler.js#L13)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: HandleFailedRequest;
+    handleFailedRequestFunction?: CheerioHandleFailedRequest<JSONData>;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -288,7 +295,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<BasicCra
     persistCookiesPerSession?: boolean;
 }
 
-export interface PrepareRequestInputs {
+export interface PrepareRequestInputs<JSONData = unknown> {
     /**
      *  Original instance of the {@link Request} object. Must be modified in-place.
      */
@@ -304,16 +311,16 @@ export interface PrepareRequestInputs {
      * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
-    crawler?: CheerioCrawler;
+    crawler?: CheerioCrawler<JSONData>;
 }
 
-export type PrepareRequest = (inputs: PrepareRequestInputs) => Awaitable<void>;
+export type PrepareRequest<JSONData = unknown> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
 export type CheerioHook<JSONData = unknown> = (
     crawlingContext: CheerioCrawlingContext<JSONData>,
     requestAsBrowserOptions: RequestAsBrowserOptions,
 ) => Awaitable<void>;
 
-export interface PostResponseInputs {
+export interface PostResponseInputs<JSONData = unknown> {
     /**
      * stream
      */
@@ -334,10 +341,10 @@ export interface PostResponseInputs {
      * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
-    crawler: CheerioCrawler;
+    crawler: CheerioCrawler<JSONData>;
 }
 
-export type PostResponse = (inputs: PostResponseInputs) => Awaitable<void>;
+export type PostResponse<JSONData = unknown> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
 export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingContext {
     /**
@@ -359,7 +366,7 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
      * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
-    crawler: CheerioCrawler;
+    crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
     enqueueLinks: (options: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
@@ -453,7 +460,10 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'u
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<CheerioCrawlingContext<JSONData>> {
+export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
+    CheerioCrawlingContext<JSONData>,
+    CheerioHandleFailedRequestInput<JSONData>
+> {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -471,8 +481,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<CheerioCraw
     protected ignoreSslErrors: boolean;
     protected suggestResponseEncoding?: string;
     protected forceResponseEncoding?: string;
-    protected prepareRequestFunction?: PrepareRequest;
-    protected postResponseFunction?: PostResponse;
+    protected prepareRequestFunction?: PrepareRequest<JSONData>;
+    protected postResponseFunction?: PostResponse<JSONData>;
     protected readonly supportedMimeTypes: Set<string>;
 
     protected static override optionsShape = {

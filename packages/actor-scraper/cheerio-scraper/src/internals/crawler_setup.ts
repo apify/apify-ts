@@ -14,7 +14,7 @@ import {
     createProxyConfiguration,
     Dataset,
     Dictionary,
-    HandleFailedRequestInput,
+    CheerioHandleFailedRequestInput,
     KeyValueStore,
     logUtils,
     PrepareRequestInputs,
@@ -230,7 +230,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         }
     }
 
-    private _handleFailedRequestFunction({ request }: HandleFailedRequestInput) {
+    private _handleFailedRequestFunction({ request }: CheerioHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
