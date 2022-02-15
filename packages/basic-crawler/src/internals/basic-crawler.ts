@@ -6,8 +6,12 @@ import {
     AutoscaledPool,
     AutoscaledPoolOptions,
     Awaitable,
+    BaseEnqueueLinksOptions,
+    enqueueLinks,
     events,
     openSessionPool,
+    ProxyInfo,
+    QueueOperationInfo,
     Request,
     RequestList,
     RequestQueue,
@@ -21,15 +25,18 @@ import {
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
-    crawler: BasicCrawler;
+    crawler: BasicCrawler<BasicCrawlerCrawlingContext>;
+    enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
-export interface HandleFailedRequestInput extends BasicCrawlerCrawlingContext {
+export interface HandleFailedRequestInput extends CrawlingContext {
     /**
      * The Error thrown by `handleRequestFunction`.
      */
     error: Error;
 }
+
+export type BasicCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'requestQueue'>
 
 /**
  * Since there's no set number of seconds before the container is terminated after
@@ -42,11 +49,11 @@ export interface HandleFailedRequestInput extends BasicCrawlerCrawlingContext {
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export type HandleRequest<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Inputs) => Awaitable<void>;
+export type HandleRequest<Context extends CrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
 export type HandleFailedRequest = (inputs: HandleFailedRequestInput) => Awaitable<void>;
 
-export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
+export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCrawlerCrawlingContext> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
@@ -71,7 +78,7 @@ export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext 
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handleRequestFunction: HandleRequest<Inputs>;
+    handleRequestFunction: HandleRequest<Context>;
 
     /**
      * Static list of URLs to be processed.
@@ -219,7 +226,7 @@ export interface BasicCrawlerOptions<Inputs extends BasicCrawlerCrawlingContext 
  * ```
  * @category Crawlers
  */
-export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCrawlerCrawlingContext> {
+export class BasicCrawler<Context extends CrawlingContext = BasicCrawlerCrawlingContext> {
     /**
      * Static list of URLs to be processed.
      */
@@ -256,7 +263,7 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
     autoscaledPool?: AutoscaledPool;
 
     protected log: Log;
-    protected userProvidedHandler: HandleRequest;
+    protected userProvidedHandler: HandleRequest<Context>;
     protected failedContextHandler?: HandleFailedRequest;
     protected handleFailedRequestFunction?: HandleFailedRequest;
     protected handleRequestTimeoutMillis: number;
@@ -265,7 +272,7 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
     protected handledRequestsCount: number;
     protected sessionPoolOptions: SessionPoolOptions;
     protected useSessionPool: boolean;
-    protected crawlingContexts = new Map<string, BasicCrawlerCrawlingContext>();
+    protected crawlingContexts = new Map<string, Context>();
     protected isRunningPromise?: Promise<void>;
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
 
@@ -295,7 +302,7 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions<Inputs>) {
+    constructor(options: BasicCrawlerOptions<Context>) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {
@@ -428,6 +435,12 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
         }
     }
 
+    async getRequestQueue() {
+        this.requestQueue ??= await RequestQueue.open();
+
+        return this.requestQueue!;
+    }
+
     protected async _init(): Promise<void> {
         // Initialize AutoscaledPool before awaiting _loadHandledRequestCount(),
         // so that the caller can get a reference to it before awaiting the promise returned from run()
@@ -443,7 +456,7 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestFunction(crawlingContext: BasicCrawlerCrawlingContext): Promise<void> {
+    protected async _handleRequestFunction(crawlingContext: Context): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
@@ -540,12 +553,10 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
         this.stats.startJob(statisticsId);
 
         // Shared crawling context
-        const crawlingContext: BasicCrawlerCrawlingContext = {
-            id: cryptoRandomObjectId(10),
-            crawler: this,
+        const crawlingContext = this._createContext({
             request,
             session,
-        };
+        });
 
         this.crawlingContexts.set(crawlingContext.id, crawlingContext);
 
@@ -587,11 +598,28 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
         }
     }
 
+    protected _createContext(options: CreateContextOptions): Context {
+        // @ts-expect-error It is assignable, but TS says otherwise...
+        const context: Context = {
+            id: cryptoRandomObjectId(10),
+            crawler: this,
+            ...options,
+            enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {
+                return enqueueLinks({
+                    requestQueue: await this.getRequestQueue(),
+                    ...enqueueOptions,
+                });
+            },
+        };
+
+        return context;
+    }
+
     /**
      * Run async callback with given timeout and retry.
      * @ignore
      */
-    async _timeoutAndRetry(handler: () => Promise<unknown>, timeout: number, error: Error | string, maxRetries = 3, retried = 1): Promise<void> {
+    protected async _timeoutAndRetry(handler: () => Promise<unknown>, timeout: number, error: Error | string, maxRetries = 3, retried = 1): Promise<void> {
         try {
             await addTimeoutToPromise(
                 handler,
@@ -640,7 +668,7 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
      */
     protected async _requestFunctionErrorHandler(
         error: Error,
-        crawlingContext: BasicCrawlerCrawlingContext,
+        crawlingContext: Context,
         source: RequestList | RequestQueue,
     ): Promise<void> {
         const { request } = crawlingContext;
@@ -663,8 +691,13 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
             this.handledRequestsCount++;
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.url);
-            crawlingContext.error = error;
-            await this._handleFailedRequestFunction(crawlingContext as HandleFailedRequestInput); // This function prints an error message.
+
+            const handleFailedErrorContext: HandleFailedRequestInput = {
+                ...crawlingContext,
+                error,
+            };
+
+            await this._handleFailedRequestFunction(handleFailedErrorContext); // This function prints an error message.
         }
     }
 
@@ -714,4 +747,10 @@ export class BasicCrawler<Inputs extends BasicCrawlerCrawlingContext = BasicCraw
             await this.sessionPool!.teardown();
         }
     }
+}
+
+export interface CreateContextOptions {
+    request: Request;
+    session?: Session;
+    proxyInfo?: ProxyInfo;
 }

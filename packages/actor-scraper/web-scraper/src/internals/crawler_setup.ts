@@ -13,8 +13,6 @@ import {
     createProxyConfiguration,
     Dataset,
     Dictionary,
-    enqueueLinks,
-    EnqueueLinksOptions,
     KeyValueStore,
     logUtils,
     Request,
@@ -474,7 +472,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // unless the user invoked the `skipLinks()` context function
         // or maxCrawlingDepth would be exceeded.
         if (!pageContext.skipLinks) {
-            await this._handleLinks(page, request);
+            await this._handleLinks(crawlingContext);
         }
 
         // Save the `pageFunction`s result (or just metadata) to the default dataset.
@@ -496,7 +494,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return true;
     }
 
-    private async _handleLinks(page: Page, request: Request) {
+    private async _handleLinks({ request, enqueueLinks }: PuppeteerCrawlContext) {
         if (!(this.input.linkSelector && this.requestQueue)) return;
         const start = process.hrtime();
 
@@ -507,25 +505,21 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             return;
         }
 
-        const enqueueOptions: EnqueueLinksOptions = {
-            page,
+        await enqueueLinks({
             selector: this.input.linkSelector,
             pseudoUrls: this.input.pseudoUrls,
-            requestQueue: this.requestQueue,
             transformRequestFunction: (requestOptions) => {
-                requestOptions.userData = {
-                    [META_KEY]: {
-                        parentRequestId: request.id || request.uniqueKey,
-                        depth: currentDepth + 1,
-                    },
+                requestOptions.userData ??= {};
+                requestOptions.userData[META_KEY] = {
+                    parentRequestId: request.id || request.uniqueKey,
+                    depth: currentDepth + 1,
                 };
+
                 requestOptions.useExtendedUniqueKey = true;
                 requestOptions.keepUrlFragment = this.input.keepUrlFragments;
                 return requestOptions;
             },
-        };
-
-        await enqueueLinks(enqueueOptions);
+        });
 
         tools.logPerformance(request, 'handleLinks EXECUTION', start);
     }

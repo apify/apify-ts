@@ -10,6 +10,9 @@ import {
     throwOnBlockedRequest,
     validators,
     EVENT_SESSION_RETIRED,
+    BaseEnqueueLinksOptions,
+    QueueOperationInfo,
+    enqueueLinks,
 } from '@crawlers/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -40,6 +43,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
+    enqueueLinks: (options: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends HandleFailedRequestInput {
@@ -49,6 +53,8 @@ export interface BrowserCrawlerHandleFailedRequestInput extends HandleFailedRequ
 export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserCrawlerHandleFailedRequestInput) => Awaitable<void>;
 
 export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
+
+export type BrowserCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'requestQueue' | 'urls'>
 
 export type BrowserHook<
     Context = BrowserCrawlingContext,
@@ -463,6 +469,16 @@ export abstract class BrowserCrawler<
         if (!crawlingContext.proxyInfo) {
             crawlingContext.proxyInfo = browserControllerInstance.launchContext.proxyInfo as ProxyInfo;
         }
+
+        crawlingContext.enqueueLinks = async (enqueueOptions) => {
+            const urls = await extractUrlsFromPage(page as any, enqueueOptions.selector ?? 'a');
+
+            return enqueueLinks({
+                requestQueue: await this.getRequestQueue(),
+                urls,
+                ...enqueueOptions,
+            });
+        };
     }
 
     protected async _handleNavigation(crawlingContext: Context) {
@@ -571,4 +587,13 @@ export abstract class BrowserCrawler<
         await this.browserPool.destroy();
         await super.teardown();
     }
+}
+
+/**
+ * Extracts URLs from a given page.
+ * @ignore
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
+    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.href).filter((href) => !!href));
 }

@@ -1,6 +1,4 @@
-import ow, { ArgumentError } from 'ow';
-import { URL } from 'url';
-import log from '../utils_log';
+import ow from 'ow';
 import {
     constructPseudoUrlInstances,
     createRequests,
@@ -10,24 +8,14 @@ import {
     PseudoUrlInput,
 } from './shared';
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
-import { PseudoUrl } from '../pseudo_url';
 import { validators } from '../validators';
-import { CheerioRoot } from '../utils';
 
-export interface EnqueueLinksOptions {
+export interface BaseEnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
     limit?: number;
-    /**
-     * Puppeteer [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
-     * Either `page` or `$` option must be provided.
-     */
-    page?: import('puppeteer').Page | import('playwright').Page;
 
-    /**
-     * [`Cheerio`](https://github.com/cheeriojs/cheerio) function with loaded HTML.
-     * Either `page` or `$` option must be provided.
-     */
-    $?: CheerioRoot;
+    /** An array of URLs to enqueue. */
+    urls: string[];
 
     /** A request queue to which the URLs will be enqueued. */
     requestQueue: RequestQueue;
@@ -52,7 +40,7 @@ export interface EnqueueLinksOptions {
      * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    pseudoUrls?: Record<string, unknown>[] | PseudoUrl[] | RegExp[] | string[] | null;
+    pseudoUrls?: PseudoUrlInput | PseudoUrlInput[] | null;
 
     /**
      * Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used
@@ -102,34 +90,22 @@ export interface EnqueueLinksOptions {
  * });
  * ```
  *
- * @param {object} options
+ * @param options
  *   All `enqueueLinks()` parameters are passed via an options object.
  * @returns
  *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
  */
-export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinks(options: BaseEnqueueLinksOptions): Promise<QueueOperationInfo[]> {
     const {
-        page,
-        $,
         requestQueue,
         limit,
-        selector = 'a',
-        baseUrl,
+        urls,
         pseudoUrls,
         transformRequestFunction,
     } = options;
 
-    if (!page && !$) {
-        throw new ArgumentError('One of the parameters "options.page" or "options.$" must be provided!', enqueueLinks);
-    }
-
-    if (page && $) {
-        throw new ArgumentError('Only one of the parameters "options.page" or "options.$" must be provided!', enqueueLinks);
-    }
-
     ow(options, ow.object.exactShape({
-        page: ow.optional.object.hasKeys('goto', 'evaluate'),
-        $: ow.optional.function,
+        urls: ow.array.ofType(ow.string),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
         limit: ow.optional.number,
         selector: ow.optional.string,
@@ -143,50 +119,27 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         transformRequestFunction: ow.optional.function,
     }));
 
-    if (baseUrl && page) log.warning('The parameter options.baseUrl can only be used when parsing a Cheerio object. It will be ignored.');
-
     // Construct pseudoUrls from input where necessary.
-    const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls as PseudoUrlInput[] || []);
+    let parsedPseudoUrls: PseudoUrlInput[];
 
-    const urls = page ? await extractUrlsFromPage(page, selector) : extractUrlsFromCheerio($!, selector, baseUrl);
-    let requestOptions = createRequestOptions(urls);
-    if (transformRequestFunction) {
-        requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
+    if (Array.isArray(pseudoUrls)) {
+        parsedPseudoUrls = pseudoUrls;
+    } else if (pseudoUrls) {
+        parsedPseudoUrls = [pseudoUrls];
+    } else {
+        parsedPseudoUrls = [];
     }
+
+    const pseudoUrlInstances = constructPseudoUrlInstances(parsedPseudoUrls);
+
+    let requestOptions = createRequestOptions(urls);
+
+    if (transformRequestFunction) {
+        requestOptions = requestOptions.map((request) => transformRequestFunction(request)).filter((r) => !!r);
+    }
+
     let requests = createRequests(requestOptions, pseudoUrlInstances);
     if (limit) requests = requests.slice(0, limit);
 
     return addRequestsToQueueInBatches(requests, requestQueue);
-}
-
-/**
- * Extracts URLs from a given Puppeteer Page.
- * @ignore
- */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
-    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.href).filter((href) => !!href));
-}
-
-/**
- * Extracts URLs from a given Cheerio object.
- * @todo how to support cheerio.Selector?
- * @ignore
- */
-export function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: string): string[] {
-    return $(selector)
-        .map((_i, el) => $(el).attr('href'))
-        .get()
-        .filter((href) => !!href)
-        .map((href) => {
-            // Throw a meaningful error when only a relative URL would be extracted instead of waiting for the Request to fail later.
-            const isHrefAbsolute = /^[a-z][a-z0-9+.-]*:/.test(href); // Grabbed this in 'is-absolute-url' package.
-            if (!isHrefAbsolute && !baseUrl) {
-                throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
-                    + 'Use options.baseUrl in utils.enqueueLinks() to automatically resolve relative URLs.');
-            }
-            return baseUrl
-                ? (new URL(href, baseUrl)).href
-                : href;
-        });
 }

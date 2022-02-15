@@ -3,21 +3,23 @@ import { concatStreamToBuffer, readStreamToString } from '@apify/utilities';
 import {
     BasicCrawler,
     HandleFailedRequest,
-    HandleRequest,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
 import {
     Awaitable,
+    BaseEnqueueLinksOptions,
     CheerioRoot,
     CrawlerExtension,
     CrawlingContext,
     diffCookies,
+    enqueueLinks,
     entries,
     mergeCookies,
     parseContentTypeFromResponse,
     ProxyConfiguration,
     ProxyInfo,
+    QueueOperationInfo,
     Request,
     requestAsBrowser,
     RequestAsBrowserOptions,
@@ -358,10 +360,12 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler;
     response: IncomingMessage;
+    enqueueLinks: (options: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
 export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageInputs<JSONData>) => Awaitable<void>;
+export type CheerioCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'urls' | 'requestQueue'>;
 
 /**
  * Provides a framework for the parallel crawling of web pages using plain HTTP requests and
@@ -448,7 +452,7 @@ export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageIn
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
+export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<CheerioCrawlingContext<JSONData>> {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -520,7 +524,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         super({
             ...basicCrawlerOptions,
             // TODO temporary until the API is unified in V2
-            handleRequestFunction: handlePageFunction as HandleRequest,
+            handleRequestFunction: handlePageFunction,
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
@@ -636,6 +640,20 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
         crawlingContext.$ = $!;
         crawlingContext.contentType = contentType;
         crawlingContext.response = response;
+        crawlingContext.enqueueLinks = async (enqueueOptions) => {
+            if (!$) {
+                throw new Error('Cannot enqueue links because the DOM is not available.');
+            }
+
+            const urls = extractUrlsFromCheerio($, enqueueOptions.selector ?? 'a', enqueueOptions.baseUrl);
+
+            return enqueueLinks({
+                requestQueue: await this.getRequestQueue(),
+                urls,
+                ...enqueueOptions,
+            });
+        };
+
         Object.defineProperty(crawlingContext, 'json', {
             get() {
                 if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
@@ -643,6 +661,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler {
                 return JSON.parse(jsonString);
             },
         });
+
         Object.defineProperty(crawlingContext, 'body', {
             get() {
                 // NOTE: For XML/HTML documents, we don't store the original body and only reconstruct it from Cheerio's DOM.
@@ -940,4 +959,27 @@ interface RequestFunctionOptions {
     session?: Session;
     proxyUrl?: string;
     requestAsBrowserOptions: RequestAsBrowserOptions;
+}
+
+/**
+ * Extracts URLs from a given Cheerio object.
+ * @todo how to support cheerio.Selector?
+ * @ignore
+ */
+function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: string): string[] {
+    return $(selector)
+        .map((_i, el) => $(el).attr('href'))
+        .get()
+        .filter((href) => !!href)
+        .map((href) => {
+            // Throw a meaningful error when only a relative URL would be extracted instead of waiting for the Request to fail later.
+            const isHrefAbsolute = /^[a-z][a-z0-9+.-]*:/.test(href); // Grabbed this in 'is-absolute-url' package.
+            if (!isHrefAbsolute && !baseUrl) {
+                throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
+                    + 'Use options.baseUrl in utils.enqueueLinks() to automatically resolve relative URLs.');
+            }
+            return baseUrl
+                ? (new URL(href, baseUrl)).href
+                : href;
+        });
 }
