@@ -2,7 +2,7 @@ import ow, { ArgumentError } from 'ow';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import { Request, RequestOptions } from '../request';
 import { events } from '../events';
-import log from '../utils_log';
+import { log } from '../utils_log';
 import { publicUtils } from '../utils';
 import { getValue, setValue } from '../storages/key_value_store';
 import { serializeArray, createDeserialize } from '../serialization';

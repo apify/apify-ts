@@ -5,6 +5,7 @@ import {
     RequestMetadata,
     tools,
 } from '@apify/scraper-tools';
+import log from '@apify/log';
 import {
     AutoscaledPool,
     Awaitable,
@@ -16,13 +17,12 @@ import {
     Dictionary,
     CheerioHandleFailedRequestInput,
     KeyValueStore,
-    logUtils,
     PrepareRequestInputs,
     ProxyConfiguration,
     Request,
     RequestList,
     RequestQueue,
-} from 'crawlers';
+} from '@crawlers/cheerio';
 import { Actor, ApifyEnv } from 'apify';
 import cheerio from 'cheerio';
 import { readFile } from 'node:fs/promises';
@@ -70,7 +70,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
     constructor(input: Input) {
         // Set log level early to prevent missed messages.
-        if (input.debugLog) logUtils.setLevel(logUtils.LEVELS.DEBUG);
+        if (input.debugLog) log.setLevel(log.LEVELS.DEBUG);
 
         // Keep this as string to be immutable.
         this.rawInput = JSON.stringify(input);
@@ -233,7 +233,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private _handleFailedRequestFunction({ request }: CheerioHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
-        logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
+        log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
         return this._handleResult(request, undefined, undefined, true);
     }
 
@@ -311,7 +311,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private async _handleMaxResultsPerCrawl(autoscaledPool?: AutoscaledPool) {
         if (!this.input.maxResultsPerCrawl || this.pagesOutputted < this.input.maxResultsPerCrawl) return false;
         if (!autoscaledPool) return false;
-        logUtils.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
+        log.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
         await autoscaledPool.abort();
         return true;
     }
@@ -321,7 +321,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         const currentDepth = (request.userData![META_KEY] as RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
         if (hasReachedMaxDepth) {
-            logUtils.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
+            log.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
             return;
         }
 

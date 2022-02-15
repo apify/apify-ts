@@ -1,12 +1,10 @@
 import { Page, Browser } from 'puppeteer';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import {
-    logUtils,
-    keys,
-} from '@crawlers/core';
+import _log from '@apify/log';
+import { keys } from '@crawlers/core';
 import * as hidingTricks from './hiding_tricks';
 
-const log = logUtils.child({ prefix: 'Stealth' });
+const log = _log.child({ prefix: 'Stealth' });
 
 /**
  * Configuration of stealth tricks for a proper hiding effect all of them should be set to true.

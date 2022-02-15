@@ -4,7 +4,7 @@ import { Log } from '@apify/log';
 import ow from 'ow';
 import { Snapshotter, SnapshotterOptions } from './snapshotter';
 import { SystemInfo, SystemStatus, SystemStatusOptions } from './system_status';
-import defaultLog from '../utils_log';
+import { log as defaultLog } from '../utils_log';
 
 export interface AutoscaledPoolOptions {
     /**

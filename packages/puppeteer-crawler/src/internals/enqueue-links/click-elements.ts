@@ -4,19 +4,19 @@ import {
     createRequestOptions,
     createRequests,
     Dictionary,
-    logUtils,
     PseudoUrlInput,
     QueueOperationInfo,
     RequestQueue,
     RequestTransform,
 } from '@crawlers/browser';
+import log_ from '@apify/log';
 import ow from 'ow';
 import { BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
 import { URL } from 'url';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;
-const log = logUtils.child({ prefix: 'Puppeteer Click Elements' });
+const log = log_.child({ prefix: 'Puppeteer Click Elements' });
 
 export interface EnqueueLinksByClickingElementsOptions {
     /**

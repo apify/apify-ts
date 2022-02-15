@@ -6,8 +6,9 @@
 	"type": "module",
 	"dependencies": {
 		"@apify/scraper-tools": "^1.0.0",
+		"@apify/log": "^1.1.10",
+		"@crawlers/puppeteer": "^1.0.0",
 		"apify": "^2.2.1",
-		"crawlers": "^1.0.0",
 		"puppeteer": "*"
 	},
 	"devDependencies": {

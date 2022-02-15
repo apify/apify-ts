@@ -13,8 +13,8 @@
  */
 
 import cheerio from 'cheerio';
-import log from './utils_log';
-import { publicUtils } from './utils';
+import { log } from './utils_log';
+import { htmlToText } from './utils';
 
 // TODO: We could support URLs like https://www.linkedin.com/company/some-company-inc
 
@@ -291,7 +291,7 @@ export function parseHandlesFromHtml(html: string, data: Record<string, unknown>
     const $ = cheerio.load(html, { decodeEntities: true });
     if (data) data.$ = $;
 
-    const text = publicUtils.htmlToText($);
+    const text = htmlToText($);
     if (data) data.text = text;
 
     // Find all <a> links with href tag

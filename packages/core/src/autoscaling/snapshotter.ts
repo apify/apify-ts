@@ -5,7 +5,7 @@ import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import { Log } from '@apify/log';
 import { getMemoryInfo, isAtHome } from '../utils';
 import { events } from '../events';
-import defaultLog from '../utils_log';
+import { log as defaultLog } from '../utils_log';
 import { SystemInfo } from './system_status';
 import { Configuration } from '../configuration';
 

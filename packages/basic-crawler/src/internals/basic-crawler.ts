@@ -341,6 +341,7 @@ export class BasicCrawler<
         this.failedContextHandler = handleFailedRequestFunction;
         this.handleRequestTimeoutMillis = handleRequestTimeoutSecs * 1000;
         this.internalTimeoutMillis = Math.max(this.handleRequestTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
+        // TODO remove `this.handleFailedRequestFunction` in favour of `this.failedContextHandler`
         this.handleFailedRequestFunction = handleFailedRequestFunction;
         this.maxRequestRetries = maxRequestRetries;
         this.handledRequestsCount = 0;

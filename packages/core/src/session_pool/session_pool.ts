@@ -4,7 +4,7 @@ import { Log } from '@apify/log';
 import { KeyValueStore, openKeyValueStore } from '../storages/key_value_store';
 import { Session, SessionOptions } from './session';
 import { events } from '../events';
-import defaultLog from '../utils_log';
+import { log as defaultLog } from '../utils_log';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import { Configuration } from '../configuration';
 import { Dictionary } from '../typedefs';

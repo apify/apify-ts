@@ -1,4 +1,4 @@
-import { Dictionary, Session, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions } from 'apify';
+import { Dictionary, Session, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions } from '@crawlers/puppeteer';
 import { PuppeteerLifeCycleEvent } from 'puppeteer';
 
 /**

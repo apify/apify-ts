@@ -1,4 +1,5 @@
-import { Actor, logUtils } from 'apify';
+import { Actor } from 'apify';
+import log from '@apify/log';
 import { Page } from 'puppeteer';
 import { inspect } from 'util';
 import { RESOURCE_LOAD_ERROR_MESSAGE, SNAPSHOT } from './consts';
@@ -117,7 +118,7 @@ export function dumpConsole(page: Page, options: DumpConsoleOptions = {}) {
         if (hasJSHandles) {
             const msgPromises = msg.args().map((jsh) => {
                 return jsh.jsonValue()
-                    .catch((e) => logUtils.exception(e, `Stringification of console.${msgType} in browser failed.`));
+                    .catch((e) => log.exception(e, `Stringification of console.${msgType} in browser failed.`));
             });
             message = (await Promise.all(msgPromises))
                 .map((m) => inspect(m))
@@ -126,10 +127,10 @@ export function dumpConsole(page: Page, options: DumpConsoleOptions = {}) {
             message = msg.text();
         }
 
-        if (msgType in logUtils) {
-            logUtils[msgType as 'info'](message);
+        if (msgType in log) {
+            log[msgType as 'info'](message);
         } else {
-            logUtils.info(message);
+            log.info(message);
         }
     });
 }
@@ -154,7 +155,7 @@ export async function saveSnapshot({ page, body, contentType, json }: SnapshotOp
     // Throttle snapshots.
     const now = Date.now();
     if (now - lastSnapshotTimestamp < SNAPSHOT.TIMEOUT_SECS * 1000) {
-        logUtils.warning('Aborting saveSnapshot(). It can only be invoked once '
+        log.warning('Aborting saveSnapshot(). It can only be invoked once '
             + `in ${SNAPSHOT.TIMEOUT_SECS} secs to prevent database overloading.`);
         return;
     }

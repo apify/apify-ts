@@ -7,7 +7,7 @@
   "dependencies": {
     "@apify/scraper-tools": "^1.0.0",
     "apify": "^2.2.1",
-    "crawlers": "^1.0.0",
+    "@crawlers/puppeteer": "^1.0.0",
     "content-type": "^1.0.4",
     "devtools-server": "^0.0.2",
     "puppeteer": "*"

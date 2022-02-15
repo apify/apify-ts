@@ -8,7 +8,7 @@ import { Log } from '@apify/log';
 import { EVENT_SESSION_RETIRED } from './events';
 import { STATUS_CODES_BLOCKED } from '../constants';
 import { getCookiesFromResponse } from './session_utils';
-import defaultLog from '../utils_log';
+import { log as defaultLog } from '../utils_log';
 import { SessionPool } from './session_pool';
 import { Dictionary } from '../typedefs';
 

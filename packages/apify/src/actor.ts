@@ -1375,4 +1375,4 @@ export interface StopOptions {
     exitCode?: number;
 }
 
-export type ActorRun = ClientActorRun;
+export { ClientActorRun as ActorRun };

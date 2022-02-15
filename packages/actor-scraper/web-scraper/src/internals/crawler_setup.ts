@@ -1,31 +1,22 @@
+import { browserTools, constants as scraperToolsConstants, CrawlerSetupOptions, createContext, tools } from '@apify/scraper-tools';
+import { Actor, ApifyEnv } from 'apify';
 import {
-    browserTools,
-    constants as scraperToolsConstants,
-    CrawlerSetupOptions,
-    createContext,
-    tools,
-} from '@apify/scraper-tools';
-import {
-    Actor,
-    ApifyEnv,
     AutoscaledPool,
     Awaitable,
+    BrowserCrawlerHandleFailedRequestInput,
     createProxyConfiguration,
     Dataset,
     Dictionary,
     KeyValueStore,
-    logUtils,
-    Request,
-    RequestList,
-    RequestQueue,
-} from 'apify';
-import {
-    BrowserCrawlerHandleFailedRequestInput,
     PuppeteerCrawlContext,
     PuppeteerCrawler,
     PuppeteerCrawlerOptions,
     puppeteerUtils,
-} from 'crawlers';
+    Request,
+    RequestList,
+    RequestQueue,
+} from '@crawlers/puppeteer';
+import log from '@apify/log';
 import contentType from 'content-type';
 // TODO: type devtools module
 // @ts-ignore
@@ -99,7 +90,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
     constructor(input: Input) {
         // Set log level early to prevent missed messages.
-        if (input.debugLog) logUtils.setLevel(logUtils.LEVELS.DEBUG);
+        if (input.debugLog) log.setLevel(log.LEVELS.DEBUG);
 
         // Keep this as string to be immutable.
         this.rawInput = JSON.stringify(input);
@@ -354,7 +345,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private _handleFailedRequestFunction({ request }: BrowserCrawlerHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
-        logUtils.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
+        log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
         return this._handleResult(request, undefined, undefined, true);
     }
 
@@ -489,7 +480,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     private async _handleMaxResultsPerCrawl(autoscaledPool?: AutoscaledPool) {
         if (!this.input.maxResultsPerCrawl || this.pagesOutputted < this.input.maxResultsPerCrawl) return false;
         if (!autoscaledPool) return false;
-        logUtils.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
+        log.info(`User set limit of ${this.input.maxResultsPerCrawl} results was reached. Finishing the crawl.`);
         await autoscaledPool.abort();
         return true;
     }
@@ -501,7 +492,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         const currentDepth = (request.userData![META_KEY] as tools.RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;
         if (hasReachedMaxDepth) {
-            logUtils.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
+            log.debug(`Request ${request.url} reached the maximum crawling depth of ${currentDepth}.`);
             return;
         }
 
@@ -584,7 +575,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         );
         const logP = browserTools.createBrowserHandlesForObject(
             page,
-            logUtils,
+            log,
             ['LEVELS', 'setLevel', 'getLevel', 'debug', 'info', 'warning', 'error', 'exception'],
         );
         const requestQueueP = this.requestQueue
@@ -603,7 +594,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             keyValueStore,
         ] = await Promise.all([saveSnapshotP, skipLinksP, globalStoreP, logP, requestQueueP, keyValueStoreP]);
 
-        const handles = {
+        return {
             saveSnapshot,
             skipLinks,
             globalStore,
@@ -611,13 +602,11 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             keyValueStore,
             requestQueue,
         };
-
-        return handles;
     }
 }
 
 function logDevRunWarning() {
-    logUtils.warning(`
+    log.warning(`
 *****************************************************************
 *          Web Scraper is running in DEVELOPMENT MODE!          *
 *       Concurrency is limited, sessionPool is not available,   *

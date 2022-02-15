@@ -2,7 +2,7 @@ import { APIFY_PROXY_VALUE_REGEX, ENV_VARS } from '@apify/consts';
 import ow from 'ow';
 import { COUNTRY_CODE_REGEX } from './constants';
 import { requestAsBrowser, RequestAsBrowserOptions } from './utils_request';
-import defaultLog from './utils_log';
+import { log as defaultLog } from './utils_log';
 import { Configuration } from './configuration';
 
 // CONSTANTS

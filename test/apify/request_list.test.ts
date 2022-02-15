@@ -449,7 +449,7 @@ describe('RequestList', () => {
         // Persist state.
         setValueSpy.mockResolvedValueOnce();
         events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
-        await sleep(5);
+        await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 
         // Do some other changes and persist it again.
@@ -459,7 +459,7 @@ describe('RequestList', () => {
         expect(requestList.isStatePersisted).toBe(false);
         setValueSpy.mockResolvedValueOnce();
         events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
-        await sleep(5);
+        await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 
         // Reclaim event doesn't change the state.
