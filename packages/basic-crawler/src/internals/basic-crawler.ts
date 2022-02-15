@@ -686,12 +686,10 @@ export class BasicCrawler<
             this.stats.failJob(request.id || request.url);
 
             // @ts-expect-error It is assignable, but TS says otherwise...
-            const handleFailedErrorContext: ErrorContext = {
-                ...crawlingContext,
-                error,
-            };
+            const castedErrorContext = crawlingContext as ErrorContext;
+            castedErrorContext.error = error;
 
-            await this._handleFailedRequestFunction(handleFailedErrorContext); // This function prints an error message.
+            await this._handleFailedRequestFunction(castedErrorContext); // This function prints an error message.
         }
     }
 
