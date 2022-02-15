@@ -6,7 +6,7 @@ import {
     AutoscaledPool,
     AutoscaledPoolOptions,
     Awaitable,
-    BaseEnqueueLinksOptions,
+    EnqueueLinksOptions,
     CrawlerHandleFailedRequestInput,
     enqueueLinks,
     events,
@@ -34,7 +34,7 @@ export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFaile
     crawler: BasicCrawler<BasicCrawlerCrawlingContext>;
 }
 
-export type BasicCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'requestQueue'>
+export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue'>
 
 /**
  * Since there's no set number of seconds before the container is terminated after

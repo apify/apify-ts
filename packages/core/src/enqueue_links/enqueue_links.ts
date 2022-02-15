@@ -10,7 +10,7 @@ import {
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
 import { validators } from '../validators';
 
-export interface BaseEnqueueLinksOptions {
+export interface EnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
     limit?: number;
 
@@ -40,7 +40,7 @@ export interface BaseEnqueueLinksOptions {
      * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    pseudoUrls?: PseudoUrlInput | PseudoUrlInput[] | null;
+    pseudoUrls?: PseudoUrlInput[] | null;
 
     /**
      * Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used
@@ -95,7 +95,7 @@ export interface BaseEnqueueLinksOptions {
  * @returns
  *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
  */
-export async function enqueueLinks(options: BaseEnqueueLinksOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueOperationInfo[]> {
     const {
         requestQueue,
         limit,
@@ -120,17 +120,8 @@ export async function enqueueLinks(options: BaseEnqueueLinksOptions): Promise<Qu
     }));
 
     // Construct pseudoUrls from input where necessary.
-    let parsedPseudoUrls: PseudoUrlInput[];
 
-    if (Array.isArray(pseudoUrls)) {
-        parsedPseudoUrls = pseudoUrls;
-    } else if (pseudoUrls) {
-        parsedPseudoUrls = [pseudoUrls];
-    } else {
-        parsedPseudoUrls = [];
-    }
-
-    const pseudoUrlInstances = constructPseudoUrlInstances(parsedPseudoUrls);
+    const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls ?? []);
 
     let requestOptions = createRequestOptions(urls);
 

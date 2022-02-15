@@ -7,7 +7,7 @@ import {
 } from '@crawlers/basic';
 import {
     Awaitable,
-    BaseEnqueueLinksOptions,
+    EnqueueLinksOptions,
     CheerioRoot,
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
@@ -373,7 +373,7 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
 export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageInputs<JSONData>) => Awaitable<void>;
-export type CheerioCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'urls' | 'requestQueue'>;
+export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls' | 'requestQueue'>;
 
 /**
  * Provides a framework for the parallel crawling of web pages using plain HTTP requests and

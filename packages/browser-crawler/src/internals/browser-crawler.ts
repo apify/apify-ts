@@ -1,7 +1,7 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import {
     Awaitable,
-    BaseEnqueueLinksOptions,
+    EnqueueLinksOptions,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
     Dictionary,
@@ -55,7 +55,7 @@ export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserCrawlerHandleFai
 
 export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
-export type BrowserCrawlerEnqueueLinksOptions = Omit<BaseEnqueueLinksOptions, 'requestQueue' | 'urls'>
+export type BrowserCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue' | 'urls'>
 
 export type BrowserHook<
     Context = BrowserCrawlingContext,
