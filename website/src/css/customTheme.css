@@ -97,23 +97,34 @@ aside > div > a > b {
     display: none;
 }
 
-.navbar .icon[href*=github] {
+.navbar .icon{
     font-size: 0;
     padding: 4px;
     margin-right: 20px;
 }
 
-.navbar .icon[href*=github]::before {
+.navbar .icon::before {
     content: '';
     display: block;
     width: 32px;
     height: 32px;
     background-size: cover;
+}
+
+.navbar .icon[href*=github]::before {
     background-image: url('/static/img/github-brand.svg');
 }
 
 html[data-theme="dark"] .navbar .navbar__link[href*=github]:before {
     background-image: url('/static/img/github-brand-dark.svg');
+}
+
+.navbar .icon[href*=discord]::before {
+    background-image: url('/static/img/discord-brand.svg');
+}
+
+html[data-theme="dark"] .navbar .navbar__link[href*=discord]:before {
+    background-image: url('/static/img/discord-brand-dark.svg');
 }
 
 .navbar svg[class*=iconExternalLink],
