@@ -6,6 +6,8 @@
  */
 
 import Layout from '@theme/Layout';
+import clsx from 'clsx';
+import styles from './index.module.css';
 
 const React = require('react');
 
@@ -24,7 +26,7 @@ function Versions(props) {
     const latestVersion = versions[0];
     const repoUrl = `https://github.com/${siteConfig.organizationName}/${siteConfig.projectName}`;
     return (
-        <div className="docMainWrapper wrapper">
+        <section className={clsx('container', styles.features)}>
             <Container className="mainContainer versionsContainer">
                 <div className="post">
                     <header className="postHeader">
@@ -139,7 +141,7 @@ function Versions(props) {
                     </p>
                 </div>
             </Container>
-        </div>
+        </section>
     );
 }
 

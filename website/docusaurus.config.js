@@ -10,7 +10,7 @@ module.exports = {
     baseUrl: '/apify-ts/',
     organizationName: 'apify',
     projectName: 'apify-ts',
-    scripts: ['/js/custom.js'],
+    scripts: ['/apify-ts/js/custom.js'],
     favicon: 'img/favicon.ico',
     customFields: {
         markdownOptions: {
@@ -117,31 +117,21 @@ module.exports = {
                     position: 'left',
                 },
                 {
-                    href: 'https://github.com/apify/apify-js',
-                    label: 'GitHub',
+                    href: 'https://github.com/apify/apify-js/blob/master/CHANGELOG.md',
+                    label: 'Changelog',
                     position: 'left',
+                    className: 'changelog',
                 },
                 {
                     type: 'docsVersionDropdown',
                     position: 'right',
                 },
-                // {
-                //     to: 'api',
-                //     type: 'dropdown',
-                //     label: versions[0],
-                //     position: 'right',
-                //     items: [
-                //         { label: 'Next', to: 'api/next' },
-                //         ...versions.map((version, i) => ({
-                //             label: version,
-                //             to: i === 0 ? 'api' : `api/${version}`,
-                //             exact: true,
-                //         })),
-                //     ],
-                // },
                 {
-                    type: 'search',
+                    href: 'https://github.com/apify/apify-js',
+                    label: 'GitHub',
+                    title: 'View on GitHub',
                     position: 'right',
+                    className: 'icon',
                 },
             ],
         },
