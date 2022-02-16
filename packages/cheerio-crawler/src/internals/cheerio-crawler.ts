@@ -368,7 +368,7 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
-    enqueueLinks: (options: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
@@ -652,7 +652,12 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         crawlingContext.contentType = contentType;
         crawlingContext.response = response;
         crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            return cheerioCrawlerEnqueueLinks(enqueueOptions, $, await this.getRequestQueue());
+            return cheerioCrawlerEnqueueLinks({
+                options: enqueueOptions,
+                $,
+                requestQueue: await this.getRequestQueue(),
+                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+            });
         };
 
         Object.defineProperty(crawlingContext, 'json', {
@@ -955,16 +960,26 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     }
 }
 
-export async function cheerioCrawlerEnqueueLinks(options: CheerioCrawlerEnqueueLinksOptions, $: CheerioRoot | null, requestQueue?: RequestQueue) {
+interface EnqueueLinksInternalOptions {
+    options?: CheerioCrawlerEnqueueLinksOptions;
+    $: CheerioRoot | null;
+    requestQueue?: RequestQueue;
+    defaultBaseUrl?: string;
+}
+
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
 
-    const urls = extractUrlsFromCheerio($, options.selector ?? 'a', options.baseUrl);
+    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+
+    const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
+        baseUrl,
         ...options,
     });
 }

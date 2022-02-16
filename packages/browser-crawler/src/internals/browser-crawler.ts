@@ -44,7 +44,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
-    enqueueLinks: (options: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
@@ -472,7 +472,12 @@ export abstract class BrowserCrawler<
         }
 
         crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            return browserCrawlerEnqueueLinks(enqueueOptions, page, await this.getRequestQueue());
+            return browserCrawlerEnqueueLinks({
+                options: enqueueOptions,
+                page,
+                requestQueue: await this.getRequestQueue(),
+                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+            });
         };
     }
 
@@ -584,12 +589,22 @@ export abstract class BrowserCrawler<
     }
 }
 
-export async function browserCrawlerEnqueueLinks(options: BrowserCrawlerEnqueueLinksOptions, page: CommonPage, requestQueue?: RequestQueue) {
-    const urls = await extractUrlsFromPage(page as any, options.selector ?? 'a');
+interface EnqueueLinksInternalOptions {
+    options?: BrowserCrawlerEnqueueLinksOptions;
+    page: CommonPage;
+    requestQueue?: RequestQueue;
+    defaultBaseUrl?: string;
+}
+
+export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
+    const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a');
+
+    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
 
     return enqueueLinks({
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
+        baseUrl,
         ...options,
     });
 }
