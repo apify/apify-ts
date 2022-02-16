@@ -1,4 +1,4 @@
-import * as utils from '../src/utils';
+import * as utils from '@apify/storage-local/src/utils';
 
 describe('utils', () => {
     describe('purgeNullsFromObject', () => {
@@ -6,10 +6,13 @@ describe('utils', () => {
             const object = {
                 one: 1,
                 two: [null, 2],
+                // @ts-expect-error Object literal's property implicitly has an 'any' type.
                 three: null,
                 four: {
+                    // @ts-expect-error Object literal's property implicitly has an 'any' type.
                     five: null,
                 },
+                // @ts-expect-error Object literal's property implicitly has an 'any' type.
                 six: undefined,
             };
             const purged = utils.purgeNullsFromObject(object);

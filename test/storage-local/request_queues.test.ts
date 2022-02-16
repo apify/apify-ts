@@ -2,13 +2,13 @@ import { ensureDirSync, readdirSync } from 'fs-extra';
 import { ArgumentError } from 'ow';
 import { join } from 'path';
 import type { Database, Statement } from 'better-sqlite3-with-prebuilds';
-import { ApifyStorageLocal } from '../src/index';
-import { STORAGE_NAMES, DATABASE_FILE_NAME } from '../src/consts';
-import { RequestQueueEmulator } from '../src/emulators/request_queue_emulator';
-import { uniqueKeyToRequestId } from '../src/utils';
+import { ApifyStorageLocal } from '@apify/storage-local';
+import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@apify/storage-local/src/consts';
+import { RequestQueueEmulator } from '@apify/storage-local/src/emulators/request_queue_emulator';
+import { uniqueKeyToRequestId } from '@apify/storage-local/src/utils';
+import type { DatabaseConnectionCache } from '@apify/storage-local/src/database_connection_cache';
+import type { RequestModel } from '@apify/storage-local/src/resource_clients/request_queue';
 import { prepareTestDir, removeTestDir } from './_tools';
-import type { DatabaseConnectionCache } from '../src/database_connection_cache';
-import type { RequestModel } from '../src/resource_clients/request_queue';
 
 const REQUESTS_TABLE_NAME = `${STORAGE_NAMES.REQUEST_QUEUES}_requests`;
 
@@ -473,7 +473,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -483,7 +483,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -492,7 +492,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -501,7 +501,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(nonExistantQueueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Request queue with id: ${nonExistantQueueName} does not exist.`);
             }
         });
@@ -538,7 +538,7 @@ describe('getRequest', () => {
             try {
                 await storageLocal.requestQueue(nonExistentQueueName).getRequest(request.id!);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Request queue with id: ${nonExistentQueueName} does not exist.`);
             }
         });
@@ -636,7 +636,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -646,7 +646,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -655,7 +655,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -664,7 +664,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(nonExistantQueueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Request queue with id: ${nonExistantQueueName} does not exist.`);
             }
         });
@@ -703,7 +703,7 @@ describe.skip('deleteRequest', () => {
             try {
                 await storageLocal.requestQueue(nonExistantQueueName).deleteRequest(request.id!);
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Request queue with id: ${nonExistantQueueName} does not exist.`);
             }
         });
@@ -758,7 +758,7 @@ describe('listHead', () => {
             try {
                 await storageLocal.requestQueue(nonExistantQueueName).listHead();
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Request queue with id: ${nonExistantQueueName} does not exist.`);
             }
         });

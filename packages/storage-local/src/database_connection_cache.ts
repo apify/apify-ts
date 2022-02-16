@@ -69,7 +69,7 @@ export class DatabaseConnectionCache {
         let connection;
         try {
             connection = new Sqlite(path, options);
-        } catch (err) {
+        } catch (err: any) {
             if (/cannot open database because the directory does not exist/i.test(err.message)) {
                 err.code = 'ENOENT';
                 throw err;

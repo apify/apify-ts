@@ -71,7 +71,7 @@ export class DatasetClient {
                 accessedAt: new Date(accessedTimestamp),
                 itemCount: this.itemCount!,
             };
-        } catch (err) {
+        } catch (err: any) {
             if (err.code !== 'ENOENT') throw err;
             return undefined;
         }
@@ -88,7 +88,7 @@ export class DatasetClient {
         const newPath = join(dirname(this.storeDir), newFields.name);
         try {
             await move(this.storeDir, newPath);
-        } catch (err) {
+        } catch (err: any) {
             if (/dest already exists/.test(err.message)) {
                 throw new Error('Dataset name is not unique.');
             } else if (err.code === 'ENOENT') {
@@ -211,7 +211,7 @@ export class DatasetClient {
         let files: string[];
         try {
             files = readdirSync(this.storeDir);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 this._throw404();
             } else {
@@ -254,7 +254,7 @@ export class DatasetClient {
         throw err;
     }
 
-    private _updateTimestamps({ mtime }: { mtime?: boolean; } = {}) {
+    private _updateTimestamps({ mtime }: { mtime?: boolean } = {}) {
         // It's throwing EINVAL on Windows. Not sure why,
         // so the function is a best effort only.
         const now = new Date();

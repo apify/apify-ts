@@ -1,7 +1,7 @@
 import { emptyDirSync, ensureDirSync, readdirSync, readFile, writeJsonSync } from 'fs-extra';
 import { join } from 'path';
-import { ApifyStorageLocal } from '../src/index';
-import { STORAGE_NAMES } from '../src/consts';
+import { ApifyStorageLocal } from '@apify/storage-local';
+import { STORAGE_NAMES } from '@apify/storage-local/src/consts';
 import { prepareTestDir, removeTestDir } from './_tools';
 
 const TEST_DATASETS = {
@@ -215,7 +215,7 @@ describe('pushItems', () => {
             try {
                 await storageLocal.dataset(id).pushItems({ key: 'some-key', value: 'some-value' });
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Dataset with id: ${id} does not exist.`);
             }
         });
@@ -230,7 +230,7 @@ describe('pushItems', () => {
             try {
                 // @ts-expect-error Making sure datasets only allow a single JSON object
                 await storageLocal.dataset(datasetName).pushItems(arrayOfArrays);
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toMatch('Each dataset item can only be a single JSON object, not an array. Received:');
             }
         });
@@ -266,7 +266,7 @@ describe('listItems', () => {
             try {
                 await storageLocal.dataset(id).listItems();
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Dataset with id: ${id} does not exist.`);
             }
         });

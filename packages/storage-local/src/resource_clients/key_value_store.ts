@@ -87,7 +87,7 @@ export class KeyValueStoreClient {
                 modifiedAt: stats.mtime,
                 accessedAt: new Date(accessedTimestamp),
             };
-        } catch (err) {
+        } catch (err: any) {
             if (err.code !== 'ENOENT') throw err;
         }
         return undefined;
@@ -105,7 +105,7 @@ export class KeyValueStoreClient {
         const newPath = join(dirname(this.storeDir), newFields.name);
         try {
             await move(this.storeDir, newPath);
-        } catch (err) {
+        } catch (err: any) {
             if (/dest already exists/.test(err.message)) {
                 throw new Error('Key-value store name is not unique.');
             } else if (err.code === 'ENOENT') {
@@ -135,7 +135,7 @@ export class KeyValueStoreClient {
         let files!: string[];
         try {
             files = await readdir(this.storeDir);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 this._throw404();
             } else {
@@ -151,7 +151,7 @@ export class KeyValueStoreClient {
                     key: parse(file).name,
                     size,
                 });
-            } catch (e) {
+            } catch (e: any) {
                 if (e.code !== 'ENOENT') throw e;
             }
         }
@@ -205,7 +205,7 @@ export class KeyValueStoreClient {
         try {
             result = await this._handleFile(key, handler);
             if (!result) return;
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 throw err;
             } else {
@@ -255,7 +255,7 @@ export class KeyValueStoreClient {
         if (isContentTypeJson && !isValueStreamOrBuffer && typeof value !== 'string') {
             try {
                 value = JSON.stringify(value, null, 2);
-            } catch (err) {
+            } catch (err: any) {
                 const msg = `The record value cannot be stringified to JSON. Please provide other content type.\nCause: ${err.message}`;
                 throw new Error(msg);
             }
@@ -268,7 +268,7 @@ export class KeyValueStoreClient {
             } else {
                 await writeFile(filePath, value);
             }
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 this._throw404();
             } else {
@@ -283,7 +283,7 @@ export class KeyValueStoreClient {
         try {
             const result = await this._handleFile(key, unlink);
             if (result) this._updateTimestamps({ mtime: true });
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 throw err;
             } else {
@@ -327,7 +327,7 @@ export class KeyValueStoreClient {
             const filePath = this._resolvePath(fileName);
             const returnValue = await handler(filePath);
             return { returnValue, fileName };
-        } catch (err) {
+        } catch (err: any) {
             if (err.code !== 'ENOENT') throw err;
             return undefined;
         }
@@ -341,7 +341,7 @@ export class KeyValueStoreClient {
         try {
             const files = await readdir(this.storeDir);
             return files.find((file) => key === parse(file).name);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') this._throw404();
             throw err;
         }
@@ -354,7 +354,7 @@ export class KeyValueStoreClient {
         throw err;
     }
 
-    private _updateTimestamps({ mtime }: { mtime?: boolean; } = {}) {
+    private _updateTimestamps({ mtime }: { mtime?: boolean } = {}) {
         // It's throwing EINVAL on Windows. Not sure why,
         // so the function is a best effort only.
         const now = new Date();

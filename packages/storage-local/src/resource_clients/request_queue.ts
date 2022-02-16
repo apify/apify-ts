@@ -100,7 +100,7 @@ export class RequestQueueClient {
         try {
             this._getEmulator().updateAccessedAtById(this.id);
             queue = this._getEmulator().selectById(this.id);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code !== 'ENOENT') throw err;
         }
 
@@ -128,7 +128,7 @@ export class RequestQueueClient {
 
         try {
             await move(this.queueDir, newPath);
-        } catch (err) {
+        } catch (err: any) {
             if (/dest already exists/.test(err.message)) {
                 throw new Error('Request queue name is not unique.');
             }

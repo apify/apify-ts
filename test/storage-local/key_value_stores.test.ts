@@ -1,10 +1,10 @@
 import { emptyDirSync, ensureDirSync, readdirSync, readFile, writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import stream from 'stream';
-import { ApifyStorageLocal } from '../src/index';
-import { STORAGE_NAMES } from '../src/consts';
+import * as stream from 'stream';
+import { ApifyStorageLocal } from '@apify/storage-local';
+import { STORAGE_NAMES } from '@apify/storage-local/src/consts';
+import type { KeyValueStoreClient } from '@apify/storage-local/src/resource_clients/key_value_store';
 import { prepareTestDir, removeTestDir } from './_tools';
-import type { KeyValueStoreClient } from '../src/resource_clients/key_value_store';
 
 const TEST_STORES = {
     1: {
@@ -197,7 +197,7 @@ describe('setRecord', () => {
             try {
                 await storageLocal.keyValueStore(id).setRecord({ key: 'some-key', value: 'some-value' });
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Key-value store with id: ${id} does not exist.`);
             }
         });
@@ -274,7 +274,7 @@ describe('getRecord', () => {
             try {
                 await storageLocal.keyValueStore(id).getRecord('some-key');
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Key-value store with id: ${id} does not exist.`);
             }
         });
@@ -293,7 +293,7 @@ describe('deleteRecord', () => {
         try {
             await readFile(recordPath);
             throw new Error('wrong error');
-        } catch (err) {
+        } catch (err: any) {
             expect(err.code).toBe('ENOENT');
         }
     });
@@ -310,7 +310,7 @@ describe('deleteRecord', () => {
             try {
                 await storageLocal.keyValueStore(id).deleteRecord('some-key');
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Key-value store with id: ${id} does not exist.`);
             }
         });
@@ -381,7 +381,7 @@ describe('listKeys', () => {
             try {
                 await storageLocal.keyValueStore(id).listKeys();
                 throw new Error('wrong-error');
-            } catch (err) {
+            } catch (err: any) {
                 expect(err.message).toBe(`Key-value store with id: ${id} does not exist.`);
             }
         });

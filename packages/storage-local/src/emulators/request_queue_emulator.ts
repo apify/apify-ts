@@ -94,7 +94,7 @@ export class RequestQueueEmulator {
 
         try {
             this.db = dbConnections.openConnection(this.dbPath);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code !== 'ENOENT') throw err;
             const newError = new Error(`Request queue with id: ${parse(queueDir).name} does not exist.`) as ErrorWithCode;
             newError.code = 'ENOENT';
@@ -311,7 +311,7 @@ export class RequestQueueEmulator {
                     // We return wasAlreadyHandled: false even though the request may
                     // have been added as handled, because that's how API behaves.
                     return new QueueOperationInfo(model.id);
-                } catch (err) {
+                } catch (err: any) {
                     if (err.code === ERROR_REQUEST_NOT_UNIQUE) {
                         // If we got here it means that the request was already present.
                         // We need to figure out if it were handled too.

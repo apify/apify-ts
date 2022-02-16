@@ -1,3 +1,4 @@
+import os from 'os';
 import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import {
@@ -421,67 +422,69 @@ describe('PuppeteerCrawler', () => {
         expect(sessions.size).toBe(3); // 3 different sessions used
     });
 
-    test('proxy per page', async () => {
-        const proxyConfiguration = new ProxyConfiguration({
-            proxyUrls: [
-                `http://127.0.0.2:${servers[0].port}`,
-                `http://127.0.0.3:${servers[1].port}`,
-                `http://127.0.0.4:${servers[2].port}`,
-            ],
-        });
-
-        const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
-
-        const requestListLarge = new RequestList({
-            sources: [
-                { url: `${serverUrl}/?q=1` },
-                { url: `${serverUrl}/?q=2` },
-                { url: `${serverUrl}/?q=3` },
-                { url: `${serverUrl}/?q=4` },
-                { url: `${serverUrl}/?q=5` },
-                { url: `${serverUrl}/?q=6` },
-            ],
-        });
-
-        const count = {
-            2: 0,
-            3: 0,
-            4: 0,
-        };
-
-        const puppeteerCrawler = new PuppeteerCrawler({
-            requestList: requestListLarge,
-            useSessionPool: true,
-            launchContext: {
-                useIncognitoPages: true,
-            },
-            browserPoolOptions: {
-                prePageCreateHooks: [
-                    (_id, _controller, options) => {
-                        options.proxyBypassList = ['<-loopback>'];
-                    },
+    if (os.platform() !== 'darwin') {
+        test('proxy per page', async () => {
+            const proxyConfiguration = new ProxyConfiguration({
+                proxyUrls: [
+                    `http://127.0.0.2:${servers[0].port}`,
+                    `http://127.0.0.3:${servers[1].port}`,
+                    `http://127.0.0.4:${servers[2].port}`,
                 ],
-            },
-            proxyConfiguration,
-            handlePageFunction: async ({ page }) => {
-                const content = await page.content();
+            });
 
-                if (content.includes('127.0.0.2')) {
-                    count[2]++;
-                } else if (content.includes('127.0.0.3')) {
-                    count[3]++;
-                } else if (content.includes('127.0.0.4')) {
-                    count[4]++;
-                }
-            },
+            const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
+
+            const requestListLarge = new RequestList({
+                sources: [
+                    { url: `${serverUrl}/?q=1` },
+                    { url: `${serverUrl}/?q=2` },
+                    { url: `${serverUrl}/?q=3` },
+                    { url: `${serverUrl}/?q=4` },
+                    { url: `${serverUrl}/?q=5` },
+                    { url: `${serverUrl}/?q=6` },
+                ],
+            });
+
+            const count = {
+                2: 0,
+                3: 0,
+                4: 0,
+            };
+
+            const puppeteerCrawler = new PuppeteerCrawler({
+                requestList: requestListLarge,
+                useSessionPool: true,
+                launchContext: {
+                    useIncognitoPages: true,
+                },
+                browserPoolOptions: {
+                    prePageCreateHooks: [
+                        (_id, _controller, options) => {
+                            options.proxyBypassList = ['<-loopback>'];
+                        },
+                    ],
+                },
+                proxyConfiguration,
+                handlePageFunction: async ({ page }) => {
+                    const content = await page.content();
+
+                    if (content.includes('127.0.0.2')) {
+                        count[2]++;
+                    } else if (content.includes('127.0.0.3')) {
+                        count[3]++;
+                    } else if (content.includes('127.0.0.4')) {
+                        count[4]++;
+                    }
+                },
+            });
+
+            await requestListLarge.initialize();
+            await puppeteerCrawler.run();
+
+            expect(count[2]).toBeGreaterThan(0);
+            expect(count[3]).toBeGreaterThan(0);
+            expect(count[4]).toBeGreaterThan(0);
+            expect(count[2] + count[3] + count[4]).toBe(6);
         });
-
-        await requestListLarge.initialize();
-        await puppeteerCrawler.run();
-
-        expect(count[2]).toBeGreaterThan(0);
-        expect(count[3]).toBeGreaterThan(0);
-        expect(count[4]).toBeGreaterThan(0);
-        expect(count[2] + count[3] + count[4]).toBe(6);
-    });
+    }
 });
