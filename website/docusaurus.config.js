@@ -10,7 +10,7 @@ module.exports = {
     baseUrl: '/apify-ts/',
     organizationName: 'apify',
     projectName: 'apify-ts',
-    scripts: [],
+    scripts: ['/js/custom.js'],
     favicon: 'img/favicon.ico',
     customFields: {
         markdownOptions: {
@@ -125,20 +125,20 @@ module.exports = {
                     type: 'docsVersionDropdown',
                     position: 'right',
                 },
-                {
-                    to: 'api',
-                    type: 'dropdown',
-                    label: versions[0],
-                    position: 'right',
-                    items: [
-                        { label: 'Next', to: 'api/next' },
-                        ...versions.map((version, i) => ({
-                            label: version,
-                            to: i === 0 ? 'api' : `api/${version}`,
-                            exact: true,
-                        })),
-                    ],
-                },
+                // {
+                //     to: 'api',
+                //     type: 'dropdown',
+                //     label: versions[0],
+                //     position: 'right',
+                //     items: [
+                //         { label: 'Next', to: 'api/next' },
+                //         ...versions.map((version, i) => ({
+                //             label: version,
+                //             to: i === 0 ? 'api' : `api/${version}`,
+                //             exact: true,
+                //         })),
+                //     ],
+                // },
                 {
                     type: 'search',
                     position: 'right',
