@@ -128,7 +128,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
             ow.object.validate(validators.pseudoUrl),
         ))),
         transformRequestFunction: ow.optional.function,
-        strategy: ow.optional.string.uppercase.oneOf([
+        strategy: ow.optional.string.oneOf([
             DomainStrategy.All,
             DomainStrategy.SameDomain,
         ]),
