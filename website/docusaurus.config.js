@@ -1,6 +1,6 @@
 const { createHref } = require('./tools/utils/createHref');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
-const versions = require('./versions.json');
+// const versions = require('./versions.json');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
@@ -151,9 +151,9 @@ module.exports = {
             respectPrefersColorScheme: true,
         },
         prism: {
-            defaultLanguage: 'javascript',
-            theme: require('prism-react-renderer/themes/duotoneLight'),
-            darkTheme: require('prism-react-renderer/themes/vsDark'),
+            defaultLanguage: 'typescript',
+            theme: require('prism-react-renderer/themes/github'),
+            darkTheme: require('prism-react-renderer/themes/dracula'),
         },
         metadata: [],
         image: 'img/apify_og_SDK.png',
