@@ -22,6 +22,10 @@ import {
     Statistics,
     validators,
     type CrawlingContext,
+    RequestOptions,
+    RequestQueueOperationOptions,
+    addRequestsToQueueInBatches,
+    createRequests,
 } from '@crawlers/core';
 import ow, { ArgumentError } from 'ow';
 
@@ -444,6 +448,27 @@ export class BasicCrawler<
         this.requestQueue ??= await RequestQueue.open();
 
         return this.requestQueue!;
+    }
+
+    /**
+     * Adds requests to be processed by the crawler
+     * @param requests The requests to add
+     * @param options Options for the request queue
+     */
+    async addRequests(requests: (string | Request | RequestOptions)[], options: RequestQueueOperationOptions = {}) {
+        ow(requests, ow.array.ofType(ow.any(ow.string, ow.object.partialShape({
+            url: ow.string,
+            id: ow.undefined,
+        }))));
+        ow(options, ow.object.exactShape({
+            forefront: ow.optional.boolean,
+        }));
+
+        const requestQueue = await this.getRequestQueue();
+
+        const builtRequests = createRequests(requests);
+
+        return addRequestsToQueueInBatches(builtRequests, requestQueue);
     }
 
     protected async _init(): Promise<void> {

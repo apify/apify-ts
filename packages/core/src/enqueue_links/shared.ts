@@ -49,9 +49,9 @@ export function constructPseudoUrlInstances(pseudoUrls: PseudoUrlInput[]): Pseud
 /**
  * @ignore
  */
-export function createRequests(requestOptions: (string | RequestOptions)[], pseudoUrls: PseudoUrl[]): Request[] {
+export function createRequests(requestOptions: (string | RequestOptions)[], pseudoUrls?: PseudoUrl[]): Request[] {
     if (!pseudoUrls || !pseudoUrls.length) {
-        return requestOptions.map((opts) => new Request(opts as RequestOptions));
+        return requestOptions.map((opts) => new Request(typeof opts === 'string' ? { url: opts } : opts));
     }
 
     const requests: Request[] = [];
