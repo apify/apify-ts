@@ -8,15 +8,5 @@
         },
         "packagePath": "packages/apify",
         "packageSlug": "apify"
-    },
-    {
-        "entryPoints": {
-            "index": {
-                "label": "Index",
-                "path": "src/index.ts"
-            }
-        },
-        "packagePath": "packages/dummy",
-        "packageSlug": "dummy"
     }
 ]
