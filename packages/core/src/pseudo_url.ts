@@ -139,7 +139,7 @@ export class PseudoUrl {
      * be merged together, with the `userData` property having preference over the template.
      * This enables dynamic overriding of the template.
      */
-    createRequest(urlOrProps: string | Record<string, unknown>): Request {
+    createRequest(urlOrProps: string | RequestOptions): Request {
         const props: Partial<RequestOptions> = typeof urlOrProps === 'string' ? { url: urlOrProps } : urlOrProps;
         props.userData = { ...this.requestTemplate.userData, ...props.userData };
         const options = { ...this.requestTemplate, ...props } as RequestOptions; // props.userData will override template with merged data.

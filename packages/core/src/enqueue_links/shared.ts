@@ -57,9 +57,9 @@ export function createRequests(requestOptions: (string | RequestOptions)[], pseu
     const requests: Request[] = [];
     requestOptions.forEach((opts) => {
         pseudoUrls
-            .filter((purl) => purl.matches(typeof opts === 'string' ? opts : opts.url as string))
+            .filter((purl) => purl.matches(typeof opts === 'string' ? opts : opts.url))
             .forEach((purl) => {
-                const request = purl.createRequest(opts as string);
+                const request = purl.createRequest(opts);
                 requests.push(request);
             });
     });
