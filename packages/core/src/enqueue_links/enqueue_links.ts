@@ -72,8 +72,8 @@ export interface EnqueueLinksOptions {
 }
 
 export enum DomainStrategy {
-    All = 'ALL',
-    SameDomain = 'SAME_DOMAIN'
+    All = 'all',
+    SameDomain = 'same-domain'
 }
 
 /**
