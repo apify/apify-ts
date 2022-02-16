@@ -543,14 +543,4 @@ export interface DatasetOptions {
     isLocal?: boolean;
 }
 
-/**
- * @typedef DatasetContent
- * @property {Array<object>} items Dataset entries based on chosen format parameter.
- * @property {number} total Total count of entries in the dataset.
- * @property {number} offset Position of the first returned entry in the dataset.
- * @property {number} count Count of dataset entries returned in this set.
- * @property {number} limit Maximum number of dataset entries requested.
- */
-
-// TODO comment PaginatedList parameters based pn DatasetContent
-export type DatasetContent<T> = PaginatedList<T>;
+export interface DatasetContent<T> extends PaginatedList<T> {}

@@ -64,6 +64,15 @@ module.exports = {
                         path: 'packages/core',
                     },
                     {
+                        path: 'packages/crawlers',
+                    },
+                    {
+                        path: 'packages/basic-crawler',
+                    },
+                    {
+                        path: 'packages/browser-crawler',
+                    },
+                    {
                         path: 'packages/cheerio-crawler',
                     },
                     {

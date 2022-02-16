@@ -42,6 +42,7 @@ html[data-theme='dark'] {
     --ifm-footer-background-color: #1a1b22;
     --ifm-footer-title-color: #f2f3fb;
     --ifm-footer-link-color: #f2f3fb;
+    --max-layout-width: 1680px;
 }
 
 .footer__title {
@@ -64,8 +65,7 @@ html[data-theme='dark'] {
 
 .navbar__inner {
     /* .container */
-    margin: 0 auto;
-    max-width: var(--ifm-container-width-xl);
+    max-width: calc(var(--max-layout-width) - 32px);
     padding: 0 var(--ifm-spacing-horizontal);
     width: 100%;
 }
@@ -77,4 +77,20 @@ html[data-theme='dark'] {
     /* Annoying, but needed */
     /* https://stackoverflow.com/questions/26140050/why-is-font-family-not-inherited-in-button-tags-automatically/26140154 */
     font-family: inherit;
+}
+
+.navbar, .main-wrapper {
+    justify-content: center;
+}
+
+.main-wrapper > div {
+    max-width: var(--max-layout-width);
+}
+
+aside > div > a {
+    padding-left: 16px;
+}
+
+aside > div > a > b {
+    display: none;
 }
