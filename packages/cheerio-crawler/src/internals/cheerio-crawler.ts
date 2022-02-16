@@ -1006,7 +1006,7 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
             const isHrefAbsolute = /^[a-z][a-z0-9+.-]*:/.test(href); // Grabbed this in 'is-absolute-url' package.
             if (!isHrefAbsolute && !baseUrl) {
                 throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
-                    + 'Use options.baseUrl in utils.enqueueLinks() to automatically resolve relative URLs.');
+                    + 'Use options.baseUrl in enqueueLinks() to automatically resolve relative URLs.');
             }
             return baseUrl
                 ? (new URL(href, baseUrl)).href
