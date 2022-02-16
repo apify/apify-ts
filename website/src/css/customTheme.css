@@ -10,6 +10,8 @@ html[data-theme='dark'] {
     --ifm-pre-background: #242736;
 
     --ifm-footer-background-color: #242736;
+    --ifm-color-primary: #5d9df1;
+    --ifm-link-color: #5d9df1;
 }
 
 :root {
