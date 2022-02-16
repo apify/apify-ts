@@ -615,5 +615,5 @@ export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, 
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
-    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.href).filter((href) => !!href));
+    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.getAttribute('href')).filter((href) => !!href));
 }

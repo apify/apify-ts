@@ -372,6 +372,77 @@ describe('enqueueLinks()', () => {
                 expect(enqueued).toHaveLength(0);
             }
         });
+
+        test('correctly resolves relative URLs with default strategy of SAME_DOMAIN', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await browserCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/' },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(2);
+
+            expect(enqueued[0].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+        });
+
+        test('correctly resolves relative URLs with the strategy of ALL', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await browserCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: 'ALL' },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(7);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/second');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[2].method).toBe('GET');
+            expect(enqueued[2].userData).toEqual({});
+
+            expect(enqueued[3].url).toBe('https://another.com/a/fifth');
+            expect(enqueued[3].method).toBe('GET');
+            expect(enqueued[3].userData).toEqual({});
+
+            expect(enqueued[4].url).toBe('http://cool.com/');
+            expect(enqueued[4].method).toBe('GET');
+            expect(enqueued[4].userData).toEqual({});
+
+            expect(enqueued[5].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[5].method).toBe('GET');
+            expect(enqueued[5].userData).toEqual({});
+
+            expect(enqueued[6].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[6].method).toBe('GET');
+            expect(enqueued[6].userData).toEqual({});
+        });
     });
 
     describe('using Cheerio', () => {
@@ -738,27 +809,6 @@ describe('enqueueLinks()', () => {
             });
 
             expect(enqueued).toHaveLength(2);
-
-            // Commented out till we know if this is expected or not
-            // expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            // expect(enqueued[0].method).toBe('GET');
-            // expect(enqueued[0].userData).toEqual({});
-
-            // expect(enqueued[1].url).toBe('https://example.com/a/second');
-            // expect(enqueued[1].method).toBe('GET');
-            // expect(enqueued[1].userData).toEqual({});
-
-            // expect(enqueued[2].url).toBe('https://example.com/a/b/third');
-            // expect(enqueued[2].method).toBe('GET');
-            // expect(enqueued[2].userData).toEqual({});
-
-            // expect(enqueued[3].url).toBe('https://another.com/a/fifth');
-            // expect(enqueued[3].method).toBe('GET');
-            // expect(enqueued[3].userData).toEqual({});
-
-            // expect(enqueued[4].url).toBe('http://cool.com/');
-            // expect(enqueued[4].method).toBe('GET');
-            // expect(enqueued[4].userData).toEqual({});
 
             expect(enqueued[0].url).toBe('http://www.absolute.com/x/absolutepath');
             expect(enqueued[0].method).toBe('GET');
