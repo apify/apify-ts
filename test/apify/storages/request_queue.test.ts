@@ -391,13 +391,13 @@ describe('RequestQueue remote', () => {
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
         listHeadMock.mockResolvedValueOnce({
             limit: 5,
-            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS * 0.75).toISOString(),
+            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS * 0.75),
             items: [],
             hadMultipleClients: true,
         });
         listHeadMock.mockResolvedValueOnce({
             limit: 5,
-            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS).toISOString(),
+            queueModifiedAt: new Date(Date.now() - API_PROCESSED_REQUESTS_DELAY_MILLIS),
             items: [],
             hadMultipleClients: true,
         });
@@ -534,7 +534,7 @@ describe('RequestQueue remote', () => {
         // it will finish immediately.
         listHeadMock.mockResolvedValueOnce({
             limit: 5,
-            queueModifiedAt: new Date().toISOString(),
+            queueModifiedAt: new Date(),
             items: [],
             hadMultipleClients: false,
         });
@@ -551,9 +551,9 @@ describe('RequestQueue remote', () => {
             id: 'WkzbQMuFYuamGv3YF',
             name: 'my-queue',
             userId: 'wRsJZtadYvn4mBZmm',
-            createdAt: new Date('2015-12-12T07:34:14.202Z').toISOString(),
-            modifiedAt: new Date('2015-12-13T08:36:13.202Z').toISOString(),
-            accessedAt: new Date('2015-12-14T08:36:13.202Z').toISOString(),
+            createdAt: new Date('2015-12-12T07:34:14.202Z'),
+            modifiedAt: new Date('2015-12-13T08:36:13.202Z'),
+            accessedAt: new Date('2015-12-14T08:36:13.202Z'),
             totalRequestCount: 0,
             handledRequestCount: 0,
             pendingRequestCount: 0,
