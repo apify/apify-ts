@@ -14,6 +14,7 @@ module.exports = {
     moduleNameMapper: {
         '^apify$': '<rootDir>/packages/apify/src',
         '^@apify/scraper-tools$': '<rootDir>/packages/scraper-tools/src',
+        '^@apify/storage-local$': '<rootDir>/packages/storage-local/src',
         '^crawlers$': '<rootDir>/packages/crawlers/src',
         '^@crawlers/basic$': '<rootDir>/packages/basic-crawler/src',
         '^@crawlers/browser$': '<rootDir>/packages/browser-crawler/src',

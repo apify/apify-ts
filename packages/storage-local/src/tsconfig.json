@@ -1,0 +1,12 @@
+{
+    "extends": "../tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "outDir": "../dist",
+        "composite": true,
+
+        // Remove this once we finish migration from JS
+        "allowJs": true
+    },
+    "include": [".", "./**/*.d.ts"]
+}
