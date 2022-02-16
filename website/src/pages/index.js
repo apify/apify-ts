@@ -2,10 +2,10 @@ import React from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import CodeBlock from '@theme/CodeBlock';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
 import Hightlights from '../components/Highlights';
-import PropTypes from 'prop-types';
 
 function Hero() {
     return (
@@ -88,26 +88,22 @@ Apify.main(async () => {
     });
 });`;
 
-function Code({ value }) {
-    return (
-        <pre>{value}</pre>
-    );
-}
-
-Code.propTypes = {
-    value: PropTypes.string,
-};
-
 function ActorExample() {
     return (
         <section className="container">
             <h2>Try it out</h2>
             <p>Install Apify SDK into a Node.js project. You must have Node.js 10 or higher installed.</p>
-            <Code value="npm install puppeteer" />
+            <CodeBlock className="language-bash">
+                npm install puppeteer
+            </CodeBlock>
             <p>Copy the following code into a file in the project, for example <code>main.js</code>:</p>
-            <Code value={example} />
+            <CodeBlock className="language-typescript">
+                {example}
+            </CodeBlock>
             <p>Execute the following command in the project's folder and watch it recursively crawl IANA with Puppeteer and Chromium.</p>
-            <Code value="node main.js" />
+            <CodeBlock className="language-bash">
+                node main.js
+            </CodeBlock>
         </section>
     );
 }
