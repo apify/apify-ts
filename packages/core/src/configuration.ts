@@ -1,6 +1,6 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
 import { join } from 'path';
-import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@apify/storage-local';
+import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@crawlers/storage';
 import { ApifyClient, ApifyClientOptions } from 'apify-client';
 import log from '@apify/log';
 import { EventEmitter } from 'events';

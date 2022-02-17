@@ -1,7 +1,7 @@
 import ow from 'ow';
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-client';
-import { ApifyStorageLocal } from '@apify/storage-local';
+import { ApifyStorageLocal } from '@crawlers/storage';
 import type { PaginatedList } from 'apify-client';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { log } from '../utils_log';

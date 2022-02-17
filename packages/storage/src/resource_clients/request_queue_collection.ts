@@ -24,7 +24,7 @@ export class RequestQueueCollectionClient {
     }
 
     async list(): Promise<never> {
-        throw new Error('This method is not implemented in @apify/storage-local yet.');
+        throw new Error('This method is not implemented in @crawlers/storage yet.');
     }
 
     async getOrCreate(name: string): Promise<RawQueueTableData> {

@@ -1,8 +1,8 @@
 import log from '@apify/log';
 import { join } from 'path';
 import { ensureDirSync, statSync, writeFileSync } from 'fs-extra';
-import { ApifyStorageLocal } from '@apify/storage-local';
-import { STORAGE_NAMES } from '@apify/storage-local/src/consts';
+import { ApifyStorageLocal } from '@crawlers/storage';
+import { STORAGE_NAMES } from '@crawlers/storage/src/consts';
 import { prepareTestDir, removeTestDir } from './_tools';
 
 let STORAGE_DIR: string;

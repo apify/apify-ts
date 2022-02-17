@@ -208,7 +208,7 @@ export class RequestQueueClient {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async deleteRequest(_id: string): Promise<never> {
         // TODO Deletion is done, but we also need to update request counts in a transaction.
-        throw new Error('This method is not implemented in @apify/storage-local yet.');
+        throw new Error('This method is not implemented in @crawlers/storage yet.');
     }
 
     private _createRequestModel(request: RequestBody, forefront?: boolean): RequestModel {

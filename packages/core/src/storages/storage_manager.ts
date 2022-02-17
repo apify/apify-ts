@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
 import { ApifyClient } from 'apify-client';
-import { ApifyStorageLocal } from '@apify/storage-local';
+import { ApifyStorageLocal } from '@crawlers/storage';
 import { LruCache } from '@apify/datastructures';
 import { Configuration } from '../configuration';
 import { Constructor } from '../typedefs';

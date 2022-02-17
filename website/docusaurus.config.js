@@ -63,6 +63,9 @@ module.exports = {
                     {
                         path: 'packages/core',
                     },
+                    {
+                        path: 'packages/storage',
+                    },
                     // {
                     //     path: 'packages/crawlers',
                     // },

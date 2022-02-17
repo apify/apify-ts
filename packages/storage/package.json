@@ -1,5 +1,5 @@
 {
-    "name": "@apify/storage-local",
+    "name": "@crawlers/storage",
     "version": "2.0.2",
     "description": "Drop in replacement of Apify API with a local SQLite and filesystem implementation. Not all API features are supported.",
     "engines": {

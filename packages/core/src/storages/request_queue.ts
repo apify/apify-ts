@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { ListDictionary, LruCache } from '@apify/datastructures';
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import { ApifyStorageLocal } from '@apify/storage-local';
+import { ApifyStorageLocal } from '@crawlers/storage';
 import { storage } from '@apify/timeout';
 import { ApifyClient, RequestQueueClient, RequestQueue as RequestQueueInfo } from 'apify-client';
 import ow from 'ow';

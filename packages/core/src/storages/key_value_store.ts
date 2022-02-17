@@ -2,7 +2,7 @@ import { ENV_VARS, KEY_VALUE_STORE_KEYS, KEY_VALUE_STORE_KEY_REGEX } from '@apif
 import { jsonStringifyExtended } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
 import { ApifyClient, KeyValueStoreClient } from 'apify-client';
-import { ApifyStorageLocal } from '@apify/storage-local';
+import { ApifyStorageLocal } from '@crawlers/storage';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';

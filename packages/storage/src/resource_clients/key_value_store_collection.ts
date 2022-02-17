@@ -2,11 +2,11 @@ import { ensureDir, stat } from 'fs-extra';
 import ow from 'ow';
 import { join } from 'path';
 
-export interface DatasetCollectionClientOptions {
+export interface KeyValueStoreCollectionClientOptions {
     storageDir: string;
 }
 
-export interface DatasetCollectionData {
+export interface KeyValueStoreCollectionData {
     id: string;
     name: string;
     createdAt: Date;
@@ -15,20 +15,20 @@ export interface DatasetCollectionData {
 }
 
 /**
- * Dataset collection client.
+ * Key-value store collection client.
  */
-export class DatasetCollectionClient {
+export class KeyValueStoreCollectionClient {
     storageDir: string;
 
-    constructor({ storageDir }: DatasetCollectionClientOptions) {
+    constructor({ storageDir }: KeyValueStoreCollectionClientOptions) {
         this.storageDir = storageDir;
     }
 
     async list(): Promise<never> {
-        throw new Error('This method is not implemented in @apify/storage-local yet.');
+        throw new Error('This method is not implemented in @crawlers/storage yet.');
     }
 
-    async getOrCreate(name: string): Promise<DatasetCollectionData> {
+    async getOrCreate(name: string): Promise<KeyValueStoreCollectionData> {
         ow(name, ow.string.nonEmpty);
         const storePath = join(this.storageDir, name);
         await ensureDir(storePath);
