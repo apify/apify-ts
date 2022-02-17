@@ -116,6 +116,7 @@ export class Actor {
      *
      * @param userFunc User function to be executed. If it returns a promise,
      * the promise will be awaited. The user function is called with no arguments.
+     * @ignore
      */
     main(userFunc: UserFunc): void {
         if (!userFunc || typeof userFunc !== 'function') {
@@ -164,7 +165,11 @@ export class Actor {
         });
     }
 
+    /**
+     * @ignore
+     */
     start(): void {
+        // TODO use client as store if at home
         logSystemInfo();
         printOutdatedSdkWarning();
         initializeEvents();
@@ -209,6 +214,7 @@ export class Actor {
      *  JSON and its content type set to `application/json; charset=utf-8`.
      *  Otherwise the `options.contentType` parameter must be provided.
      * @param [options]
+     * @ignore
      */
     async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
         const { token, ...rest } = options;
@@ -251,6 +257,7 @@ export class Actor {
      *  JSON and its content type set to `application/json; charset=utf-8`.
      *  Provided input will be merged with actor task input.
      * @param [options]
+     * @ignore
      */
     async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
         const { token, ...rest } = options;
@@ -271,6 +278,7 @@ export class Actor {
      *  JSON and its content type set to `application/json; charset=utf-8`.
      *  Otherwise, the `options.contentType` parameter must be provided.
      * @param [options]
+     * @ignore
      */
     async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
         if (!this.isAtHome()) {
@@ -299,6 +307,7 @@ export class Actor {
      * @param options
      * @returns The return value is the Webhook object.
      * For more information, see the [Get webhook](https://apify.com/docs/api/v2#/reference/webhooks/webhook-object/get-webhook) API endpoint.
+     * @ignore
      */
     async addWebhook(options: WebhookOptions): Promise<Webhook | undefined> {
         ow(options, ow.object.exactShape({
@@ -354,6 +363,7 @@ export class Actor {
      *
      * @param item Object or array of objects containing data to be stored in the default dataset.
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
+     * @ignore
      */
     async pushData(item: Dictionary): Promise<void> {
         const dataset = await this.openDataset();
@@ -373,6 +383,7 @@ export class Actor {
      *   ID or name of the dataset to be opened. If `null` or `undefined`,
      *   the function returns the default dataset associated with the actor run.
      * @param [options]
+     * @ignore
      */
     async openDataset<Data extends Dictionary = Dictionary>(
         datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
@@ -411,6 +422,7 @@ export class Actor {
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
+     * @ignore
      */
     async getValue<T = unknown>(key: string): Promise<T | null> {
         const store = await this.openKeyValueStore();
@@ -446,6 +458,7 @@ export class Actor {
      *    - If `options.contentType` is set, `value` is taken as is, and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
      *   For any other value an error will be thrown.
      * @param [options]
+     * @ignore
      */
     async setValue<T>(key: string, value: T | null, options: RecordOptions = {}): Promise<void> {
         const store = await this.openKeyValueStore();
@@ -479,6 +492,7 @@ export class Actor {
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
+     * @ignore
      */
     async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
         return this.getValue<T>(this.config.get('inputKey'));
@@ -497,6 +511,7 @@ export class Actor {
      *   ID or name of the key-value store to be opened. If `null` or `undefined`,
      *   the function returns the default key-value store associated with the actor run.
      * @param [options]
+     * @ignore
      */
     async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
@@ -559,6 +574,7 @@ export class Actor {
      *   The {@link RequestList} options. Note that the `listName` parameter supersedes
      *   the {@link RequestListOptions.persistStateKey} and {@link RequestListOptions.persistRequestsKey}
      *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
+     * @ignore
      */
     async openRequestList(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
         return RequestList.open(listName, sources, options);
@@ -579,6 +595,7 @@ export class Actor {
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
      *   the function returns the default request queue associated with the actor run.
      * @param [options]
+     * @ignore
      */
     async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
@@ -594,6 +611,7 @@ export class Actor {
      * of the {@link SessionPool} class that is already initialized.
      *
      * For more details and code examples, see the {@link SessionPool} class.
+     * @ignore
      */
     async openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
         const sessionPool = new SessionPool(sessionPoolOptions, this.config);
@@ -636,6 +654,7 @@ export class Actor {
      * ```
      * { useApifyProxy: false }
      * ```
+     * @ignore
      */
     async createProxyConfiguration(
         proxyConfigurationOptions: ProxyConfigurationOptions & { useApifyProxy?: boolean } = {},
@@ -660,7 +679,8 @@ export class Actor {
      *
      * For the list of the `APIFY_XXX` environment variables, see
      * [Actor documentation](https://docs.apify.com/actor/run#environment-variables).
-     * If some of the variables are not defined or are invalid, the corresponding value in the resulting object will be null.
+     * If some variables are not defined or are invalid, the corresponding value in the resulting object will be null.
+     * @ignore
      */
     getEnv(): ApifyEnv {
         // NOTE: Don't throw if env vars are invalid to simplify local development and debugging of actors
@@ -691,6 +711,7 @@ export class Actor {
      * NPM package, and it is automatically configured using the `APIFY_API_BASE_URL`, and `APIFY_TOKEN`
      * environment variables. You can override the token via the available options. That's useful
      * if you want to use the client as a different Apify user than the SDK internals are using.
+     * @ignore
      */
     newClient(options: ApifyClientOptions = {}): ApifyClient {
         return this.config.createClient(options);
@@ -698,6 +719,7 @@ export class Actor {
 
     /**
      * Returns `true` when code is running on Apify platform and `false` otherwise (for example locally).
+     * @ignore
      */
     isAtHome(): boolean {
         return !!this.config.get('isAtHome');
