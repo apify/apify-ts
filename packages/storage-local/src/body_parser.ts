@@ -1,6 +1,3 @@
-// THIS IS A COPY OF PARSING LOGIC FROM APIFY-CLIENT V1
-// ONCE THE V1 IS RELEASED, IT SHOULD BE REQUIRED FROM THERE
-
 import contentTypeParser from 'content-type';
 
 const CONTENT_TYPE_JSON = 'application/json';
@@ -40,7 +37,7 @@ export function maybeParseBody(body: Buffer | ArrayBuffer, contentTypeHeader: st
     return contentType === CONTENT_TYPE_JSON
         ? JSON.parse(dataString)
         : dataString;
-};
+}
 
 function isomorphicBufferToString(buffer: Buffer | ArrayBuffer, encoding: BufferEncoding): string {
     if (buffer.constructor.name !== ArrayBuffer.name) {
