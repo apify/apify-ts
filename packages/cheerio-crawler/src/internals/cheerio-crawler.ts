@@ -368,7 +368,7 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
-    enqueueLinks: (options: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
@@ -652,7 +652,12 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         crawlingContext.contentType = contentType;
         crawlingContext.response = response;
         crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            return cheerioCrawlerEnqueueLinks(enqueueOptions, $, await this.getRequestQueue());
+            return cheerioCrawlerEnqueueLinks({
+                options: enqueueOptions,
+                $,
+                requestQueue: await this.getRequestQueue(),
+                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+            });
         };
 
         Object.defineProperty(crawlingContext, 'json', {
@@ -955,16 +960,26 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     }
 }
 
-export async function cheerioCrawlerEnqueueLinks(options: CheerioCrawlerEnqueueLinksOptions, $: CheerioRoot | null, requestQueue?: RequestQueue) {
+interface EnqueueLinksInternalOptions {
+    options?: CheerioCrawlerEnqueueLinksOptions;
+    $: CheerioRoot | null;
+    requestQueue?: RequestQueue;
+    defaultBaseUrl?: string;
+}
+
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
 
-    const urls = extractUrlsFromCheerio($, options.selector ?? 'a', options.baseUrl);
+    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+
+    const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
+        baseUrl,
         ...options,
     });
 }
@@ -991,7 +1006,7 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
             const isHrefAbsolute = /^[a-z][a-z0-9+.-]*:/.test(href); // Grabbed this in 'is-absolute-url' package.
             if (!isHrefAbsolute && !baseUrl) {
                 throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
-                    + 'Use options.baseUrl in utils.enqueueLinks() to automatically resolve relative URLs.');
+                    + 'Use options.baseUrl in enqueueLinks() to automatically resolve relative URLs.');
             }
             return baseUrl
                 ? (new URL(href, baseUrl)).href

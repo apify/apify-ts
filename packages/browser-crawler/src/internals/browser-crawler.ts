@@ -44,7 +44,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
-    enqueueLinks: (options: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
@@ -472,7 +472,12 @@ export abstract class BrowserCrawler<
         }
 
         crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            return browserCrawlerEnqueueLinks(enqueueOptions, page, await this.getRequestQueue());
+            return browserCrawlerEnqueueLinks({
+                options: enqueueOptions,
+                page,
+                requestQueue: await this.getRequestQueue(),
+                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+            });
         };
     }
 
@@ -584,12 +589,22 @@ export abstract class BrowserCrawler<
     }
 }
 
-export async function browserCrawlerEnqueueLinks(options: BrowserCrawlerEnqueueLinksOptions, page: CommonPage, requestQueue?: RequestQueue) {
-    const urls = await extractUrlsFromPage(page as any, options.selector ?? 'a');
+interface EnqueueLinksInternalOptions {
+    options?: BrowserCrawlerEnqueueLinksOptions;
+    page: CommonPage;
+    requestQueue?: RequestQueue;
+    defaultBaseUrl?: string;
+}
+
+export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
+    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+
+    const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
+        baseUrl,
         ...options,
     });
 }
@@ -599,6 +614,18 @@ export async function browserCrawlerEnqueueLinks(options: BrowserCrawlerEnqueueL
  * @ignore
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
-async function extractUrlsFromPage(page: { $$eval: Function }, selector: string): Promise<string[]> {
-    return page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.href).filter((href) => !!href));
+async function extractUrlsFromPage(page: { $$eval: Function }, selector: string, baseUrl?: string): Promise<string[]> {
+    const urls = await page.$$eval(selector, (linkEls: HTMLLinkElement[]) => linkEls.map((link) => link.getAttribute('href')).filter((href) => !!href));
+
+    return urls.map((href: string) => {
+        // Throw a meaningful error when only a relative URL would be extracted instead of waiting for the Request to fail later.
+        const isHrefAbsolute = /^[a-z][a-z0-9+.-]*:/.test(href); // Grabbed this in 'is-absolute-url' package.
+        if (!isHrefAbsolute && !baseUrl) {
+            throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
+                    + 'Use options.baseUrl in enqueueLinks() to automatically resolve relative URLs.');
+        }
+        return baseUrl
+            ? (new URL(href, baseUrl)).href
+            : href;
+    });
 }

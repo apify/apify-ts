@@ -5,6 +5,7 @@ import {
     cheerioCrawlerEnqueueLinks,
     CheerioRoot,
     Configuration,
+    EnqueueStrategy,
     launchPlaywright,
     launchPuppeteer,
     PseudoUrl,
@@ -81,7 +82,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await browserCrawlerEnqueueLinks({ limit: 3, selector: '.click' }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { limit: 3, selector: '.click' },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -114,7 +119,11 @@ describe('enqueueLinks()', () => {
                 new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -145,7 +154,11 @@ describe('enqueueLinks()', () => {
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
             ];
 
-            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -175,7 +188,11 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -206,7 +223,11 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -232,7 +253,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await browserCrawlerEnqueueLinks({ selector: '.click' }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click' },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(4);
 
@@ -262,7 +287,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: null }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls: null },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(4);
 
@@ -292,7 +321,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: [] }, page, requestQueue);
+            await browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls: [] },
+                page,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(4);
 
@@ -329,12 +362,87 @@ describe('enqueueLinks()', () => {
             ];
 
             try {
-                await browserCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, page, requestQueue);
+                await browserCrawlerEnqueueLinks({
+                    options: { selector: '.click', pseudoUrls },
+                    page,
+                    requestQueue,
+                });
                 throw new Error('Wrong error.');
             } catch (err) {
                 expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
                 expect(enqueued).toHaveLength(0);
             }
+        });
+
+        test('correctly resolves relative URLs with default strategy of SAME_DOMAIN', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await browserCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/' },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(2);
+
+            expect(enqueued[0].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+        });
+
+        test('correctly resolves relative URLs with the strategy of ALL', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await browserCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.All },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(7);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/second');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[2].method).toBe('GET');
+            expect(enqueued[2].userData).toEqual({});
+
+            expect(enqueued[3].url).toBe('https://another.com/a/fifth');
+            expect(enqueued[3].method).toBe('GET');
+            expect(enqueued[3].userData).toEqual({});
+
+            expect(enqueued[4].url).toBe('http://cool.com/');
+            expect(enqueued[4].method).toBe('GET');
+            expect(enqueued[4].userData).toEqual({});
+
+            expect(enqueued[5].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[5].method).toBe('GET');
+            expect(enqueued[5].userData).toEqual({});
+
+            expect(enqueued[6].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[6].method).toBe('GET');
+            expect(enqueued[6].userData).toEqual({});
         });
     });
 
@@ -362,7 +470,11 @@ describe('enqueueLinks()', () => {
                 new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -392,7 +504,11 @@ describe('enqueueLinks()', () => {
                 new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
             ];
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -422,7 +538,11 @@ describe('enqueueLinks()', () => {
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
             ];
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -451,7 +571,11 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -480,7 +604,11 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(3);
 
@@ -505,7 +633,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click' }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click' },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(4);
 
@@ -534,7 +666,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: null }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls: null },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(4);
 
@@ -563,7 +699,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls: [] }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls: [] },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(4);
 
@@ -598,7 +738,11 @@ describe('enqueueLinks()', () => {
             ];
 
             try {
-                await cheerioCrawlerEnqueueLinks({ selector: '.click', pseudoUrls }, $, requestQueue);
+                await cheerioCrawlerEnqueueLinks({
+                    options: { selector: '.click', pseudoUrls },
+                    $,
+                    requestQueue,
+                });
                 throw new Error('Wrong error.');
             } catch (err) {
                 expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
@@ -606,7 +750,7 @@ describe('enqueueLinks()', () => {
             }
         });
 
-        test('correctly resolves relative URLs', async () => {
+        test('correctly resolves relative URLs with the strategy of ALL', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
@@ -614,7 +758,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await cheerioCrawlerEnqueueLinks({ baseUrl: 'http://www.absolute.com/removethis/' }, $, requestQueue);
+            await cheerioCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.All },
+                $,
+                requestQueue,
+            });
 
             expect(enqueued).toHaveLength(7);
 
@@ -647,6 +795,31 @@ describe('enqueueLinks()', () => {
             expect(enqueued[6].userData).toEqual({});
         });
 
+        test('correctly resolves relative URLs with the default strategy of SAME_DOMAIN', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await cheerioCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/' },
+                $,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(2);
+
+            expect(enqueued[0].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+        });
+
         test('throws on finding a relative link with no baseUrl set', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
@@ -655,7 +828,11 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             try {
-                await cheerioCrawlerEnqueueLinks({}, $, requestQueue);
+                await cheerioCrawlerEnqueueLinks({
+                    options: {},
+                    $,
+                    requestQueue,
+                });
                 throw new Error('wrong error');
             } catch (err) {
                 expect((err as Error).message).toMatch('/x/absolutepath');
