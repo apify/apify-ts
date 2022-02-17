@@ -474,7 +474,7 @@ describe('addRequest', () => {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
             } catch (err) {
-                expect(err).toBeInstanceOf(ArgumentError);
+                expect(err.toString()).toMatch('ArgumentError');
             }
         });
         test('on missing uniqueKey', async () => {
@@ -484,7 +484,7 @@ describe('addRequest', () => {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
             } catch (err) {
-                expect(err).toBeInstanceOf(ArgumentError);
+                expect(err.toString()).toMatch('ArgumentError');
             }
         });
         test('when id is provided', async () => {
@@ -493,7 +493,7 @@ describe('addRequest', () => {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
             } catch (err) {
-                expect(err).toBeInstanceOf(ArgumentError);
+                expect(err.toString()).toMatch('ArgumentError');
             }
         });
         test('when queue does not exist', async () => {
@@ -635,9 +635,8 @@ describe('updateRequest', () => {
 
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
-                throw new Error('wrong-error');
             } catch (err) {
-                expect(err).toBeInstanceOf(ArgumentError);
+                expect(err.toString()).toMatch('ArgumentError');
             }
         });
         test('on missing uniqueKey', async () => {
@@ -647,7 +646,7 @@ describe('updateRequest', () => {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
             } catch (err) {
-                expect(err).toBeInstanceOf(ArgumentError);
+                expect(err.toString()).toMatch('ArgumentError');
             }
         });
         test('when id is not provided', async () => {
@@ -656,7 +655,7 @@ describe('updateRequest', () => {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
             } catch (err) {
-                expect(err).toBeInstanceOf(ArgumentError);
+                expect(err.toString()).toMatch('ArgumentError');
             }
         });
         test('when queue does not exist', async () => {
