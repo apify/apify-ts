@@ -123,45 +123,21 @@ export class Actor {
             throw new Error(`Actor.main() accepts a single parameter that must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
         }
 
-        logSystemInfo();
-        printOutdatedSdkWarning();
-
-        // This is to enable unit tests where process.exit() is mocked and doesn't really exit the process
-        // Note that mocked process.exit() might throw, so set exited flag before calling it to avoid confusion.
-        let exited = false;
-        const exitWithError = (err: Error, exitCode?: number) => {
-            log.exception(err, err.message);
-            exited = true;
-            process.exit(exitCode);
-        };
-
-        // Set dummy interval to ensure the process will not be killed while awaiting empty promise:
-        // await new Promise(() => {})
-        // Such a construct is used for testing of actor timeouts and aborts.
-        const intervalId = setInterval(() => {}, 9999999);
-
-        // Using async here to have nice stack traces for errors
         const run = async () => {
-            initializeEvents();
+            this.start();
+
             try {
                 await userFunc();
-
-                stopEvents();
-                clearInterval(intervalId);
-                if (!exited) {
-                    process.exit(EXIT_CODES.SUCCESS);
-                }
-            } catch (err) {
-                stopEvents();
-                clearInterval(intervalId);
-                if (!exited) {
-                    exitWithError(err as Error, EXIT_CODES.ERROR_USER_FUNCTION_THREW);
-                }
+                this.exit({ exitCode: EXIT_CODES.SUCCESS });
+            } catch (err: any) {
+                log.exception(err, err.message);
+                this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
             }
         };
 
         run().catch((err) => {
-            exitWithError(err, EXIT_CODES.ERROR_UNKNOWN);
+            log.exception(err, err.message);
+            this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
         });
     }
 
