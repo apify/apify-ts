@@ -131,3 +131,7 @@ html[data-theme="dark"] .navbar .navbar__link[href*=discord]:before {
 aside svg[class*=iconExternalLink] {
     display: none;
 }
+
+#try {
+    padding-top: 20px;
+}

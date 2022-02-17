@@ -20,14 +20,11 @@ function Hero() {
                                 for JavaScript/Node.js
                             </p>
                         </div>
-                        <div className="row">
-                            <div className="col col--9">
-                                <div className={styles.heroButtons}>
-                                    <Link to="docs/guides/getting-started" className={styles.getStarted}>Get Started</Link>
-                                    <Link to="docs/examples/basic-crawler" className={styles.seeExamples}>See examples</Link>
-                                    <iframe src="https://ghbtns.com/github-btn.html?user=apify&repo=apify-ts&type=star&count=true&size=large" frameBorder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
-                                </div>
-                            </div>
+                        <div className={styles.heroButtons}>
+                            <Link to="#try" className={styles.getStarted}>Try it out</Link>
+                            <Link to="docs/guides/getting-started" className={styles.seeExamples}>Get Started</Link>
+                            <Link to="docs/examples/basic-crawler" className={styles.seeExamples}>See examples</Link>
+                            <iframe src="https://ghbtns.com/github-btn.html?user=apify&repo=apify-ts&type=star&count=true&size=large" frameBorder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
                         </div>
                     </div>
                     <div className="col col--5" style={{ textAlign: 'center' }}>
@@ -66,35 +63,27 @@ function Features() {
     );
 }
 
-const example = `const Apify = require('apify');
+const example = `import { PuppeteerCrawler } from '@crawlers/puppeteer';
 
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
-    await requestQueue.addRequest({ url: 'https://www.iana.org/' });
+const crawler = new PuppeteerCrawler({
+    async requestHandler({ request, page, enqueueLinks }) {
+        const title = await page.title();
+        ${'console.log(`Tilte of ${request.url}`: ${title});'}
+        await enqueueLinks();
+    },
+});
 
-    const crawler = new Apify.PuppeteerCrawler({
-        requestQueue,
-        handlePageFunction: async ({ request, page }) => {
-            const title = await page.title();
-            ${'console.log(`Tilte of ${request.url}`: ${title});'}
-            await Apify.utils.enqueueLinks({
-                requestQueue,
-                page,
-                pseudoUrls: [
-                    'https://www.iana.org/[.*]',
-                ],
-            });
-        },
-    });
-});`;
+await crawler.addRequests(['https://www.iana.org/']);
+await crawler.run();
+`;
 
 function ActorExample() {
     return (
-        <section className="container">
+        <section id="try" className="container">
             <h2>Try it out</h2>
-            <p>Install Apify SDK into a Node.js project. You must have Node.js 10 or higher installed.</p>
+            <p>Install Apify SDK into a Node.js project. You must have Node.js 16 or higher installed.</p>
             <CodeBlock className="language-bash">
-                npm install puppeteer
+                npm install @crawlers/puppeteer puppeteer
             </CodeBlock>
             <p>Copy the following code into a file in the project, for example <code>main.js</code>:</p>
             <CodeBlock className="language-typescript">
