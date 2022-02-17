@@ -5,9 +5,9 @@
     "main": "dist/main.js",
     "type": "module",
 	"dependencies": {
-		"@apify/scraper-tools": "^1.0.0",
-        "@crawlers/cheerio": "^1.0.0",
-		"apify": "^2.2.1"
+		"@apify/scraper-tools": "^3.0.0",
+        "@crawlers/cheerio": "^3.0.0",
+		"apify": "^3.0.0"
 	},
 	"devDependencies": {
 		"markdown-toc": "^1.2.0"

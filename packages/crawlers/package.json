@@ -1,6 +1,6 @@
 {
     "name": "crawlers",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
         "node": ">=15.10.0"
@@ -52,12 +52,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/core": "^1.0.0",
-        "@crawlers/basic": "^1.0.0",
-        "@crawlers/browser": "^1.0.0",
-        "@crawlers/cheerio": "^1.0.0",
-        "@crawlers/playwright": "^1.0.0",
-        "@crawlers/puppeteer": "^1.0.0"
+        "@crawlers/core": "^3.0.0",
+        "@crawlers/basic": "^3.0.0",
+        "@crawlers/browser": "^3.0.0",
+        "@crawlers/cheerio": "^3.0.0",
+        "@crawlers/playwright": "^3.0.0",
+        "@crawlers/puppeteer": "^3.0.0"
     },
     "peerDependencies": {
         "playwright": "^1.11.0",

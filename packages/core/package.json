@@ -1,6 +1,6 @@
 {
     "name": "@crawlers/core",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
         "node": ">=15.10.0"
@@ -56,7 +56,7 @@
         "@apify/datastructures": "^1.0.1",
         "@apify/log": "^1.1.6",
         "@apify/ps-tree": "^1.1.4",
-        "@crawlers/storage": "^2.0.2",
+        "@crawlers/storage": "^3.0.0",
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.5",
         "@types/mime-types": "^2.1.1",
