@@ -1,0 +1,58 @@
+{
+    "name": "@apify/storage-local",
+    "version": "2.0.2",
+    "description": "Drop in replacement of Apify API with a local SQLite and filesystem implementation. Not all API features are supported.",
+    "engines": {
+        "node": ">=10.17.0"
+    },
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "keywords": [
+        "apify",
+        "sqlite",
+        "api"
+    ],
+    "author": {
+        "name": "Apify",
+        "email": "support@apify.com",
+        "url": "https://apify.com"
+    },
+    "contributors": [
+        "Ondra Urban <ondra@apify.com>"
+    ],
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/apify/apify-storage-local-js"
+    },
+    "bugs": {
+        "url": "https://github.com/apifytech/apify-client-local/issues"
+    },
+    "homepage": "https://sdk.apify.com/",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "npm run clean && npm run compile && npm run copy",
+        "clean": "rimraf ./dist",
+        "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
+        "copy": "ts-node -T ../../scripts/copy.ts"
+    },
+    "dependencies": {
+        "@apify/consts": "^1.4.2",
+        "@apify/log": "^1.1.6",
+        "better-sqlite3-with-prebuilds": "^7.4.3",
+        "content-type": "^1.0.4",
+        "fs-extra": "^10.0.0",
+        "mime-types": "^2.1.34",
+        "ow": "^0.28.1",
+        "tslib": "^2.3.1"
+    }
+}

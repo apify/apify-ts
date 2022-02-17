@@ -5,6 +5,7 @@
         "paths": {
             "apify": ["packages/apify/src"],
             "@apify/scraper-tools": ["packages/scraper-tools/src"],
+            "@apify/storage-local": ["packages/storage-local/src"],
             "crawlers": ["packages/crawlers/src"],
             "@crawlers/basic": ["packages/basic-crawler/src"],
             "@crawlers/browser": ["packages/browser-crawler/src"],
