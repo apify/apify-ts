@@ -5,7 +5,7 @@ import {
     cheerioCrawlerEnqueueLinks,
     CheerioRoot,
     Configuration,
-    DomainStrategy,
+    EnqueueStrategy,
     launchPlaywright,
     launchPuppeteer,
     PseudoUrl,
@@ -409,7 +409,7 @@ describe('enqueueLinks()', () => {
             };
 
             await browserCrawlerEnqueueLinks({
-                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: DomainStrategy.All },
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.All },
                 page,
                 requestQueue,
             });
@@ -759,7 +759,7 @@ describe('enqueueLinks()', () => {
             };
 
             await cheerioCrawlerEnqueueLinks({
-                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: DomainStrategy.All },
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.All },
                 $,
                 requestQueue,
             });

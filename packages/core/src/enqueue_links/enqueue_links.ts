@@ -66,12 +66,12 @@ export interface EnqueueLinksOptions {
 
     /**
      * The strategy to use when enqueueing the urls.
-     * @default DomainStrategy.SameDomain
+     * @default EnqueueStrategy.SameDomain
      */
-    strategy?: DomainStrategy | 'all' | 'same-domain';
+    strategy?: EnqueueStrategy | 'all' | 'same-domain';
 }
 
-export enum DomainStrategy {
+export enum EnqueueStrategy {
     All = 'all',
     SameDomain = 'same-domain'
 }
@@ -129,22 +129,22 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         ))),
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
-            DomainStrategy.All,
-            DomainStrategy.SameDomain,
+            EnqueueStrategy.All,
+            EnqueueStrategy.SameDomain,
         ]),
     }));
 
     const extraPseudoUrls = [];
 
     if (options.baseUrl) {
-        switch (options.strategy ?? DomainStrategy.SameDomain) {
-            case DomainStrategy.SameDomain:
+        switch (options.strategy ?? EnqueueStrategy.SameDomain) {
+            case EnqueueStrategy.SameDomain:
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to a url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
                 extraPseudoUrls.push(`${new URL(options.baseUrl).origin}/[.*]`);
                 break;
-            case DomainStrategy.All:
+            case EnqueueStrategy.All:
             default:
                 break;
         }
