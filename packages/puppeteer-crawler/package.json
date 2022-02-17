@@ -62,8 +62,5 @@
         "puppeteer": {
             "optional": true
         }
-    },
-    "devDependencies": {
-        "puppeteer": "10.x"
     }
 }

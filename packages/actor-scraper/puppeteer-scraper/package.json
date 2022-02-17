@@ -12,9 +12,7 @@
 		"puppeteer": "*"
 	},
 	"devDependencies": {
-		"@apify/tsconfig": "^0.1.0",
-		"markdown-toc": "^1.2.0",
-		"typescript": "^4.5.4"
+		"markdown-toc": "^1.2.0"
 	},
 	"scripts": {
 		"start": "node dist/main.js",
