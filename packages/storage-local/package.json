@@ -46,14 +46,14 @@
         "copy": "ts-node -T ../../scripts/copy.ts"
     },
     "dependencies": {
-        "@apify/consts": "^1.0.0",
-        "@apify/log": "^1.0.0",
+        "@apify/consts": "^1.7.0",
+        "@apify/log": "^1.1.10",
         "better-sqlite3-with-prebuilds": "^7.1.8",
         "content-type": "^1.0.4",
-        "fs-extra": "^9.1.0",
+        "fs-extra": "^10.0.0",
         "mime-types": "^2.1.30",
-        "ow": "^0.23.0",
-        "tslib": "^2.2.0"
+        "ow": "^0.28.1",
+        "tslib": "^2.3.1"
     },
     "devDependencies": {
         "@types/mime-types": "^2.1.1",
