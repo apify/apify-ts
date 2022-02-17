@@ -136,6 +136,6 @@ aside svg[class*=iconExternalLink] {
     padding-top: 20px;
 }
 
-div.heroButtons_src-pages-index-module {
+header.hero div[class^=heroButtons] {
     justify-content: inherit;
 }
