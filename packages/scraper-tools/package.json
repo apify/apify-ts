@@ -42,6 +42,6 @@
     },
     "peerDependencies": {
         "apify": ">=3.x || >=3.0.0-beta.0",
-        "@crawlers/core": ">=3.x || >=3.0.0-beta.0"
+        "@crawlers/puppeteer": ">=3.x || >=3.0.0-beta.0"
     }
 }
