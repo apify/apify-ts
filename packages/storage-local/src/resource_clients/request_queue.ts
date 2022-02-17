@@ -112,7 +112,7 @@ export class RequestQueueClient {
         return undefined;
     }
 
-    async update(newFields: { name?: string; }): Promise<RawQueueTableData | undefined> {
+    async update(newFields: { name?: string }): Promise<RawQueueTableData | undefined> {
         // The validation is intentionally loose to prevent issues
         // when swapping to a remote queue in production.
         ow(newFields, ow.object.partialShape({
