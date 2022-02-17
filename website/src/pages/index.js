@@ -85,7 +85,7 @@ function ActorExample() {
             <CodeBlock className="language-bash">
                 npm install @crawlers/puppeteer puppeteer
             </CodeBlock>
-            <p>Copy the following code into a file in the project, for example <code>main.js</code>:</p>
+            <p>Copy the following code into a file in the project, for example <code>main.mjs</code>:</p>
             <CodeBlock className="language-typescript">
                 {example}
             </CodeBlock>
