@@ -47,7 +47,6 @@ export class Actor {
     readonly apifyClient: ApifyClient;
 
     private readonly storageManagers = new Map<Constructor, StorageManager>();
-    private _intervalId?: NodeJS.Timer;
 
     constructor(options: ConfigurationOptions = {}) {
         // use default configuration object if nothing overridden (it fallbacks to env vars)
@@ -169,26 +168,11 @@ export class Actor {
         logSystemInfo();
         printOutdatedSdkWarning();
         initializeEvents();
-
-        // Set dummy interval to ensure the process will not be killed while awaiting empty promise:
-        // await new Promise(() => {})
-        // Such a construct is used for testing of actor timeouts and aborts.
-        this._intervalId = setInterval(() => {}, 9999999);
     }
 
-    stop(options: StopOptions = {}): void {
-        options.exit ??= true;
-        options.exitCode ??= EXIT_CODES.SUCCESS;
-
+    exit(options: ExitOptions = {}): void {
         stopEvents();
-
-        if (this._intervalId) {
-            clearInterval(this._intervalId);
-        }
-
-        if (options.exit) {
-            process.exit(EXIT_CODES.SUCCESS);
-        }
+        process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
     }
 
     /**
@@ -1367,10 +1351,7 @@ export interface MetamorphOptions {
     customAfterSleepMillis?: number;
 }
 
-export interface StopOptions {
-    /** Call `process.exit()`, defaults to true. */
-    exit?: boolean;
-
+export interface ExitOptions {
     /** Exit code, defaults to 0 */
     exitCode?: number;
 }
