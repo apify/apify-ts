@@ -119,7 +119,7 @@ export class RequestQueueClient {
             name: ow.optional.string.nonEmpty,
         }));
 
-        if (!newFields.name) return;
+        if (!newFields.name) return undefined;
 
         const newPath = join(dirname(this.queueDir), newFields.name);
 

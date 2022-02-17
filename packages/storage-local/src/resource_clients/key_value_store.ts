@@ -204,7 +204,7 @@ export class KeyValueStoreClient {
         let result;
         try {
             result = await this._handleFile(key, handler);
-            if (!result) return;
+            if (!result) return undefined;
         } catch (err: any) {
             if (err.code === 'ENOENT') {
                 throw err;

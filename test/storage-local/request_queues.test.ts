@@ -473,7 +473,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err: any) {
+            } catch (err) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -483,7 +483,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err: any) {
+            } catch (err) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -492,7 +492,7 @@ describe('addRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).addRequest(throwRequest);
                 throw new Error('wrong-error');
-            } catch (err: any) {
+            } catch (err) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -636,7 +636,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err: any) {
+            } catch (err) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -646,7 +646,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err: any) {
+            } catch (err) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
@@ -655,7 +655,7 @@ describe('updateRequest', () => {
             try {
                 await storageLocal.requestQueue(queueName).updateRequest(request);
                 throw new Error('wrong-error');
-            } catch (err: any) {
+            } catch (err) {
                 expect(err).toBeInstanceOf(ArgumentError);
             }
         });
