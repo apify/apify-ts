@@ -54,5 +54,9 @@
         "mime-types": "^2.1.30",
         "ow": "^0.23.0",
         "tslib": "^2.2.0"
+    },
+    "devDependencies": {
+        "@types/mime-types": "^2.1.1",
+        "jest-circus": "^27.5.1"
     }
 }
