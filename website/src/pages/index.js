@@ -68,7 +68,7 @@ const example = `import { PuppeteerCrawler } from '@crawlers/puppeteer';
 const crawler = new PuppeteerCrawler({
     async requestHandler({ request, page, enqueueLinks }) {
         const title = await page.title();
-        ${'console.log(`Tilte of ${request.url}`: ${title});'}
+        ${'console.log(`Title of ${request.url}`: ${title});'}
         await enqueueLinks();
     },
 });
