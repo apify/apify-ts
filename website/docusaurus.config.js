@@ -149,6 +149,22 @@ module.exports = {
             defaultMode: 'light',
             disableSwitch: false,
             respectPrefersColorScheme: true,
+            switchConfig: {
+                darkIconStyle: {
+                    backgroundImage: 'url(./img/switch-dark.svg)',
+                    color: 'transparent',
+                    width: 19,
+                    height: 19,
+                    margin: '-4.5px 0 0 -5px',
+                },
+                lightIconStyle: {
+                    backgroundImage: 'url(./img/switch-light.svg)',
+                    color: 'transparent',
+                    width: 19,
+                    height: 19,
+                    margin: '-4.5px 0 0px -2px',
+                },
+            },
         },
         prism: {
             defaultLanguage: 'typescript',
