@@ -1,5 +1,8 @@
 import _ from 'underscore';
 import sinon from 'sinon';
+import express from 'express';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import log from '@apify/log';
 import {
@@ -18,10 +21,25 @@ import {
     KeyValueStore,
 } from 'crawlers';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { startExpressAppPromise } from '../_helper';
 
 describe('BasicCrawler', () => {
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
+
+    const HOSTNAME = '127.0.0.1';
+    let port: number;
+    let server: Server;
+    beforeAll(async () => {
+        const app = express();
+
+        app.get('/', (req, res) => {
+            res.send(`<html><head><title>Example Domain</title></head></html>`);
+        });
+
+        server = await startExpressAppPromise(app, 0);
+        port = (server.address() as AddressInfo).port;
+    });
 
     beforeAll(async () => {
         logLevel = log.getLevel();
@@ -30,6 +48,7 @@ describe('BasicCrawler', () => {
     });
 
     beforeEach(async () => {
+        jest.clearAllMocks();
         const storageDir = await localStorageEmulator.init();
         Configuration.getGlobalConfig().set('localStorageDir', storageDir);
     });
@@ -37,6 +56,10 @@ describe('BasicCrawler', () => {
     afterAll(async () => {
         await localStorageEmulator.destroy();
         log.setLevel(logLevel);
+    });
+
+    afterAll(() => {
+        server.close();
     });
 
     test('should run in parallel thru all the requests', async () => {
@@ -639,6 +662,138 @@ describe('BasicCrawler', () => {
         const maxSignedInteger = 2 ** 31 - 1;
         // @ts-expect-error Accessing private prop
         expect(crawler.handleRequestTimeoutMillis).toBe(maxSignedInteger);
+    });
+
+    test('should not log stack trace for timeout errors by default', async () => {
+        log.setLevel(log.LEVELS.INFO);
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const warnMock = jest.fn();
+        console.warn = warnMock;
+
+        const errMock = jest.fn();
+        console.error = errMock;
+
+        const crawler = new BasicCrawler({
+            requestList,
+            handleRequestTimeoutSecs: 1,
+            maxRequestRetries: 3,
+            handleRequestFunction: () => sleep(5 * 1e3),
+        });
+
+        await crawler.run();
+
+        expect(warnMock.mock.calls.length).toBe(3);
+        for (const args of warnMock.mock.calls) {
+            expect(args.length).toBe(1);
+            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
+        }
+
+        expect(errMock.mock.calls.length).toBe(1);
+        for (const args of errMock.mock.calls) {
+            expect(args.length).toBe(1);
+            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
+        }
+
+        log.setLevel(log.LEVELS.OFF);
+    });
+
+    test('should log stack trace for non-timeout errors only when request will no longer be retried by default', async () => {
+        log.setLevel(log.LEVELS.INFO);
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const warnMock = jest.fn();
+        console.warn = warnMock;
+
+        const errMock = jest.fn();
+        console.error = errMock;
+
+        const crawler = new BasicCrawler({
+            requestList,
+            handleRequestTimeoutSecs: 1,
+            maxRequestRetries: 3,
+            handleRequestFunction: () => {
+                throw new Error('Other non-timeout error');
+            },
+        });
+
+        await crawler.run();
+
+        expect(warnMock.mock.calls.length).toBe(3);
+        for (const args of warnMock.mock.calls) {
+            expect(args.length).toBe(1);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(false);
+        }
+
+        expect(errMock.mock.calls.length).toBe(1);
+        for (const args of errMock.mock.calls) {
+            expect(args.length).toBe(1);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
+        }
+
+        log.setLevel(log.LEVELS.OFF);
+    });
+
+    test('should log stack trace for timeout errors when log level set to DEBUG', async () => {
+        log.setLevel(log.LEVELS.DEBUG);
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const errMock = jest.fn();
+        console.error = errMock;
+
+        const crawler = new BasicCrawler({
+            requestList,
+            handleRequestTimeoutSecs: 1,
+            maxRequestRetries: 3,
+            handleRequestFunction: () => sleep(5 * 1e3),
+        });
+
+        await crawler.run();
+
+        expect(errMock.mock.calls.length).toBe(4);
+        for (const args of errMock.mock.calls) {
+            expect(args.length).toBe(1);
+            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
+        }
+
+        log.setLevel(log.LEVELS.OFF);
+    });
+
+    test('should log stack trace for non-timeout errors when log level set to DEBUG', async () => {
+        log.setLevel(log.LEVELS.DEBUG);
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const errMock = jest.fn();
+        console.error = errMock;
+
+        const crawler = new BasicCrawler({
+            requestList,
+            handleRequestTimeoutSecs: 1,
+            maxRequestRetries: 3,
+            handleRequestFunction: () => {
+                throw new Error('Other non-timeout error');
+            },
+        });
+
+        await crawler.run();
+
+        expect(errMock.mock.calls.length).toBe(4);
+        for (const args of errMock.mock.calls) {
+            expect(args.length).toBe(1);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
+        }
+
+        log.setLevel(log.LEVELS.OFF);
     });
 
     describe('Uses SessionPool', () => {

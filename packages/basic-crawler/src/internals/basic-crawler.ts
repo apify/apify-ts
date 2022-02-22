@@ -697,11 +697,21 @@ export class BasicCrawler<
         if (shouldRetryRequest) {
             request.retryCount++;
             const { url, retryCount, id } = request;
-            this.log.exception(
-                error,
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
-                { url, retryCount, id },
-            );
+            // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
+            // Thus, we print the full stack trace only for DEBUG log level.
+            // Maybe it's worth adding another ENV variable instead of using log levels here.
+            if (this.log.getLevel() < 5) {
+                this.log.warning(
+                    `Reclaiming failed request back to the list or queue. ${error}`,
+                    { url, retryCount },
+                );
+            } else {
+                this.log.exception(
+                    error,
+                    'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                    { url, retryCount, id },
+                );
+            }
             await source.reclaimRequest(request);
         } else {
             // If we get here, the request is either not retryable
@@ -724,11 +734,19 @@ export class BasicCrawler<
             await this.failedContextHandler(crawlingContext);
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
-            this.log.exception(
-                crawlingContext.error,
-                'Request failed and reached maximum retries',
-                { id, url, method, uniqueKey },
-            );
+            if (crawlingContext.error instanceof TimeoutError && this.log.getLevel() < 5) {
+                crawlingContext.error.stack = crawlingContext.error.message;
+                this.log.error(
+                    `Request failed and reached maximum retries. ${crawlingContext.error}`,
+                    { url, method, uniqueKey },
+                );
+            } else {
+                this.log.exception(
+                    crawlingContext.error,
+                    'Request failed and reached maximum retries',
+                    { id, url, method, uniqueKey },
+                );
+            }
         }
     }
 
