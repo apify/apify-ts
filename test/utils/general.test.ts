@@ -103,8 +103,6 @@ describe('purgeLocalStorage()', () => {
     // Create test folders
     const folder = Date.now().toString(16);
     syncFs.mkdirSync(folder);
-    // TODO: maybe default folder name will change
-    syncFs.mkdirSync('apify_storage');
 
     test('should purge local storage by default', async () => {
         await expect(purgeLocalStorage()).resolves.toBeUndefined();

@@ -20,11 +20,11 @@ jest.mock('@crawlers/utils/src/internals/request', () => {
 
 const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
 
-describe('downloadListOfUrls()', () => {
-    afterAll(() => {
-        jest.unmock('@crawlers/utils/src/internals/request');
-    });
+afterAll(() => {
+    jest.unmock('@crawlers/utils/src/internals/request');
+});
 
+describe('downloadListOfUrls()', () => {
     test('downloads a list of URLs', async () => {
         const text = fs.readFileSync(path.join(baseDataPath, 'simple_url_list.txt'), 'utf8');
         const arr = text.trim().split(/[\r\n]+/g).map((u) => u.trim());

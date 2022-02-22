@@ -26,8 +26,9 @@ import {
     CheerioCrawler,
     RequestList,
     createProxyConfiguration,
-    requestUtils,
     CheerioHandleFailedRequestInput,
+    requestAsBrowser,
+    RequestAsBrowserOptions,
 } from 'crawlers';
 import { IncomingHttpHeaders, Server } from 'http';
 import { AddressInfo } from 'net';
@@ -147,6 +148,20 @@ app.get('/image-type', (_req, res) => {
 app.get('/timeout', async (_req, res) => {
     await sleep(32000);
     res.type('html').send('<div>TEST</div>');
+});
+
+jest.mock('@crawlers/utils/src/internals/request', () => {
+    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+    return {
+        ...original,
+        requestAsBrowser: jest.fn(),
+    };
+});
+
+const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+
+afterAll(() => {
+    jest.unmock('@crawlers/utils/src/internals/request');
 });
 
 /* eslint-disable no-underscore-dangle */
@@ -946,19 +961,18 @@ describe('CheerioCrawler', () => {
 
             });
 
-            const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
             await crawler.run();
             requests.forEach((_req, i) => {
                 if (i >= 1) {
-                    expect(spy.mock.calls[i][0].headers.Cookie).toBe(cookie);
+                    expect(requestAsBrowserSpy.mock.calls[i][0].headers.Cookie).toBe(cookie);
                 }
             });
-            spy.mockRestore();
+            requestAsBrowserSpy.mockClear();
         });
 
         test('should merge cookies set in pre-nav hook with the session ones', async () => {
             const responses: unknown[] = [];
-            const requestAsBrowserOptions: requestUtils.RequestAsBrowserOptions[] = [];
+            const requestAsBrowserOptions: RequestAsBrowserOptions[] = [];
             const crawler = new CheerioCrawler({
                 requestList: await RequestList.open(null, [{
                     url: `http://${HOST}:${port}/headers`,
@@ -1105,15 +1119,15 @@ describe('CheerioCrawler', () => {
 
             const requestListNew = new RequestList({ sources: sourcesNew });
             let usedSession: Session;
-            const usedRequests: requestUtils.RequestAsBrowserOptions[] = [];
+            const usedRequests: RequestAsBrowserOptions[] = [];
             const status = { connected: true };
 
-            const fakeCall = (opt: requestUtils.RequestAsBrowserOptions) => {
+            const fakeCall = (opt: RequestAsBrowserOptions) => {
                 usedRequests.push(opt);
                 return { body: status } as never;
             };
 
-            const stub = sinon.stub(requestUtils, 'requestAsBrowser').callsFake(fakeCall);
+            const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
 
             const proxyConfiguration = await createProxyConfiguration();
             const cheerioCrawler = new CheerioCrawler({
@@ -1138,7 +1152,7 @@ describe('CheerioCrawler', () => {
 
             const cheerioCrawlerRequest = usedRequests[1];
             expect(cheerioCrawlerRequest.proxyUrl.includes(usedSession.id)).toBeTruthy();
-            stub.restore();
+            stub.mockClear();
         });
     });
 
@@ -1206,7 +1220,7 @@ describe('CheerioCrawler', () => {
         test('handleFailedRequestFunction contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
 
-            const stub = sinon.stub(requestUtils, 'requestAsBrowser').resolves({ body: { connected: true } } as never);
+            const stub = requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
             const proxyConfiguration = await createProxyConfiguration();
 
@@ -1227,7 +1241,7 @@ describe('CheerioCrawler', () => {
             await cheerioCrawler.run();
 
             delete process.env[ENV_VARS.PROXY_PASSWORD];
-            stub.restore();
+            stub.mockClear();
         });
     });
 
