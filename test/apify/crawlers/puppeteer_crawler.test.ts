@@ -258,38 +258,44 @@ describe('PuppeteerCrawler', () => {
         });
 
         // @ts-expect-error Overriding protected method
-        const logSpy = jest.spyOn(crawler.log, 'exception');
-        logSpy.mockImplementation(() => {});
+        const logWarningSpy = jest.spyOn(crawler.log, 'warning');
+        logWarningSpy.mockImplementation(() => {});
+
+        // @ts-expect-error Overriding protected method
+        const logErrorSpy = jest.spyOn(crawler.log, 'exception');
+        logErrorSpy.mockImplementation(() => {});
 
         await crawler.run();
         await crawler.teardown();
         await requestQueue.drop();
 
         expect(handlePageFunction).not.toBeCalled();
-        const exceptions = logSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
-        expect(exceptions).toEqual([
+        const warnings = logWarningSpy.mock.calls.map((call) => [call[0], call[1].retryCount]);
+        expect(warnings).toEqual([
             [
-                'Navigation timed out after 0.005 seconds.',
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                'Reclaiming failed request back to the list or queue. Error: Navigation timed out after 0.005 seconds.',
                 1,
             ],
             [
-                'Navigation timed out after 0.005 seconds.',
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                'Reclaiming failed request back to the list or queue. Error: Navigation timed out after 0.005 seconds.',
                 2,
             ],
             [
-                'Navigation timed out after 0.005 seconds.',
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                'Reclaiming failed request back to the list or queue. Error: Navigation timed out after 0.005 seconds.',
                 3,
             ],
+        ]);
+        logWarningSpy.mockRestore();
+
+        const exceptions = logErrorSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
+        expect(exceptions).toEqual([
             [
                 'Navigation timed out after 0.005 seconds.',
                 'Request failed and reached maximum retries',
                 undefined,
             ],
         ]);
-        logSpy.mockRestore();
+        logErrorSpy.mockRestore();
     });
 
     test('timeout in preLaunchHooks will abort the page function as early as possible (gh #1216)', async () => {
@@ -312,38 +318,44 @@ describe('PuppeteerCrawler', () => {
         });
 
         // @ts-expect-error Overriding protected method
-        const logSpy = jest.spyOn(crawler.log, 'exception');
-        logSpy.mockImplementation(() => {});
+        const logWarningSpy = jest.spyOn(crawler.log, 'warning');
+        logWarningSpy.mockImplementation(() => {});
+
+        // @ts-expect-error Overriding protected method
+        const logErrorSpy = jest.spyOn(crawler.log, 'exception');
+        logErrorSpy.mockImplementation(() => {});
 
         await crawler.run();
         await crawler.teardown();
         await requestQueue.drop();
 
         expect(handlePageFunction).not.toBeCalled();
-        const exceptions = logSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
-        expect(exceptions).toEqual([
+        const warnings = logWarningSpy.mock.calls.map((call) => [call[0], call[1].retryCount]);
+        expect(warnings).toEqual([
             [
-                'Navigation timed out after 0.005 seconds.',
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                'Reclaiming failed request back to the list or queue. Error: Navigation timed out after 0.005 seconds.',
                 1,
             ],
             [
-                'Navigation timed out after 0.005 seconds.',
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                'Reclaiming failed request back to the list or queue. Error: Navigation timed out after 0.005 seconds.',
                 2,
             ],
             [
-                'Navigation timed out after 0.005 seconds.',
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
+                'Reclaiming failed request back to the list or queue. Error: Navigation timed out after 0.005 seconds.',
                 3,
             ],
+        ]);
+        logWarningSpy.mockRestore();
+
+        const exceptions = logErrorSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
+        expect(exceptions).toEqual([
             [
                 'Navigation timed out after 0.005 seconds.',
                 'Request failed and reached maximum retries',
                 undefined,
             ],
         ]);
-        logSpy.mockRestore();
+        logErrorSpy.mockRestore();
     });
 
     test('should set cookies assigned to session to page', async () => {
