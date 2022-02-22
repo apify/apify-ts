@@ -1,13 +1,12 @@
 import { EventEmitter } from 'events';
 import ow from 'ow';
 import { Log } from '@apify/log';
+import { log as defaultLog, Dictionary } from '@crawlers/utils';
 import { KeyValueStore, openKeyValueStore } from '../storages/key_value_store';
 import { Session, SessionOptions } from './session';
 import { events } from '../events';
-import { log as defaultLog } from '../utils_log';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import { Configuration } from '../configuration';
-import { Dictionary } from '../typedefs';
 
 /**
  * Factory user-function which creates customized {@link Session} instances.

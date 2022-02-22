@@ -5,12 +5,11 @@ import { Cookie, CookieJar } from 'tough-cookie';
 import { IncomingMessage } from 'http';
 import { HTTPResponse, Protocol } from 'puppeteer';
 import { Log } from '@apify/log';
+import { log as defaultLog, Dictionary } from '@crawlers/utils';
 import { EVENT_SESSION_RETIRED } from './events';
 import { STATUS_CODES_BLOCKED } from '../constants';
 import { getCookiesFromResponse } from './session_utils';
-import { log as defaultLog } from '../utils_log';
 import { SessionPool } from './session_pool';
-import { Dictionary } from '../typedefs';
 
 export type PuppeteerCookie = Protocol.Network.Cookie | BrowserPoolCookie;
 

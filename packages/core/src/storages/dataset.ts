@@ -3,11 +3,10 @@ import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import { ApifyClient, DatasetClient, Dataset as ClientDataset } from 'apify-client';
 import { ApifyStorageLocal } from '@crawlers/storage';
 import type { PaginatedList } from 'apify-client';
+import { log, Dictionary, Awaitable } from '@crawlers/utils';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
-import { log } from '../utils_log';
 
 import { Configuration } from '../configuration';
-import { Dictionary, Awaitable } from '../typedefs';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;

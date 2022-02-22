@@ -3,7 +3,7 @@ import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
 import ow from 'ow';
 import { Dictionary, keys } from './typedefs';
-import { log } from './utils_log';
+import { log } from './log';
 
 type GotRequest = ReturnType<GotStream>
 

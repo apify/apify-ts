@@ -1,6 +1,6 @@
 import { Cookie, CookieJar } from 'tough-cookie';
+import { log } from '@crawlers/utils';
 import { Session } from '../session_pool/session';
-import { log } from '../utils_log';
 
 /**
  * Handles timeout request

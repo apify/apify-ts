@@ -2,8 +2,8 @@ import { ENV_VARS } from '@apify/consts';
 import { ApifyClient } from 'apify-client';
 import { ApifyStorageLocal } from '@crawlers/storage';
 import { LruCache } from '@apify/datastructures';
+import { Constructor } from '@crawlers/utils';
 import { Configuration } from '../configuration';
-import { Constructor } from '../typedefs';
 
 const MAX_OPENED_STORAGES = 1000;
 

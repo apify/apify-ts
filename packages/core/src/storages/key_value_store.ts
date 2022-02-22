@@ -3,10 +3,10 @@ import { jsonStringifyExtended } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
 import { ApifyClient, KeyValueStoreClient } from 'apify-client';
 import { ApifyStorageLocal } from '@crawlers/storage';
+import { Awaitable, Dictionary } from '@crawlers/utils';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';
-import { Awaitable, Dictionary } from '../typedefs';
 
 export type KeyValueStoreValueTypes = Record<string, unknown> | null | Buffer | string;
 

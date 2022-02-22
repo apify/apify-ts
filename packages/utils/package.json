@@ -1,0 +1,54 @@
+{
+    "name": "@crawlers/utils",
+    "version": "3.0.0",
+    "description": "A set of shared utilities that can be used by crawlers",
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "keywords": [
+        "apify",
+        "crawlers",
+        "crawling",
+        "utilities",
+        "utils"
+    ],
+    "author": {
+        "name": "Apify",
+        "email": "support@apify.com",
+        "url": "https://apify.com"
+    },
+    "contributors": [
+        "Ondra Urban <ondra@apify.com>"
+    ],
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/apify/apify-ts"
+    },
+    "bugs": {
+        "url": "https://github.com/apifytech/apify-ts/issues"
+    },
+    "homepage": "https://sdk.apify.com/",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "npm run clean && npm run compile && npm run copy",
+        "clean": "rimraf ./dist",
+        "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
+        "copy": "ts-node -T ../../scripts/copy.ts"
+    },
+    "dependencies": {
+        "cheerio": "1.0.0-rc.10",
+        "tslib": "^2.3.1"
+    }
+}

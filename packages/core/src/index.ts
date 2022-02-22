@@ -1,3 +1,4 @@
+export * from '@crawlers/utils';
 export * from './events';
 export * from './autoscaling';
 export * from './crawlers';

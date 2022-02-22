@@ -14,8 +14,6 @@ import {
     initializeEvents,
     IStorage,
     KeyValueStore,
-    logSystemInfo,
-    printOutdatedSdkWarning,
     ProxyConfiguration,
     ProxyConfigurationOptions,
     RecordOptions,
@@ -31,6 +29,10 @@ import {
     StorageManager,
     StorageManagerOptions,
 } from '@crawlers/core';
+import {
+    logSystemInfo,
+    printOutdatedSdkWarning,
+} from './utils';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration

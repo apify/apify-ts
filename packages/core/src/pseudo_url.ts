@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { log } from './utils_log';
+import { log } from '@crawlers/utils';
 import { Request, RequestOptions } from './request';
 
 /**

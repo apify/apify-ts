@@ -2,9 +2,9 @@ import { addTimeoutToPromise } from '@apify/timeout';
 import { betterSetInterval, betterClearInterval, BetterIntervalID } from '@apify/utilities';
 import { Log } from '@apify/log';
 import ow from 'ow';
+import { log as defaultLog } from '@crawlers/utils';
 import { Snapshotter, SnapshotterOptions } from './snapshotter';
 import { SystemInfo, SystemStatus, SystemStatusOptions } from './system_status';
-import { log as defaultLog } from '../utils_log';
 
 export interface AutoscaledPoolOptions {
     /**

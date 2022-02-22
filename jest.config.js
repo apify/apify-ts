@@ -20,6 +20,7 @@ module.exports = {
         '^@crawlers/cheerio$': '<rootDir>/packages/cheerio-crawler/src',
         '^@crawlers/playwright$': '<rootDir>/packages/playwright-crawler/src',
         '^@crawlers/puppeteer$': '<rootDir>/packages/puppeteer-crawler/src',
+        '^@crawlers/utils$': '<rootDir>/packages/utils/src',
         '^@crawlers/(.*)/(.*)$': '<rootDir>/packages/$1/$2',
         '^@crawlers/(.*)$': '<rootDir>/packages/$1/src',
     },

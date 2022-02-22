@@ -4,7 +4,6 @@ import { ENV_VARS } from '@apify/consts';
 import {
     Dictionary,
     Constructor,
-    isAtHome,
 } from '@crawlers/core';
 import {
     BrowserPlugin,
@@ -61,9 +60,15 @@ export abstract class BrowserLauncher<
             if (e.code === 'MODULE_NOT_FOUND') {
                 const msg = `Cannot find module '${launcher}'. Did you you install the '${launcher}' package?\n`
                     + `Make sure you have '${launcher}' in your package.json dependencies and in your package-lock.json, if you use it.`;
-                e.message = isAtHome()
-                    ? `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`
-                    : msg;
+                try {
+                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+                    const apify = require('apify');
+                    // TODO: this might be doable better to know if its used on apify or not...
+                    if (apify.isAtHome()) {
+                        e.message = `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`;
+                    }
+                // eslint-disable-next-line no-empty
+                } catch {}
             }
 
             throw err;

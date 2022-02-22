@@ -1,10 +1,7 @@
 import ow from 'ow';
 import { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from 'browser-pool';
-import {
-    isAtHome,
-    DEFAULT_USER_AGENT,
-} from '@crawlers/core';
+import { DEFAULT_USER_AGENT } from '@crawlers/core';
 import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
 import { applyStealthToBrowser, StealthOptions } from './stealth';
 
@@ -149,7 +146,12 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
         const launchOptions = super.createLaunchOptions();
         launchOptions.args = launchOptions.args || [];
 
-        if (isAtHome()) launchOptions.args.push('--no-sandbox');
+        try {
+            // eslint-disable-next-line
+            const { isAtHome } = require('apify');
+            if (isAtHome()) launchOptions.args.push('--no-sandbox');
+        // eslint-disable-next-line no-empty
+        } catch {}
 
         launchOptions.defaultViewport ??= LAUNCH_PUPPETEER_DEFAULT_VIEWPORT;
 

@@ -3,8 +3,7 @@ import crypto, { BinaryLike } from 'crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
 import { AllowedHttpMethods } from 'apify-client';
-import { log as defaultLog } from './utils_log';
-import { keys } from './typedefs';
+import { log as defaultLog, keys } from '@crawlers/utils';
 
 // new properties on the Request object breaks serialization
 const log = defaultLog.child({ prefix: 'Request' });

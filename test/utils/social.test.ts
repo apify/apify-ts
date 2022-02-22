@@ -1,16 +1,33 @@
-import { socialUtils } from '@crawlers/core';
-// TODO: we need to fix the type exports at the top level
-import { SocialHandles } from '@crawlers/core/src/utils_social';
+import {
+    emailsFromText,
+    emailsFromUrls,
+    phonesFromText,
+    phonesFromUrls,
+    SocialHandles,
+    parseHandlesFromHtml,
+    EMAIL_REGEX,
+    EMAIL_REGEX_GLOBAL,
+    LINKEDIN_REGEX,
+    LINKEDIN_REGEX_GLOBAL,
+    INSTAGRAM_REGEX,
+    INSTAGRAM_REGEX_GLOBAL,
+    TWITTER_REGEX,
+    TWITTER_REGEX_GLOBAL,
+    FACEBOOK_REGEX,
+    FACEBOOK_REGEX_GLOBAL,
+    YOUTUBE_REGEX,
+    YOUTUBE_REGEX_GLOBAL,
+} from '@crawlers/utils';
 
 describe('utils.social', () => {
     describe('emailsFromText()', () => {
         const testEmailsFromText = (text: string, phones: string[]) => {
-            expect(socialUtils.emailsFromText(text)).toEqual(phones);
+            expect(emailsFromText(text)).toEqual(phones);
         };
 
         test('works with arg with no emails or invalid', () => {
             // @ts-expect-error invalid input type
-            expect(socialUtils.emailsFromText()).toEqual([]);
+            expect(emailsFromText()).toEqual([]);
             testEmailsFromText('', []);
             testEmailsFromText(null, []);
             testEmailsFromText(undefined, []);
@@ -54,37 +71,37 @@ describe('utils.social', () => {
         test('throws on invalid arg', () => {
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.emailsFromUrls();
+                emailsFromUrls();
             }).toThrowError(/must be an array/);
 
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.emailsFromUrls({});
+                emailsFromUrls({});
             }).toThrowError(/must be an array/);
 
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.emailsFromUrls('fwefwef');
+                emailsFromUrls('fwefwef');
             }).toThrowError(/must be an array/);
 
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.emailsFromUrls(12345);
+                emailsFromUrls(12345);
             }).toThrowError(/must be an array/);
         });
 
         test('extracts emails correctly', () => {
-            expect(socialUtils.emailsFromUrls([])).toEqual([]);
+            expect(emailsFromUrls([])).toEqual([]);
             // @ts-expect-error invalid input type
-            expect(socialUtils.emailsFromUrls([1, 2, {}, 'fwef', null, undefined])).toEqual([]);
+            expect(emailsFromUrls([1, 2, {}, 'fwef', null, undefined])).toEqual([]);
 
-            expect(socialUtils.emailsFromUrls([
+            expect(emailsFromUrls([
                 'mailto:info@example.com',
             ])).toEqual([
                 'info@example.com',
             ]);
 
-            expect(socialUtils.emailsFromUrls([
+            expect(emailsFromUrls([
                 'http://www.example.com',
                 'mailto:info@example.com',
                 'mailto:info@example.com',
@@ -96,7 +113,7 @@ describe('utils.social', () => {
                 'info@example.com',
             ]);
 
-            expect(socialUtils.emailsFromUrls([
+            expect(emailsFromUrls([
                 'http://www.example.com',
                 'mailto:info@example.com',
                 'mailto:info@example.com',
@@ -112,12 +129,12 @@ describe('utils.social', () => {
 
     describe('phonesFromText()', () => {
         const testPhonesFromText = (text: string, phones: string[]) => {
-            expect(socialUtils.phonesFromText(text)).toEqual(phones);
+            expect(phonesFromText(text)).toEqual(phones);
         };
 
         test('works with arg with no phones or invalid', () => {
             // @ts-expect-error invalid input type
-            expect(socialUtils.phonesFromText()).toEqual([]);
+            expect(phonesFromText()).toEqual([]);
 
             testPhonesFromText('', []);
             testPhonesFromText(null, []);
@@ -250,31 +267,31 @@ describe('utils.social', () => {
         test('throws on invalid arg', () => {
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.phonesFromUrls();
+                phonesFromUrls();
             }).toThrowError(/must be an array/);
 
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.phonesFromUrls({});
+                phonesFromUrls({});
             }).toThrowError(/must be an array/);
 
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.phonesFromUrls('fwefwef');
+                phonesFromUrls('fwefwef');
             }).toThrowError(/must be an array/);
 
             expect(() => {
                 // @ts-expect-error invalid input type
-                socialUtils.phonesFromUrls(12345);
+                phonesFromUrls(12345);
             }).toThrowError(/must be an array/);
         });
 
         test('extracts phones correctly', () => {
-            expect(socialUtils.phonesFromUrls([])).toEqual([]);
+            expect(phonesFromUrls([])).toEqual([]);
             // @ts-expect-error invalid input type
-            expect(socialUtils.phonesFromUrls([1, 2, {}, 'fwef', null, undefined])).toEqual([]);
+            expect(phonesFromUrls([1, 2, {}, 'fwef', null, undefined])).toEqual([]);
 
-            expect(socialUtils.phonesFromUrls([
+            expect(phonesFromUrls([
                 'tel:12345678',
                 'tel:/22345678', //
                 'tel://32345678',
@@ -302,7 +319,7 @@ describe('utils.social', () => {
                 '9992345678',
             ]);
 
-            expect(socialUtils.phonesFromUrls([
+            expect(phonesFromUrls([
                 'https://www.example.com',
                 'ftp://www.example.com',
                 '1234567',
@@ -331,28 +348,28 @@ describe('utils.social', () => {
 
         test('handles invalid arg', () => {
             // @ts-expect-error invalid input type
-            expect(socialUtils.parseHandlesFromHtml()).toEqual(EMPTY_RESULT);
-            expect(socialUtils.parseHandlesFromHtml(undefined)).toEqual(EMPTY_RESULT);
-            expect(socialUtils.parseHandlesFromHtml(null)).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml()).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml(undefined)).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml(null)).toEqual(EMPTY_RESULT);
             // @ts-expect-error invalid input type
-            expect(socialUtils.parseHandlesFromHtml({})).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml({})).toEqual(EMPTY_RESULT);
             // @ts-expect-error invalid input type
-            expect(socialUtils.parseHandlesFromHtml(1234)).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml(1234)).toEqual(EMPTY_RESULT);
         });
 
         test('works', () => {
-            expect(socialUtils.parseHandlesFromHtml('')).toEqual(EMPTY_RESULT);
-            expect(socialUtils.parseHandlesFromHtml('         ')).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml('')).toEqual(EMPTY_RESULT);
+            expect(parseHandlesFromHtml('         ')).toEqual(EMPTY_RESULT);
             const html = 'use the data in this [YouTube Video](https://www.youtube.com/watch?v=BsidLZKdYWQ).\\n\\n## Sample result\\n'
                 + 'use the data in this [YouTube Video](https://www.youtube.com/watch?v=BsidLZKd123).\\\\n\\\\n## Sample result\\\\n';
-            expect(socialUtils.parseHandlesFromHtml(html)).toMatchObject({
+            expect(parseHandlesFromHtml(html)).toMatchObject({
                 youtubes: [
                     'https://www.youtube.com/watch?v=BsidLZKd123',
                     'https://www.youtube.com/watch?v=BsidLZKdYWQ',
                 ],
             });
 
-            expect(socialUtils.parseHandlesFromHtml(`
+            expect(parseHandlesFromHtml(`
                 <html>
                     <head>
                         <title>Bla</title>
@@ -448,7 +465,7 @@ describe('utils.social', () => {
 
         test('data is set correctly', () => {
             const data = {} as any;
-            socialUtils.parseHandlesFromHtml(`
+            parseHandlesFromHtml(`
                 <html>
                     <head>
                         <title>Bla</title>
@@ -466,84 +483,84 @@ describe('utils.social', () => {
 
     describe('EMAIL_REGEX', () => {
         test('works', () => {
-            expect(socialUtils.EMAIL_REGEX).toBeInstanceOf(RegExp);
-            expect(socialUtils.EMAIL_REGEX_GLOBAL).toBeInstanceOf(RegExp);
+            expect(EMAIL_REGEX).toBeInstanceOf(RegExp);
+            expect(EMAIL_REGEX_GLOBAL).toBeInstanceOf(RegExp);
 
-            expect(socialUtils.EMAIL_REGEX.flags).toBe('i');
-            expect(socialUtils.EMAIL_REGEX_GLOBAL.flags).toBe('gi');
+            expect(EMAIL_REGEX.flags).toBe('i');
+            expect(EMAIL_REGEX_GLOBAL.flags).toBe('gi');
 
-            expect(socialUtils.EMAIL_REGEX.test('bob@example.com')).toBe(true);
-            expect(socialUtils.EMAIL_REGEX.test('ALICE@EXAMPLE.COM')).toBe(true);
+            expect(EMAIL_REGEX.test('bob@example.com')).toBe(true);
+            expect(EMAIL_REGEX.test('ALICE@EXAMPLE.COM')).toBe(true);
 
-            expect(socialUtils.EMAIL_REGEX.test('bob+something@example.co.uk')).toBe(true);
-            expect(socialUtils.EMAIL_REGEX.test('really.long.email.address@really.long.domain.name.travel')).toBe(true);
-            expect(socialUtils.EMAIL_REGEX.test('really-long-email-address@really.long.domain.name.travel')).toBe(true);
-            expect(socialUtils.EMAIL_REGEX.test('really_long_email_address@really.long.domain.name.travel')).toBe(true);
+            expect(EMAIL_REGEX.test('bob+something@example.co.uk')).toBe(true);
+            expect(EMAIL_REGEX.test('really.long.email.address@really.long.domain.name.travel')).toBe(true);
+            expect(EMAIL_REGEX.test('really-long-email-address@really.long.domain.name.travel')).toBe(true);
+            expect(EMAIL_REGEX.test('really_long_email_address@really.long.domain.name.travel')).toBe(true);
 
-            expect(socialUtils.EMAIL_REGEX.test('a alice@example.com')).toBe(false);
-            expect(socialUtils.EMAIL_REGEX.test('bob@example.com alice@example.com')).toBe(false);
-            expect(socialUtils.EMAIL_REGEX.test('')).toBe(false);
-            expect(socialUtils.EMAIL_REGEX.test('dummy')).toBe(false);
+            expect(EMAIL_REGEX.test('a alice@example.com')).toBe(false);
+            expect(EMAIL_REGEX.test('bob@example.com alice@example.com')).toBe(false);
+            expect(EMAIL_REGEX.test('')).toBe(false);
+            expect(EMAIL_REGEX.test('dummy')).toBe(false);
 
-            expect(socialUtils.EMAIL_REGEX_GLOBAL.test('bob@example.com')).toBe(true);
-            expect('bob@example.com alice@example.com'.match(socialUtils.EMAIL_REGEX_GLOBAL)).toEqual(['bob@example.com', 'alice@example.com']);
+            expect(EMAIL_REGEX_GLOBAL.test('bob@example.com')).toBe(true);
+            expect('bob@example.com alice@example.com'.match(EMAIL_REGEX_GLOBAL)).toEqual(['bob@example.com', 'alice@example.com']);
 
-            expect(''.match(socialUtils.EMAIL_REGEX_GLOBAL)).toBe(null);
-            expect(' dummy '.match(socialUtils.EMAIL_REGEX_GLOBAL)).toBe(null);
+            expect(''.match(EMAIL_REGEX_GLOBAL)).toBe(null);
+            expect(' dummy '.match(EMAIL_REGEX_GLOBAL)).toBe(null);
         });
     });
 
     describe('LINKEDIN_REGEX', () => {
         test('works', () => {
-            expect(socialUtils.LINKEDIN_REGEX).toBeInstanceOf(RegExp);
-            expect(socialUtils.LINKEDIN_REGEX_GLOBAL).toBeInstanceOf(RegExp);
+            expect(LINKEDIN_REGEX).toBeInstanceOf(RegExp);
+            expect(LINKEDIN_REGEX_GLOBAL).toBeInstanceOf(RegExp);
 
-            expect(socialUtils.LINKEDIN_REGEX.flags).toBe('i');
-            expect(socialUtils.LINKEDIN_REGEX_GLOBAL.flags).toBe('gi');
+            expect(LINKEDIN_REGEX.flags).toBe('i');
+            expect(LINKEDIN_REGEX_GLOBAL.flags).toBe('gi');
 
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/bobnewman')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/bobnewman/')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('http://www.linkedin.com/in/bobnewman')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('http://ie.linkedin.com/in/bobnewman')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://linkedin.com/in/bobnewman')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/carl-newman')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/first-last-123456a')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/first_last_1%23456a')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('HTTPS://WWW.LINKEDIN.COM/IN/CARL-NEWMAN')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('www.linkedin.com/in/bobnewman')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/bobnewman/')).toBe(true);
+            expect(LINKEDIN_REGEX.test('http://www.linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('http://ie.linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/carl-newman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/first-last-123456a')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/first_last_1%23456a')).toBe(true);
+            expect(LINKEDIN_REGEX.test('HTTPS://WWW.LINKEDIN.COM/IN/CARL-NEWMAN')).toBe(true);
+            expect(LINKEDIN_REGEX.test('www.linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX.test('linkedin.com/in/bobnewman')).toBe(true);
 
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/alan-turing')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('en.linkedin.com/in/alan-turing')).toBe(true);
-            expect(socialUtils.LINKEDIN_REGEX.test('linkedin.com/in/alan-turing')).toBe(true);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/alan-turing')).toBe(true);
+            expect(LINKEDIN_REGEX.test('en.linkedin.com/in/alan-turing')).toBe(true);
+            expect(LINKEDIN_REGEX.test('linkedin.com/in/alan-turing')).toBe(true);
 
             // Test there is just on matching group for the username
-            expect('https://www.linkedin.com/in/bobnewman/'.match(socialUtils.LINKEDIN_REGEX)[1]).toBe('bobnewman');
-            expect('http://www.linkedin.com/in/bobnewman'.match(socialUtils.LINKEDIN_REGEX)[1]).toBe('bobnewman');
-            expect('www.linkedin.com/in/bobnewman/'.match(socialUtils.LINKEDIN_REGEX)[1]).toBe('bobnewman');
-            expect('linkedin.com/in/bobnewman'.match(socialUtils.LINKEDIN_REGEX)[1]).toBe('bobnewman');
+            expect('https://www.linkedin.com/in/bobnewman/'.match(LINKEDIN_REGEX)[1]).toBe('bobnewman');
+            expect('http://www.linkedin.com/in/bobnewman'.match(LINKEDIN_REGEX)[1]).toBe('bobnewman');
+            expect('www.linkedin.com/in/bobnewman/'.match(LINKEDIN_REGEX)[1]).toBe('bobnewman');
+            expect('linkedin.com/in/bobnewman'.match(LINKEDIN_REGEX)[1]).toBe('bobnewman');
 
-            expect(socialUtils.LINKEDIN_REGEX.test('')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('dummy')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('a https://www.linkedin.com/in/bobnewman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://linkedin.com/in/bobnewman/sub-page')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('xhttps://www.linkedin.com/in/carl-newman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('0https://www.linkedin.com/in/carl-newman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('_https://www.linkedin.com/in/carl-newman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('xlinkedin.com/in/bobnewman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('_linkedin.com/in/bobnewman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('0linkedin.com/in/bobnewman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/bobnewman/?param=bla')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('://linkedin.com/in/bobnewman')).toBe(false);
-            expect(socialUtils.LINKEDIN_REGEX.test('https://www.linkedin.com/in/bob https://www.linkedin.com/in/alice')).toBe(false);
+            expect(LINKEDIN_REGEX.test('')).toBe(false);
+            expect(LINKEDIN_REGEX.test('dummy')).toBe(false);
+            expect(LINKEDIN_REGEX.test('a https://www.linkedin.com/in/bobnewman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('https://linkedin.com/in/bobnewman/sub-page')).toBe(false);
+            expect(LINKEDIN_REGEX.test('xhttps://www.linkedin.com/in/carl-newman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('0https://www.linkedin.com/in/carl-newman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('_https://www.linkedin.com/in/carl-newman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('xlinkedin.com/in/bobnewman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('_linkedin.com/in/bobnewman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('0linkedin.com/in/bobnewman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/bobnewman/?param=bla')).toBe(false);
+            expect(LINKEDIN_REGEX.test('://linkedin.com/in/bobnewman')).toBe(false);
+            expect(LINKEDIN_REGEX.test('https://www.linkedin.com/in/bob https://www.linkedin.com/in/alice')).toBe(false);
 
-            expect(socialUtils.LINKEDIN_REGEX_GLOBAL.test('https://www.linkedin.com/in/bobnewman')).toBe(true);
+            expect(LINKEDIN_REGEX_GLOBAL.test('https://www.linkedin.com/in/bobnewman')).toBe(true);
             expect(`
                 https://www.linkedin.com/in/bobnewman
                 "http://ie.linkedin.com/in/alicenewman"
                 https://www.linkedin.com/in/someverylongnamesomeverylongnamesomeverylongnamesomeverylongnamesomeverylongnamesomeverylongname
                 linkedin.com/in/carlnewman
-                `.match(socialUtils.LINKEDIN_REGEX_GLOBAL)).toEqual([
+                `.match(LINKEDIN_REGEX_GLOBAL)).toEqual([
                 'https://www.linkedin.com/in/bobnewman',
                 'http://ie.linkedin.com/in/alicenewman',
                 'linkedin.com/in/carlnewman',
@@ -554,62 +571,62 @@ describe('utils.social', () => {
                 xlinkedin.com/in/carlnewman
                 alinkedin.com/in/carlnewman
                 _linkedin.com/in/carlnewman
-                `.match(socialUtils.LINKEDIN_REGEX_GLOBAL)).toEqual([
+                `.match(LINKEDIN_REGEX_GLOBAL)).toEqual([
                 'https://www.linkedin.com/in/bobnewman/',
                 'http://ie.linkedin.com/in/alicenewman',
             ]);
-            expect(''.match(socialUtils.LINKEDIN_REGEX_GLOBAL)).toBe(null);
+            expect(''.match(LINKEDIN_REGEX_GLOBAL)).toBe(null);
         });
     });
 
     describe('INSTAGRAM_REGEX', () => {
         test('works', () => {
-            expect(socialUtils.INSTAGRAM_REGEX).toBeInstanceOf(RegExp);
-            expect(socialUtils.INSTAGRAM_REGEX_GLOBAL).toBeInstanceOf(RegExp);
+            expect(INSTAGRAM_REGEX).toBeInstanceOf(RegExp);
+            expect(INSTAGRAM_REGEX_GLOBAL).toBeInstanceOf(RegExp);
 
-            expect(socialUtils.INSTAGRAM_REGEX.flags).toBe('i');
-            expect(socialUtils.INSTAGRAM_REGEX_GLOBAL.flags).toBe('gi');
+            expect(INSTAGRAM_REGEX.flags).toBe('i');
+            expect(INSTAGRAM_REGEX_GLOBAL.flags).toBe('gi');
 
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('http://www.instagram.com/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://instagram.com/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('HTTPS://INSTAGR.AM/OLD_PRAGUE/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('http://instagr.am/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://www.instagr.am/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('www.instagram.com/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('instagram.com/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('www.instagr.am/old_prague/')).toBe(true);
-            expect(socialUtils.INSTAGRAM_REGEX.test('instagr.am/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('http://www.instagram.com/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('https://instagram.com/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('HTTPS://INSTAGR.AM/OLD_PRAGUE/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('http://instagr.am/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('https://www.instagr.am/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('www.instagram.com/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('instagram.com/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('www.instagr.am/old_prague/')).toBe(true);
+            expect(INSTAGRAM_REGEX.test('instagr.am/old_prague/')).toBe(true);
 
             // Test there is just on matching group for the username
-            expect('https://www.instagram.com/old_prague/'.match(socialUtils.INSTAGRAM_REGEX)[1]).toBe('old_prague');
-            expect('http://www.instagram.com/old_prague/'.match(socialUtils.INSTAGRAM_REGEX)[1]).toBe('old_prague');
-            expect('www.instagram.com/old_prague'.match(socialUtils.INSTAGRAM_REGEX)[1]).toBe('old_prague');
-            expect('instagram.com/old_prague'.match(socialUtils.INSTAGRAM_REGEX)[1]).toBe('old_prague');
+            expect('https://www.instagram.com/old_prague/'.match(INSTAGRAM_REGEX)[1]).toBe('old_prague');
+            expect('http://www.instagram.com/old_prague/'.match(INSTAGRAM_REGEX)[1]).toBe('old_prague');
+            expect('www.instagram.com/old_prague'.match(INSTAGRAM_REGEX)[1]).toBe('old_prague');
+            expect('instagram.com/old_prague'.match(INSTAGRAM_REGEX)[1]).toBe('old_prague');
 
-            expect(socialUtils.INSTAGRAM_REGEX.test('')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('dummy')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('a https://www.instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://www.instagram.com/a')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague/sub-page')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('xhttps://www.instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('0https://www.instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('_https://www.instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('xinstagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('_instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('0instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague/?param=bla')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('://www.instagram.com/old_prague')).toBe(false);
-            expect(socialUtils.INSTAGRAM_REGEX.test('http://www.instagram.com/old_prague http://www.instagram.com/old_brno')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('dummy')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('a https://www.instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('https://www.instagram.com/a')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague/sub-page')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('xhttps://www.instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('0https://www.instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('_https://www.instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('xinstagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('_instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('0instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague/?param=bla')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('://www.instagram.com/old_prague')).toBe(false);
+            expect(INSTAGRAM_REGEX.test('http://www.instagram.com/old_prague http://www.instagram.com/old_brno')).toBe(false);
 
-            expect(socialUtils.INSTAGRAM_REGEX_GLOBAL.test('https://www.instagram.com/old_prague')).toBe(true);
+            expect(INSTAGRAM_REGEX_GLOBAL.test('https://www.instagram.com/old_prague')).toBe(true);
             expect(`
                     https://www.instagram.com/old_prague
                     https://www.instagram.com/someverylongusernamethatisnotgood
                     "instagram.com/old_brno"
                     http://instagr.am/old_plzen
-                    `.match(socialUtils.INSTAGRAM_REGEX_GLOBAL)).toEqual([
+                    `.match(INSTAGRAM_REGEX_GLOBAL)).toEqual([
                 'https://www.instagram.com/old_prague',
                 'instagram.com/old_brno',
                 'http://instagr.am/old_plzen',
@@ -620,61 +637,61 @@ describe('utils.social', () => {
                     xinstagram.com/old_brno
                     ainstagram.com/old_brno
                     _instagram.com/old_brno
-                    `.match(socialUtils.INSTAGRAM_REGEX_GLOBAL)).toEqual([
+                    `.match(INSTAGRAM_REGEX_GLOBAL)).toEqual([
                 'https://www.instagram.com/old_prague/',
                 'instagr.am/old_plzen',
             ]);
-            expect(''.match(socialUtils.INSTAGRAM_REGEX_GLOBAL)).toBe(null);
+            expect(''.match(INSTAGRAM_REGEX_GLOBAL)).toBe(null);
         });
     });
 
     describe('TWITTER_REGEX', () => {
         test('works', () => {
-            expect(socialUtils.TWITTER_REGEX).toBeInstanceOf(RegExp);
-            expect(socialUtils.TWITTER_REGEX_GLOBAL).toBeInstanceOf(RegExp);
+            expect(TWITTER_REGEX).toBeInstanceOf(RegExp);
+            expect(TWITTER_REGEX_GLOBAL).toBeInstanceOf(RegExp);
 
-            expect(socialUtils.TWITTER_REGEX.flags).toBe('i');
-            expect(socialUtils.TWITTER_REGEX_GLOBAL.flags).toBe('gi');
+            expect(TWITTER_REGEX.flags).toBe('i');
+            expect(TWITTER_REGEX_GLOBAL.flags).toBe('gi');
 
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/apify')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/apify/')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/aa_bb_123')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('http://www.twitter.com/apify')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('https://twitter.com/apify')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('http://twitter.com/apify')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('www.twitter.com/apify')).toBe(true);
-            expect(socialUtils.TWITTER_REGEX.test('twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/apify/')).toBe(true);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/aa_bb_123')).toBe(true);
+            expect(TWITTER_REGEX.test('http://www.twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX.test('https://twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX.test('http://twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX.test('www.twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX.test('twitter.com/apify')).toBe(true);
 
             // Test there is just on matching group for the username
-            expect('https://www.twitter.com/apify/'.match(socialUtils.TWITTER_REGEX)[1]).toBe('apify');
-            expect('http://www.twitter.com/apify'.match(socialUtils.TWITTER_REGEX)[1]).toBe('apify');
-            expect('www.twitter.com/apify'.match(socialUtils.TWITTER_REGEX)[1]).toBe('apify');
-            expect('twitter.com/apify'.match(socialUtils.TWITTER_REGEX)[1]).toBe('apify');
+            expect('https://www.twitter.com/apify/'.match(TWITTER_REGEX)[1]).toBe('apify');
+            expect('http://www.twitter.com/apify'.match(TWITTER_REGEX)[1]).toBe('apify');
+            expect('www.twitter.com/apify'.match(TWITTER_REGEX)[1]).toBe('apify');
+            expect('twitter.com/apify'.match(TWITTER_REGEX)[1]).toBe('apify');
 
-            expect(socialUtils.TWITTER_REGEX.test('')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('dummy')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('a https://www.twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/apify/sub-page')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('xhttps://www.twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('0https://www.twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('_https://www.twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('xtwitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('_twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('0twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/apify?param=bla')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('://www.twitter.com/apify')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/apify https://www.twitter.com/jack')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/oauth')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/account')).toBe(false);
-            expect(socialUtils.TWITTER_REGEX.test('https://www.twitter.com/privacy/')).toBe(false);
+            expect(TWITTER_REGEX.test('')).toBe(false);
+            expect(TWITTER_REGEX.test('dummy')).toBe(false);
+            expect(TWITTER_REGEX.test('a https://www.twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/apify/sub-page')).toBe(false);
+            expect(TWITTER_REGEX.test('xhttps://www.twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('0https://www.twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('_https://www.twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('xtwitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('_twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('0twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/apify?param=bla')).toBe(false);
+            expect(TWITTER_REGEX.test('://www.twitter.com/apify')).toBe(false);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/apify https://www.twitter.com/jack')).toBe(false);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/oauth')).toBe(false);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/account')).toBe(false);
+            expect(TWITTER_REGEX.test('https://www.twitter.com/privacy/')).toBe(false);
 
-            expect(socialUtils.TWITTER_REGEX_GLOBAL.test('https://www.twitter.com/apify')).toBe(true);
+            expect(TWITTER_REGEX_GLOBAL.test('https://www.twitter.com/apify')).toBe(true);
             expect(`
                     https://www.twitter.com/apify
                     www.twitter.com/jack/sub-dir
                     www.twitter.com/invalidverylongtwitterhandlenotgood
                     twitter.com/bob123?param=1
-                    `.match(socialUtils.TWITTER_REGEX_GLOBAL)).toEqual([
+                    `.match(TWITTER_REGEX_GLOBAL)).toEqual([
                 'https://www.twitter.com/apify',
                 'www.twitter.com/jack/',
                 'twitter.com/bob123',
@@ -686,73 +703,73 @@ describe('utils.social', () => {
                     xtwitter.com/bob
                     atwitter.com/bob
                     _twitter.com/bob
-                    `.match(socialUtils.TWITTER_REGEX_GLOBAL)).toEqual([
+                    `.match(TWITTER_REGEX_GLOBAL)).toEqual([
                 'https://www.twitter.com/apify',
                 'twitter.com/jack',
                 'twitter.com/carl123',
             ]);
-            expect(''.match(socialUtils.TWITTER_REGEX_GLOBAL)).toBe(null);
+            expect(''.match(TWITTER_REGEX_GLOBAL)).toBe(null);
         });
     });
 
     describe('FACEBOOK_REGEX', () => {
         test('works', () => {
-            expect(socialUtils.FACEBOOK_REGEX).toBeInstanceOf(RegExp);
-            expect(socialUtils.FACEBOOK_REGEX_GLOBAL).toBeInstanceOf(RegExp);
+            expect(FACEBOOK_REGEX).toBeInstanceOf(RegExp);
+            expect(FACEBOOK_REGEX_GLOBAL).toBeInstanceOf(RegExp);
 
-            expect(socialUtils.FACEBOOK_REGEX.flags).toBe('i');
-            expect(socialUtils.FACEBOOK_REGEX_GLOBAL.flags).toBe('gi');
+            expect(FACEBOOK_REGEX.flags).toBe('i');
+            expect(FACEBOOK_REGEX_GLOBAL.flags).toBe('gi');
 
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/someusername')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/someusername/')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('http://www.facebook.com/some.username123')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('www.facebook.com/someusername')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('facebook.com/someusername')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.fb.com/someusername')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.fb.com/someusername/')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('http://www.fb.com/some.username123')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('www.fb.com/someusername')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('fb.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/someusername/')).toBe(true);
+            expect(FACEBOOK_REGEX.test('http://www.facebook.com/some.username123')).toBe(true);
+            expect(FACEBOOK_REGEX.test('www.facebook.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX.test('facebook.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX.test('https://www.fb.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX.test('https://www.fb.com/someusername/')).toBe(true);
+            expect(FACEBOOK_REGEX.test('http://www.fb.com/some.username123')).toBe(true);
+            expect(FACEBOOK_REGEX.test('www.fb.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX.test('fb.com/someusername')).toBe(true);
 
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/profile.php?id=1155802082')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('http://www.facebook.com/profile.php?id=1155802082')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('www.facebook.com/profile.php?id=1155802082')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('facebook.com/profile.php?id=1155802082')).toBe(true);
-            expect(socialUtils.FACEBOOK_REGEX.test('fb.com/profile.php?id=1155802082')).toBe(true);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/profile.php?id=1155802082')).toBe(true);
+            expect(FACEBOOK_REGEX.test('http://www.facebook.com/profile.php?id=1155802082')).toBe(true);
+            expect(FACEBOOK_REGEX.test('www.facebook.com/profile.php?id=1155802082')).toBe(true);
+            expect(FACEBOOK_REGEX.test('facebook.com/profile.php?id=1155802082')).toBe(true);
+            expect(FACEBOOK_REGEX.test('fb.com/profile.php?id=1155802082')).toBe(true);
 
             // Test there is just on matching group for the username
-            expect('https://www.facebook.com/someusername/'.match(socialUtils.FACEBOOK_REGEX)[1]).toBe('someusername');
-            expect('https://www.facebook.com/someusername'.match(socialUtils.FACEBOOK_REGEX)[1]).toBe('someusername');
-            expect('https://www.facebook.com/profile.php?id=1155802082'.match(socialUtils.FACEBOOK_REGEX)[1]).toBe('profile.php?id=1155802082');
-            expect('fb.com/someusername'.match(socialUtils.FACEBOOK_REGEX)[1]).toBe('someusername');
+            expect('https://www.facebook.com/someusername/'.match(FACEBOOK_REGEX)[1]).toBe('someusername');
+            expect('https://www.facebook.com/someusername'.match(FACEBOOK_REGEX)[1]).toBe('someusername');
+            expect('https://www.facebook.com/profile.php?id=1155802082'.match(FACEBOOK_REGEX)[1]).toBe('profile.php?id=1155802082');
+            expect('fb.com/someusername'.match(FACEBOOK_REGEX)[1]).toBe('someusername');
 
-            expect(socialUtils.FACEBOOK_REGEX.test('')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('dummy')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('a https://www.facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/a')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/someusername/sub-page')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('http://www.facebook.com/profile.php')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('xhttps://www.facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('0https://www.facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('_https://www.facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('xfacebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('_facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('0facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/someusername?param=bla')).toBe(false);
+            expect(FACEBOOK_REGEX.test('')).toBe(false);
+            expect(FACEBOOK_REGEX.test('dummy')).toBe(false);
+            expect(FACEBOOK_REGEX.test('a https://www.facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/a')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/someusername/sub-page')).toBe(false);
+            expect(FACEBOOK_REGEX.test('http://www.facebook.com/profile.php')).toBe(false);
+            expect(FACEBOOK_REGEX.test('xhttps://www.facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('0https://www.facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('_https://www.facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('xfacebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('_facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('0facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/someusername?param=bla')).toBe(false);
 
-            expect(socialUtils.FACEBOOK_REGEX.test('://www.facebook.com/someusername')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/someusername https://www.facebook.com/jack')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/groups')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/events')).toBe(false);
-            expect(socialUtils.FACEBOOK_REGEX.test('https://www.facebook.com/policies/')).toBe(false);
+            expect(FACEBOOK_REGEX.test('://www.facebook.com/someusername')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/someusername https://www.facebook.com/jack')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/groups')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/events')).toBe(false);
+            expect(FACEBOOK_REGEX.test('https://www.facebook.com/policies/')).toBe(false);
 
-            expect(socialUtils.FACEBOOK_REGEX_GLOBAL.test('https://www.facebook.com/someusername')).toBe(true);
+            expect(FACEBOOK_REGEX_GLOBAL.test('https://www.facebook.com/someusername')).toBe(true);
             expect(`
                     https://www.facebook.com/someusername?param=123
                     www.facebook.com/another123/sub-dir
                     https://www.facebook.com/waytoolongusernamewaytoolongusernamewaytoolongusernamewaytoolongusernamewaytoolongusername
                     fb.com/bob123
-                    `.match(socialUtils.FACEBOOK_REGEX_GLOBAL)).toEqual([
+                    `.match(FACEBOOK_REGEX_GLOBAL)).toEqual([
                 'https://www.facebook.com/someusername',
                 'www.facebook.com/another123/',
                 'fb.com/bob123',
@@ -764,27 +781,27 @@ describe('utils.social', () => {
                     xfacebook.com/bob
                     afacebook.com/bob
                     _facebook.com/bob
-                    `.match(socialUtils.FACEBOOK_REGEX_GLOBAL)).toEqual([
+                    `.match(FACEBOOK_REGEX_GLOBAL)).toEqual([
                 'https://www.facebook.com/someusername/',
                 'facebook.com/jack4567',
                 'fb.com/carl123',
             ]);
-            expect(''.match(socialUtils.FACEBOOK_REGEX_GLOBAL)).toBe(null);
+            expect(''.match(FACEBOOK_REGEX_GLOBAL)).toBe(null);
         });
     });
     describe('YOUTUBE_REGEX', () => {
         it('works', () => {
-            expect(socialUtils.YOUTUBE_REGEX).toBeInstanceOf(RegExp);
-            expect(socialUtils.YOUTUBE_REGEX_GLOBAL).toBeInstanceOf(RegExp);
+            expect(YOUTUBE_REGEX).toBeInstanceOf(RegExp);
+            expect(YOUTUBE_REGEX_GLOBAL).toBeInstanceOf(RegExp);
 
-            expect(socialUtils.YOUTUBE_REGEX.flags).toBe('i');
-            expect(socialUtils.YOUTUBE_REGEX_GLOBAL.flags).toBe('gi');
+            expect(YOUTUBE_REGEX.flags).toBe('i');
+            expect(YOUTUBE_REGEX_GLOBAL.flags).toBe('gi');
 
-            expect(socialUtils.YOUTUBE_REGEX.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')).toBe(true);
-            expect(socialUtils.YOUTUBE_REGEX.test('https://youtu.be/kM7YfhfkiEE')).toBe(true);
-            expect(socialUtils.YOUTUBE_REGEX.test('https://www.youtube.com/c/TrapNation')).toBe(true);
-            expect(socialUtils.YOUTUBE_REGEX.test('https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA')).toBe(true);
-            expect(socialUtils.YOUTUBE_REGEX.test('https://www.youtube.com/user/pewdiepie')).toBe(true);
+            expect(YOUTUBE_REGEX.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')).toBe(true);
+            expect(YOUTUBE_REGEX.test('https://youtu.be/kM7YfhfkiEE')).toBe(true);
+            expect(YOUTUBE_REGEX.test('https://www.youtube.com/c/TrapNation')).toBe(true);
+            expect(YOUTUBE_REGEX.test('https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA')).toBe(true);
+            expect(YOUTUBE_REGEX.test('https://www.youtube.com/user/pewdiepie')).toBe(true);
             expect(`
                     -https://www.youtube.com/someusername/
                     youtube.com/jack4567
@@ -795,7 +812,7 @@ describe('utils.social', () => {
                     www.youtube.com/c/TrapNation
                     https://www.youtube.com/channel/UCklie6BM0fhFvzWYqQVoCTA
                     youtube.com/user/pewdiepie
-                    `.match(socialUtils.YOUTUBE_REGEX_GLOBAL))
+                    `.match(YOUTUBE_REGEX_GLOBAL))
                 .toEqual([
                     'https://www.youtube.com/watch?v=kM7YfhfkiEE',
                     'www.youtube.com/c/TrapNation',
