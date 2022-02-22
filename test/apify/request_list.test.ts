@@ -7,11 +7,17 @@ jest.mock('@crawlers/utils/src/internals/request', () => {
     const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
     return {
         ...original,
-        requestAsBrowser: jest.fn(),
+        requestAsBrowser: jest.fn(original.requestAsBrowser),
     };
 });
 
 const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+const originalRequestAsBrowserImplementation = requestAsBrowserSpy.getMockImplementation()!;
+
+afterEach(() => {
+    requestAsBrowserSpy.mockReset();
+    requestAsBrowserSpy.mockImplementation(originalRequestAsBrowserImplementation);
+});
 
 afterAll(() => {
     jest.unmock('@crawlers/utils/src/internals/request');
