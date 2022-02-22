@@ -1,3 +1,4 @@
+import { TimeoutError } from '@apify/timeout';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { Session } from '../session_pool/session';
 import { log } from '../utils_log';
@@ -10,7 +11,7 @@ export function handleRequestTimeout({ session, errorMessage }: { session?: Sess
     session?.markBad();
     const timeoutMillis = errorMessage.match(/(\d+)\s?ms/)?.[1]; // first capturing group
     const timeoutSecs = Number(timeoutMillis) / 1000;
-    throw new Error(`Navigation timed out after ${timeoutSecs} seconds.`);
+    throw new TimeoutError(`Navigation timed out after ${timeoutSecs} seconds.`);
 }
 
 /**

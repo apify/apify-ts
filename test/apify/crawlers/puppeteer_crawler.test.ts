@@ -262,7 +262,7 @@ describe('PuppeteerCrawler', () => {
         logWarningSpy.mockImplementation(() => {});
 
         // @ts-expect-error Overriding protected method
-        const logErrorSpy = jest.spyOn(crawler.log, 'exception');
+        const logErrorSpy = jest.spyOn(crawler.log, 'error');
         logErrorSpy.mockImplementation(() => {});
 
         await crawler.run();
@@ -287,11 +287,10 @@ describe('PuppeteerCrawler', () => {
         ]);
         logWarningSpy.mockRestore();
 
-        const exceptions = logErrorSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
-        expect(exceptions).toEqual([
+        const errors = logErrorSpy.mock.calls.map((call) => [call[0], call[1].retryCount]);
+        expect(errors).toEqual([
             [
-                'Navigation timed out after 0.005 seconds.',
-                'Request failed and reached maximum retries',
+                'Request failed and reached maximum retries. Error: Navigation timed out after 0.005 seconds.',
                 undefined,
             ],
         ]);
@@ -322,7 +321,7 @@ describe('PuppeteerCrawler', () => {
         logWarningSpy.mockImplementation(() => {});
 
         // @ts-expect-error Overriding protected method
-        const logErrorSpy = jest.spyOn(crawler.log, 'exception');
+        const logErrorSpy = jest.spyOn(crawler.log, 'error');
         logErrorSpy.mockImplementation(() => {});
 
         await crawler.run();
@@ -347,11 +346,10 @@ describe('PuppeteerCrawler', () => {
         ]);
         logWarningSpy.mockRestore();
 
-        const exceptions = logErrorSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
-        expect(exceptions).toEqual([
+        const errors = logErrorSpy.mock.calls.map((call) => [call[0], call[1].retryCount]);
+        expect(errors).toEqual([
             [
-                'Navigation timed out after 0.005 seconds.',
-                'Request failed and reached maximum retries',
+                'Request failed and reached maximum retries. Error: Navigation timed out after 0.005 seconds.',
                 undefined,
             ],
         ]);
