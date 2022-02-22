@@ -670,9 +670,9 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: 1,
+            handleRequestTimeoutSecs: 0.005,
             maxRequestRetries: 3,
-            handleRequestFunction: () => sleep(5 * 1e3),
+            handleRequestFunction: () => sleep(10),
         });
 
         const warnMock = jest.fn();
@@ -716,7 +716,6 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: 1,
             maxRequestRetries: 3,
             handleRequestFunction: () => {
                 throw new Error('Other non-timeout error');
@@ -764,9 +763,9 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: 1,
+            handleRequestTimeoutSecs: 0.005,
             maxRequestRetries: 3,
-            handleRequestFunction: () => sleep(5 * 1e3),
+            handleRequestFunction: () => sleep(10),
         });
 
         const errMock = jest.fn();
@@ -797,7 +796,6 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: 1,
             maxRequestRetries: 3,
             handleRequestFunction: () => {
                 throw new Error('Other non-timeout error');
