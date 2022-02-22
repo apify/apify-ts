@@ -700,7 +700,7 @@ export class BasicCrawler<
             // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
             // Thus, we print the full stack trace only for DEBUG log level.
             // Maybe it's worth adding another ENV variable instead of using log levels here.
-            if (this.log.getLevel() < 5) {
+            if (this.log.getLevel() < this.log.LEVELS.DEBUG) {
                 this.log.warning(
                     `Reclaiming failed request back to the list or queue. ${error}`,
                     { url, retryCount },
@@ -734,7 +734,7 @@ export class BasicCrawler<
             await this.failedContextHandler(crawlingContext);
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
-            if (crawlingContext.error instanceof TimeoutError && this.log.getLevel() < 5) {
+            if (crawlingContext.error instanceof TimeoutError && this.log.getLevel() < this.log.LEVELS.DEBUG) {
                 crawlingContext.error.stack = crawlingContext.error.message;
                 this.log.error(
                     `Request failed and reached maximum retries. ${crawlingContext.error}`,
