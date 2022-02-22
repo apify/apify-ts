@@ -665,15 +665,8 @@ describe('BasicCrawler', () => {
     });
 
     test('should not log stack trace for timeout errors by default', async () => {
-        log.setLevel(log.LEVELS.INFO);
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
-
-        const warnMock = jest.fn();
-        console.warn = warnMock;
-
-        const errMock = jest.fn();
-        console.error = errMock;
 
         const crawler = new BasicCrawler({
             requestList,
@@ -682,35 +675,44 @@ describe('BasicCrawler', () => {
             handleRequestFunction: () => sleep(5 * 1e3),
         });
 
+        const warnMock = jest.fn();
+        // @ts-expect-error Overriding protected method
+        crawler.log.warning = warnMock;
+
+        const errMock = jest.fn();
+        // @ts-expect-error Overriding protected method
+        crawler.log.error = errMock;
+
         await crawler.run();
 
         expect(warnMock.mock.calls.length).toBe(3);
         for (const args of warnMock.mock.calls) {
-            expect(args.length).toBe(1);
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(args[0].message).toBeUndefined();
+            expect(args[0].stack).toBeUndefined();
+            expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
+            expect(args[1]).toBeDefined();
         }
 
         expect(errMock.mock.calls.length).toBe(1);
         for (const args of errMock.mock.calls) {
-            expect(args.length).toBe(1);
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(args[0].message).toBeUndefined();
+            expect(args[0].stack).toBeUndefined();
+            expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
             expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
+            expect(args[1]).toBeDefined();
         }
-
-        log.setLevel(log.LEVELS.OFF);
     });
 
     test('should log stack trace for non-timeout errors only when request will no longer be retried by default', async () => {
-        log.setLevel(log.LEVELS.INFO);
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
-
-        const warnMock = jest.fn();
-        console.warn = warnMock;
-
-        const errMock = jest.fn();
-        console.error = errMock;
 
         const crawler = new BasicCrawler({
             requestList,
@@ -721,32 +723,44 @@ describe('BasicCrawler', () => {
             },
         });
 
+        const warnMock = jest.fn();
+        // @ts-expect-error Overriding protected method
+        crawler.log.warning = warnMock;
+
+        const errMock = jest.fn();
+        // @ts-expect-error Overriding protected method
+        crawler.log.exception = errMock;
+
         await crawler.run();
 
         expect(warnMock.mock.calls.length).toBe(3);
         for (const args of warnMock.mock.calls) {
-            expect(args.length).toBe(1);
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(args[0].message).toBeUndefined();
+            expect(args[0].stack).toBeUndefined();
+            expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/Other non-timeout error/.test(args[0])).toBe(true);
             expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(false);
+            expect(args[1]).toBeDefined();
         }
 
         expect(errMock.mock.calls.length).toBe(1);
         for (const args of errMock.mock.calls) {
-            expect(args.length).toBe(1);
-            expect(/Other non-timeout error/.test(args[0])).toBe(true);
-            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
+            expect(args.length).toBe(3);
+            expect(args[0].message).toBeDefined();
+            expect(args[0].stack).toBeDefined();
+            expect(args[0].message).toBe('Other non-timeout error');
+            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0].stack)).toBe(true);
+            expect(args[1]).toBe('Request failed and reached maximum retries');
+            expect(args[2]).toBeDefined();
         }
-
-        log.setLevel(log.LEVELS.OFF);
     });
 
     test('should log stack trace for timeout errors when log level set to DEBUG', async () => {
         log.setLevel(log.LEVELS.DEBUG);
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
-
-        const errMock = jest.fn();
-        console.error = errMock;
 
         const crawler = new BasicCrawler({
             requestList,
@@ -755,13 +769,22 @@ describe('BasicCrawler', () => {
             handleRequestFunction: () => sleep(5 * 1e3),
         });
 
+        const errMock = jest.fn();
+        // @ts-expect-error Overriding protected method
+        crawler.log.exception = errMock;
+
         await crawler.run();
 
         expect(errMock.mock.calls.length).toBe(4);
         for (const args of errMock.mock.calls) {
-            expect(args.length).toBe(1);
-            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
-            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
+            expect(args.length).toBe(3);
+            expect(args[0].message).toBeDefined();
+            expect(args[0].stack).toBeDefined();
+            expect(/handleRequestFunction timed out after/.test(args[0].message)).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0].stack)).toBe(true);
+            expect(args[1]).toBeDefined();
+            expect(typeof args[1]).toBe('string');
+            expect(args[2]).toBeDefined();
         }
 
         log.setLevel(log.LEVELS.OFF);
@@ -772,9 +795,6 @@ describe('BasicCrawler', () => {
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
 
-        const errMock = jest.fn();
-        console.error = errMock;
-
         const crawler = new BasicCrawler({
             requestList,
             handleRequestTimeoutSecs: 1,
@@ -784,13 +804,22 @@ describe('BasicCrawler', () => {
             },
         });
 
+        const errMock = jest.fn();
+        // @ts-expect-error Overriding protected method
+        crawler.log.exception = errMock;
+
         await crawler.run();
 
         expect(errMock.mock.calls.length).toBe(4);
         for (const args of errMock.mock.calls) {
-            expect(args.length).toBe(1);
-            expect(/Other non-timeout error/.test(args[0])).toBe(true);
-            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
+            expect(args.length).toBe(3);
+            expect(args[0].message).toBeDefined();
+            expect(args[0].stack).toBeDefined();
+            expect(/Other non-timeout error/.test(args[0].message)).toBe(true);
+            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0].stack)).toBe(true);
+            expect(args[1]).toBeDefined();
+            expect(typeof args[1]).toBe('string');
+            expect(args[2]).toBeDefined();
         }
 
         log.setLevel(log.LEVELS.OFF);
