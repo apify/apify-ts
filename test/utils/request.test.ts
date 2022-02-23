@@ -2,7 +2,7 @@ import express from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlers/utils';
-import { startExpressAppPromise } from '../apify/_helper';
+import { startExpressAppPromise } from '../shared/_helper';
 
 const CONTENT = 'CONTENT';
 const JSON_CONTENT = JSON.stringify({ content: CONTENT });

@@ -1,6 +1,6 @@
 import cheerio from 'cheerio';
 import { CheerioRoot, htmlToText } from '@crawlers/utils';
-import * as htmlToTextData from '../apify/data/html_to_text_test_data';
+import * as htmlToTextData from '../shared/data/html_to_text_test_data';
 
 const checkHtmlToText = (html: string | CheerioRoot, expectedText: string, hasBody = false) => {
     const text1 = htmlToText(html);

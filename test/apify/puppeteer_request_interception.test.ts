@@ -3,7 +3,7 @@ import { launchPuppeteer, puppeteerUtils, sleep } from '@crawlers/puppeteer';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { HTTPRequest } from 'puppeteer';
-import { startExpressAppPromise } from './_helper';
+import { startExpressAppPromise } from '../shared/_helper';
 
 const { addInterceptRequestHandler, removeInterceptRequestHandler } = puppeteerUtils;
 

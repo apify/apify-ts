@@ -6,7 +6,7 @@ import { Browser, Page, ResponseForRequest } from 'puppeteer';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
-import { startExpressAppPromise } from './_helper';
+import { startExpressAppPromise } from '../shared/_helper';
 
 const HOSTNAME = '127.0.0.1';
 let port: number;
@@ -68,7 +68,7 @@ describe('Apify.puppeteerUtils', () => {
                 // @ts-expect-error
                 let result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
-                await puppeteerUtils.injectFile(page, path.join(__dirname, 'data', 'inject_file.txt'), { surviveNavigations: true });
+                await puppeteerUtils.injectFile(page, path.join(__dirname, '..', 'shared', 'data', 'inject_file.txt'), { surviveNavigations: true });
                 // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
@@ -91,7 +91,7 @@ describe('Apify.puppeteerUtils', () => {
                 // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
-                await puppeteerUtils.injectFile(page, path.join(__dirname, 'data', 'inject_file.txt'));
+                await puppeteerUtils.injectFile(page, path.join(__dirname, '..', 'shared', 'data', 'inject_file.txt'));
                 // @ts-ignore
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);

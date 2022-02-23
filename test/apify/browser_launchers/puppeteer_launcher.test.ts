@@ -14,7 +14,7 @@ import express from 'express';
 import { BrowserLauncher, Dictionary, launchPuppeteer } from '@crawlers/puppeteer';
 import { AddressInfo } from 'net';
 import { Browser, Page } from 'puppeteer';
-import { startExpressAppPromise } from '../_helper';
+import { startExpressAppPromise } from '../../shared/_helper';
 
 let prevEnvHeadless: string;
 let proxyServer: Server;

@@ -8,7 +8,7 @@ import {
 import fs from 'node:fs';
 import path from 'node:path';
 
-const baseDataPath = path.join(__dirname, '..', 'apify', 'data');
+const baseDataPath = path.join(__dirname, '..', 'shared', 'data');
 
 jest.mock('@crawlers/utils/src/internals/request', () => {
     const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
