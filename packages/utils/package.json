@@ -48,7 +48,9 @@
         "copy": "ts-node -T ../../scripts/copy.ts"
     },
     "dependencies": {
+        "@apify/ps-tree": "^1.1.4",
         "cheerio": "1.0.0-rc.10",
+        "ow": "^0.28.1",
         "tslib": "^2.3.1"
     }
 }
