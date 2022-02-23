@@ -1,10 +1,13 @@
 import { ENV_VARS } from '@apify/consts';
 import { addTimeoutToPromise } from '@apify/timeout';
-import { createRequestDebugInfo, Request, log } from '@crawlers/core';
+import { Request, log } from '@crawlers/core';
+import { tools } from '@apify/scraper-tools';
 import { Actor } from 'apify';
 import { isAtHome, printOutdatedSdkWarning } from 'apify/src/utils';
 import semver from 'semver';
 import { IncomingMessage } from 'node:http';
+
+const { createRequestDebugInfo } = tools;
 
 describe('isAtHome()', () => {
     test('works', () => {
