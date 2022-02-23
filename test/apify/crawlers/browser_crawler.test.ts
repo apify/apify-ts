@@ -881,7 +881,6 @@ describe('BrowserCrawler', () => {
             await browserCrawler.run();
 
             delete process.env[ENV_VARS.PROXY_PASSWORD];
-            stub.mockClear();
         });
     });
 });
