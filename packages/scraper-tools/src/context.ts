@@ -1,6 +1,5 @@
 import { Actor, ApifyEnv } from 'apify';
 import {
-    Dictionary,
     KeyValueStore,
     RecordOptions,
     Request,
@@ -9,6 +8,7 @@ import {
     RequestQueueOperationOptions,
 } from '@crawlers/core';
 import { puppeteerUtils } from '@crawlers/puppeteer';
+import { Dictionary } from '@crawlers/utils';
 import log from '@apify/log';
 import contentTypeParser, { MediaType } from 'content-type';
 import { saveSnapshot, SnapshotOptions } from './browser_tools';

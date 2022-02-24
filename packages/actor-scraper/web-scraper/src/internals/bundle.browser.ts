@@ -4,7 +4,6 @@ import type { CrawlerSetupOptions, constants, RequestMetadata } from '@apify/scr
 import { Log } from '@apify/log';
 import type { ApifyEnv } from 'apify';
 import type {
-    Dictionary,
     KeyValueStore,
     RecordOptions,
     Request,
@@ -12,6 +11,7 @@ import type {
     RequestQueue,
     RequestQueueOperationOptions,
 } from '@crawlers/puppeteer';
+import { Dictionary } from '@crawlers/utils';
 import { Input } from './consts';
 import { GlobalStore } from './global_store';
 

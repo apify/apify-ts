@@ -4,7 +4,7 @@ import { ENV_VARS } from '@apify/consts';
 import {
     Dictionary,
     Constructor,
-} from '@crawlers/core';
+} from '@crawlers/utils';
 import {
     BrowserPlugin,
     BrowserPluginOptions,

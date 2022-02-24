@@ -2,11 +2,9 @@ import { browserTools, constants as scraperToolsConstants, CrawlerSetupOptions, 
 import { Actor, ApifyEnv } from 'apify';
 import {
     AutoscaledPool,
-    Awaitable,
     BrowserCrawlerHandleFailedRequestInput,
     createProxyConfiguration,
     Dataset,
-    Dictionary,
     KeyValueStore,
     PuppeteerCrawlContext,
     PuppeteerCrawler,
@@ -17,6 +15,7 @@ import {
     RequestQueue,
 } from '@crawlers/puppeteer';
 import log from '@apify/log';
+import { Awaitable, Dictionary } from '@crawlers/utils';
 import contentType from 'content-type';
 // TODO: type devtools module
 // @ts-ignore

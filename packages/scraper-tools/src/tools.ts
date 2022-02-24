@@ -1,5 +1,6 @@
 import log from '@apify/log';
-import { Dictionary, PuppeteerCookie, Request, Session } from '@crawlers/core';
+import { PuppeteerCookie, Request, Session } from '@crawlers/core';
+import { Dictionary } from '@crawlers/utils';
 import Ajv from 'ajv';
 import { randomBytes as callbackRandomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';

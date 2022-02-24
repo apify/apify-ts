@@ -1,4 +1,5 @@
-import { Dictionary, ProxyConfigurationOptions, PseudoUrlInput, RequestOptions, Session } from '@crawlers/core';
+import { ProxyConfigurationOptions, PseudoUrlInput, RequestOptions, Session } from '@crawlers/core';
+import { Dictionary } from '@crawlers/utils';
 
 /**
  * Replicates the INPUT_SCHEMA with JavaScript types for quick reference
