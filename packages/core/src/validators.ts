@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { Dictionary } from '@crawlers/utils';
+import { Dictionary } from './typedefs';
 
 export const validators = {
     // Naming it browser page for future proofing with Playwright

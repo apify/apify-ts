@@ -1,5 +1,5 @@
 import { Cookie, CookieJar } from 'tough-cookie';
-import { log } from '@crawlers/utils';
+import { log } from '../log';
 import { Session } from '../session_pool/session';
 
 /**

@@ -57,6 +57,7 @@
         "@apify/log": "^1.1.6",
         "@apify/ps-tree": "^1.1.4",
         "@crawlers/storage": "^3.0.0",
+        "@crawlers/utils": "^3.0.0",
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.5",
         "@types/mime-types": "^2.1.1",

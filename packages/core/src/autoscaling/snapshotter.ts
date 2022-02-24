@@ -1,12 +1,13 @@
-import os from 'os';
-import ow from 'ow';
-import { betterSetInterval, betterClearInterval, BetterIntervalID } from '@apify/utilities';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import { Log } from '@apify/log';
-import { log as defaultLog, getMemoryInfo } from '@crawlers/utils';
-import { events } from '../events';
-import { SystemInfo } from './system_status';
+import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
+import { getMemoryInfo } from '@crawlers/utils';
+import os from 'os';
+import ow from 'ow';
 import { Configuration } from '../configuration';
+import { events } from '../events';
+import { log as defaultLog } from '../log';
+import { SystemInfo } from './system_status';
 
 const RESERVE_MEMORY_RATIO = 0.5;
 const CLIENT_RATE_LIMIT_ERROR_RETRY_COUNT = 2;

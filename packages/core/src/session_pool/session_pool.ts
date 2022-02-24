@@ -1,12 +1,13 @@
+import { Log } from '@apify/log';
 import { EventEmitter } from 'events';
 import ow from 'ow';
-import { Log } from '@apify/log';
-import { log as defaultLog, Dictionary } from '@crawlers/utils';
-import { KeyValueStore, openKeyValueStore } from '../storages/key_value_store';
-import { Session, SessionOptions } from './session';
-import { events } from '../events';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import { Configuration } from '../configuration';
+import { ACTOR_EVENT_NAMES_EX } from '../constants';
+import { events } from '../events';
+import { log as defaultLog } from '../log';
+import { KeyValueStore } from '../storages/key_value_store';
+import { Dictionary } from '../typedefs';
+import { Session, SessionOptions } from './session';
 
 /**
  * Factory user-function which creates customized {@link Session} instances.
@@ -200,7 +201,7 @@ export class SessionPool extends EventEmitter {
      * It is called automatically by the {@link Apify.openSessionPool} function.
      */
     async initialize(): Promise<void> {
-        this.keyValueStore = await openKeyValueStore(this.persistStateKeyValueStoreId, { config: this.config, forceCloud: this.forceCloud });
+        this.keyValueStore = await KeyValueStore.open(this.persistStateKeyValueStoreId, { config: this.config, forceCloud: this.forceCloud });
 
         if (this.forceCloud && !this.persistStateKeyValueStoreId) {
             this.log.warning(`You enabled 'forceCloud' in the session pool options but you haven't specified a 'persistStateKeyValueStoreId'!`);

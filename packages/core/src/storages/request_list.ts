@@ -1,10 +1,12 @@
+import { downloadListOfUrls } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
-import { downloadListOfUrls, log, Dictionary } from '@crawlers/utils';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { Request, RequestOptions } from '../request';
 import { events } from '../events';
+import { log } from '../log';
+import { Request, RequestOptions } from '../request';
+import { createDeserialize, serializeArray } from '../serialization';
 import { getValue, setValue } from '../storages/key_value_store';
-import { serializeArray, createDeserialize } from '../serialization';
+import { Dictionary } from '../typedefs';
 
 /** @internal */
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';

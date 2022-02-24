@@ -1,9 +1,9 @@
+import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import { EventEmitter } from 'events';
 import WebSocket from 'ws';
-import { ENV_VARS, ACTOR_EVENT_NAMES } from '@apify/consts';
-import { log as defaultLog } from '@crawlers/utils';
-import { ACTOR_EVENT_NAMES_EX } from './constants';
 import { Configuration } from './configuration';
+import { ACTOR_EVENT_NAMES_EX } from './constants';
+import { log as defaultLog } from './log';
 
 /**
  * Gets an instance of a Node.js'

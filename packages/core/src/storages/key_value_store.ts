@@ -1,12 +1,12 @@
 import { ENV_VARS, KEY_VALUE_STORE_KEYS, KEY_VALUE_STORE_KEY_REGEX } from '@apify/consts';
 import { jsonStringifyExtended } from '@apify/utilities';
-import ow, { ArgumentError } from 'ow';
-import { ApifyClient, KeyValueStoreClient } from 'apify-client';
 import { ApifyStorageLocal } from '@crawlers/storage';
-import { Awaitable, Dictionary } from '@crawlers/utils';
-import { StorageManager, StorageManagerOptions } from './storage_manager';
+import { ApifyClient, KeyValueStoreClient } from 'apify-client';
+import ow, { ArgumentError } from 'ow';
 import { Configuration } from '../configuration';
 import { APIFY_API_BASE_URL } from '../constants';
+import { Awaitable, Dictionary } from '../typedefs';
+import { StorageManager, StorageManagerOptions } from './storage_manager';
 
 export type KeyValueStoreValueTypes = Record<string, unknown> | null | Buffer | string;
 
