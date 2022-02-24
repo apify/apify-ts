@@ -1,4 +1,5 @@
-export * from '@crawlers/utils';
+import log, { Log, LoggerOptions, LogLevel, Logger, LoggerJson, LoggerText } from '@apify/log';
+
 export * from './events';
 export * from './autoscaling';
 export * from './crawlers';
@@ -13,3 +14,13 @@ export * from './serialization';
 export * from './request';
 export * from './proxy_configuration';
 export * from './validators';
+
+export {
+    log,
+    Log,
+    LoggerOptions,
+    LogLevel,
+    Logger,
+    LoggerJson,
+    LoggerText,
+};
