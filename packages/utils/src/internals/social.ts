@@ -183,31 +183,6 @@ const FACEBOOK_REGEX_STRING = `(?<!\\w)(?:http(?:s)?:\\/\\/)?(?:www.)?(?:faceboo
 // eslint-disable-next-line max-len
 const YOUTUBE_REGEX_STRING = '(?:https?:\\/\\/)?(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch|v|embed|user|c(?:hannel)?)(?:\\.php)?(?:\\?[^ ]*v=|\\/))([a-zA-Z0-9\\-_]+)';
 
-try {
-    /* eslint-disable no-new */
-    new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
-    new RegExp(LINKEDIN_REGEX_STRING, 'ig');
-    new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
-    new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
-    new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
-    new RegExp(TWITTER_REGEX_STRING, 'ig');
-    new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
-    new RegExp(FACEBOOK_REGEX_STRING, 'ig');
-    new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
-    new RegExp(YOUTUBE_REGEX_STRING, 'ig');
-    /* eslint-enable */
-} catch (e) {
-    // Older versions of Node don't support negative lookbehind and lookahead expressions.
-    // Show warning instead of failing.
-    const error = e as Error;
-    if (error?.message.includes('Invalid group')) {
-        // eslint-disable-next-line max-len
-        log.warning(`Your version of Node.js (${process.version}) doesn't support the regular expression syntax used by crawlerUtils.social tools. The tools will not work. Please upgrade your Node.js to the latest version.`);
-    } else {
-        throw e;
-    }
-}
-
 /**
  * Representation of social handles parsed from a HTML page.
  */
