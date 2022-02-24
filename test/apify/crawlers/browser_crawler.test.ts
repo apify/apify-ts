@@ -2,7 +2,6 @@
 
 import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
-import sinon from 'sinon';
 import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from 'browser-pool';
 import puppeteer from 'puppeteer';
 import log from '@apify/log';
@@ -20,10 +19,9 @@ import {
     EVENT_SESSION_RETIRED,
     Configuration,
     RequestList,
-    sleep,
     createProxyConfiguration,
-    requestAsBrowser,
 } from 'crawlers';
+import { requestAsBrowser, sleep } from '@crawlers/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 

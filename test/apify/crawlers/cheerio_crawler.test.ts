@@ -1,37 +1,34 @@
-import fs from 'fs';
-import path from 'path';
 import { ENV_VARS } from '@apify/consts';
-import express from 'express';
-import bodyParser from 'body-parser';
-import sinon from 'sinon';
-import { Readable } from 'stream';
-import iconv from 'iconv-lite';
 import log, { Log } from '@apify/log';
+import { requestAsBrowser, RequestAsBrowserOptions, sleep } from '@crawlers/utils';
+import bodyParser from 'body-parser';
 import {
+    AutoscaledPool,
+    CheerioCrawler,
+    CheerioHandleFailedRequestInput,
     CheerioHandlePage,
     CheerioHandlePageInputs,
+    Configuration,
+    CrawlerExtension,
+    createProxyConfiguration,
     Dictionary,
     entries,
+    mergeCookies,
     PrepareRequestInputs,
     ProxyInfo,
-    Source,
-    sleep,
-    Session,
-    STATUS_CODES_BLOCKED,
-    CrawlerExtension,
     Request,
-    AutoscaledPool,
-    mergeCookies,
-    Configuration,
-    CheerioCrawler,
     RequestList,
-    createProxyConfiguration,
-    CheerioHandleFailedRequestInput,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
+    Session,
+    Source,
+    STATUS_CODES_BLOCKED,
 } from 'crawlers';
+import express from 'express';
+import fs from 'fs';
 import { IncomingHttpHeaders, Server } from 'http';
+import iconv from 'iconv-lite';
 import { AddressInfo } from 'net';
+import path from 'path';
+import { Readable } from 'stream';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 const HOST = '127.0.0.1';

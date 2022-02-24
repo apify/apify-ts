@@ -1,6 +1,7 @@
-import { shuffle } from 'underscore';
-import { KeyValueStore, RequestList, ACTOR_EVENT_NAMES_EX, deserializeArray, Request, sleep, events, requestAsBrowser } from '@crawlers/core';
 import log from '@apify/log';
+import { ACTOR_EVENT_NAMES_EX, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
+import { requestAsBrowser, sleep } from '@crawlers/utils';
+import { shuffle } from 'underscore';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
 jest.mock('@crawlers/utils/src/internals/request', () => {

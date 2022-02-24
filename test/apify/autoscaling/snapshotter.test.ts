@@ -1,9 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 
-import os from 'os';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
-import { Snapshotter, sleep, events, MemoryInfo, Configuration } from '@crawlers/core';
 import log from '@apify/log';
+import { Configuration, events, Snapshotter } from '@crawlers/core';
+import { MemoryInfo, sleep } from '@crawlers/utils';
+import os from 'os';
 
 const toBytes = (x: number) => x * 1024 * 1024;
 

@@ -1,5 +1,6 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { createProxyConfiguration, ProxyConfiguration, requestAsBrowser } from '@crawlers/core';
+import { createProxyConfiguration, ProxyConfiguration } from '@crawlers/core';
+import { requestAsBrowser } from '@crawlers/utils';
 import { UserClient } from 'apify-client';
 
 const groups = ['GROUP1', 'GROUP2'];

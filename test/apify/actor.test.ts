@@ -3,7 +3,7 @@ import _ from 'underscore';
 import sinon from 'sinon';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
-import { sleep } from '@crawlers/core';
+import { sleep } from '@crawlers/utils';
 import { Actor, ApifyEnv } from 'apify';
 import { ApifyClient, WebhookUpdateData } from 'apify-client';
 

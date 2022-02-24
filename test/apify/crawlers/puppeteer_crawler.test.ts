@@ -1,4 +1,3 @@
-import os from 'os';
 import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import {
@@ -9,13 +8,18 @@ import {
     PuppeteerGoToOptions,
     PuppeteerHandlePage,
     PuppeteerHandlePageFunctionParam,
-    Request, RequestList, RequestQueue, Session, sleep,
+    Request,
+    RequestList,
+    RequestQueue,
+    Session,
 } from '@crawlers/puppeteer';
+import { sleep } from '@crawlers/utils';
+import { once } from 'events';
 import { createServer, Server } from 'http';
+import { AddressInfo } from 'net';
+import os from 'os';
 import { Server as ProxyChainServer } from 'proxy-chain';
 import { promisify } from 'util';
-import { once } from 'events';
-import { AddressInfo } from 'net';
 import { createProxyServer } from '../create-proxy-server';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
