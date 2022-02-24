@@ -4,12 +4,9 @@ import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import {
     ActorRunWithOutput,
-    Awaitable,
     Configuration,
     ConfigurationOptions,
-    Constructor,
     Dataset,
-    Dictionary,
     EXIT_CODES,
     initializeEvents,
     IStorage,
@@ -27,7 +24,7 @@ import {
     StorageManager,
     StorageManagerOptions,
 } from '@crawlers/core';
-import { sleep, snakeCaseToCamelCase } from '@crawlers/utils';
+import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
 import {
     logSystemInfo,
     printOutdatedSdkWarning,
