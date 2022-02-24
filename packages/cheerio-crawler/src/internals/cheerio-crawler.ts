@@ -7,27 +7,23 @@ import {
 } from '@crawlers/basic';
 import {
     Awaitable,
-    EnqueueLinksOptions,
-    CheerioRoot,
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
     diffCookies,
     enqueueLinks,
+    EnqueueLinksOptions,
     entries,
     mergeCookies,
-    parseContentTypeFromResponse,
     ProxyConfiguration,
     ProxyInfo,
     QueueOperationInfo,
     Request,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
-    RequestAsBrowserResult,
     RequestQueue,
     Session,
     validators,
 } from '@crawlers/core';
+import { CheerioRoot, parseContentTypeFromResponse, requestAsBrowser, RequestAsBrowserOptions, RequestAsBrowserResult } from '@crawlers/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { Method, TimeoutError } from 'got-scraping';

@@ -22,13 +22,12 @@ import {
     RequestQueue,
     SessionPool,
     SessionPoolOptions,
-    sleep,
-    snakeCaseToCamelCase,
     Source,
     stopEvents,
     StorageManager,
     StorageManagerOptions,
 } from '@crawlers/core';
+import { sleep, snakeCaseToCamelCase } from '@crawlers/utils';
 import {
     logSystemInfo,
     printOutdatedSdkWarning,
