@@ -1,5 +1,5 @@
-import { Dictionary, entries, EVENT_SESSION_RETIRED, ProxyConfiguration, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlers/core';
-import { sleep } from '@crawlers/utils';
+import { EVENT_SESSION_RETIRED, ProxyConfiguration, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlers/core';
+import { Dictionary, entries, sleep } from '@crawlers/utils';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool: SessionPool;

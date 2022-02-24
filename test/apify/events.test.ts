@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
-import { ACTOR_EVENT_NAMES_EX, Dictionary, events, initializeEvents, stopEvents } from '@crawlers/core';
-import { sleep } from '@crawlers/utils';
+import { ACTOR_EVENT_NAMES_EX, events, initializeEvents, stopEvents } from '@crawlers/core';
+import { Dictionary, sleep } from '@crawlers/utils';
 import { Actor } from 'apify';
 import WebSocket from 'ws';
 

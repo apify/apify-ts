@@ -1,4 +1,5 @@
-import { SessionPool, openSessionPool, events, Session, entries, KeyValueStore, Configuration, ACTOR_EVENT_NAMES_EX } from '@crawlers/core';
+import { SessionPool, openSessionPool, events, Session, KeyValueStore, Configuration, ACTOR_EVENT_NAMES_EX } from '@crawlers/core';
+import { entries } from '@crawlers/utils';
 import { Log } from '@apify/log';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 

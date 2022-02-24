@@ -1,5 +1,6 @@
 import { ENV_VARS, MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
-import { Dataset, StorageManager, checkAndSerialize, chunkBySize, Dictionary, Configuration, pushData } from '@crawlers/core';
+import { Dataset, StorageManager, checkAndSerialize, chunkBySize, Configuration, pushData } from '@crawlers/core';
+import { Dictionary } from '@crawlers/utils';
 
 describe('dataset', () => {
     const apifyClient = Configuration.getDefaultClient();
