@@ -1,6 +1,6 @@
+import log from '@apify/log';
 import cheerio from 'cheerio';
 import { htmlToText } from './cheerio';
-import { log } from './log';
 
 // TODO: We could support URLs like https://www.linkedin.com/company/some-company-inc
 
