@@ -1,23 +1,24 @@
-import {
-    emailsFromText,
-    emailsFromUrls,
-    phonesFromText,
-    phonesFromUrls,
-    SocialHandles,
-    parseHandlesFromHtml,
+import { social, SocialHandles } from '@crawlers/utils';
+
+const {
     EMAIL_REGEX,
     EMAIL_REGEX_GLOBAL,
-    LINKEDIN_REGEX,
-    LINKEDIN_REGEX_GLOBAL,
-    INSTAGRAM_REGEX,
-    INSTAGRAM_REGEX_GLOBAL,
-    TWITTER_REGEX,
-    TWITTER_REGEX_GLOBAL,
     FACEBOOK_REGEX,
     FACEBOOK_REGEX_GLOBAL,
+    INSTAGRAM_REGEX,
+    INSTAGRAM_REGEX_GLOBAL,
+    LINKEDIN_REGEX,
+    LINKEDIN_REGEX_GLOBAL,
+    TWITTER_REGEX,
+    TWITTER_REGEX_GLOBAL,
     YOUTUBE_REGEX,
     YOUTUBE_REGEX_GLOBAL,
-} from '@crawlers/utils';
+    emailsFromText,
+    emailsFromUrls,
+    parseHandlesFromHtml,
+    phonesFromText,
+    phonesFromUrls,
+} = social;
 
 describe('utils.social', () => {
     describe('emailsFromText()', () => {
