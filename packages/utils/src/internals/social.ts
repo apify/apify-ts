@@ -1,4 +1,3 @@
-import log from '@apify/log';
 import cheerio from 'cheerio';
 import { htmlToText } from './cheerio';
 
