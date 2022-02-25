@@ -64,6 +64,9 @@ module.exports = {
                         path: 'packages/core',
                     },
                     {
+                        path: 'packages/utils',
+                    },
+                    {
                         path: 'packages/storage',
                     },
                     // {
