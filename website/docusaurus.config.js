@@ -154,14 +154,14 @@ module.exports = {
             respectPrefersColorScheme: true,
             switchConfig: {
                 darkIconStyle: {
-                    backgroundImage: 'url(./img/switch-dark.svg)',
+                    backgroundImage: 'url(/apify-ts/img/switch-dark.svg)',
                     color: 'transparent',
                     width: 19,
                     height: 19,
                     margin: '-4.5px 0 0 -5px',
                 },
                 lightIconStyle: {
-                    backgroundImage: 'url(./img/switch-light.svg)',
+                    backgroundImage: 'url(/apify-ts/img/switch-light.svg)',
                     color: 'transparent',
                     width: 19,
                     height: 19,
