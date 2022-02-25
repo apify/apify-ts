@@ -6,28 +6,30 @@ import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
 import {
-    Awaitable,
-    EnqueueLinksOptions,
-    CheerioRoot,
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
     diffCookies,
     enqueueLinks,
-    entries,
+    EnqueueLinksOptions,
     mergeCookies,
-    parseContentTypeFromResponse,
     ProxyConfiguration,
     ProxyInfo,
     QueueOperationInfo,
     Request,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
-    RequestAsBrowserResult,
     RequestQueue,
     Session,
     validators,
 } from '@crawlers/core';
+import {
+    Awaitable,
+    CheerioRoot,
+    entries,
+    parseContentTypeFromResponse,
+    requestAsBrowser,
+    RequestAsBrowserOptions,
+    RequestAsBrowserResult,
+} from '@crawlers/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { Method, TimeoutError } from 'got-scraping';

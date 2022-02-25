@@ -1,7 +1,8 @@
 /* eslint-disable dot-notation */
-import _ from 'underscore';
 import log from '@apify/log';
-import { AutoscaledPool, sleep } from '@crawlers/core';
+import { AutoscaledPool } from '@crawlers/core';
+import { sleep } from '@crawlers/utils';
+import _ from 'underscore';
 
 /* eslint-disable no-underscore-dangle */
 

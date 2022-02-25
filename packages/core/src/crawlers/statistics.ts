@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import ow from 'ow';
-import { KeyValueStore } from '../storages/key_value_store';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { log as defaultLog } from '../utils_log';
 import { events } from '../events';
+import { log as defaultLog } from '../log';
+import { KeyValueStore } from '../storages/key_value_store';
 
 /**
  * @ignore

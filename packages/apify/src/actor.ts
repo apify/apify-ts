@@ -4,18 +4,13 @@ import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import {
     ActorRunWithOutput,
-    Awaitable,
     Configuration,
     ConfigurationOptions,
-    Constructor,
     Dataset,
-    Dictionary,
     EXIT_CODES,
     initializeEvents,
     IStorage,
     KeyValueStore,
-    logSystemInfo,
-    printOutdatedSdkWarning,
     ProxyConfiguration,
     ProxyConfigurationOptions,
     RecordOptions,
@@ -24,13 +19,16 @@ import {
     RequestQueue,
     SessionPool,
     SessionPoolOptions,
-    sleep,
-    snakeCaseToCamelCase,
     Source,
     stopEvents,
     StorageManager,
     StorageManagerOptions,
 } from '@crawlers/core';
+import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
+import {
+    logSystemInfo,
+    printOutdatedSdkWarning,
+} from './utils';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration

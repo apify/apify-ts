@@ -8,7 +8,7 @@ import {
 } from '@crawlers/browser';
 import {
     Dictionary,
-} from '@crawlers/core';
+} from '@crawlers/utils';
 import { BrowserPoolOptions, PuppeteerPlugin } from 'browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';

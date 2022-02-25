@@ -1,9 +1,9 @@
-import { AfterResponseHook, GotOptionsInit, gotScraping, Method, Response, GotStream } from 'got-scraping';
+import log from '@apify/log';
+import { AfterResponseHook, GotOptionsInit, gotScraping, GotStream, Method, Response } from 'got-scraping';
 import { IncomingMessage } from 'http';
-import { Duplex } from 'stream';
 import ow from 'ow';
+import { Duplex } from 'stream';
 import { Dictionary, keys } from './typedefs';
-import { log } from './utils_log';
 
 type GotRequest = ReturnType<GotStream>
 

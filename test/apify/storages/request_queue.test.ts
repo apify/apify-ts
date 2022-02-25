@@ -6,8 +6,8 @@ import {
     RequestQueue,
     Request,
     Configuration,
-    sleep,
 } from '@crawlers/core';
+import { sleep } from '@crawlers/utils';
 
 describe('RequestQueue remote', () => {
     const apifyClient = Configuration.getDefaultClient();

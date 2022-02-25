@@ -2,7 +2,6 @@
 
 import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
-import sinon from 'sinon';
 import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from 'browser-pool';
 import puppeteer from 'puppeteer';
 import log from '@apify/log';
@@ -20,12 +19,25 @@ import {
     EVENT_SESSION_RETIRED,
     Configuration,
     RequestList,
-    sleep,
     createProxyConfiguration,
-    requestUtils,
 } from 'crawlers';
+import { requestAsBrowser, sleep } from '@crawlers/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
+
+jest.mock('@crawlers/utils/src/internals/request', () => {
+    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+    return {
+        ...original,
+        requestAsBrowser: jest.fn(),
+    };
+});
+
+const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+
+afterAll(() => {
+    jest.unmock('@crawlers/utils/src/internals/request');
+});
 
 describe('BrowserCrawler', () => {
     let prevEnvHeadless: string;
@@ -656,7 +668,7 @@ describe('BrowserCrawler', () => {
                 return { body: status } as never;
             };
 
-            const stub = sinon.stub(requestUtils, 'requestAsBrowser').callsFake(fakeCall);
+            const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
             const proxyConfiguration = await createProxyConfiguration();
             const generatedProxyUrl = new URL(proxyConfiguration.newUrl()).href;
             let browserProxy;
@@ -684,7 +696,7 @@ describe('BrowserCrawler', () => {
 
             expect(browserProxy).toEqual(generatedProxyUrl);
 
-            stub.restore();
+            stub.mockClear();
         });
 
         test('handlePageFunction should expose the proxyInfo object with sessions correctly', async () => {
@@ -694,7 +706,7 @@ describe('BrowserCrawler', () => {
                 return { body: status } as never;
             };
 
-            const stub = sinon.stub(requestUtils, 'requestAsBrowser').callsFake(fakeCall);
+            const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
 
             const proxyConfiguration = await createProxyConfiguration();
             const proxies: ProxyInfo[] = [];
@@ -727,7 +739,7 @@ describe('BrowserCrawler', () => {
             expect(proxies[3].sessionId).toEqual(sessions[3].id);
 
             delete process.env[ENV_VARS.PROXY_PASSWORD];
-            stub.restore();
+            stub.mockClear();
         });
 
         test('browser should launch with rotated custom proxy', async () => {
@@ -842,7 +854,7 @@ describe('BrowserCrawler', () => {
 
         test('handleFailedRequestFunction contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-            const stub = sinon.stub(requestUtils, 'requestAsBrowser').resolves({ body: { connected: true } } as never);
+            const stub = requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
             const proxyConfiguration = await createProxyConfiguration();
 
@@ -867,7 +879,6 @@ describe('BrowserCrawler', () => {
             await browserCrawler.run();
 
             delete process.env[ENV_VARS.PROXY_PASSWORD];
-            stub.restore();
         });
     });
 });

@@ -1,10 +1,8 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import {
-    Awaitable,
     EnqueueLinksOptions,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
-    Dictionary,
     enqueueLinks,
     EVENT_SESSION_RETIRED,
     handleRequestTimeout,
@@ -21,6 +19,7 @@ import {
     BasicCrawler,
     BasicCrawlerOptions,
 } from '@crawlers/basic';
+import { Awaitable, Dictionary } from '@crawlers/utils';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,

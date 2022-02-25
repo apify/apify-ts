@@ -8,13 +8,11 @@ import {
 import log from '@apify/log';
 import {
     AutoscaledPool,
-    Awaitable,
     CheerioCrawler,
     CheerioCrawlerOptions,
     CheerioCrawlingContext,
     createProxyConfiguration,
     Dataset,
-    Dictionary,
     CheerioHandleFailedRequestInput,
     KeyValueStore,
     PrepareRequestInputs,
@@ -23,6 +21,7 @@ import {
     RequestList,
     RequestQueue,
 } from '@crawlers/cheerio';
+import { Awaitable, Dictionary } from '@crawlers/utils';
 import { Actor, ApifyEnv } from 'apify';
 import cheerio from 'cheerio';
 import { readFile } from 'node:fs/promises';

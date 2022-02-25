@@ -1,6 +1,6 @@
 import ow from 'ow';
+import { weightedAvg } from '@crawlers/utils';
 import { Snapshotter } from './snapshotter'; // eslint-disable-line import/no-duplicates
-import { weightedAvg } from '../utils';
 
 /**
  * Represents the current status of the system.

@@ -1,14 +1,14 @@
 import express from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlers/core';
-import { startExpressAppPromise } from './_helper';
+import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlers/utils';
+import { startExpressAppPromise } from '../shared/_helper';
 
 const CONTENT = 'CONTENT';
 const JSON_CONTENT = JSON.stringify({ content: CONTENT });
 const HOSTNAME = '127.0.0.1';
 
-describe('Apify.utils_request', () => {
+describe('@crawlers/utils.requestAsBrowser', () => {
     let port: number;
     let server: Server;
     beforeAll(async () => {
@@ -97,7 +97,7 @@ describe('Apify.utils_request', () => {
         server.close();
     });
 
-    describe('Apify.requestAsBrowser', () => {
+    describe('requestAsBrowser', () => {
         test('it uses mobile user-agent when mobile property is set to true', async () => {
             const data = {
                 url: `http://${HOSTNAME}:${port}/echo`,

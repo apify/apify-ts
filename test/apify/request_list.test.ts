@@ -1,7 +1,28 @@
-import { shuffle } from 'underscore';
-import { KeyValueStore, RequestList, ACTOR_EVENT_NAMES_EX, deserializeArray, Request, sleep, events, requestUtils } from '@crawlers/core';
 import log from '@apify/log';
+import { ACTOR_EVENT_NAMES_EX, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
+import { requestAsBrowser, sleep } from '@crawlers/utils';
+import { shuffle } from 'underscore';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
+
+jest.mock('@crawlers/utils/src/internals/request', () => {
+    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+    return {
+        ...original,
+        requestAsBrowser: jest.fn(original.requestAsBrowser),
+    };
+});
+
+const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+const originalRequestAsBrowserImplementation = requestAsBrowserSpy.getMockImplementation()!;
+
+afterEach(() => {
+    requestAsBrowserSpy.mockReset();
+    requestAsBrowserSpy.mockImplementation(originalRequestAsBrowserImplementation);
+});
+
+afterAll(() => {
+    jest.unmock('@crawlers/utils/src/internals/request');
+});
 
 describe('RequestList', () => {
     let ll: number;
@@ -148,10 +169,9 @@ describe('RequestList', () => {
     });
 
     test('should use regex parameter to parse urls', async () => {
-        const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const listStr = 'kjnjkn"https://example.com/a/b/c?q=1#abc";,"HTTP://google.com/a/b/c";dgg:dd';
         const listArr = ['https://example.com', 'HTTP://google.com'];
-        spy.mockResolvedValue({ body: listStr } as any);
+        requestAsBrowserSpy.mockResolvedValue({ body: listStr } as any);
 
         const regex = /(https:\/\/example.com|HTTP:\/\/google.com)/g;
         const requestList = new RequestList({
@@ -169,12 +189,11 @@ describe('RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[1] });
 
-        expect(spy).toBeCalledWith({ url: 'http://example.com/list-1', encoding: 'utf8' });
-        spy.mockRestore();
+        expect(requestAsBrowserSpy).toBeCalledWith({ url: 'http://example.com/list-1', encoding: 'utf8' });
+        requestAsBrowserSpy.mockRestore();
     });
 
     test('should fix gdoc sharing url in `requestsFromUrl` automatically (GH issue #639)', async () => {
-        const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const list = [
             'https://example.com',
             'https://google.com',
@@ -190,7 +209,7 @@ describe('RequestList', () => {
         ];
         const correctUrl = 'https://docs.google.com/spreadsheets/d/11UGSBOSXy5Ov2WEP9nr4kSIxQJmH18zh-5onKtBsovU/gviz/tq?tqx=out:csv';
 
-        spy.mockResolvedValueOnce({ body: JSON.stringify(list) } as any);
+        requestAsBrowserSpy.mockResolvedValueOnce({ body: JSON.stringify(list) } as any);
 
         const requestList = new RequestList({
             sources: wrongUrls.map((requestsFromUrl) => ({ requestsFromUrl })),
@@ -202,8 +221,8 @@ describe('RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[1] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[2] });
 
-        expect(spy).toBeCalledWith({ url: correctUrl, encoding: 'utf8' });
-        spy.mockRestore();
+        expect(requestAsBrowserSpy).toBeCalledWith({ url: correctUrl, encoding: 'utf8' });
+        requestAsBrowserSpy.mockRestore();
     });
 
     test('should handle requestsFromUrl with no URLs', async () => {

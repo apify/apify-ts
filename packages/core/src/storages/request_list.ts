@@ -1,11 +1,11 @@
+import { downloadListOfUrls } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { Request, RequestOptions } from '../request';
 import { events } from '../events';
-import { log } from '../utils_log';
-import { publicUtils } from '../utils';
+import { log } from '../log';
+import { Request, RequestOptions } from '../request';
+import { createDeserialize, serializeArray } from '../serialization';
 import { getValue, setValue } from '../storages/key_value_store';
-import { serializeArray, createDeserialize } from '../serialization';
 import { Dictionary } from '../typedefs';
 
 /** @internal */
@@ -814,7 +814,7 @@ export class RequestList {
      * @internal wraps public utility for mocking purposes
      */
     private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp }): Promise<string[]> {
-        return publicUtils.downloadListOfUrls(options);
+        return downloadListOfUrls(options);
     }
 }
 

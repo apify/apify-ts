@@ -1,5 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
-import { Dictionary, KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlers/core';
+import { KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlers/core';
+import { Dictionary } from '@crawlers/utils';
 
 describe('KeyValueStore remote', () => {
     const apifyClient = Configuration.getDefaultClient();

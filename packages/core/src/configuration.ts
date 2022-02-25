@@ -1,9 +1,9 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { join } from 'path';
+import log from '@apify/log';
 import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@crawlers/storage';
 import { ApifyClient, ApifyClientOptions } from 'apify-client';
-import log from '@apify/log';
 import { EventEmitter } from 'events';
+import { join } from 'path';
 import { entries } from './typedefs';
 
 export interface ConfigurationOptions {

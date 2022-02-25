@@ -1,9 +1,9 @@
 import { normalizeUrl } from '@apify/utilities';
+import { AllowedHttpMethods } from 'apify-client';
 import crypto, { BinaryLike } from 'crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
-import { AllowedHttpMethods } from 'apify-client';
-import { log as defaultLog } from './utils_log';
+import { log as defaultLog } from './log';
 import { keys } from './typedefs';
 
 // new properties on the Request object breaks serialization

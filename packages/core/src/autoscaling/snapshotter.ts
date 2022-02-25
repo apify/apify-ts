@@ -1,13 +1,13 @@
-import os from 'os';
-import ow from 'ow';
-import { betterSetInterval, betterClearInterval, BetterIntervalID } from '@apify/utilities';
 import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import { Log } from '@apify/log';
-import { getMemoryInfo, isAtHome } from '../utils';
-import { events } from '../events';
-import { log as defaultLog } from '../utils_log';
-import { SystemInfo } from './system_status';
+import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
+import { getMemoryInfo } from '@crawlers/utils';
+import os from 'os';
+import ow from 'ow';
 import { Configuration } from '../configuration';
+import { events } from '../events';
+import { log as defaultLog } from '../log';
+import { SystemInfo } from './system_status';
 
 const RESERVE_MEMORY_RATIO = 0.5;
 const CLIENT_RATE_LIMIT_ERROR_RETRY_COUNT = 2;
@@ -195,13 +195,14 @@ export class Snapshotter {
         // Start snapshotting.
         this.eventLoopInterval = betterSetInterval(this._snapshotEventLoop.bind(this), this.eventLoopSnapshotIntervalMillis);
         this.clientInterval = betterSetInterval(this._snapshotClient.bind(this), this.clientSnapshotIntervalMillis);
-        if (isAtHome()) {
-            events.on(ACTOR_EVENT_NAMES.SYSTEM_INFO, this._snapshotCpuOnPlatform);
-            events.on(ACTOR_EVENT_NAMES.SYSTEM_INFO, this._snapshotMemoryOnPlatform);
-        } else {
-            this.cpuInterval = betterSetInterval(this._snapshotCpuOnLocal.bind(this), this.cpuSnapshotIntervalMillis);
-            this.memoryInterval = betterSetInterval(this._snapshotMemoryOnLocal.bind(this), this.memorySnapshotIntervalMillis);
-        }
+        // FIXME: we need an abstract handler for this
+        // if (isAtHome()) {
+        //     events.on(ACTOR_EVENT_NAMES.SYSTEM_INFO, this._snapshotCpuOnPlatform);
+        //     events.on(ACTOR_EVENT_NAMES.SYSTEM_INFO, this._snapshotMemoryOnPlatform);
+        // } else {
+        this.cpuInterval = betterSetInterval(this._snapshotCpuOnLocal.bind(this), this.cpuSnapshotIntervalMillis);
+        this.memoryInterval = betterSetInterval(this._snapshotMemoryOnLocal.bind(this), this.memorySnapshotIntervalMillis);
+        // }
     }
 
     /**
@@ -472,13 +473,14 @@ export class Snapshotter {
     protected async _ensureCorrectMaxMemory() {
         if (this.maxMemoryBytes) return;
         const { totalBytes } = await this._getMemoryInfo();
-        if (isAtHome()) {
-            this.maxMemoryBytes = totalBytes;
-        } else {
-            this.maxMemoryBytes = Math.ceil(totalBytes / 4);
-            // NOTE: Log as AutoscaledPool, so that users are not confused what "Snapshotter" is
-            this.log.info(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. Use the ${ENV_VARS.MEMORY_MBYTES} environment variable to override it.`); // eslint-disable-line max-len
-        }
+        // FIXME: this needs to be handled for platform usage
+        // if (isAtHome()) {
+        //     this.maxMemoryBytes = totalBytes;
+        // } else {
+        this.maxMemoryBytes = Math.ceil(totalBytes / 4);
+        // NOTE: Log as AutoscaledPool, so that users are not confused what "Snapshotter" is
+        this.log.info(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. Use the ${ENV_VARS.MEMORY_MBYTES} environment variable to override it.`); // eslint-disable-line max-len
+        // }
     }
 
     /**

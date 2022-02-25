@@ -5,7 +5,6 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import {
     AutoscaledPool,
     AutoscaledPoolOptions,
-    Awaitable,
     EnqueueLinksOptions,
     CrawlerHandleFailedRequestInput,
     enqueueLinks,
@@ -27,6 +26,7 @@ import {
     addRequestsToQueueInBatches,
     createRequests,
 } from '@crawlers/core';
+import { Awaitable } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
