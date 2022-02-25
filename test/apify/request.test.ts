@@ -1,6 +1,6 @@
 import util from 'util';
 import { normalizeUrl } from '@apify/utilities';
-import { Request, hashPayload } from '@crawlers/core';
+import { Request } from '@crawlers/core';
 
 describe('Apify.Request', () => {
     test('should not accept invalid values', () => {
@@ -27,13 +27,10 @@ describe('Apify.Request', () => {
     test('should create unique key based on url, method and payload for POST requests', () => {
         const url = 'https://user:pass@website.com/a/vb/c /d?q=1&q=kjnjkn$lkn#lkmlkml';
         const payload = JSON.stringify({ foo: 'bar' });
-        const payloadHash = hashPayload(payload);
-        const normalizedUrl = normalizeUrl(url);
-        const request = new Request({ url, method: 'post', payload, useExtendedUniqueKey: true });
+        const request1 = new Request({ url, method: 'post', payload, useExtendedUniqueKey: true });
+        const request2 = new Request({ url, method: 'post', payload: `${payload}123`, useExtendedUniqueKey: true });
 
-        const uniqueKey = `POST(${payloadHash}):${normalizedUrl}`;
-
-        expect(request.uniqueKey).toEqual(uniqueKey);
+        expect(request1.uniqueKey).not.toBe(request2.uniqueKey);
     });
 
     test('works', () => {
