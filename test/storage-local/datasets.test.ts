@@ -1,5 +1,6 @@
 import { emptyDirSync, ensureDirSync, readdirSync, readFile, writeJsonSync } from 'fs-extra';
 import { join } from 'path';
+import { setTimeout } from 'node:timers/promises';
 import { ApifyStorageLocal } from '@crawlers/storage';
 import { STORAGE_NAMES } from '@crawlers/storage/src/consts';
 import { prepareTestDir, removeTestDir } from './_tools';
@@ -51,7 +52,7 @@ describe('timestamps:', () => {
     const testInitTimestamp = Date.now();
 
     test('createdAt has a valid date', async () => {
-        await wait10ms();
+        await setTimeout(30);
         const { createdAt } = (await storageLocal.dataset(datasetName).get())!;
         const createdAtTimestamp = createdAt.getTime();
         expect(createdAtTimestamp).toBeGreaterThan(testInitTimestamp);
@@ -61,7 +62,7 @@ describe('timestamps:', () => {
     test('get updated on item insert', async () => {
         const beforeUpdate = (await storageLocal.dataset(datasetName).get())!;
         await storageLocal.dataset(datasetName).pushItems({ foo: 'bar' });
-        await wait10ms();
+        await setTimeout(30);
         const afterUpdate = (await storageLocal.dataset(datasetName).get())!;
         expect(afterUpdate.modifiedAt.getTime()).toBeGreaterThan(beforeUpdate.modifiedAt.getTime());
         expect(afterUpdate.accessedAt.getTime()).toBeGreaterThan(beforeUpdate.accessedAt.getTime());
@@ -70,7 +71,7 @@ describe('timestamps:', () => {
     test('listItems updates accessedAt', async () => {
         const beforeGet = (await storageLocal.dataset(datasetName).get())!;
         await storageLocal.dataset(datasetName).listItems();
-        await wait10ms();
+        await setTimeout(30);
         const afterGet = (await storageLocal.dataset(datasetName).get())!;
         expect(beforeGet.modifiedAt.getTime()).toBe(afterGet.modifiedAt.getTime());
         expect(afterGet.accessedAt.getTime()).toBeGreaterThan(beforeGet.accessedAt.getTime());
@@ -272,10 +273,6 @@ describe('listItems', () => {
         });
     });
 });
-
-function wait10ms() {
-    return new Promise((r) => setTimeout(r, 10));
-}
 
 function seed(datasetsDir: string) {
     Object.values(TEST_DATASETS).forEach((dataset) => {
