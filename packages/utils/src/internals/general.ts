@@ -112,7 +112,7 @@ export async function purgeLocalStorage(folder?: string): Promise<void> {
     }
 
     // Clear the folder
-    await fs.rm(folder, { recursive: true });
+    await fs.rm(folder, { recursive: true, force: true });
 }
 
 /**
