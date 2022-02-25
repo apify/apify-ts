@@ -9,6 +9,7 @@ import {
 import { IncomingMessage } from 'node:http';
 import syncFs from 'node:fs';
 import asyncFs from 'node:fs/promises';
+import { ENV_VARS } from '@apify/consts';
 
 describe('isDocker()', () => {
     test('works for dockerenv && cgroup', async () => {
@@ -101,12 +102,14 @@ describe('snakeCaseToCamelCase()', () => {
 
 describe('purgeLocalStorage()', () => {
     // Create test folders
+    process.env[ENV_VARS.LOCAL_STORAGE_DIR] = `./test_storage_${Date.now().toString(16)}`;
     const folder = Date.now().toString(16);
     syncFs.mkdirSync(folder);
+    syncFs.mkdirSync(process.env[ENV_VARS.LOCAL_STORAGE_DIR]);
 
     test('should purge local storage by default', async () => {
         await expect(purgeLocalStorage()).resolves.toBeUndefined();
-        expect(syncFs.existsSync('apify_storage')).toBe(false);
+        expect(syncFs.existsSync(process.env[ENV_VARS.LOCAL_STORAGE_DIR])).toBe(false);
     });
 
     test('should purge local storage when passing custom name', async () => {

@@ -564,6 +564,7 @@ describe('RequestList', () => {
         const urlsFromTxt = ['http://example.com/3', 'http://example.com/4'];
         spy.mockResolvedValueOnce(urlsFromTxt);
 
+        console.log(PERSIST_REQUESTS_KEY);
         const requestList = new RequestList(opts);
         expect(requestList.areRequestsPersisted).toBe(false);
 

@@ -1,5 +1,5 @@
 import { ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
-import { Configuration, getValue, KeyValueStore, setValue } from '@crawlers/core';
+import { Configuration, KeyValueStore } from '@crawlers/core';
 import { Actor } from 'apify';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
 
@@ -51,7 +51,7 @@ describe('Apify functions for storages', () => {
                 expect(value).toBe(record);
             };
 
-            await setValue('key-1', record);
+            await Actor.setValue('key-1', record);
 
             defaultStore.setValue = oldSet;
         });
@@ -65,7 +65,7 @@ describe('Apify functions for storages', () => {
             // @ts-expect-error TODO use spyOn instead of this
             defaultStore.getValue = async (key) => expect(key).toBe('key-1');
 
-            await getValue('key-1');
+            await Actor.getValue('key-1');
 
             defaultStore.getValue = oldGet;
         });
@@ -79,7 +79,7 @@ describe('Apify functions for storages', () => {
             // @ts-expect-error TODO use spyOn instead of this
             defaultStore.getValue = async (key) => expect(key).toBe('key-1');
 
-            await getValue('key-1');
+            await Actor.getValue('key-1');
 
             defaultStore.getValue = oldGet;
         });
