@@ -1,9 +1,14 @@
 import ow from 'ow';
 import { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from 'browser-pool';
-import { DEFAULT_USER_AGENT } from '@crawlers/core';
 import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
 import { applyStealthToBrowser, StealthOptions } from './stealth';
+
+/**
+ * The default user agent used by `Apify.launchPuppeteer`.
+ * Last updated on 2020-05-22.
+ */
+const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36';
 
 const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
     width: 1366,
