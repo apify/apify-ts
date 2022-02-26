@@ -17,8 +17,6 @@ import {
     RequestList,
     RequestListOptions,
     RequestQueue,
-    SessionPool,
-    SessionPoolOptions,
     Source,
     stopEvents,
     StorageManager,
@@ -36,12 +34,19 @@ import {
  * See {@link Configuration} for details about what can be configured and what are the default values.
  */
 export class Actor {
+    /** @internal */
     static _instance: Actor;
 
-    /** Configuration of this SDK instance (provided to its constructor). See {@link Configuration} for details. */
+    /**
+     * Configuration of this SDK instance (provided to its constructor). See {@link Configuration} for details.
+     * @internal
+     */
     readonly config: Configuration;
 
-    /** Default {@link ApifyClient} instance. */
+    /**
+     * Default {@link ApifyClient} instance.
+     * @internal
+     */
     readonly apifyClient: ApifyClient;
 
     private readonly storageManagers = new Map<Constructor, StorageManager>();
@@ -581,20 +586,6 @@ export class Actor {
     }
 
     /**
-     * Opens a SessionPool and returns a promise resolving to an instance
-     * of the {@link SessionPool} class that is already initialized.
-     *
-     * For more details and code examples, see the {@link SessionPool} class.
-     * @ignore
-     */
-    async openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
-        const sessionPool = new SessionPool(sessionPoolOptions, this.config);
-        await sessionPool.initialize();
-
-        return sessionPool;
-    }
-
-    /**
      * Creates a proxy configuration and returns a promise resolving to an instance
      * of the {@link ProxyConfiguration} class that is already initialized.
      *
@@ -1116,16 +1107,6 @@ export class Actor {
     }
 
     /**
-     * Opens a SessionPool and returns a promise resolving to an instance
-     * of the {@link SessionPool} class that is already initialized.
-     *
-     * For more details and code examples, see the {@link SessionPool} class.
-     */
-    static async openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
-        return Actor.getDefaultInstance().openSessionPool(sessionPoolOptions);
-    }
-
-    /**
      * Creates a proxy configuration and returns a promise resolving to an instance
      * of the {@link ProxyConfiguration} class that is already initialized.
      *
@@ -1205,6 +1186,7 @@ export class Actor {
         return Actor.getDefaultInstance().config;
     }
 
+    /** @internal */
     static getDefaultInstance(): Actor {
         this._instance ??= new Actor();
         return this._instance;

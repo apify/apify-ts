@@ -9,7 +9,6 @@ import {
     CrawlerHandleFailedRequestInput,
     enqueueLinks,
     events,
-    openSessionPool,
     ProxyInfo,
     QueueOperationInfo,
     Request,
@@ -30,12 +29,12 @@ import { Awaitable } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
-    crawler: BasicCrawler<BasicCrawlerCrawlingContext>;
+    crawler: BasicCrawler;
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
 }
 
 export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
-    crawler: BasicCrawler<BasicCrawlerCrawlingContext>;
+    crawler: BasicCrawler;
 }
 
 export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue'>
@@ -478,7 +477,7 @@ export class BasicCrawler<
         this.autoscaledPool = new AutoscaledPool(this.autoscaledPoolOptions);
 
         if (this.useSessionPool) {
-            this.sessionPool = await openSessionPool(this.sessionPoolOptions);
+            this.sessionPool = await SessionPool.open(this.sessionPoolOptions);
             // Assuming there are not more than 20 browsers running at once;
             this.sessionPool.setMaxListeners(20);
         }
