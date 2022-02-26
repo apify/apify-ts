@@ -7,7 +7,6 @@ import {
     Configuration,
     ConfigurationOptions,
     Dataset,
-    EXIT_CODES,
     initializeEvents,
     IStorage,
     KeyValueStore,
@@ -1335,3 +1334,15 @@ export interface ExitOptions {
 }
 
 export { ClientActorRun as ActorRun };
+
+/**
+ * Exit codes for the actor process.
+ * The error codes must be in the range 1-128, to avoid collision with signal exits
+ * and to ensure Docker will handle them correctly!
+ * @internal should be removed if we decide to remove `Actor.main()`
+ */
+export const EXIT_CODES = {
+    SUCCESS: 0,
+    ERROR_USER_FUNCTION_THREW: 91,
+    ERROR_UNKNOWN: 92,
+};
