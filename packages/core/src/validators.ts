@@ -1,6 +1,7 @@
 import ow from 'ow';
 import { Dictionary } from './typedefs';
 
+/** @internal */
 export const validators = {
     // Naming it browser page for future proofing with Playwright
     browserPage: (value: Dictionary<any>) => ({
