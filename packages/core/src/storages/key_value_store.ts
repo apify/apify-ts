@@ -8,8 +8,6 @@ import { APIFY_API_BASE_URL } from '../constants';
 import { Awaitable, Dictionary } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 
-export type KeyValueStoreValueTypes = Record<string, unknown> | null | Buffer | string;
-
 /**
  * Helper function to possibly stringify value if options.contentType is not set.
  *
