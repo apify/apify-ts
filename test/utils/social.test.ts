@@ -1,4 +1,4 @@
-import { social, SocialHandles } from '@crawlers/utils';
+import { social } from '@crawlers/utils';
 
 const {
     EMAIL_REGEX,
@@ -336,7 +336,7 @@ describe('utils.social', () => {
     });
 
     describe('parseHandlesFromHtml()', () => {
-        const EMPTY_RESULT: SocialHandles = {
+        const EMPTY_RESULT: social.SocialHandles = {
             emails: [],
             phones: [],
             phonesUncertain: [],
