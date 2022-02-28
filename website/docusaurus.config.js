@@ -250,7 +250,8 @@ module.exports = {
             },
         },
         algolia: {
-            apiKey: '64ce2544769e34add0e6402688c86e92',
+            appId: 'N8EOCSBQGH',
+            apiKey: '03b4b90877515c89fcd2decba22634f3',
             indexName: 'apify_sdk',
             algoliaOptions: {
                 facetFilters: ['version:VERSION'],
