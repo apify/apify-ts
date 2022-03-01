@@ -290,7 +290,7 @@ describe('PuppeteerCrawler', () => {
         const errors = logErrorSpy.mock.calls.map((call) => [call[0], call[1].retryCount]);
         expect(errors).toEqual([
             [
-                'Request failed and reached maximum retries. Error: Navigation timed out after 0.005 seconds.',
+                'Request failed and reached maximum retries. Navigation timed out after 0.005 seconds.',
                 undefined,
             ],
         ]);
@@ -349,7 +349,7 @@ describe('PuppeteerCrawler', () => {
         const errors = logErrorSpy.mock.calls.map((call) => [call[0], call[1].retryCount]);
         expect(errors).toEqual([
             [
-                'Request failed and reached maximum retries. Error: Navigation timed out after 0.005 seconds.',
+                'Request failed and reached maximum retries. Navigation timed out after 0.005 seconds.',
                 undefined,
             ],
         ]);

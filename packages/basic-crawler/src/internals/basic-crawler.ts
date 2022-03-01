@@ -514,7 +514,7 @@ export class BasicCrawler<
                                 + 'invalid config. Make sure to use either Apify.openRequestList() or the "stateKeyPrefix" option of RequestList '
                                 + 'constructor to ensure your crawling state is persisted through host migrations and restarts.');
                         } else {
-                            this.log.exception(err, 'An unexpected error occured when the crawler '
+                            this.log.exception(err, 'An unexpected error occurred when the crawler '
                                 + 'attempted to persist its request list\'s state.');
                         }
                     });
@@ -700,18 +700,10 @@ export class BasicCrawler<
             // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
             // Thus, we print the full stack trace only for DEBUG log level.
             // Maybe it's worth adding another ENV variable instead of using log levels here.
-            if (this.log.getLevel() < this.log.LEVELS.DEBUG) {
-                this.log.warning(
-                    `Reclaiming failed request back to the list or queue. ${error}`,
-                    { url, retryCount },
-                );
-            } else {
-                this.log.exception(
-                    error,
-                    'handleRequestFunction failed, reclaiming failed request back to the list or queue',
-                    { url, retryCount, id },
-                );
-            }
+            this.log.warning(
+                `Reclaiming failed request back to the list or queue. ${this.log.getLevel() < this.log.LEVELS.DEBUG ? error : error.stack}`,
+                { id, url, retryCount },
+            );
             await source.reclaimRequest(request);
         } else {
             // If we get here, the request is either not retryable
@@ -734,19 +726,13 @@ export class BasicCrawler<
             await this.failedContextHandler(crawlingContext);
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
-            if (crawlingContext.error instanceof TimeoutError && this.log.getLevel() < this.log.LEVELS.DEBUG) {
-                crawlingContext.error.stack = crawlingContext.error.message;
-                this.log.error(
-                    `Request failed and reached maximum retries. ${crawlingContext.error}`,
-                    { url, method, uniqueKey },
-                );
-            } else {
-                this.log.exception(
-                    crawlingContext.error,
-                    'Request failed and reached maximum retries',
-                    { id, url, method, uniqueKey },
-                );
-            }
+            this.log.error(
+                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && this.log.getLevel() < 5
+                    ? crawlingContext.error.message
+                    : crawlingContext.error.stack
+                }`,
+                { id, url, method, uniqueKey },
+            );
         }
     }
 
