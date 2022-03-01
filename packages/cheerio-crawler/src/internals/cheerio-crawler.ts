@@ -26,6 +26,7 @@ import {
     RequestAsBrowserResult,
     RequestQueue,
     Session,
+    throwOnBlockedRequest,
     validators,
 } from '@crawlers/core';
 import cheerio, { CheerioOptions } from 'cheerio';
@@ -629,7 +630,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         tryCancel();
 
         if (this.useSessionPool) {
-            this._throwOnBlockedRequest(session!, response.statusCode!);
+            throwOnBlockedRequest(session!, response.statusCode!);
         }
 
         if (this.persistCookiesPerSession) {
@@ -915,17 +916,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
                 throw new Error(`Can not parse mime type ${mimeType} from "options.additionalMimeTypes".`);
             }
         });
-    }
-
-    /**
-     * Handles blocked request
-     */
-    protected _throwOnBlockedRequest(session: Session, statusCode: number) {
-        const isBlocked = session.retireOnBlockedStatusCodes(statusCode);
-
-        if (isBlocked) {
-            throw new Error(`Request blocked - received ${statusCode} status code`);
-        }
     }
 
     /**
