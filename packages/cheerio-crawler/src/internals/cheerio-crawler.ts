@@ -685,7 +685,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         ow(extension, ow.object.instanceOf(CrawlerExtension));
 
         const extensionOptions = extension.getCrawlerOptions();
-        // TODO temporary until the API is unified in V2
         extensionOptions.userProvidedHandler = extensionOptions.requestHandler;
         delete extensionOptions.requestHandler;
 
