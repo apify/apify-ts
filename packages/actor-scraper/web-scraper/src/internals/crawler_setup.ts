@@ -195,13 +195,13 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         if (this.isDevRun) args.push(`--remote-debugging-port=${CHROME_DEBUGGER_PORT}`);
 
         const options: PuppeteerCrawlerOptions = {
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._handlePageFunction.bind(this),
             requestList: this.requestList,
             requestQueue: this.requestQueue,
             handlePageTimeoutSecs: this.isDevRun ? DEVTOOLS_TIMEOUT_SECS : this.input.pageFunctionTimeoutSecs,
             preNavigationHooks: [],
             postNavigationHooks: [],
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._handleFailedRequestFunction.bind(this),
             maxConcurrency: this.isDevRun ? MAX_CONCURRENCY_IN_DEVELOPMENT : this.input.maxConcurrency,
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,

@@ -13,7 +13,7 @@ import {
     CheerioCrawlingContext,
     createProxyConfiguration,
     Dataset,
-    CheerioHandleFailedRequestInput,
+    CheerioFailedRequestHandlerInput,
     KeyValueStore,
     PrepareRequestInputs,
     ProxyConfiguration,
@@ -159,7 +159,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
         const options: CheerioCrawlerOptions = {
             proxyConfiguration: this.proxyConfiguration,
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._handlePageFunction.bind(this),
             preNavigationHooks: this.evaledPreNavigationHooks,
             postNavigationHooks: this.evaledPostNavigationHooks,
             requestList: this.requestList,
@@ -168,7 +168,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             prepareRequestFunction: this._prepareRequestFunction.bind(this),
             requestTimeoutSecs: this.input.pageLoadTimeoutSecs,
             ignoreSslErrors: this.input.ignoreSslErrors,
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._handleFailedRequestFunction.bind(this),
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
             additionalMimeTypes: this.input.additionalMimeTypes,
@@ -229,7 +229,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         }
     }
 
-    private _handleFailedRequestFunction({ request }: CheerioHandleFailedRequestInput) {
+    private _handleFailedRequestFunction({ request }: CheerioFailedRequestHandlerInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);

@@ -196,7 +196,7 @@ export interface BrowserCrawlerOptions<
      * represents the last error thrown during processing of the request.
      *
      */
-    failedRequestHandler: BrowserCrawlerHandleFailedRequest;
+    failedRequestHandler?: BrowserCrawlerHandleFailedRequest;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.

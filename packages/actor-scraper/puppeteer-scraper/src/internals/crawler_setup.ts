@@ -178,13 +178,13 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         if (this.input.ignoreCorsAndCsp) args.push('--disable-web-security');
 
         const options: PuppeteerCrawlerOptions = {
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._handlePageFunction.bind(this),
             requestList: this.requestList,
             requestQueue: this.requestQueue,
             handlePageTimeoutSecs: this.devtools ? DEVTOOLS_TIMEOUT_SECS : this.input.pageFunctionTimeoutSecs,
             preNavigationHooks: [],
             postNavigationHooks: [],
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._handleFailedRequestFunction.bind(this),
             maxConcurrency: this.input.maxConcurrency,
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,

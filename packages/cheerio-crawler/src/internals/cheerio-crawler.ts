@@ -133,7 +133,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      */
     requestHandler: CheerioRequestHandler<JSONData>;
 
-        /**
+    /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
      *
