@@ -328,7 +328,7 @@ export class BasicCrawler<
     autoscaledPool?: AutoscaledPool;
 
     protected log: Log;
-    protected userProvidedHandler!: RequestHandler<Context>;
+    protected requestHandler!: RequestHandler<Context>;
     protected failedRequestHandler?: FailedRequestHandler<ErrorContext>;
     protected requestHandlerTimeoutMillis!: number;
     protected internalTimeoutMillis: number;
@@ -415,7 +415,7 @@ export class BasicCrawler<
         this._handlePropertyNameChange({
             newName: 'requestHandler',
             oldName: 'handleRequestFunction',
-            propertyKey: 'userProvidedHandler',
+            propertyKey: 'requestHandler',
             newProperty: requestHandler,
             oldProperty: handleRequestFunction,
         });
@@ -590,7 +590,7 @@ export class BasicCrawler<
     }
 
     protected async _runRequestHandler(crawlingContext: Context): Promise<void> {
-        await this.userProvidedHandler(crawlingContext);
+        await this.requestHandler(crawlingContext);
     }
 
     protected async _pauseOnMigration() {

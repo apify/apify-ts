@@ -1320,7 +1320,7 @@ describe('CheerioCrawler', () => {
             // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.requestHandler).toBeUndefined();
             // @ts-expect-error Accessing private prop
-            expect(cheerioCrawler.userProvidedHandler).toBeUndefined();
+            expect(cheerioCrawler.requestHandler).toBeUndefined();
         });
     });
 });

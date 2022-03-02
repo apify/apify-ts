@@ -685,8 +685,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         ow(extension, ow.object.instanceOf(CrawlerExtension));
 
         const extensionOptions = extension.getCrawlerOptions();
-        extensionOptions.userProvidedHandler = extensionOptions.requestHandler;
-        delete extensionOptions.requestHandler;
 
         for (const [key, value] of entries(extensionOptions)) {
             const isConfigurable = this.hasOwnProperty(key); // eslint-disable-line
@@ -781,7 +779,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         });
 
         return addTimeoutToPromise(
-            () => Promise.resolve(this.userProvidedHandler(crawlingContext)),
+            () => Promise.resolve(this.requestHandler(crawlingContext)),
             this.handlePageTimeoutMillis,
             `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
         );

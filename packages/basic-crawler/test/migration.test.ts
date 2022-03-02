@@ -30,7 +30,7 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             ].join('\n'));
 
             // eslint-disable-next-line dot-notation -- accessing private property
-            expect(crawler['userProvidedHandler']).toBe(newHandler);
+            expect(crawler['requestHandler']).toBe(newHandler);
         });
 
         it('should log when providing only the deprecated handleRequestFunction', () => {
@@ -50,7 +50,7 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             ].join('\n'));
 
             // eslint-disable-next-line dot-notation -- accessing private property
-            expect(crawler['userProvidedHandler']).toBe(oldHandler);
+            expect(crawler['requestHandler']).toBe(oldHandler);
         });
 
         it('should not log when providing only requestHandler', () => {
@@ -66,7 +66,7 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             expect(warningSpy).not.toHaveBeenCalled();
 
             // eslint-disable-next-line dot-notation -- accessing private property
-            expect(crawler['userProvidedHandler']).toBe(handler);
+            expect(crawler['requestHandler']).toBe(handler);
         });
     });
 
