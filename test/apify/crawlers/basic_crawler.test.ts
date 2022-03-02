@@ -45,7 +45,7 @@ describe('BasicCrawler', () => {
 
         const processed: { url: string }[] = [];
         const requestList = new RequestList({ sources });
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed.push(_.pick(request, 'url'));
         };
@@ -54,7 +54,7 @@ describe('BasicCrawler', () => {
             requestList,
             minConcurrency: 25,
             maxConcurrency: 25,
-            handleRequestFunction,
+            requestHandler,
         });
 
         await requestList.initialize();
@@ -81,7 +81,7 @@ describe('BasicCrawler', () => {
 
         const processed: { url: string }[] = [];
         const requestList = await RequestList.open('reqList', sources);
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             if (request.url.endsWith('200')) events.emit(event);
             processed.push(_.pick(request, 'url'));
         };
@@ -90,7 +90,7 @@ describe('BasicCrawler', () => {
             requestList,
             minConcurrency: 25,
             maxConcurrency: 25,
-            handleRequestFunction,
+            requestHandler,
         });
 
         let finished = false;
@@ -128,7 +128,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
 
@@ -144,7 +144,7 @@ describe('BasicCrawler', () => {
             maxRequestRetries: 10,
             minConcurrency: 3,
             maxConcurrency: 3,
-            handleRequestFunction,
+            requestHandler,
         });
 
         await requestList.initialize();
@@ -177,7 +177,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
             request.userData.foo = 'bar';
@@ -185,7 +185,7 @@ describe('BasicCrawler', () => {
         };
 
         let handleFailedRequestFunctionCalls = 0;
-        const handleFailedRequestFunction = async () => {
+        const failedRequestHandler = async () => {
             handleFailedRequestFunctionCalls++;
         };
 
@@ -194,8 +194,8 @@ describe('BasicCrawler', () => {
             maxRequestRetries: 10,
             minConcurrency: 3,
             maxConcurrency: 3,
-            handleRequestFunction,
-            handleFailedRequestFunction,
+            requestHandler,
+            failedRequestHandler,
         });
 
         await requestList.initialize();
@@ -229,20 +229,20 @@ describe('BasicCrawler', () => {
         const errors: Error[] = [];
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             await Promise.reject(new Error('some-error'));
             processed[request.url] = request;
         };
 
-        const handleFailedRequestFunction: FailedRequestHandler = async ({ request, error }) => {
+        const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
             failed[request.url] = request;
             errors.push(error);
         };
 
         const basicCrawler = new BasicCrawler({
             requestList,
-            handleRequestFunction,
-            handleFailedRequestFunction,
+            requestHandler,
+            failedRequestHandler,
         });
 
         await requestList.initialize();
@@ -264,12 +264,12 @@ describe('BasicCrawler', () => {
     test('should require at least one of RequestQueue and RequestList', () => {
         const requestList = new RequestList({ sources: [] });
         const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
-        const handleRequestFunction = async () => {};
+        const requestHandler = async () => {};
 
-        expect(() => new BasicCrawler({ handleRequestFunction })).toThrowError();
-        expect(() => new BasicCrawler({ handleRequestFunction, requestList })).not.toThrowError();
-        expect(() => new BasicCrawler({ handleRequestFunction, requestQueue })).not.toThrowError();
-        expect(() => new BasicCrawler({ handleRequestFunction, requestQueue, requestList })).not.toThrowError();
+        expect(() => new BasicCrawler({ requestHandler })).toThrowError();
+        expect(() => new BasicCrawler({ requestHandler, requestList })).not.toThrowError();
+        expect(() => new BasicCrawler({ requestHandler, requestQueue })).not.toThrowError();
+        expect(() => new BasicCrawler({ requestHandler, requestQueue, requestList })).not.toThrowError();
     });
 
     test('should correctly combine RequestList and RequestQueue', async () => {
@@ -282,7 +282,7 @@ describe('BasicCrawler', () => {
         const requestList = new RequestList({ sources });
         const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
 
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
 
@@ -299,7 +299,7 @@ describe('BasicCrawler', () => {
             maxRequestRetries: 3,
             minConcurrency: 1,
             maxConcurrency: 1,
-            handleRequestFunction,
+            requestHandler,
         });
 
         // It enqueues all requests from RequestList to RequestQueue.
@@ -404,7 +404,7 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestQueue,
-            handleRequestFunction: async () => {},
+            requestHandler: async () => {},
         });
 
         // @ts-expect-error Accessing private prop
@@ -426,7 +426,7 @@ describe('BasicCrawler', () => {
                     return Promise.resolve(isFinished);
                 },
             },
-            handleRequestFunction: async ({ request }) => {
+            requestHandler: async ({ request }) => {
                 await sleep(10);
                 processed.push(request);
             },
@@ -471,7 +471,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: RequestHandler = async ({ request }) => {
+        const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
             if (request.url === 'http://example.com/2') throw Error();
@@ -479,7 +479,7 @@ describe('BasicCrawler', () => {
         };
 
         let handleFailedRequestFunctionCalls = 0;
-        const handleFailedRequestFunction = async () => {
+        const failedRequestHandler = async () => {
             handleFailedRequestFunctionCalls++;
         };
 
@@ -488,8 +488,8 @@ describe('BasicCrawler', () => {
             maxRequestRetries: 3,
             maxRequestsPerCrawl: 3,
             maxConcurrency: 1,
-            handleRequestFunction,
-            handleFailedRequestFunction,
+            requestHandler,
+            failedRequestHandler,
         });
 
         await requestList.initialize();
@@ -528,7 +528,7 @@ describe('BasicCrawler', () => {
         let crawler = new BasicCrawler({
             requestQueue,
             maxConcurrency: 1,
-            handleRequestFunction: async () => {
+            requestHandler: async () => {
                 await sleep(1);
                 count++;
             },
@@ -552,7 +552,7 @@ describe('BasicCrawler', () => {
         crawler = new BasicCrawler({
             requestList,
             maxConcurrency: 1,
-            handleRequestFunction: async () => {
+            requestHandler: async () => {
                 await sleep(1);
                 count++;
             },
@@ -583,7 +583,7 @@ describe('BasicCrawler', () => {
             requestList,
             requestQueue,
             maxConcurrency: 1,
-            handleRequestFunction: async () => {
+            requestHandler: async () => {
                 await sleep(1);
                 count++;
             },
@@ -608,8 +608,8 @@ describe('BasicCrawler', () => {
             requestList,
             handleRequestTimeoutSecs: 0.01,
             maxRequestRetries: 1,
-            handleRequestFunction: () => sleep(1000),
-            handleFailedRequestFunction: async ({ request }) => {
+            requestHandler: () => sleep(1000),
+            failedRequestHandler: async ({ request }) => {
                 results.push(request);
             },
         });
@@ -630,8 +630,8 @@ describe('BasicCrawler', () => {
             requestList,
             handleRequestTimeoutSecs: Infinity,
             maxRequestRetries: 1,
-            handleRequestFunction: () => sleep(1000),
-            handleFailedRequestFunction: async ({ request }) => {
+            requestHandler: () => sleep(1000),
+            failedRequestHandler: async ({ request }) => {
                 results.push(request);
             },
         });
@@ -657,11 +657,11 @@ describe('BasicCrawler', () => {
                     maxPoolSize: 10,
                     persistStateKey: 'POOL',
                 },
-                handleRequestFunction: async ({ session }) => {
+                requestHandler: async ({ session }) => {
                     expect(session.constructor.name).toEqual('Session');
                     expect(session.id).toBeDefined();
                 },
-                handleFailedRequestFunction: async ({ request }) => {
+                failedRequestHandler: async ({ request }) => {
                     results.push(request);
                 },
             });
@@ -685,8 +685,8 @@ describe('BasicCrawler', () => {
                     maxPoolSize: 10,
                     persistStateKey: 'POOL',
                 },
-                handleRequestFunction: async () => {},
-                handleFailedRequestFunction: async () => {},
+                requestHandler: async () => {},
+                failedRequestHandler: async () => {},
             });
             await crawler.run();
 
@@ -707,8 +707,8 @@ describe('BasicCrawler', () => {
                 sessionPoolOptions: {
                     maxPoolSize: 10,
                 },
-                handleRequestFunction: async () => {},
-                handleFailedRequestFunction: async () => {},
+                requestHandler: async () => {},
+                failedRequestHandler: async () => {},
             });
 
             // @ts-expect-error Accessing private prop
@@ -742,7 +742,7 @@ describe('BasicCrawler', () => {
             const crawler = new BasicCrawler({
                 requestList,
                 minConcurrency: 4,
-                async handleRequestFunction(crawlingContext) {
+                async requestHandler(crawlingContext) {
                     // @ts-expect-error Accessing private prop
                     mainContexts[counter] = crawler.crawlingContexts.get(crawlingContext.id);
                     // @ts-expect-error Accessing private prop

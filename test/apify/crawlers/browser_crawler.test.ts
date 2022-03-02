@@ -11,7 +11,7 @@ import {
     BrowserCrawlerHandleFailedRequestInput,
     ProxyInfo,
     PuppeteerGoToOptions,
-    PuppeteerHandlePage,
+    PuppeteerRequestHandler,
     STATUS_CODES_BLOCKED,
     Request,
     AutoscaledPool,
@@ -82,7 +82,7 @@ describe('BrowserCrawler', () => {
         const processed: Request[] = [];
         const failed: Request[] = [];
         const requestList = new RequestList({ sources });
-        const handlePageFunction: PuppeteerHandlePage = async ({ page, request, response }) => {
+        const handlePageFunction: PuppeteerRequestHandler = async ({ page, request, response }) => {
             await page.waitForSelector('title');
 
             expect(response.status()).toBe(200);

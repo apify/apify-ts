@@ -144,9 +144,9 @@ export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, Play
 
 export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
 
-export type PlaywrightHandlePageFunctionParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
+export type PlaywrightRequestHandlerParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
 
-export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightHandlePageFunctionParam>;
+export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightRequestHandlerParam>;
 
 /**
  * Provides a simple framework for parallel crawling of web pages

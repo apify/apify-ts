@@ -6,8 +6,8 @@ import {
     PuppeteerCookie,
     PuppeteerCrawler,
     PuppeteerGoToOptions,
-    PuppeteerHandlePage,
-    PuppeteerHandlePageFunctionParam,
+    PuppeteerRequestHandler,
+    PuppeteerRequestHandlerParam,
     Request,
     RequestList,
     RequestQueue,
@@ -83,7 +83,7 @@ describe('PuppeteerCrawler', () => {
         const processed: Request[] = [];
         const failed: Request[] = [];
         const requestListLarge = new RequestList({ sources: sourcesLarge });
-        const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
+        const requestHandler = async ({ page, request, response }: Parameters<PuppeteerRequestHandler>[0]) => {
             await page.waitForSelector('title');
             expect(response.status()).toBe(200);
             request.userData.title = await page.title();
@@ -94,8 +94,8 @@ describe('PuppeteerCrawler', () => {
             requestList: requestListLarge,
             minConcurrency: 1,
             maxConcurrency: 1,
-            handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => {
+            requestHandler,
+            failedRequestHandler: ({ request }) => {
                 failed.push(request);
             },
         });
@@ -120,7 +120,7 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {},
+            requestHandler: () => {},
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
@@ -136,18 +136,18 @@ describe('PuppeteerCrawler', () => {
 
     test('should support custom gotoFunction', async () => {
         const functions = {
-            handlePageFunction: async () => {},
-            gotoFunction: ({ page, request }: PuppeteerHandlePageFunctionParam, options: PuppeteerGoToOptions) => {
+            requestHandler: async () => {},
+            gotoFunction: ({ page, request }: PuppeteerRequestHandlerParam, options: PuppeteerGoToOptions) => {
                 return page.goto(request.url, options);
             },
         };
         jest.spyOn(functions, 'gotoFunction');
-        jest.spyOn(functions, 'handlePageFunction');
+        jest.spyOn(functions, 'requestHandler');
         const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: functions.handlePageFunction,
+            requestHandler: functions.requestHandler,
             gotoFunction: functions.gotoFunction,
         });
 
@@ -156,7 +156,7 @@ describe('PuppeteerCrawler', () => {
         await puppeteerCrawler.run();
 
         expect(functions.gotoFunction).toBeCalled();
-        expect(functions.handlePageFunction).toBeCalled();
+        expect(functions.requestHandler).toBeCalled();
     });
 
     test('should override goto timeout with navigationTimeoutSecs ', async () => {
@@ -166,7 +166,7 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {},
+            requestHandler: () => {},
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
@@ -189,7 +189,7 @@ describe('PuppeteerCrawler', () => {
                 launchContext: {
                     proxyUrl: 'http://localhost@1234',
                 },
-                handlePageFunction: () => {},
+                requestHandler: () => {},
             });
         } catch (e) {
             expect((e as Error).message).toMatch('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.');
@@ -212,7 +212,7 @@ describe('PuppeteerCrawler', () => {
                     headless: true,
                 },
             },
-            handlePageFunction: () => {},
+            requestHandler: () => {},
         });
 
         // expect(spy.calledOnce).toBe(true);
@@ -234,7 +234,7 @@ describe('PuppeteerCrawler', () => {
             maxRequestRetries: 0,
             maxConcurrency: 1,
             launchContext: opts,
-            handlePageFunction: async ({ page }) => {
+            requestHandler: async ({ page }) => {
                 loadedUserAgent = await page.evaluate(() => window.navigator.userAgent);
             },
         });
@@ -247,7 +247,7 @@ describe('PuppeteerCrawler', () => {
     test('timeout via preNavigationHooks will abort the page function as early as possible (gh #1216)', async () => {
         const requestQueue = await RequestQueue.open();
         await requestQueue.addRequest({ url: 'http://www.example.com' });
-        const handlePageFunction = jest.fn();
+        const requestHandler = jest.fn();
 
         const crawler = new PuppeteerCrawler({
             requestQueue,
@@ -258,7 +258,7 @@ describe('PuppeteerCrawler', () => {
                     await sleep(20);
                 },
             ],
-            handlePageFunction,
+            requestHandler,
         });
 
         // @ts-expect-error Overriding protected method
@@ -269,7 +269,7 @@ describe('PuppeteerCrawler', () => {
         await crawler.teardown();
         await requestQueue.drop();
 
-        expect(handlePageFunction).not.toBeCalled();
+        expect(requestHandler).not.toBeCalled();
         const exceptions = logSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
         expect(exceptions).toEqual([
             [
@@ -299,7 +299,7 @@ describe('PuppeteerCrawler', () => {
     test('timeout in preLaunchHooks will abort the page function as early as possible (gh #1216)', async () => {
         const requestQueue = await RequestQueue.open();
         await requestQueue.addRequest({ url: 'http://www.example.com' });
-        const handlePageFunction = jest.fn();
+        const requestHandler = jest.fn();
 
         const crawler = new PuppeteerCrawler({
             requestQueue,
@@ -312,7 +312,7 @@ describe('PuppeteerCrawler', () => {
                     },
                 ],
             },
-            handlePageFunction,
+            requestHandler,
         });
 
         // @ts-expect-error Overriding protected method
@@ -323,7 +323,7 @@ describe('PuppeteerCrawler', () => {
         await crawler.teardown();
         await requestQueue.drop();
 
-        expect(handlePageFunction).not.toBeCalled();
+        expect(requestHandler).not.toBeCalled();
         const exceptions = logSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
         expect(exceptions).toEqual([
             [
@@ -374,7 +374,7 @@ describe('PuppeteerCrawler', () => {
                     return session;
                 },
             },
-            handlePageFunction: async ({ page, session }) => {
+            requestHandler: async ({ page, session }) => {
                 pageCookies = await page.cookies().then((cks) => cks.map((c) => `${c.name}=${c.value}`).join('; '));
                 sessionCookies = session.getCookieString('http://www.example.com');
             },
@@ -415,7 +415,7 @@ describe('PuppeteerCrawler', () => {
                 },
             },
             proxyConfiguration,
-            handlePageFunction: async ({ proxyInfo, session }) => {
+            requestHandler: async ({ proxyInfo, session }) => {
                 proxies.add(proxyInfo.url);
                 sessions.add(session.id);
             },
@@ -469,7 +469,7 @@ describe('PuppeteerCrawler', () => {
                     ],
                 },
                 proxyConfiguration,
-                handlePageFunction: async ({ page }) => {
+                requestHandler: async ({ page }) => {
                     const content = await page.content();
 
                     if (content.includes('127.0.0.2')) {

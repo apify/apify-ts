@@ -21,9 +21,9 @@ export type PuppeteerCrawlContext = BrowserCrawlingContext<Page, HTTPResponse, P
 
 export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext, PuppeteerGoToOptions>;
 
-export type PuppeteerHandlePageFunctionParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
+export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
 
-export type PuppeteerHandlePage = BrowserCrawlerHandleRequest<PuppeteerHandlePageFunctionParam>;
+export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerRequestHandlerParam>;
 
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
