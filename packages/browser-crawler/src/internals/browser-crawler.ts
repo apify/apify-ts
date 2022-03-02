@@ -73,7 +73,15 @@ export interface BrowserCrawlerOptions<
     __BrowserPlugins extends BrowserPlugin[] = InferBrowserPluginArray<InternalBrowserPoolOptions['browserPlugins']>,
     __BrowserControllerReturn extends BrowserController = ReturnType<__BrowserPlugins[number]['createController']>,
     __LaunchContextReturn extends LaunchContext = ReturnType<__BrowserPlugins[number]['createLaunchContext']>
-> extends Omit<BasicCrawlerOptions, 'handleRequestFunction' | 'handleFailedRequestFunction'> {
+> extends Omit<
+    BasicCrawlerOptions,
+    // Overridden with browser context
+    | 'requestHandler'
+    | 'handleRequestFunction'
+    // Overridden with browser context
+    | 'failedRequestHandler'
+    | 'handleFailedRequestFunction'
+> {
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -113,10 +121,53 @@ export interface BrowserCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: BrowserCrawlerHandleRequest<Context>;
+    requestHandler: BrowserCrawlerHandleRequest<Context>;
 
     /**
-     * Timeout in which the function passed as `handlePageFunction` needs to finish, in seconds.
+     * Function that is called to process each request.
+     * It is passed an object with the following fields:
+     *
+     * ```
+     * {
+     *   request: Request,
+     *   response: Response,
+     *   page: Page,
+     *   session: Session,
+     *   browserController: BrowserController,
+     *   proxyInfo: ProxyInfo,
+     *   crawler: BrowserCrawler,
+     * }
+     * ```
+     *
+     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * `page` is an instance of the `Puppeteer`
+     * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or `Playwright`
+     * [`Page`](https://playwright.dev/docs/api/class-page)
+     * `browserPool` is an instance of the
+     * [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool),
+     * `browserController` is an instance of the
+     * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
+     * `response` is an instance of the `Puppeteer`
+     * [`Response`](https://pptr.dev/#?product=Puppeteer&show=api-class-response) or `Playwright`
+     * [`Response`](https://playwright.dev/docs/api/class-response),
+     * which is the main resource response as returned by `page.goto(request.url)`.
+     * The function must return a promise, which is then awaited by the crawler.
+     *
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
+     *
+     * @deprecated `handlePageFunction` has been renamed to `requestHandler` and will be removed in a future version.
+     */
+    handlePageFunction?: BrowserCrawlerHandleRequest<Context>;
+
+    /**
+     * Timeout in which the function passed as `requestHandler` needs to finish, in seconds.
      */
     handlePageTimeoutSecs?: number;
 
@@ -143,6 +194,30 @@ export interface BrowserCrawlerOptions<
      * ```
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
+     *
+     */
+    failedRequestHandler: BrowserCrawlerHandleFailedRequest;
+
+    /**
+     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     *
+     * The function receives the following object as an argument:
+     * ```
+     * {
+     *     request: Request,
+     *     response: Response,
+     *     page: Page,
+     *     browserPool: BrowserPool,
+     *     autoscaledPool: AutoscaledPool,
+     *     session: Session,
+     *     browserController: BrowserController,
+     *     proxyInfo: ProxyInfo,
+     * }
+     * ```
+     * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * represents the last error thrown during processing of the request.
+     *
+     * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.
      */
     handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
 
@@ -196,11 +271,6 @@ export interface BrowserCrawlerOptions<
      * Timeout in which page navigation needs to finish, in seconds.
      */
     navigationTimeoutSecs?: number;
-
-    /**
-     * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
-     */
-    handleRequestTimeoutSecs?: number;
 
     /**
      * @deprecated Use `navigationTimeoutSecs` instead
@@ -272,8 +342,7 @@ export abstract class BrowserCrawler<
 
     launchContext?: BrowserLaunchContext<LaunchOptions, unknown>;
 
-    protected handlePageFunction: BrowserCrawlerHandleRequest<Context>;
-    protected handlePageTimeoutSecs: number;
+    protected userProvidedPageHandler!: BrowserCrawlerHandleRequest<Context>;
     protected handlePageTimeoutMillis: number;
     protected navigationTimeoutMillis: number;
     protected gotoFunction?: GotoFunction<Context, GoToOptions>;
@@ -284,10 +353,8 @@ export abstract class BrowserCrawler<
 
     protected static override optionsShape = {
         ...BasicCrawler.optionsShape,
-        // TODO temporary until the API is unified in V2
-        handleRequestFunction: ow.undefined as never,
+        handlePageFunction: ow.optional.function,
 
-        handlePageFunction: ow.function,
         gotoFunction: ow.optional.function,
 
         gotoTimeoutSecs: ow.optional.number.greaterThan(0),
@@ -303,13 +370,16 @@ export abstract class BrowserCrawler<
         proxyConfiguration: ow.optional.object.validate(validators.proxyConfiguration),
     };
 
+    protected static override CrawlerRenames = {
+        handleRequestFunction: 'handlePageFunction',
+    };
+
     /**
      * All `BrowserCrawler` parameters are passed via an options object.
      */
     protected constructor(options: BrowserCrawlerOptions<Context, GoToOptions>) {
         ow(options, 'BrowserCrawlerOptions', ow.object.exactShape(BrowserCrawler.optionsShape));
         const {
-            handlePageFunction,
             handlePageTimeoutSecs = 60,
             navigationTimeoutSecs = 60,
             gotoFunction, // deprecated
@@ -319,17 +389,38 @@ export abstract class BrowserCrawler<
             browserPoolOptions,
             preNavigationHooks = [],
             postNavigationHooks = [],
+            // Ignored
+            handleRequestFunction,
+
+            requestHandler: userProvidedRequestHandler,
+            handlePageFunction,
+
+            failedRequestHandler,
             handleFailedRequestFunction,
             ...basicCrawlerOptions
         } = options;
 
         super({
             ...basicCrawlerOptions,
-            handleRequestFunction: (...args) => this._handleRequestFunction(...args),
-            handleRequestTimeoutSecs: navigationTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
-            handleFailedRequestFunction: handleFailedRequestFunction
-                ? (...args) => handleFailedRequestFunction(...args as unknown as [BrowserCrawlerHandleFailedRequestInput])
-                : undefined,
+            requestHandler: (...args) => this._handleRequestHandler(...args),
+            requestHandlerTimeoutSecs: navigationTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+        });
+
+        this._handlePropertyNameChange({
+            newName: 'requestHandler',
+            oldName: 'handlePageFunction',
+            propertyKey: 'userProvidedPageHandler',
+            newProperty: userProvidedRequestHandler,
+            oldProperty: handlePageFunction,
+        });
+
+        this._handlePropertyNameChange({
+            newName: 'failedRequestHandler',
+            oldName: 'handleFailedRequestFunction',
+            propertyKey: 'failedRequestHandler',
+            newProperty: failedRequestHandler,
+            oldProperty: handleFailedRequestFunction,
+            allowUndefined: true,
         });
 
         // Cookies should be persisted per session only if session pool is used
@@ -341,9 +432,7 @@ export abstract class BrowserCrawler<
             this.log.deprecated('Option "gotoTimeoutSecs" is deprecated. Use "navigationTimeoutSecs" instead.');
         }
 
-        this.handlePageFunction = handlePageFunction;
-        this.handlePageTimeoutSecs = handlePageTimeoutSecs;
-        this.handlePageTimeoutMillis = this.handlePageTimeoutSecs * 1000;
+        this.handlePageTimeoutMillis = handlePageTimeoutSecs * 1000;
         this.navigationTimeoutMillis = (gotoTimeoutSecs || navigationTimeoutSecs) * 1000;
 
         this.gotoFunction = gotoFunction;
@@ -380,7 +469,7 @@ export abstract class BrowserCrawler<
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestFunction(crawlingContext: Context) {
+    protected override async _handleRequestHandler(crawlingContext: Context) {
         const newPageOptions: Dictionary = {
             id: crawlingContext.id,
         };
@@ -440,7 +529,7 @@ export abstract class BrowserCrawler<
             }
 
             await addTimeoutToPromise(
-                () => Promise.resolve(this.handlePageFunction(crawlingContext)),
+                () => Promise.resolve(this.userProvidedPageHandler(crawlingContext)),
                 this.handlePageTimeoutMillis,
                 `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
             );

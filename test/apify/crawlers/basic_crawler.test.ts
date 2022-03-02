@@ -5,8 +5,8 @@ import log from '@apify/log';
 import {
     CrawlingContext,
     Dictionary,
-    HandleFailedRequest,
-    HandleRequest,
+    FailedRequestHandler,
+    RequestHandler,
     Request,
     QueueOperationInfo,
     RequestQueue,
@@ -45,7 +45,7 @@ describe('BasicCrawler', () => {
 
         const processed: { url: string }[] = [];
         const requestList = new RequestList({ sources });
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed.push(_.pick(request, 'url'));
         };
@@ -81,7 +81,7 @@ describe('BasicCrawler', () => {
 
         const processed: { url: string }[] = [];
         const requestList = await RequestList.open('reqList', sources);
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             if (request.url.endsWith('200')) events.emit(event);
             processed.push(_.pick(request, 'url'));
         };
@@ -128,7 +128,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
 
@@ -177,7 +177,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
             request.userData.foo = 'bar';
@@ -229,12 +229,12 @@ describe('BasicCrawler', () => {
         const errors: Error[] = [];
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             await Promise.reject(new Error('some-error'));
             processed[request.url] = request;
         };
 
-        const handleFailedRequestFunction: HandleFailedRequest = async ({ request, error }) => {
+        const handleFailedRequestFunction: FailedRequestHandler = async ({ request, error }) => {
             failed[request.url] = request;
             errors.push(error);
         };
@@ -282,7 +282,7 @@ describe('BasicCrawler', () => {
         const requestList = new RequestList({ sources });
         const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
 
@@ -471,7 +471,7 @@ describe('BasicCrawler', () => {
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
 
-        const handleRequestFunction: HandleRequest = async ({ request }) => {
+        const handleRequestFunction: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed[request.url] = request;
             if (request.url === 'http://example.com/2') throw Error();
