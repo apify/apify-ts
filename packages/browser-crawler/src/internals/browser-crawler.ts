@@ -402,7 +402,7 @@ export abstract class BrowserCrawler<
 
         super({
             ...basicCrawlerOptions,
-            requestHandler: (...args) => this._handleRequestHandler(...args),
+            requestHandler: (...args) => this._runRequestHandler(...args),
             requestHandlerTimeoutSecs: navigationTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
@@ -469,7 +469,7 @@ export abstract class BrowserCrawler<
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestHandler(crawlingContext: Context) {
+    protected override async _runRequestHandler(crawlingContext: Context) {
         const newPageOptions: Dictionary = {
             id: crawlingContext.id,
         };

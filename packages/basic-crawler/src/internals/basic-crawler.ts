@@ -589,7 +589,7 @@ export class BasicCrawler<
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestHandler(crawlingContext: Context): Promise<void> {
+    protected async _runRequestHandler(crawlingContext: Context): Promise<void> {
         await this.userProvidedHandler(crawlingContext);
     }
 
@@ -701,7 +701,7 @@ export class BasicCrawler<
 
         try {
             await addTimeoutToPromise(
-                () => this._handleRequestHandler(crawlingContext),
+                () => this._runRequestHandler(crawlingContext),
                 this.requestHandlerTimeoutMillis,
                 `handleRequestFunction timed out after ${this.requestHandlerTimeoutMillis / 1e3} seconds.`,
             );

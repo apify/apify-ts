@@ -686,8 +686,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         const extensionOptions = extension.getCrawlerOptions();
         // TODO temporary until the API is unified in V2
-        extensionOptions.userProvidedHandler = extensionOptions.handlePageFunction;
-        delete extensionOptions.handlePageFunction;
+        extensionOptions.userProvidedHandler = extensionOptions.requestHandler;
+        delete extensionOptions.requestHandler;
 
         for (const [key, value] of entries(extensionOptions)) {
             const isConfigurable = this.hasOwnProperty(key); // eslint-disable-line
@@ -715,7 +715,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestHandler(crawlingContext: CheerioCrawlingContext<JSONData>) {
+    protected override async _runRequestHandler(crawlingContext: CheerioCrawlingContext<JSONData>) {
         const { request, session } = crawlingContext;
 
         if (this.proxyConfiguration) {

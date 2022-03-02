@@ -46,7 +46,7 @@ describe('Stealth - testing headless chrome hiding tricks', () => {
                     headless: true,
                 },
             },
-            async handlePageFunction({ page }) {
+            async requestHandler({ page }) {
                 const webDriver = await page.evaluate(() => navigator.webdriver);
 
                 expect(webDriver).toBe(false);

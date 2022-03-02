@@ -628,7 +628,7 @@ describe('BasicCrawler', () => {
         const results = [];
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: Infinity,
+            requestHandlerTimeoutSecs: Infinity,
             maxRequestRetries: 1,
             requestHandler: () => sleep(1000),
             failedRequestHandler: async ({ request }) => {
@@ -638,7 +638,7 @@ describe('BasicCrawler', () => {
 
         const maxSignedInteger = 2 ** 31 - 1;
         // @ts-expect-error Accessing private prop
-        expect(crawler.handleRequestTimeoutMillis).toBe(maxSignedInteger);
+        expect(crawler.requestHandlerTimeoutMillis).toBe(maxSignedInteger);
     });
 
     describe('Uses SessionPool', () => {

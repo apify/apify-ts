@@ -1142,9 +1142,9 @@ describe('CheerioCrawler', () => {
             });
 
             // @ts-expect-error Accessing private method
-            const oldHandleRequestF = cheerioCrawler._handleRequestFunction;
+            const oldHandleRequestF = cheerioCrawler._runRequestHandler;
             // @ts-expect-error Overriding private method
-            cheerioCrawler._handleRequestFunction = (opts) => {
+            cheerioCrawler._runRequestHandler = (opts) => {
                 usedSession = opts.session;
                 return oldHandleRequestF.call(cheerioCrawler, opts);
             };
