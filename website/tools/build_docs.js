@@ -1,52 +1,53 @@
-const fs = require('fs-extra');
+const fs = require('node:fs/promises');
+const { basename } = require('node:path');
 const path = require('path');
-const prettier = require('prettier'); // eslint-disable-line
-const got = require('got');
-const prettierConfig = require('./docs-prettier.config');
 const sidebars = require('../sidebars.json');
 
-const DOCS_DIR = path.join(__dirname, '..', '..', 'docs');
-const EXAMPLES_DIR_NAME = path.join(DOCS_DIR, 'examples');
-// TODO remove custom branch once we merge it to master
-const EXAMPLES_REPO = 'https://api.github.com/repos/apify/actor-templates/contents/dist/examples?ref=feat/docusaurus-v2';
+const EXAMPLES_DIR = path.join(__dirname, '..', '..', 'docs', 'examples');
 
-async function getExamplesFromRepo() {
-    await fs.emptyDir(EXAMPLES_DIR_NAME);
-    process.chdir(EXAMPLES_DIR_NAME);
-    const body = await got(EXAMPLES_REPO).json();
-    const builtExamples = await buildExamples(body);
-    await addExamplesToSidebars(builtExamples);
+async function updateExamplesSidebar() {
+    const rawExamples = [];
+
+    for await (const [filePath, filename] of walk(EXAMPLES_DIR)) {
+        rawExamples.push([`examples/${filePath}`, filename]);
+    }
+
+    console.log(`Found ${rawExamples.length} examples to list`);
+
+    // Sort files based on their file name, not folder path
+    const sorted = rawExamples
+        .sort(([, a], [, b]) => a.localeCompare(b))
+        .map(([filePath]) => filePath);
+
+    await addExamplesToSidebars(sorted);
+
+    return sorted;
 }
 
-async function buildExamples(exampleLinks) {
-    const examples = [];
-    for (const example of exampleLinks) {
-        const fileContent = await got(example.download_url).text();
-        if (example.name.endsWith('.mdx')) {
-            console.log(`Rendering example ${example.name}`);
-            const markdown = prettier.format(fileContent, prettierConfig);
-            fs.writeFileSync(example.name, markdown);
-            const exampleName = example.name.split('.')[0];
-            examples.push(`examples/${exampleName.replace(/_/g, '-')}`);
-        } else {
-            console.log(`Saving file ${example.name}`);
-            fs.writeFileSync(example.name, fileContent);
+async function* walk(dir, prefix = '') {
+    const dirEntries = await fs.opendir(dir);
+
+    for await (const entry of dirEntries) {
+        if (entry.isDirectory()) {
+            yield* walk(path.join(dir, entry.name), `${prefix}${entry.name}/`);
+        } else if (entry.isFile() && entry.name.endsWith('.mdx')) {
+            const fileName = basename(entry.name.replaceAll('_', '-'), '.mdx');
+            yield [`${prefix}${fileName}`, fileName];
         }
     }
-    return examples;
 }
 
 async function addExamplesToSidebars(examples) {
     console.log('Saving examples to sidebars.json');
     sidebars.docs.Examples = examples;
-    fs.writeFileSync(
+    await fs.writeFile(
         path.join(__dirname, '..', 'sidebars.json'),
         JSON.stringify(sidebars, null, 4),
     );
 }
 
 const main = async () => {
-    await getExamplesFromRepo();
+    await updateExamplesSidebar();
 };
 
-main().then(() => console.log('All docs built successfully.'));
+main().then(() => console.log('Examples sidebar updated successfully.'));
