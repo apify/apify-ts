@@ -1,16 +1,16 @@
-import crypto from 'crypto';
-import { ListDictionary, LruCache } from '@apify/datastructures';
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
+import { ListDictionary, LruCache } from '@apify/datastructures';
+import { storage } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@crawlers/storage';
-import { storage } from '@apify/timeout';
-import { ApifyClient, RequestQueueClient, RequestQueue as RequestQueueInfo } from 'apify-client';
+import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient } from 'apify-client';
+import crypto from 'crypto';
+import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
+import { log } from '../log';
+import { Request, RequestOptions } from '../request';
 import { entries } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
-import { sleep } from '../utils';
-import { log } from '../utils_log';
-import { Request, RequestOptions } from '../request';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 

@@ -1,4 +1,5 @@
-import { Statistics, Dictionary, events, ACTOR_EVENT_NAMES_EX, Configuration } from '@crawlers/core';
+import { Statistics, events, ACTOR_EVENT_NAMES_EX, Configuration } from '@crawlers/core';
+import { Dictionary } from '@crawlers/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
 
 describe('Statistics', () => {

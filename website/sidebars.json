@@ -15,26 +15,25 @@
             "guides/migration-to-v1"
         ],
         "Examples": [
-            "examples/accept-user-input",
-            "examples/add-data-to-dataset",
-            "examples/basic-crawler",
-            "examples/call-actor",
-            "examples/capture-screenshot",
-            "examples/cheerio-crawler",
-            "examples/crawl-all-links",
-            "examples/crawl-multiple-urls",
-            "examples/crawl-relative-links",
+            "examples/basics/accept-user-input",
+            "examples/basics/add-data-to-dataset",
+            "examples/crawlers/basic/basic-crawler",
+            "examples/crawlers/cheerio/cheerio-crawler",
+            "examples/crawlers/crawl-all-links",
+            "examples/crawlers/crawl-multiple-urls",
+            "examples/crawlers/cheerio/crawl-relative-links",
             "examples/crawl-single-url",
-            "examples/crawl-sitemap",
-            "examples/crawl-some-links",
+            "examples/crawlers/crawl-sitemap",
+            "examples/crawlers/cheerio/crawl-some-links",
             "examples/forms",
             "examples/map-and-reduce",
-            "examples/playwright-crawler",
-            "examples/puppeteer-crawler",
-            "examples/puppeteer-recursive-crawl",
-            "examples/puppeteer-with-proxy",
-            "examples/synchronous-run",
-            "examples/use-stealth-mode"
+            "examples/crawlers/playwright/playwright-crawler",
+            "examples/crawlers/puppeteer/puppeteer-capture-screenshot",
+            "examples/crawlers/puppeteer/puppeteer-crawler",
+            "examples/crawlers/puppeteer/puppeteer-recursive-crawl",
+            "examples/crawlers/puppeteer/puppeteer-with-proxy",
+            "examples/crawlers/puppeteer/synchronous-run",
+            "examples/crawlers/puppeteer/use-stealth-mode"
         ]
     }
 }

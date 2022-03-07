@@ -6,29 +6,31 @@ import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlers/basic';
 import {
-    Awaitable,
-    EnqueueLinksOptions,
-    CheerioRoot,
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
     diffCookies,
     enqueueLinks,
-    entries,
+    EnqueueLinksOptions,
     mergeCookies,
-    parseContentTypeFromResponse,
     ProxyConfiguration,
     ProxyInfo,
     QueueOperationInfo,
     Request,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
-    RequestAsBrowserResult,
     RequestQueue,
     Session,
     throwOnBlockedRequest,
     validators,
 } from '@crawlers/core';
+import {
+    Awaitable,
+    CheerioRoot,
+    entries,
+    parseContentTypeFromResponse,
+    requestAsBrowser,
+    RequestAsBrowserOptions,
+    RequestAsBrowserResult,
+} from '@crawlers/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { Method, TimeoutError } from 'got-scraping';
@@ -657,7 +659,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
                 options: enqueueOptions,
                 $,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
 

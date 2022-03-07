@@ -1,9 +1,9 @@
 import log from '@apify/log';
+import { CheerioRoot } from '@crawlers/utils';
 import cheerio from 'cheerio';
 import {
     browserCrawlerEnqueueLinks,
     cheerioCrawlerEnqueueLinks,
-    CheerioRoot,
     Configuration,
     EnqueueStrategy,
     launchPlaywright,

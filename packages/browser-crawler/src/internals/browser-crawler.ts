@@ -1,10 +1,8 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import {
-    Awaitable,
     EnqueueLinksOptions,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
-    Dictionary,
     enqueueLinks,
     EVENT_SESSION_RETIRED,
     handleRequestTimeout,
@@ -21,6 +19,7 @@ import {
     BasicCrawler,
     BasicCrawlerOptions,
 } from '@crawlers/basic';
+import { Awaitable, Dictionary } from '@crawlers/utils';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,
@@ -476,7 +475,7 @@ export abstract class BrowserCrawler<
                 options: enqueueOptions,
                 page,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
     }

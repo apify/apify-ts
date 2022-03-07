@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-import type { Dictionary } from '@crawlers/core';
+import type { Dictionary } from '@crawlers/utils';
 
 export const hackPermissions = () => {
     const originalQuery = window.navigator.permissions.query;

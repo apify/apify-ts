@@ -64,6 +64,9 @@ module.exports = {
                         path: 'packages/core',
                     },
                     {
+                        path: 'packages/utils',
+                    },
+                    {
                         path: 'packages/storage',
                     },
                     // {
@@ -149,22 +152,6 @@ module.exports = {
             defaultMode: 'light',
             disableSwitch: false,
             respectPrefersColorScheme: true,
-            switchConfig: {
-                darkIconStyle: {
-                    backgroundImage: 'url(./img/switch-dark.svg)',
-                    color: 'transparent',
-                    width: 19,
-                    height: 19,
-                    margin: '-4.5px 0 0 -5px',
-                },
-                lightIconStyle: {
-                    backgroundImage: 'url(./img/switch-light.svg)',
-                    color: 'transparent',
-                    width: 19,
-                    height: 19,
-                    margin: '-4.5px 0 0px -2px',
-                },
-            },
         },
         prism: {
             defaultLanguage: 'typescript',
@@ -247,7 +234,8 @@ module.exports = {
             },
         },
         algolia: {
-            apiKey: '64ce2544769e34add0e6402688c86e92',
+            appId: 'N8EOCSBQGH',
+            apiKey: '03b4b90877515c89fcd2decba22634f3',
             indexName: 'apify_sdk',
             algoliaOptions: {
                 facetFilters: ['version:VERSION'],

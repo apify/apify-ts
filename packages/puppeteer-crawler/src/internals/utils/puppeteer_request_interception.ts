@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import ow from 'ow';
 import { HTTPRequest, HTTPRequest as PuppeteerRequest, Page } from 'puppeteer';
-import { Dictionary } from '@crawlers/browser';
+import { Dictionary } from '@crawlers/utils';
 import log from '@apify/log';
 
 // We use weak maps here so that the content gets discarded after page gets closed.

@@ -2,15 +2,6 @@
 
 import { ActorRun } from 'apify-client';
 
-/** @ignore */
-export type Dictionary<T = unknown> = Record<PropertyKey, T>;
-
-/** @ignore */
-export type Constructor<T = unknown> = new (...args: any[]) => T;
-
-/** @ignore */
-export type Awaitable<T> = T | PromiseLike<T>;
-
 /**
  * Represents information about an actor run, as returned by the {@link Apify.call} or {@link Apify.callTask} function.
  * The object is almost equivalent to the JSON response of the [Actor run](https://apify.com/docs/api/v2#/reference/actors/run-collection/run-actor)
@@ -33,6 +24,15 @@ export interface ActorRunWithOutput extends ActorRun {
      */
     output?: Dictionary | null;
 }
+
+/** @ignore */
+export type Dictionary<T = unknown> = Record<PropertyKey, T>;
+
+/** @ignore */
+export type Constructor<T = unknown> = new (...args: any[]) => T;
+
+/** @ignore */
+export type Awaitable<T> = T | PromiseLike<T>;
 
 /** @ignore */
 export function entries<T extends {}>(obj: T) {

@@ -1,5 +1,6 @@
 import { Cookie } from 'tough-cookie';
-import { getCookiesFromResponse, Dictionary } from '@crawlers/core';
+import { getCookiesFromResponse } from '@crawlers/core';
+import { Dictionary } from '@crawlers/utils';
 
 describe('getCookiesFromResponse', () => {
     test('should parse cookies if set-cookie is array', () => {

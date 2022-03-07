@@ -1,22 +1,13 @@
 import { normalizeUrl } from '@apify/utilities';
+import { AllowedHttpMethods } from 'apify-client';
 import crypto, { BinaryLike } from 'crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
-import { AllowedHttpMethods } from 'apify-client';
-import { log as defaultLog } from './utils_log';
+import { log as defaultLog } from './log';
 import { keys } from './typedefs';
 
 // new properties on the Request object breaks serialization
 const log = defaultLog.child({ prefix: 'Request' });
-
-export function hashPayload(payload: BinaryLike) {
-    return crypto
-        .createHash('sha256')
-        .update(payload)
-        .digest('base64')
-        .replace(/[+/=]/g, '')
-        .substr(0, 8);
-}
 
 const requestOptionalPredicates = {
     id: ow.optional.string,
@@ -230,8 +221,17 @@ export class Request {
             }
             return normalizedUrl;
         }
-        const payloadHash = payload ? hashPayload(payload) : '';
+        const payloadHash = payload ? this._hashPayload(payload) : '';
         return `${normalizedMethod}(${payloadHash}):${normalizedUrl}`;
+    }
+
+    protected _hashPayload(payload: BinaryLike): string {
+        return crypto
+            .createHash('sha256')
+            .update(payload)
+            .digest('base64')
+            .replace(/[+/=]/g, '')
+            .substring(0, 8);
     }
 }
 

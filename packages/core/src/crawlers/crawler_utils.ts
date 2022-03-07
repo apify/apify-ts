@@ -1,7 +1,7 @@
 import { TimeoutError } from '@apify/timeout';
 import { Cookie, CookieJar } from 'tough-cookie';
+import { log } from '../log';
 import { Session } from '../session_pool/session';
-import { log } from '../utils_log';
 
 /**
  * Handles timeout request

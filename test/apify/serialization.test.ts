@@ -4,7 +4,7 @@ import util from 'util';
 import zlib from 'zlib';
 import { serializeArray, deserializeArray, createDeserialize } from '@crawlers/core';
 
-const TEST_JSON_PATH = path.join(__dirname, 'data', 'sample.json.gz');
+const TEST_JSON_PATH = path.join(__dirname, '..', 'shared', 'data', 'sample.json.gz');
 
 const gunzip = util.promisify(zlib.gunzip);
 

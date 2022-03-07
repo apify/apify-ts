@@ -2,9 +2,7 @@ import { browserTools, constants as scraperToolsConstants, CrawlerSetupOptions, 
 import { Actor, ApifyEnv } from 'apify';
 import {
     AutoscaledPool,
-    Awaitable,
     Dataset,
-    Dictionary,
     KeyValueStore,
     Request,
     RequestList,
@@ -17,6 +15,7 @@ import {
     puppeteerUtils,
     BrowserCrawlerEnqueueLinksOptions,
 } from '@crawlers/puppeteer';
+import { Awaitable, Dictionary } from '@crawlers/utils';
 import log from '@apify/log';
 import { readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';

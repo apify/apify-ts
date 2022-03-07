@@ -4,33 +4,28 @@ import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import {
     ActorRunWithOutput,
-    Awaitable,
     Configuration,
     ConfigurationOptions,
-    Constructor,
     Dataset,
-    Dictionary,
-    EXIT_CODES,
     initializeEvents,
     IStorage,
     KeyValueStore,
-    logSystemInfo,
-    printOutdatedSdkWarning,
     ProxyConfiguration,
     ProxyConfigurationOptions,
     RecordOptions,
     RequestList,
     RequestListOptions,
     RequestQueue,
-    SessionPool,
-    SessionPoolOptions,
-    sleep,
-    snakeCaseToCamelCase,
     Source,
     stopEvents,
     StorageManager,
     StorageManagerOptions,
 } from '@crawlers/core';
+import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
+import {
+    logSystemInfo,
+    printOutdatedSdkWarning,
+} from './utils';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -38,12 +33,19 @@ import {
  * See {@link Configuration} for details about what can be configured and what are the default values.
  */
 export class Actor {
+    /** @internal */
     static _instance: Actor;
 
-    /** Configuration of this SDK instance (provided to its constructor). See {@link Configuration} for details. */
+    /**
+     * Configuration of this SDK instance (provided to its constructor). See {@link Configuration} for details.
+     * @internal
+     */
     readonly config: Configuration;
 
-    /** Default {@link ApifyClient} instance. */
+    /**
+     * Default {@link ApifyClient} instance.
+     * @internal
+     */
     readonly apifyClient: ApifyClient;
 
     private readonly storageManagers = new Map<Constructor, StorageManager>();
@@ -583,20 +585,6 @@ export class Actor {
     }
 
     /**
-     * Opens a SessionPool and returns a promise resolving to an instance
-     * of the {@link SessionPool} class that is already initialized.
-     *
-     * For more details and code examples, see the {@link SessionPool} class.
-     * @ignore
-     */
-    async openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
-        const sessionPool = new SessionPool(sessionPoolOptions, this.config);
-        await sessionPool.initialize();
-
-        return sessionPool;
-    }
-
-    /**
      * Creates a proxy configuration and returns a promise resolving to an instance
      * of the {@link ProxyConfiguration} class that is already initialized.
      *
@@ -1118,16 +1106,6 @@ export class Actor {
     }
 
     /**
-     * Opens a SessionPool and returns a promise resolving to an instance
-     * of the {@link SessionPool} class that is already initialized.
-     *
-     * For more details and code examples, see the {@link SessionPool} class.
-     */
-    static async openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
-        return Actor.getDefaultInstance().openSessionPool(sessionPoolOptions);
-    }
-
-    /**
      * Creates a proxy configuration and returns a promise resolving to an instance
      * of the {@link ProxyConfiguration} class that is already initialized.
      *
@@ -1207,6 +1185,7 @@ export class Actor {
         return Actor.getDefaultInstance().config;
     }
 
+    /** @internal */
     static getDefaultInstance(): Actor {
         this._instance ??= new Actor();
         return this._instance;
@@ -1355,3 +1334,15 @@ export interface ExitOptions {
 }
 
 export { ClientActorRun as ActorRun };
+
+/**
+ * Exit codes for the actor process.
+ * The error codes must be in the range 1-128, to avoid collision with signal exits
+ * and to ensure Docker will handle them correctly!
+ * @internal should be removed if we decide to remove `Actor.main()`
+ */
+export const EXIT_CODES = {
+    SUCCESS: 0,
+    ERROR_USER_FUNCTION_THREW: 91,
+    ERROR_UNKNOWN: 92,
+};

@@ -1,20 +1,5 @@
-/**
- * A namespace that contains various utilities to help you extract social handles
- * from text, URLs and and HTML documents.
- *
- * **Example usage:**
- *
- * ```javascript
- * const Apify = require('apify');
- *
- * const emails = Apify.utils.social.emailsFromText('alice@example.com bob@example.com');
- * ```
- * @module socialUtils
- */
-
 import cheerio from 'cheerio';
-import { log } from './utils_log';
-import { htmlToText } from './utils';
+import { htmlToText } from './cheerio';
 
 // TODO: We could support URLs like https://www.linkedin.com/company/some-company-inc
 
@@ -25,14 +10,12 @@ const EMAIL_REGEX_STRING = '(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&\'
 /**
  * Regular expression to exactly match a single email address.
  * It has the following form: `/^...$/i`.
- * @type {RegExp}
  */
 export const EMAIL_REGEX = new RegExp(`^${EMAIL_REGEX_STRING}$`, 'i');
 
 /**
  * Regular expression to find multiple email addresses in a text.
  * It has the following form: `/.../ig`.
- * @type {RegExp}
  */
 export const EMAIL_REGEX_GLOBAL = new RegExp(EMAIL_REGEX_STRING, 'ig');
 
@@ -110,12 +93,8 @@ const PHONE_REGEXS_STRINGS = [
     '[0-9]{2,4} [0-9]{2,4} [0-9]{2,6}',
     // 123 4567
     '[0-9]{2,4} [0-9]{3,8}',
-];
-
-// All phones might be prefixed with '+' or '00'
-for (let i = 0; i < PHONE_REGEXS_STRINGS.length; i++) {
-    PHONE_REGEXS_STRINGS[i] = `(00|\\+)?${PHONE_REGEXS_STRINGS[i]}`;
-}
+    // All phones might be prefixed with '+' or '00'
+].map((regex) => `(00|\\+)?${regex}`);
 
 // The minimum number of digits a phone number can contain.
 // That's because the PHONE_REGEXS_STRINGS patterns are quite wide and report a lot of false positives.
@@ -203,31 +182,6 @@ const FACEBOOK_REGEX_STRING = `(?<!\\w)(?:http(?:s)?:\\/\\/)?(?:www.)?(?:faceboo
 // eslint-disable-next-line max-len
 const YOUTUBE_REGEX_STRING = '(?:https?:\\/\\/)?(?:youtu\\.be\\/|(?:www\\.|m\\.)?youtube\\.com\\/(?:watch|v|embed|user|c(?:hannel)?)(?:\\.php)?(?:\\?[^ ]*v=|\\/))([a-zA-Z0-9\\-_]+)';
 
-try {
-    /* eslint-disable no-new */
-    new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
-    new RegExp(LINKEDIN_REGEX_STRING, 'ig');
-    new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
-    new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
-    new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
-    new RegExp(TWITTER_REGEX_STRING, 'ig');
-    new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
-    new RegExp(FACEBOOK_REGEX_STRING, 'ig');
-    new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
-    new RegExp(YOUTUBE_REGEX_STRING, 'ig');
-    /* eslint-enable */
-} catch (e) {
-    // Older versions of Node don't support negative lookbehind and lookahead expressions.
-    // Show warning instead of failing.
-    const error = e as Error;
-    if (error?.message.includes('Invalid group')) {
-        // eslint-disable-next-line max-len
-        log.warning(`Your version of Node.js (${process.version}) doesn't support the regular expression syntax used by Apify.utils.social tools. The tools will not work. Please upgrade your Node.js to the latest version.`);
-    } else {
-        throw e;
-    }
-}
-
 /**
  * Representation of social handles parsed from a HTML page.
  */
@@ -254,6 +208,7 @@ export interface SocialHandles {
  *
  * **Example usage:**
  * ```javascript
+ * // TODO: update example
  * const Apify = require('apify');
  *
  * const browser = await Apify.launchPuppeteer();
@@ -568,30 +523,3 @@ export const YOUTUBE_REGEX = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
  * ```
  */
 export const YOUTUBE_REGEX_GLOBAL = new RegExp(YOUTUBE_REGEX_STRING, 'ig');
-
-/** @internal */
-export const socialUtils = {
-    emailsFromText,
-    emailsFromUrls,
-    phonesFromText,
-    phonesFromUrls,
-    parseHandlesFromHtml,
-
-    EMAIL_REGEX,
-    EMAIL_REGEX_GLOBAL,
-
-    LINKEDIN_REGEX,
-    LINKEDIN_REGEX_GLOBAL,
-
-    INSTAGRAM_REGEX,
-    INSTAGRAM_REGEX_GLOBAL,
-
-    TWITTER_REGEX,
-    TWITTER_REGEX_GLOBAL,
-
-    FACEBOOK_REGEX,
-    FACEBOOK_REGEX_GLOBAL,
-
-    YOUTUBE_REGEX,
-    YOUTUBE_REGEX_GLOBAL,
-};

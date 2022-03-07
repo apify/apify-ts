@@ -1,7 +1,8 @@
-import WebSocket from 'ws';
 import { ENV_VARS } from '@apify/consts';
-import { sleep, ACTOR_EVENT_NAMES_EX, Dictionary, events, initializeEvents, stopEvents } from '@crawlers/core';
+import { ACTOR_EVENT_NAMES_EX, events, initializeEvents, stopEvents } from '@crawlers/core';
+import { Dictionary, sleep } from '@crawlers/utils';
 import { Actor } from 'apify';
+import WebSocket from 'ws';
 
 describe('events', () => {
     let wss: WebSocket.Server = null;

@@ -3,13 +3,13 @@ import {
     constructPseudoUrlInstances,
     createRequestOptions,
     createRequests,
-    Dictionary,
     PseudoUrlInput,
     QueueOperationInfo,
     RequestQueue,
     RequestTransform,
 } from '@crawlers/browser';
 import log_ from '@apify/log';
+import { Dictionary } from '@crawlers/utils';
 import ow from 'ow';
 import { BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
 import { URL } from 'url';

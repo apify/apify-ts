@@ -1,11 +1,11 @@
+import { downloadListOfUrls } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
 import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { Request, RequestOptions } from '../request';
 import { events } from '../events';
-import { log } from '../utils_log';
-import { publicUtils } from '../utils';
-import { getValue, setValue } from '../storages/key_value_store';
-import { serializeArray, createDeserialize } from '../serialization';
+import { log } from '../log';
+import { Request, RequestOptions } from '../request';
+import { createDeserialize, serializeArray } from '../serialization';
+import { KeyValueStore } from '../storages/key_value_store';
 import { Dictionary } from '../typedefs';
 
 /** @internal */
@@ -269,6 +269,7 @@ export class RequestList {
     private persistStateKey?: string;
     private persistRequestsKey?: string;
     private initialState?: RequestListState;
+    private store?: KeyValueStore;
     private keepDuplicateUrls: boolean;
     private sources: Source[];
     private sourcesFunction?: RequestListSourcesFunction;
@@ -416,7 +417,8 @@ export class RequestList {
         }
         if (this.isStatePersisted) return;
         try {
-            await setValue(this.persistStateKey, this.getState());
+            this.store ??= await KeyValueStore.open();
+            await this.store.setValue(this.persistStateKey, this.getState());
             this.isStatePersisted = true;
         } catch (e) {
             const err = e as Error;
@@ -431,7 +433,8 @@ export class RequestList {
      */
     protected async _persistRequests(): Promise<void> {
         const serializedRequests = await serializeArray(this.requests);
-        await setValue(this.persistRequestsKey!, serializedRequests, { contentType: CONTENT_TYPE_BINARY });
+        this.store ??= await KeyValueStore.open();
+        await this.store.setValue(this.persistRequestsKey!, serializedRequests, { contentType: CONTENT_TYPE_BINARY });
         this.areRequestsPersisted = true;
     }
 
@@ -500,19 +503,21 @@ export class RequestList {
     protected async _loadStateAndPersistedRequests(): Promise<[RequestListState, Buffer]> {
         let state!: RequestListState;
         let persistedRequests!: Buffer;
+
         if (this.initialState) {
-            state = this.initialState;
+            state = await this.initialState;
             this.log.debug('Loaded state from options.state argument.');
         } else if (this.persistStateKey) {
-            state = (await getValue<RequestListState>(this.persistStateKey))!;
+            state = await this._getPersistedState(this.persistStateKey);
             if (state) this.log.debug('Loaded state from key value store using the persistStateKey.');
         }
+
         if (this.persistRequestsKey) {
-            persistedRequests = (await getValue(this.persistRequestsKey))!;
+            persistedRequests = await this._getPersistedState(this.persistRequestsKey);
             if (persistedRequests) this.log.debug('Loaded requests from key value store using the persistRequestsKey.');
         }
-        // Unwraps "state" promise if needed, otherwise no-op.
-        return Promise.all([state, persistedRequests]);
+
+        return [state, persistedRequests];
     }
 
     /**
@@ -630,6 +635,13 @@ export class RequestList {
             duplicateCount: fetchedCount - importedCount,
             sample: JSON.stringify(fetchedRequests.slice(0, 5)),
         });
+    }
+
+    protected async _getPersistedState<T>(key: string): Promise<T> {
+        this.store ??= await KeyValueStore.open();
+        const state = await this.store.getValue<T>(key);
+
+        return state!;
     }
 
     /**
@@ -814,7 +826,7 @@ export class RequestList {
      * @internal wraps public utility for mocking purposes
      */
     private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp }): Promise<string[]> {
-        return publicUtils.downloadListOfUrls(options);
+        return downloadListOfUrls(options);
     }
 }
 

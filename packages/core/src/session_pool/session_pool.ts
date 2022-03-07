@@ -1,13 +1,13 @@
+import { Log } from '@apify/log';
 import { EventEmitter } from 'events';
 import ow from 'ow';
-import { Log } from '@apify/log';
-import { KeyValueStore, openKeyValueStore } from '../storages/key_value_store';
-import { Session, SessionOptions } from './session';
-import { events } from '../events';
-import { log as defaultLog } from '../utils_log';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
 import { Configuration } from '../configuration';
+import { ACTOR_EVENT_NAMES_EX } from '../constants';
+import { events } from '../events';
+import { log as defaultLog } from '../log';
+import { KeyValueStore } from '../storages/key_value_store';
 import { Dictionary } from '../typedefs';
+import { Session, SessionOptions } from './session';
 
 /**
  * Factory user-function which creates customized {@link Session} instances.
@@ -64,7 +64,7 @@ export interface SessionPoolOptions {
  * When some session is marked as blocked, it is removed and new one is created instead (the pool never returns an unusable session).
  * Learn more in the [`Session management guide`](../guides/session-management).
  *
- * You can create one by calling the {@link Apify.openSessionPool} function.
+ * You can create one by calling the {@link SessionPool.open} function.
  *
  * Session pool is already integrated into crawlers, and it can significantly improve your scraper
  * performance with just 2 lines of code.
@@ -87,7 +87,7 @@ export interface SessionPoolOptions {
  * **Advanced usage:**
  *
  * ```javascript
- * const sessionPool = await Apify.openSessionPool({
+ * const sessionPool = await SessionPool.open({
  *     maxPoolSize: 25,
  *     sessionOptions:{
  *          maxAgeSecs: 10,
@@ -198,10 +198,10 @@ export class SessionPool extends EventEmitter {
 
     /**
      * Starts periodic state persistence and potentially loads SessionPool state from {@link KeyValueStore}.
-     * It is called automatically by the {@link Apify.openSessionPool} function.
+     * It is called automatically by the {@link SessionPool.open} function.
      */
     async initialize(): Promise<void> {
-        this.keyValueStore = await openKeyValueStore(this.persistStateKeyValueStoreId, { config: this.config, forceCloud: this.forceCloud });
+        this.keyValueStore = await KeyValueStore.open(this.persistStateKeyValueStoreId, { config: this.config, forceCloud: this.forceCloud });
 
         if (this.forceCloud && !this.persistStateKeyValueStoreId) {
             this.log.warning(`You enabled 'forceCloud' in the session pool options but you haven't specified a 'persistStateKeyValueStoreId'!`);
@@ -427,16 +427,16 @@ export class SessionPool extends EventEmitter {
 
         this.log.debug(`${this.usableSessionsCount} active sessions loaded from KeyValueStore`);
     }
-}
 
-/**
- * Opens a SessionPool and returns a promise resolving to an instance
- * of the {@link SessionPool} class that is already initialized.
- *
- * For more details and code examples, see the {@link SessionPool} class.
- */
-export async function openSessionPool(sessionPoolOptions?: SessionPoolOptions): Promise<SessionPool> {
-    const sessionPool = new SessionPool(sessionPoolOptions);
-    await sessionPool.initialize();
-    return sessionPool;
+    /**
+     * Opens a SessionPool and returns a promise resolving to an instance
+     * of the {@link SessionPool} class that is already initialized.
+     *
+     * For more details and code examples, see the {@link SessionPool} class.
+     */
+    static async open(options?: SessionPoolOptions): Promise<SessionPool> {
+        const sessionPool = new SessionPool(options);
+        await sessionPool.initialize();
+        return sessionPool;
+    }
 }

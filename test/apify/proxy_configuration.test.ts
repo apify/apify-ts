@@ -1,5 +1,6 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { createProxyConfiguration, ProxyConfiguration, requestUtils } from '@crawlers/core';
+import { createProxyConfiguration, ProxyConfiguration } from '@crawlers/core';
+import { requestAsBrowser } from '@crawlers/utils';
 import { UserClient } from 'apify-client';
 
 const groups = ['GROUP1', 'GROUP2'];
@@ -15,6 +16,20 @@ const basicOpts = {
 };
 const basicOptsProxyUrl = 'http://groups-GROUP1+GROUP2,session-538909250932,country-CZ:test12345@proxy.apify.com:8000';
 const proxyUrlNoSession = 'http://groups-GROUP1+GROUP2,country-CZ:test12345@proxy.apify.com:8000';
+
+jest.mock('@crawlers/utils/src/internals/request', () => {
+    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+    return {
+        ...original,
+        requestAsBrowser: jest.fn(),
+    };
+});
+
+const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+
+afterAll(() => {
+    jest.unmock('@crawlers/utils/src/internals/request');
+});
 
 afterEach(() => {
     delete process.env[ENV_VARS.TOKEN];
@@ -305,12 +320,10 @@ describe('Apify.createProxyConfiguration()', () => {
     const userData = { proxy: { password } };
 
     test('should work with all options', async () => {
-        const spy = jest.spyOn(requestUtils, 'requestAsBrowser');
-
         const status = { connected: true };
         const proxyUrl = proxyUrlNoSession;
         const url = 'http://proxy.apify.com/?format=json';
-        spy.mockResolvedValueOnce({ body: status } as any);
+        requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
 
         const proxyConfiguration = await createProxyConfiguration(basicOpts);
 
@@ -326,7 +339,7 @@ describe('Apify.createProxyConfiguration()', () => {
         // @ts-expect-error private property
         expect(proxyConfiguration.port).toBe(port);
 
-        expect(spy).toBeCalledWith({ url, proxyUrl, timeout: { request: 4000 }, responseType: 'json' });
+        expect(requestAsBrowserSpy).toBeCalledWith({ url, proxyUrl, timeout: { request: 4000 }, responseType: 'json' });
     });
 
     test('should work without password (with token)', async () => {
@@ -334,7 +347,6 @@ describe('Apify.createProxyConfiguration()', () => {
         const opts = { ...basicOpts };
         delete opts.password;
 
-        const requestAsBrowserSpy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const getUserSpy = jest.spyOn(UserClient.prototype, 'get');
         const status = { connected: true };
 
@@ -360,7 +372,6 @@ describe('Apify.createProxyConfiguration()', () => {
     test('should show warning log', async () => {
         process.env.APIFY_TOKEN = '123456789';
 
-        const requestAsBrowserSpy = jest.spyOn(requestUtils, 'requestAsBrowser');
         const getUserSpy = jest.spyOn(UserClient.prototype, 'get');
         const status = { connected: true };
         const fakeUserData = { proxy: { password: 'some-other-users-password' } };
@@ -389,7 +400,6 @@ describe('Apify.createProxyConfiguration()', () => {
             return { body: status };
         };
 
-        const requestAsBrowserSpy = jest.spyOn(requestUtils, 'requestAsBrowser');
         requestAsBrowserSpy.mockImplementationOnce(fakeCall as any);
 
         await expect(createProxyConfiguration()).rejects.toThrow('Apify Proxy password must be provided');
@@ -403,7 +413,6 @@ describe('Apify.createProxyConfiguration()', () => {
         const connectionError = 'Invalid username: proxy group "GROUP2"; not found or not accessible.';
         const status = { connected: false, connectionError };
         const getUserSpy = jest.spyOn(UserClient.prototype, 'get');
-        const requestAsBrowserSpy = jest.spyOn(requestUtils, 'requestAsBrowser');
         getUserSpy.mockResolvedValue(userData as any);
         requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
 
@@ -415,7 +424,6 @@ describe('Apify.createProxyConfiguration()', () => {
 
     test('should not throw when access check is unresponsive', async () => {
         process.env.APIFY_PROXY_PASSWORD = '123456789';
-        const requestAsBrowserSpy = jest.spyOn(requestUtils, 'requestAsBrowser');
         requestAsBrowserSpy.mockRejectedValueOnce(new Error('some error'));
         requestAsBrowserSpy.mockRejectedValueOnce(new Error('some error'));
 
@@ -435,7 +443,6 @@ describe('Apify.createProxyConfiguration()', () => {
         process.env.APIFY_PROXY_HOSTNAME = 'proxy-domain.apify.com';
         process.env.APIFY_PROXY_PASSWORD = password;
 
-        const requestAsBrowserSpy = jest.spyOn(requestUtils, 'requestAsBrowser');
         requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as any);
 
         await createProxyConfiguration();

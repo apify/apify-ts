@@ -53,7 +53,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/core": "^3.0.0"
+        "@crawlers/core": "^3.0.0",
+        "@crawlers/utils": "^3.0.0",
+        "semver": "^7.3.5"
     },
     "peerDependencies": {
         "playwright": "^1.11.0",

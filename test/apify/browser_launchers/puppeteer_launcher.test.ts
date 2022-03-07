@@ -11,10 +11,11 @@ import basicAuthParser from 'basic-auth-parser';
 import _ from 'underscore';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
-import { BrowserLauncher, Dictionary, launchPuppeteer } from '@crawlers/puppeteer';
+import { BrowserLauncher, launchPuppeteer } from '@crawlers/puppeteer';
+import { Dictionary } from '@crawlers/utils';
 import { AddressInfo } from 'net';
 import { Browser, Page } from 'puppeteer';
-import { startExpressAppPromise } from '../_helper';
+import { startExpressAppPromise } from '../../shared/_helper';
 
 let prevEnvHeadless: string;
 let proxyServer: Server;
