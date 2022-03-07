@@ -726,7 +726,7 @@ export class BasicCrawler<
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
             this.log.error(
-                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && this.log.getLevel() < 5
+                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && this.log.getLevel() < this.log.LEVELS.DEBUG
                     ? crawlingContext.error.message
                     : crawlingContext.error.stack
                 }`,

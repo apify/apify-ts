@@ -675,34 +675,27 @@ describe('BasicCrawler', () => {
             handleRequestFunction: () => sleep(10),
         });
 
-        const warnMock = jest.fn();
         // @ts-expect-error Overriding protected method
-        crawler.log.warning = warnMock;
-
-        const errMock = jest.fn();
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
         // @ts-expect-error Overriding protected method
-        crawler.log.error = errMock;
+        const errorSpy = jest.spyOn(crawler.log, 'error');
 
         await crawler.run();
 
-        expect(warnMock.mock.calls.length).toBe(3);
-        for (const args of warnMock.mock.calls) {
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
             expect(args[1]).toBeDefined();
         }
 
-        expect(errMock.mock.calls.length).toBe(1);
-        for (const args of errMock.mock.calls) {
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
             expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
@@ -722,34 +715,27 @@ describe('BasicCrawler', () => {
             },
         });
 
-        const warnMock = jest.fn();
         // @ts-expect-error Overriding protected method
-        crawler.log.warning = warnMock;
-
-        const errMock = jest.fn();
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
         // @ts-expect-error Overriding protected method
-        crawler.log.error = errMock;
+        const errorSpy = jest.spyOn(crawler.log, 'error');
 
         await crawler.run();
 
-        expect(warnMock.mock.calls.length).toBe(3);
-        for (const args of warnMock.mock.calls) {
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/Other non-timeout error/.test(args[0])).toBe(true);
             expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(false);
             expect(args[1]).toBeDefined();
         }
 
-        expect(errMock.mock.calls.length).toBe(1);
-        for (const args of errMock.mock.calls) {
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
             expect(/Other non-timeout error/.test(args[0])).toBe(true);
             expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
@@ -769,34 +755,27 @@ describe('BasicCrawler', () => {
             handleRequestFunction: () => sleep(10),
         });
 
-        const warnMock = jest.fn();
         // @ts-expect-error Overriding protected method
-        crawler.log.warning = warnMock;
-
-        const errMock = jest.fn();
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
         // @ts-expect-error Overriding protected method
-        crawler.log.error = errMock;
+        const errorSpy = jest.spyOn(crawler.log, 'error');
 
         await crawler.run();
 
-        expect(warnMock.mock.calls.length).toBe(3);
-        for (const args of warnMock.mock.calls) {
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
             expect(args[1]).toBeDefined();
         }
 
-        expect(errMock.mock.calls.length).toBe(1);
-        for (const args of errMock.mock.calls) {
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
             expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
@@ -819,34 +798,27 @@ describe('BasicCrawler', () => {
             },
         });
 
-        const warnMock = jest.fn();
         // @ts-expect-error Overriding protected method
-        crawler.log.warning = warnMock;
-
-        const errMock = jest.fn();
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
         // @ts-expect-error Overriding protected method
-        crawler.log.error = errMock;
+        const errorSpy = jest.spyOn(crawler.log, 'error');
 
         await crawler.run();
 
-        expect(warnMock.mock.calls.length).toBe(3);
-        for (const args of warnMock.mock.calls) {
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/Other non-timeout error/.test(args[0])).toBe(true);
             expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
             expect(args[1]).toBeDefined();
         }
 
-        expect(errMock.mock.calls.length).toBe(1);
-        for (const args of errMock.mock.calls) {
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
-            expect(args[0].message).toBeUndefined();
-            expect(args[0].stack).toBeUndefined();
             expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
             expect(/Other non-timeout error/.test(args[0])).toBe(true);
             expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(true);
