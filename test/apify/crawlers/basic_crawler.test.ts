@@ -670,9 +670,9 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: 0.005,
+            handleRequestTimeoutSecs: 0.1,
             maxRequestRetries: 3,
-            handleRequestFunction: () => sleep(10),
+            handleRequestFunction: () => sleep(1e3),
         });
 
         // @ts-expect-error Overriding protected method
@@ -750,9 +750,9 @@ describe('BasicCrawler', () => {
 
         const crawler = new BasicCrawler({
             requestList,
-            handleRequestTimeoutSecs: 0.005,
+            handleRequestTimeoutSecs: 0.1,
             maxRequestRetries: 3,
-            handleRequestFunction: () => sleep(10),
+            handleRequestFunction: () => sleep(1e3),
         });
 
         // @ts-expect-error Overriding protected method
