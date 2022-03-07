@@ -21,7 +21,7 @@ import {
 } from 'crawlers';
 import { sleep } from '@crawlers/utils';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
-import { startExpressAppPromise } from '../_helper';
+import { startExpressAppPromise } from '../../shared/_helper';
 
 describe('BasicCrawler', () => {
     let logLevel: number;
