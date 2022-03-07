@@ -564,7 +564,7 @@ export abstract class BrowserCrawler<
                 options: enqueueOptions,
                 page,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
     }

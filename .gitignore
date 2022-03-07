@@ -19,7 +19,6 @@ jsconfig.json
 types
 docs/api
 docs/typedefs
-docs/examples
 .history
 .docusaurus
 tsconfig.tsbuildinfo

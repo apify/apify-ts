@@ -8,6 +8,7 @@
 		"test/**/*.js",
 		"test/**/*.ts",
 		"packages/**/test/**/*.js",
-		"packages/**/test/**/*.ts"
+		"packages/**/test/**/*.ts",
+    "docs/examples/**/*"
 	]
 }

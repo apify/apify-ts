@@ -754,7 +754,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
                 options: enqueueOptions,
                 $,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.url).origin,
+                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
 
