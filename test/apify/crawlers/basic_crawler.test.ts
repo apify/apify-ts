@@ -184,7 +184,7 @@ describe('BasicCrawler', () => {
             throw Error(`This is ${request.retryCount}th error!`);
         };
 
-        const failedRequestHandlerCalls = 0;
+        let failedRequestHandlerCalls = 0;
         const failedRequestHandler = async () => {
             failedRequestHandlerCalls++;
         };
@@ -478,7 +478,7 @@ describe('BasicCrawler', () => {
             request.userData.foo = 'bar';
         };
 
-        const failedRequestHandlerCalls = 0;
+        let failedRequestHandlerCalls = 0;
         const failedRequestHandler = async () => {
             failedRequestHandlerCalls++;
         };
