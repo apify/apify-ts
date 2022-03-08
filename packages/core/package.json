@@ -56,10 +56,10 @@
         "@apify/datastructures": "^1.0.1",
         "@apify/log": "^1.1.6",
         "@apify/ps-tree": "^1.1.4",
-        "@crawlers/storage": "^3.0.0",
-        "@crawlers/utils": "^3.0.0",
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.5",
+        "@crawlers/storage": "^3.0.0",
+        "@crawlers/utils": "^3.0.0",
         "@types/mime-types": "^2.1.1",
         "@types/stream-json": "^1.7.1",
         "apify-client": "^2.2.1-beta.1",
@@ -73,6 +73,7 @@
         "ow": "^0.28.0",
         "proxy-chain": "^2.0.1-beta.0",
         "stream-json": "^1.7.3",
+        "tldts": "^5.7.69",
         "tough-cookie": "^4.0.0",
         "ws": "^7.5.3"
     }

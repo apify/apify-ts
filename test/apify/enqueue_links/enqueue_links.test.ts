@@ -39,6 +39,7 @@ const HTML = `
         </p>
         <a href="/x/absolutepath">This is a relative link.</a>
         <a href="y/relativepath">This is a relative link.</a>
+        <a href="//example.absolute.com/hello">This is a link to a different subdomain</a>
     </body>
 </html>
 `;
@@ -374,7 +375,7 @@ describe('enqueueLinks()', () => {
             }
         });
 
-        test('correctly resolves relative URLs with default strategy of SAME_DOMAIN', async () => {
+        test('correctly resolves relative URLs with default strategy of same-domain-and-subdomain', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
@@ -400,7 +401,37 @@ describe('enqueueLinks()', () => {
             expect(enqueued[1].userData).toEqual({});
         });
 
-        test('correctly resolves relative URLs with the strategy of ALL', async () => {
+        test('correctly resolves relative URLs with the strategy of same-hostname', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await browserCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameHostname },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://example.absolute.com/hello');
+            expect(enqueued[2].method).toBe('GET');
+            expect(enqueued[2].userData).toEqual({});
+        });
+
+        test('correctly resolves relative URLs with the strategy of all', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
@@ -414,7 +445,7 @@ describe('enqueueLinks()', () => {
                 requestQueue,
             });
 
-            expect(enqueued).toHaveLength(7);
+            expect(enqueued).toHaveLength(8);
 
             expect(enqueued[0].url).toBe('https://example.com/a/b/first');
             expect(enqueued[0].method).toBe('GET');
@@ -443,6 +474,10 @@ describe('enqueueLinks()', () => {
             expect(enqueued[6].url).toBe('http://www.absolute.com/removethis/y/relativepath');
             expect(enqueued[6].method).toBe('GET');
             expect(enqueued[6].userData).toEqual({});
+
+            expect(enqueued[7].url).toBe('http://example.absolute.com/hello');
+            expect(enqueued[7].method).toBe('GET');
+            expect(enqueued[7].userData).toEqual({});
         });
     });
 
@@ -750,7 +785,7 @@ describe('enqueueLinks()', () => {
             }
         });
 
-        test('correctly resolves relative URLs with the strategy of ALL', async () => {
+        test('correctly resolves relative URLs with the strategy of all', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
@@ -764,7 +799,7 @@ describe('enqueueLinks()', () => {
                 requestQueue,
             });
 
-            expect(enqueued).toHaveLength(7);
+            expect(enqueued).toHaveLength(8);
 
             expect(enqueued[0].url).toBe('https://example.com/a/b/first');
             expect(enqueued[0].method).toBe('GET');
@@ -793,9 +828,13 @@ describe('enqueueLinks()', () => {
             expect(enqueued[6].url).toBe('http://www.absolute.com/removethis/y/relativepath');
             expect(enqueued[6].method).toBe('GET');
             expect(enqueued[6].userData).toEqual({});
+
+            expect(enqueued[7].url).toBe('http://example.absolute.com/hello');
+            expect(enqueued[7].method).toBe('GET');
+            expect(enqueued[7].userData).toEqual({});
         });
 
-        test('correctly resolves relative URLs with the default strategy of SAME_DOMAIN', async () => {
+        test('correctly resolves relative URLs with the default strategy of same-domain-and-subdomain', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
@@ -818,6 +857,36 @@ describe('enqueueLinks()', () => {
             expect(enqueued[1].url).toBe('http://www.absolute.com/removethis/y/relativepath');
             expect(enqueued[1].method).toBe('GET');
             expect(enqueued[1].userData).toEqual({});
+        });
+
+        test('correctly resolves relative URLs with the strategy of same-hostname', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequest = async (request) => {
+                enqueued.push(request);
+            };
+
+            await cheerioCrawlerEnqueueLinks({
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameHostname },
+                $,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('http://www.absolute.com/x/absolutepath');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('http://www.absolute.com/removethis/y/relativepath');
+            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://example.absolute.com/hello');
+            expect(enqueued[2].method).toBe('GET');
+            expect(enqueued[2].userData).toEqual({});
         });
 
         test('throws on finding a relative link with no baseUrl set', async () => {
