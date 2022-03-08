@@ -184,9 +184,9 @@ describe('BasicCrawler', () => {
             throw Error(`This is ${request.retryCount}th error!`);
         };
 
-        let handleFailedRequestFunctionCalls = 0;
+        const failedRequestHandlerCalls = 0;
         const failedRequestHandler = async () => {
-            handleFailedRequestFunctionCalls++;
+            failedRequestHandlerCalls++;
         };
 
         const basicCrawler = new BasicCrawler({
@@ -212,7 +212,7 @@ describe('BasicCrawler', () => {
         expect(processed['http://example.com/2'].errorMessages).toHaveLength(11);
         expect(processed['http://example.com/2'].retryCount).toBe(10);
 
-        expect(handleFailedRequestFunctionCalls).toBe(3);
+        expect(failedRequestHandlerCalls).toBe(3);
 
         expect(await requestList.isFinished()).toBe(true);
         expect(await requestList.isEmpty()).toBe(true);
@@ -478,9 +478,9 @@ describe('BasicCrawler', () => {
             request.userData.foo = 'bar';
         };
 
-        let handleFailedRequestFunctionCalls = 0;
+        const failedRequestHandlerCalls = 0;
         const failedRequestHandler = async () => {
-            handleFailedRequestFunctionCalls++;
+            failedRequestHandlerCalls++;
         };
 
         const basicCrawler = new BasicCrawler({
@@ -506,7 +506,7 @@ describe('BasicCrawler', () => {
         expect(processed['http://example.com/2'].errorMessages).toHaveLength(4);
         expect(processed['http://example.com/2'].retryCount).toBe(3);
 
-        expect(handleFailedRequestFunctionCalls).toBe(1);
+        expect(failedRequestHandlerCalls).toBe(1);
 
         expect(await requestList.isFinished()).toBe(false);
         expect(await requestList.isEmpty()).toBe(false);

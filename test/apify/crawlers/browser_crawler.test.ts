@@ -82,7 +82,7 @@ describe('BrowserCrawler', () => {
         const processed: Request[] = [];
         const failed: Request[] = [];
         const requestList = new RequestList({ sources });
-        const handlePageFunction: PuppeteerRequestHandler = async ({ page, request, response }) => {
+        const requestHandler: PuppeteerRequestHandler = async ({ page, request, response }) => {
             await page.waitForSelector('title');
 
             expect(response.status()).toBe(200);
@@ -98,8 +98,8 @@ describe('BrowserCrawler', () => {
             gotoFunction: ({ page, request }) => page.goto(request.url),
             minConcurrency: 1,
             maxConcurrency: 1,
-            handlePageFunction,
-            handleFailedRequestFunction: async ({ request }) => {
+            requestHandler,
+            failedRequestHandler: async ({ request }) => {
                 failed.push(request);
             },
         });
@@ -128,7 +128,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 return Promise.resolve();
             },
             maxRequestRetries: 1,
@@ -158,7 +158,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 return Promise.resolve();
             },
             maxRequestRetries: 1,
@@ -188,7 +188,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 return Promise.resolve();
             },
             maxRequestRetries: 0,
@@ -223,7 +223,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async ({ hookFinished }) => {
+            requestHandler: async ({ hookFinished }) => {
                 isEvaluated = hookFinished as boolean;
             },
             maxRequestRetries: 0,
@@ -255,7 +255,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async () => {},
+            requestHandler: async () => {},
             maxRequestRetries: 0,
             gotoFunction: ({ page, request }, gotoOptions) => {
                 optionsGoto = gotoOptions;
@@ -289,7 +289,7 @@ describe('BrowserCrawler', () => {
                 },
                 requestList,
                 gotoFunction: ({ page, request }) => page.goto(request.url),
-                handlePageFunction: ({ page }) => {
+                requestHandler: ({ page }) => {
                     page.close = async () => {
                         if (i === 0) {
                             throw new Error();
@@ -299,7 +299,7 @@ describe('BrowserCrawler', () => {
                     };
                     return Promise.resolve();
                 },
-                handleFailedRequestFunction: async () => {
+                failedRequestHandler: async () => {
                     failedCalled = true;
                 },
             });
@@ -323,7 +323,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async ({ session }) => {
+            requestHandler: async ({ session }) => {
                 handlePageSessions.push(session);
                 return Promise.resolve();
             },
@@ -358,7 +358,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: false,
-            handlePageFunction: async () => {},
+            requestHandler: async () => {},
 
         });
 
@@ -385,7 +385,7 @@ describe('BrowserCrawler', () => {
                 },
                 persistStateKeyValueStoreId: 'abc',
             },
-            handlePageFunction: async () => {},
+            requestHandler: async () => {},
         });
 
         // @ts-expect-error Accessing private prop
@@ -415,7 +415,7 @@ describe('BrowserCrawler', () => {
             requestList,
             useSessionPool: true,
             persistCookiesPerSession: true,
-            handlePageFunction: async ({ session, request }) => {
+            requestHandler: async ({ session, request }) => {
                 loadedCookies.push(session.getCookieString(request.url));
                 return Promise.resolve();
             },
@@ -464,10 +464,10 @@ describe('BrowserCrawler', () => {
             useSessionPool: true,
             persistCookiesPerSession: false,
             maxRequestRetries: 0,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 called = true;
             },
-            handleFailedRequestFunction: async ({ request }) => {
+            failedRequestHandler: async ({ request }) => {
                 failedRequests.push(request);
             },
         });
@@ -507,11 +507,11 @@ describe('BrowserCrawler', () => {
             useSessionPool: true,
             persistCookiesPerSession: false,
             maxRequestRetries: 0,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 called = true;
             },
             gotoFunction: ({ page, request }) => page.goto(request.url),
-            handleFailedRequestFunction: async ({ request }) => {
+            failedRequestHandler: async ({ request }) => {
                 failedRequests.push(request);
             },
         });
@@ -549,7 +549,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 await retirementPromise;
             },
             maxRequestRetries: 1,
@@ -587,7 +587,7 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            handlePageFunction: async () => {
+            requestHandler: async () => {
                 return Promise.resolve();
             },
             maxRequestRetries: 1,
@@ -632,7 +632,7 @@ describe('BrowserCrawler', () => {
             gotoFunction: async ({ page, request }) => {
                 return page.goto(request.url);
             },
-            handlePageFunction: async ({ browserController }) => {
+            requestHandler: async ({ browserController }) => {
                 expect(browserController.launchContext.fingerprint).toBeDefined();
             },
 
@@ -687,7 +687,7 @@ describe('BrowserCrawler', () => {
                 maxRequestRetries: 0,
 
                 gotoFunction: ({ page, request }) => page.goto(request.url, { timeout: 1000 }),
-                handlePageFunction: async () => {
+                requestHandler: async () => {
                 },
                 proxyConfiguration,
             });
@@ -699,7 +699,7 @@ describe('BrowserCrawler', () => {
             stub.mockClear();
         });
 
-        test('handlePageFunction should expose the proxyInfo object with sessions correctly', async () => {
+        test('requestHandler should expose the proxyInfo object with sessions correctly', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
             const status = { connected: true };
             const fakeCall = async () => {
@@ -711,7 +711,7 @@ describe('BrowserCrawler', () => {
             const proxyConfiguration = await createProxyConfiguration();
             const proxies: ProxyInfo[] = [];
             const sessions: Session[] = [];
-            const handlePageFunction = async ({ session, proxyInfo }: BrowserCrawlingContext) => {
+            const requestHandler = async ({ session, proxyInfo }: BrowserCrawlingContext) => {
                 proxies.push(proxyInfo);
                 sessions.push(session);
             };
@@ -721,7 +721,7 @@ describe('BrowserCrawler', () => {
                     browserPlugins: [puppeteerPlugin],
                 },
                 requestList,
-                handlePageFunction,
+                requestHandler,
 
                 gotoFunction: ({ page, request }) => page.goto(request.url),
                 proxyConfiguration,
@@ -758,7 +758,7 @@ describe('BrowserCrawler', () => {
                     retireBrowserAfterPageCount: 1,
                 },
                 requestList,
-                handlePageFunction: async () => {
+                requestHandler: async () => {
                 },
                 proxyConfiguration,
                 maxRequestRetries: 0,
@@ -809,7 +809,7 @@ describe('BrowserCrawler', () => {
                 expect(typeof crawlingContext.page).toBe('object');
             };
 
-            const handlePageFunction = async (crawlingContext: BrowserCrawlingContext) => {
+            const requestHandler = async (crawlingContext: BrowserCrawlingContext) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -821,7 +821,7 @@ describe('BrowserCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = async (crawlingContext: BrowserCrawlerHandleFailedRequestInput) => {
+            const failedRequestHandler = async (crawlingContext: BrowserCrawlerHandleFailedRequestInput) => {
                 expect(crawlingContext).toBe(prepareCrawlingContext);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -843,8 +843,8 @@ describe('BrowserCrawler', () => {
                 maxRequestRetries: 0,
                 maxConcurrency: 1,
                 useSessionPool: true,
-                handlePageFunction,
-                handleFailedRequestFunction,
+                requestHandler,
+                failedRequestHandler,
             });
             // @ts-expect-error Overriding private method
             browserCrawler.gotoFunction = gotoFunction;
@@ -852,7 +852,7 @@ describe('BrowserCrawler', () => {
             await browserCrawler.run();
         });
 
-        test('handleFailedRequestFunction contains proxyInfo', async () => {
+        test('failedRequestHandler contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
             const stub = requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
@@ -867,10 +867,10 @@ describe('BrowserCrawler', () => {
                 maxConcurrency: 1,
                 useSessionPool: true,
                 proxyConfiguration,
-                handlePageFunction: async () => {
+                requestHandler: async () => {
                     throw new Error('some error');
                 },
-                handleFailedRequestFunction: async (crawlingContext) => {
+                failedRequestHandler: async (crawlingContext) => {
                     expect(typeof crawlingContext.proxyInfo).toEqual('object');
                     expect(crawlingContext.proxyInfo.hasOwnProperty('url')).toEqual(true);
                 },

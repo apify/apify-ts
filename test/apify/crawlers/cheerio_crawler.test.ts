@@ -447,8 +447,8 @@ describe('CheerioCrawler', () => {
 
             failed.forEach((request) => {
                 expect(request.errorMessages).toHaveLength(2);
-                expect(request.errorMessages[0]).toMatch('handlePageFunction timed out');
-                expect(request.errorMessages[1]).toMatch('handlePageFunction timed out');
+                expect(request.errorMessages[0]).toMatch('requestHandler timed out');
+                expect(request.errorMessages[1]).toMatch('requestHandler timed out');
             });
         });
     });
@@ -775,7 +775,7 @@ describe('CheerioCrawler', () => {
             expect(proxies[3]).toEqual(proxyUrl);
         });
 
-        test('handlePageFunction should expose the proxyInfo object with sessions correctly', async () => {
+        test('requestHandler should expose the proxyInfo object with sessions correctly', async () => {
             const proxyUrls = [0, 1, 2, 3].map((n) => `http://${HOST}:${port}/proxy?x=${n}`);
             const proxyConfiguration = await createProxyConfiguration({
                 proxyUrls,
