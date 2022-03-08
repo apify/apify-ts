@@ -375,7 +375,7 @@ describe('enqueueLinks()', () => {
             }
         });
 
-        test('correctly resolves relative URLs with default strategy of same-domain-and-subdomain', async () => {
+        test('correctly resolves relative URLs with default strategy of same-subdomain', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
@@ -834,7 +834,7 @@ describe('enqueueLinks()', () => {
             expect(enqueued[7].userData).toEqual({});
         });
 
-        test('correctly resolves relative URLs with the default strategy of same-domain-and-subdomain', async () => {
+        test('correctly resolves relative URLs with the default strategy of same-subdomain', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing

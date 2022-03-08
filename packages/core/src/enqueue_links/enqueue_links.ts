@@ -69,7 +69,7 @@ export interface EnqueueLinksOptions {
      * The strategy to use when enqueueing the urls.
      * @default EnqueueStrategy.SameDomain
      */
-    strategy?: EnqueueStrategy | 'all' | 'same-domain-and-subdomain' | 'same-hostname';
+    strategy?: EnqueueStrategy | 'all' | 'same-subdomain' | 'same-hostname';
 }
 
 export enum EnqueueStrategy {
@@ -78,9 +78,9 @@ export enum EnqueueStrategy {
      */
     All = 'all',
     /**
-     * Matches any URLs that have the same subdomain and hostname as the base URL
+     * Matches any URLs that have the same subdomain as the base URL
      */
-    SameDomainAndSubdomain = 'same-domain-and-subdomain',
+    SameSubdomain = 'same-subdomain',
     /**
      * Matches any URLs that have the same hostname.
      * For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of
@@ -143,7 +143,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
             EnqueueStrategy.All,
-            EnqueueStrategy.SameDomainAndSubdomain,
+            EnqueueStrategy.SameSubdomain,
             EnqueueStrategy.SameHostname,
         ]),
     }));
@@ -151,8 +151,8 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     const extraPseudoUrls = [];
 
     if (options.baseUrl) {
-        switch (options.strategy ?? EnqueueStrategy.SameDomainAndSubdomain) {
-            case EnqueueStrategy.SameDomainAndSubdomain:
+        switch (options.strategy ?? EnqueueStrategy.SameSubdomain) {
+            case EnqueueStrategy.SameSubdomain:
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to a url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
