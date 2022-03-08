@@ -1,6 +1,6 @@
 import { Dataset, KeyValueStore } from '@crawlers/core';
 
-const dataset = await Dataset.open();
+const dataset = await Dataset.open<{ headingCount: number }>();
 const keyValueStore = await KeyValueStore.open();
 
 // calling map function and filtering through mapped items
