@@ -69,7 +69,7 @@ export interface EnqueueLinksOptions {
      * The strategy to use when enqueueing the urls.
      * @default EnqueueStrategy.SameDomain
      */
-    strategy?: EnqueueStrategy | 'all' | 'same-domain-and-subdomain';
+    strategy?: EnqueueStrategy | 'all' | 'same-domain-and-subdomain' | 'same-hostname';
 }
 
 export enum EnqueueStrategy {
