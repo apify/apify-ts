@@ -20,7 +20,7 @@ const crawler = new CheerioCrawler({
     maxRequestRetries: 1,
 
     // Increase the timeout for processing of each page.
-    handlePageTimeoutSecs: 30,
+    requestHandlerTimeoutSecs: 30,
 
     // Limit to 10 requests per one crawl
     maxRequestsPerCrawl: 10,

@@ -251,7 +251,7 @@ describe('PuppeteerCrawler', () => {
 
         const crawler = new PuppeteerCrawler({
             requestQueue,
-            handlePageTimeoutSecs: 0.005,
+            requestHandlerTimeoutSecs: 0.005,
             navigationTimeoutSecs: 0.005,
             preNavigationHooks: [
                 async () => {

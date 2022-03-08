@@ -418,7 +418,7 @@ describe('CheerioCrawler', () => {
             });
         });
 
-        test('after handlePageTimeoutSecs', async () => {
+        test('after requestHandlerTimeoutSecs', async () => {
             const failed: Request[] = [];
             const requestList = await getRequestListForMirror(port);
             const requestHandler = async () => {
@@ -427,7 +427,7 @@ describe('CheerioCrawler', () => {
 
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
-                handlePageTimeoutSecs: 1,
+                requestHandlerTimeoutSecs: 1,
                 maxRequestRetries: 1,
                 minConcurrency: 2,
                 maxConcurrency: 2,

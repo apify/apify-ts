@@ -67,8 +67,6 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
     // Overridden with cheerio context
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
-    // Crawler overrides these as a sum of requestTimeoutSecs and handlePageTimeoutSecs
-    | 'requestHandlerTimeoutSecs'
     | 'handleRequestTimeoutSecs'
 > {
     /**
@@ -253,11 +251,6 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      * The response is an instance of Node's http.IncomingMessage object.
      */
     postResponseFunction?: PostResponse<JSONData>;
-
-    /**
-     * Timeout in which the function passed as `requestHandler` needs to finish after the HTTP request finishes, given in seconds.
-     */
-    handlePageTimeoutSecs?: number;
 
     /**
      * Timeout in which the HTTP request to the resource needs to finish, given in seconds.
@@ -571,7 +564,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      */
     public proxyConfiguration?: ProxyConfiguration;
 
-    protected handlePageTimeoutMillis: number;
     protected defaultGotoOptions!: { timeout: number };
     protected preNavigationHooks: CheerioHook<JSONData>[];
     protected postNavigationHooks: CheerioHook<JSONData>[];
@@ -589,7 +581,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         handlePageFunction: ow.optional.function,
 
         requestTimeoutSecs: ow.optional.number,
-        handlePageTimeoutSecs: ow.optional.number,
         ignoreSslErrors: ow.optional.boolean,
         additionalMimeTypes: ow.optional.array.ofType(ow.string),
         suggestResponseEncoding: ow.optional.string,
@@ -616,8 +607,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         const {
             handlePageFunction,
 
+            requestHandlerTimeoutSecs = 60,
             requestTimeoutSecs = 30,
-            handlePageTimeoutSecs = 60,
             ignoreSslErrors = true,
             additionalMimeTypes = [],
             suggestResponseEncoding,
@@ -640,7 +631,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
-            requestHandlerTimeoutSecs: requestTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+            requestHandlerTimeoutSecs: requestTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
         // Cookies should be persisted per session only if session pool is used
@@ -655,7 +646,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             this.log.warning('Both forceResponseEncoding and suggestResponseEncoding options are set. Using forceResponseEncoding.');
         }
 
-        this.handlePageTimeoutMillis = handlePageTimeoutSecs * 1000;
         this.requestTimeoutMillis = requestTimeoutSecs * 1000;
         this.ignoreSslErrors = ignoreSslErrors;
         this.suggestResponseEncoding = suggestResponseEncoding;
@@ -780,8 +770,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         return addTimeoutToPromise(
             () => Promise.resolve(this.requestHandler(crawlingContext)),
-            this.handlePageTimeoutMillis,
-            `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
+            this.requestHandlerTimeoutMillis,
+            `handlePageFunction timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds.`,
         );
     }
 
@@ -1031,7 +1021,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      */
     protected _handleRequestTimeout(session?: Session) {
         session?.markBad();
-        throw new Error(`request timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`);
+        throw new Error(`request timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds.`);
     }
 
     private _abortDownloadOfBody(request: Request, response: IncomingMessage) {

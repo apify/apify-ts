@@ -167,11 +167,6 @@ export interface BrowserCrawlerOptions<
     handlePageFunction?: BrowserCrawlerHandleRequest<Context>;
 
     /**
-     * Timeout in which the function passed as `requestHandler` needs to finish, in seconds.
-     */
-    handlePageTimeoutSecs?: number;
-
-    /**
      * Navigation function for corresponding library. `page.goto(url)` is supported by both `playwright` and `puppeteer`.
      */
     gotoFunction?: GotoFunction<Context, GoToOptions>;
@@ -342,8 +337,7 @@ export abstract class BrowserCrawler<
 
     launchContext?: BrowserLaunchContext<LaunchOptions, unknown>;
 
-    protected userProvidedPageHandler!: BrowserCrawlerHandleRequest<Context>;
-    protected handlePageTimeoutMillis: number;
+    protected userProvidedRequestHandler!: BrowserCrawlerHandleRequest<Context>;
     protected navigationTimeoutMillis: number;
     protected gotoFunction?: GotoFunction<Context, GoToOptions>;
     protected defaultGotoOptions: GoToOptions;
@@ -359,7 +353,6 @@ export abstract class BrowserCrawler<
 
         gotoTimeoutSecs: ow.optional.number.greaterThan(0),
         navigationTimeoutSecs: ow.optional.number.greaterThan(0),
-        handlePageTimeoutSecs: ow.optional.number.greaterThan(0),
         preNavigationHooks: ow.optional.array,
         postNavigationHooks: ow.optional.array,
 
@@ -380,8 +373,8 @@ export abstract class BrowserCrawler<
     protected constructor(options: BrowserCrawlerOptions<Context, GoToOptions>) {
         ow(options, 'BrowserCrawlerOptions', ow.object.exactShape(BrowserCrawler.optionsShape));
         const {
-            handlePageTimeoutSecs = 60,
             navigationTimeoutSecs = 60,
+            requestHandlerTimeoutSecs = 60,
             gotoFunction, // deprecated
             gotoTimeoutSecs, // deprecated
             persistCookiesPerSession,
@@ -403,13 +396,13 @@ export abstract class BrowserCrawler<
         super({
             ...basicCrawlerOptions,
             requestHandler: (...args) => this._runRequestHandler(...args),
-            requestHandlerTimeoutSecs: navigationTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+            requestHandlerTimeoutSecs: navigationTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
         this._handlePropertyNameChange({
             newName: 'requestHandler',
             oldName: 'handlePageFunction',
-            propertyKey: 'userProvidedPageHandler',
+            propertyKey: 'userProvidedRequestHandler',
             newProperty: userProvidedRequestHandler,
             oldProperty: handlePageFunction,
         });
@@ -432,7 +425,6 @@ export abstract class BrowserCrawler<
             this.log.deprecated('Option "gotoTimeoutSecs" is deprecated. Use "navigationTimeoutSecs" instead.');
         }
 
-        this.handlePageTimeoutMillis = handlePageTimeoutSecs * 1000;
         this.navigationTimeoutMillis = (gotoTimeoutSecs || navigationTimeoutSecs) * 1000;
 
         this.gotoFunction = gotoFunction;
@@ -529,9 +521,9 @@ export abstract class BrowserCrawler<
             }
 
             await addTimeoutToPromise(
-                () => Promise.resolve(this.userProvidedPageHandler(crawlingContext)),
-                this.handlePageTimeoutMillis,
-                `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
+                () => Promise.resolve(this.userProvidedRequestHandler(crawlingContext)),
+                this.requestHandlerTimeoutMillis,
+                `requestHandler timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds.`,
             );
             tryCancel();
 

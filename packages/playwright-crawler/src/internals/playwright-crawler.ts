@@ -14,6 +14,16 @@ import { DirectNavigationOptions, gotoExtended } from './utils/playwright-utils'
 
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
 
+export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, PlaywrightController>
+
+export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
+
+export type PlaywrightRequestHandlerParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
+
+export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightRequestHandlerParam>;
+
+export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
+
 export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
     PlaywrightCrawlContext,
     PlaywrightGotoOptions,
@@ -137,16 +147,6 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
     //  */
     // maxRequestRetries?: number;
 }
-
-export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
-
-export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, PlaywrightController>
-
-export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
-
-export type PlaywrightRequestHandlerParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
-
-export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightRequestHandlerParam>;
 
 /**
  * Provides a simple framework for parallel crawling of web pages
