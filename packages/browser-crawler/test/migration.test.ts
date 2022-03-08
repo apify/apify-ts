@@ -38,7 +38,7 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             ].join('\n'));
 
             // eslint-disable-next-line dot-notation -- accessing private property
-            expect(crawler['userProvidedPageHandler']).toBe(newHandler);
+            expect(crawler['userProvidedRequestHandler']).toBe(newHandler);
 
             await crawler.browserPool.destroy();
         });
@@ -63,7 +63,7 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             ].join('\n'));
 
             // eslint-disable-next-line dot-notation -- accessing private property
-            expect(crawler['userProvidedPageHandler']).toBe(oldHandler);
+            expect(crawler['userProvidedRequestHandler']).toBe(oldHandler);
 
             await crawler.browserPool.destroy();
         });
@@ -85,7 +85,7 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             expect(warningSpy).not.toHaveBeenCalled();
 
             // eslint-disable-next-line dot-notation -- accessing private property
-            expect(crawler['userProvidedPageHandler']).toBe(handler);
+            expect(crawler['userProvidedRequestHandler']).toBe(handler);
 
             await crawler.browserPool.destroy();
         });

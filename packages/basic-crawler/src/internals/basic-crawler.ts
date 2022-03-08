@@ -350,7 +350,7 @@ export class BasicCrawler<
         requestHandler: ow.optional.function,
         // TODO: remove in a future release
         handleRequestFunction: ow.optional.function,
-        requestHandlerTimeoutSecs: ow.optional.number.greaterThanOrEqual(1),
+        requestHandlerTimeoutSecs: ow.optional.number,
         // TODO: remove in a future release
         handleRequestTimeoutSecs: ow.optional.number,
         failedRequestHandler: ow.optional.function,

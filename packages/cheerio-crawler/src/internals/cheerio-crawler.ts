@@ -564,6 +564,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      */
     public proxyConfiguration?: ProxyConfiguration;
 
+    protected userRequestHandlerTimeoutMillis: number;
     protected defaultGotoOptions!: { timeout: number };
     protected preNavigationHooks: CheerioHook<JSONData>[];
     protected postNavigationHooks: CheerioHook<JSONData>[];
@@ -646,6 +647,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             this.log.warning('Both forceResponseEncoding and suggestResponseEncoding options are set. Using forceResponseEncoding.');
         }
 
+        this.userRequestHandlerTimeoutMillis = requestHandlerTimeoutSecs * 1000;
         this.requestTimeoutMillis = requestTimeoutSecs * 1000;
         this.ignoreSslErrors = ignoreSslErrors;
         this.suggestResponseEncoding = suggestResponseEncoding;
@@ -770,8 +772,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         return addTimeoutToPromise(
             () => Promise.resolve(this.requestHandler(crawlingContext)),
-            this.requestHandlerTimeoutMillis,
-            `handlePageFunction timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds.`,
+            this.userRequestHandlerTimeoutMillis,
+            `requestHandler timed out after ${this.userRequestHandlerTimeoutMillis / 1000} seconds.`,
         );
     }
 

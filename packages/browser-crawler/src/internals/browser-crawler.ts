@@ -399,6 +399,7 @@ export abstract class BrowserCrawler<
             requestHandlerTimeoutSecs: navigationTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
+        console.log('BrowserCrawler: using deprecated options');
         this._handlePropertyNameChange({
             newName: 'requestHandler',
             oldName: 'handlePageFunction',
@@ -406,6 +407,7 @@ export abstract class BrowserCrawler<
             newProperty: userProvidedRequestHandler,
             oldProperty: handlePageFunction,
         });
+        console.log({ thisFunction: this.userProvidedRequestHandler, handlePageFunction, userProvidedRequestHandler });
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',
