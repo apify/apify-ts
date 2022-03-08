@@ -182,7 +182,6 @@ module.exports = {
                 {
                     title: 'Community',
                     items: [
-                        // { label: "User Showcase", to: "users" }
                         {
                             label: 'Discord',
                             href: 'https://discord.com/invite/jyEM2PRvMU',
@@ -207,7 +206,7 @@ module.exports = {
                         {
                             html: createHref(
                                 'https://apify.com',
-                                'Apify Cloud',
+                                'Apify Platform',
                             ),
                         },
                         {
