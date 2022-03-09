@@ -36,30 +36,6 @@ the exact same way.
 
 <Tabs groupId="enqueue_strategy">
 
-<TabItem value="same-subdomain" label="Same Subdomain" default>
-
-:::tip
-
-This is the default strategy when calling `enqueueLinks()`, so you don't have to specify it.
-
-:::
-
-:::note Example domains
-
-For a url of `https://subdomain.example.com`, `enqueueLinks()` will only match relative urls or urls that point to the same
-full domain.
-
-For instance, hyperlinks like `https://subdomain.example.com/some/path`, `/absolute/example` or `./relative/example`
-will all be matched by this strategy, while `https://other-subdomain.example.com` or `https://otherexample.com` will not.
-
-:::
-
-<CodeBlock className="language-js">
-	{SameSubdomainSource}
-</CodeBlock>
-
-</TabItem>
-
 <TabItem value="all" label="All Links">
 
 :::note Example domains
@@ -88,6 +64,30 @@ or `./relative/example` will all be matched by this strategy.
 
 <CodeBlock className="language-js">
 	{SameHostnameSource}
+</CodeBlock>
+
+</TabItem>
+
+<TabItem value="same-subdomain" label="Same Subdomain" default>
+
+:::tip
+
+This is the default strategy when calling `enqueueLinks()`, so you don't have to specify it.
+
+:::
+
+:::note Example domains
+
+For a url of `https://subdomain.example.com`, `enqueueLinks()` will only match relative urls or urls that point to the same
+full domain.
+
+For instance, hyperlinks like `https://subdomain.example.com/some/path`, `/absolute/example` or `./relative/example`
+will all be matched by this strategy, while `https://other-subdomain.example.com` or `https://otherexample.com` will not.
+
+:::
+
+<CodeBlock className="language-js">
+	{SameSubdomainSource}
 </CodeBlock>
 
 </TabItem>
