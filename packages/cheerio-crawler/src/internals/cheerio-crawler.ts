@@ -595,10 +595,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         postNavigationHooks: ow.optional.array,
     };
 
-    protected static override CrawlerRenames = {
-        handleRequestFunction: 'handlePageFunction',
-    };
-
     /**
      * All `CheerioCrawler` parameters are passed via an options object.
      */
@@ -606,6 +602,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         ow(options, 'CheerioCrawlerOptions', ow.object.exactShape(CheerioCrawler.optionsShape));
 
         const {
+            requestHandler,
             handlePageFunction,
 
             requestHandlerTimeoutSecs = 60,
@@ -621,6 +618,9 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             preNavigationHooks = [],
             postNavigationHooks = [],
 
+            // Ignored
+            handleRequestFunction,
+
             // BasicCrawler
             autoscaledPoolOptions = CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS,
             ...basicCrawlerOptions
@@ -628,11 +628,20 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         super({
             ...basicCrawlerOptions,
-            handleRequestFunction: handlePageFunction,
+            // Will be overridden below
+            requestHandler: () => {},
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
             requestHandlerTimeoutSecs: requestTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+        });
+
+        this._handlePropertyNameChange({
+            newName: 'requestHandler',
+            oldName: 'handlePageFunction',
+            propertyKey: 'requestHandler',
+            newProperty: requestHandler,
+            oldProperty: handlePageFunction,
         });
 
         // Cookies should be persisted per session only if session pool is used

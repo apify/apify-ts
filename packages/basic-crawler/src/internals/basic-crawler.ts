@@ -877,9 +877,6 @@ export class BasicCrawler<
         propertyKey,
         allowUndefined = false,
     }: HandlePropertyNameChangeData<New, Old>) {
-        newName = (this.constructor as { CrawlerRenames?: DifferentNamesPerCrawler }).CrawlerRenames?.[newName] || newName;
-        oldName = (this.constructor as { CrawlerRenames?: DifferentNamesPerCrawler }).CrawlerRenames?.[oldName] || oldName;
-
         if (newProperty && oldProperty) {
             this.log.warning([
                 `Both "${newName}" and "${oldName}" were provided in the crawler options.`,
@@ -904,8 +901,6 @@ export class BasicCrawler<
             throw new ArgumentError(`"${newName}" must be provided in the crawler options`, this.constructor);
         }
     }
-
-    protected declare static CrawlerRenames: DifferentNamesPerCrawler;
 }
 
 export async function basicCrawlerEnqueueLinks(options: BasicCrawlerEnqueueLinksOptions, requestQueue?: RequestQueue) {
@@ -929,5 +924,3 @@ interface HandlePropertyNameChangeData<New, Old> {
     propertyKey: string;
     allowUndefined?: boolean;
 }
-
-type DifferentNamesPerCrawler = Record<string, string>;

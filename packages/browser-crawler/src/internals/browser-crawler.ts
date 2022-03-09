@@ -363,10 +363,6 @@ export abstract class BrowserCrawler<
         proxyConfiguration: ow.optional.object.validate(validators.proxyConfiguration),
     };
 
-    protected static override CrawlerRenames = {
-        handleRequestFunction: 'handlePageFunction',
-    };
-
     /**
      * All `BrowserCrawler` parameters are passed via an options object.
      */
@@ -399,7 +395,6 @@ export abstract class BrowserCrawler<
             requestHandlerTimeoutSecs: navigationTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
-        console.log('BrowserCrawler: using deprecated options');
         this._handlePropertyNameChange({
             newName: 'requestHandler',
             oldName: 'handlePageFunction',
@@ -407,7 +402,6 @@ export abstract class BrowserCrawler<
             newProperty: userProvidedRequestHandler,
             oldProperty: handlePageFunction,
         });
-        console.log({ thisFunction: this.userProvidedRequestHandler, handlePageFunction, userProvidedRequestHandler });
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',
