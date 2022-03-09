@@ -1,5 +1,3 @@
-import _ from 'underscore';
-import sinon from 'sinon';
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import log from '@apify/log';
 import {
@@ -40,14 +38,14 @@ describe('BasicCrawler', () => {
     });
 
     test('should run in parallel thru all the requests', async () => {
-        const sources = _.range(0, 500).map((index) => ({ url: `https://example.com/${index}` }));
+        const sources = [...Array(500).keys()].map((index) => ({ url: `https://example.com/${index}` }));
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
         const processed: { url: string }[] = [];
         const requestList = new RequestList({ sources });
         const handleRequestFunction: HandleRequest = async ({ request }) => {
             await sleep(10);
-            processed.push(_.pick(request, 'url'));
+            processed.push({ url: request.url });
         };
 
         const basicCrawler = new BasicCrawler({
@@ -69,7 +67,7 @@ describe('BasicCrawler', () => {
     const { MIGRATING, ABORTING } = ACTOR_EVENT_NAMES;
 
     test.each([MIGRATING, ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
-        const sources = _.range(500).map((index) => ({ url: `https://example.com/${index + 1}` }));
+        const sources = [...Array(500).keys()].map((index) => ({ url: `https://example.com/${index + 1}` }));
 
         let persistResolve: (value?: unknown) => void;
         const persistPromise = new Promise((res) => { persistResolve = res; });
@@ -83,7 +81,7 @@ describe('BasicCrawler', () => {
         const requestList = await RequestList.open('reqList', sources);
         const handleRequestFunction: HandleRequest = async ({ request }) => {
             if (request.url.endsWith('200')) events.emit(event);
-            processed.push(_.pick(request, 'url'));
+            processed.push({ url: request.url });
         };
 
         const basicCrawler = new BasicCrawler({
@@ -302,84 +300,44 @@ describe('BasicCrawler', () => {
             handleRequestFunction,
         });
 
-        // It enqueues all requests from RequestList to RequestQueue.
-        const mock = sinon.mock(requestQueue);
-        mock.expects('handledCount')
-            .once()
-            .returns(Promise.resolve(0));
-        mock.expects('addRequest')
-            .once()
-            .withArgs(new Request(sources[0]), { forefront: true })
-            .returns(Promise.resolve({ requestId: 'id-0' }));
-        mock.expects('addRequest')
-            .once()
-            .withArgs(new Request(sources[1]), { forefront: true })
-            .returns(Promise.resolve({ requestId: 'id-1' }));
-        mock.expects('addRequest')
-            .once()
-            .withArgs(new Request(sources[2]), { forefront: true })
-            .returns(Promise.resolve({ requestId: 'id-2' }));
+        jest.spyOn(requestQueue, 'handledCount').mockResolvedValueOnce(0);
+
+        jest.spyOn(requestQueue, 'addRequest')
+            .mockResolvedValueOnce({ requestId: 'id-0' } as any)
+            .mockResolvedValueOnce({ requestId: 'id-1' } as any)
+            .mockResolvedValueOnce({ requestId: 'id-2' } as any);
 
         const request0 = new Request({ id: 'id-0', ...sources[0] });
         const request1 = new Request({ id: 'id-1', ...sources[1] });
         const request2 = new Request({ id: 'id-2', ...sources[2] });
 
-        // 1st try
-        mock.expects('fetchNextRequest').once().returns(Promise.resolve(request0));
-        mock.expects('fetchNextRequest').once().returns(Promise.resolve(request1));
-        mock.expects('fetchNextRequest').once().returns(Promise.resolve(request2));
-        mock.expects('markRequestHandled')
-            .once()
-            .withArgs(request0)
-            .returns(Promise.resolve());
-        mock.expects('reclaimRequest')
-            .once()
-            .withArgs(request1)
-            .returns(Promise.resolve());
-        mock.expects('markRequestHandled')
-            .once()
-            .withArgs(request2)
-            .returns(Promise.resolve());
+        jest.spyOn(requestQueue, 'fetchNextRequest')
+            .mockResolvedValueOnce(request0)
+            .mockResolvedValueOnce(request1)
+            .mockResolvedValueOnce(request2)
+            .mockResolvedValueOnce(request1)
+            .mockResolvedValueOnce(request1)
+            .mockResolvedValueOnce(request1);
 
-        // 2nd try
-        mock.expects('fetchNextRequest')
-            .once()
-            .returns(Promise.resolve(request1));
-        mock.expects('reclaimRequest')
-            .once()
-            .withArgs(request1)
-            .returns(Promise.resolve());
+        const markReqHandled = jest.spyOn(requestQueue, 'markRequestHandled').mockReturnValue(Promise.resolve() as any);
+        const reclaimReq = jest.spyOn(requestQueue, 'reclaimRequest').mockReturnValue(Promise.resolve() as any);
 
-        // 3rd try
-        mock.expects('fetchNextRequest')
-            .once()
-            .returns(Promise.resolve(request1));
-        mock.expects('reclaimRequest')
-            .once()
-            .withArgs(request1)
-            .returns(Promise.resolve());
+        jest.spyOn(requestQueue, 'isEmpty')
+            .mockResolvedValueOnce(false)
+            .mockResolvedValueOnce(false)
+            .mockResolvedValueOnce(false)
+            .mockResolvedValueOnce(true);
 
-        // 4rd try
-        mock.expects('fetchNextRequest')
-            .once()
-            .returns(Promise.resolve(request1));
-        mock.expects('markRequestHandled')
-            .once()
-            .withArgs(request1)
-            .returns(Promise.resolve());
-
-        mock.expects('isEmpty')
-            .exactly(3)
-            .returns(Promise.resolve(false));
-        mock.expects('isEmpty')
-            .once()
-            .returns(Promise.resolve(true));
-        mock.expects('isFinished')
-            .once()
-            .returns(Promise.resolve(true));
+        jest.spyOn(requestQueue, 'isFinished')
+            .mockResolvedValueOnce(true);
 
         await requestList.initialize();
         await basicCrawler.run();
+
+        // 1st try
+
+        expect(reclaimReq).toBeCalledWith(request1);
+        expect(reclaimReq).toBeCalledTimes(3);
 
         expect(processed['http://example.com/0'].userData.foo).toBe('bar');
         expect(processed['http://example.com/0'].errorMessages).toEqual([]);
@@ -395,7 +353,7 @@ describe('BasicCrawler', () => {
         expect(await requestList.isFinished()).toBe(true);
         expect(await requestList.isEmpty()).toBe(true);
 
-        mock.verify();
+        jest.restoreAllMocks();
     });
 
     test('should say that task is not ready requestList is not set and requestQueue is empty', async () => {
@@ -439,11 +397,12 @@ describe('BasicCrawler', () => {
         const request0 = new Request({ url: 'http://example.com/0' });
         const request1 = new Request({ url: 'http://example.com/1' });
 
-        const mock = sinon.mock(requestQueue);
-        mock.expects('handledCount').once().returns(Promise.resolve());
-        mock.expects('markRequestHandled').once().withArgs(request0).returns(Promise.resolve());
-        mock.expects('markRequestHandled').once().withArgs(request1).returns(Promise.resolve());
-        mock.expects('isFinished').never();
+        jest.spyOn(requestQueue, 'handledCount').mockReturnValue(Promise.resolve() as any);
+        const markRequestHandled = jest.spyOn(requestQueue, 'markRequestHandled')
+            .mockReturnValue(Promise.resolve() as any);
+
+        const isFinishedOrig = jest.spyOn(requestQueue, 'isFinished').mockImplementation();
+
         requestQueue.fetchNextRequest = () => Promise.resolve(queue.pop());
         requestQueue.isEmpty = () => Promise.resolve(!queue.length);
 
@@ -453,11 +412,14 @@ describe('BasicCrawler', () => {
 
         await basicCrawler.run();
 
+        expect(markRequestHandled).toBeCalledWith(request0);
+        expect(markRequestHandled).toBeCalledWith(request1);
+        expect(isFinishedOrig).not.toBeCalled();
+
         // TODO: see why the request1 was passed as a second parameter to includes
         expect(processed.includes(request0)).toBe(true);
 
-        mock.verify();
-        sinon.restore();
+        jest.restoreAllMocks();
     });
 
     test('should support maxRequestsPerCrawl parameter', async () => {
@@ -520,9 +482,8 @@ describe('BasicCrawler', () => {
         requestQueue.fetchNextRequest = async () => (new Request({ id: 'id', url: 'http://example.com' }));
         // @ts-expect-error Overriding the method for testing purposes
         requestQueue.markRequestHandled = async () => {};
-        const requestQueueStub = sinon
-            .stub(requestQueue, 'handledCount')
-            .returns(Promise.resolve(33));
+
+        const requestQueueStub = jest.spyOn(requestQueue, 'handledCount').mockResolvedValue(33);
 
         let count = 0;
         let crawler = new BasicCrawler({
@@ -536,17 +497,15 @@ describe('BasicCrawler', () => {
         });
 
         await crawler.run();
-        sinon.assert.called(requestQueueStub);
+        expect(requestQueueStub).toBeCalled();
         expect(count).toBe(7);
-        sinon.restore();
+        jest.restoreAllMocks();
 
-        const sources = _.range(1, 10).map((i) => ({ url: `http://example.com/${i}` }));
+        const sources = Array.from(Array(10).keys(), (x) => x + 1).map((i) => ({ url: `http://example.com/${i}` }));
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
         let requestList = new RequestList({ sources });
         await requestList.initialize();
-        const requestListStub = sinon
-            .stub(requestList, 'handledCount')
-            .returns(33);
+        const requestListStub = jest.spyOn(requestList, 'handledCount').mockReturnValue(33);
 
         count = 0;
         crawler = new BasicCrawler({
@@ -560,23 +519,15 @@ describe('BasicCrawler', () => {
         });
 
         await crawler.run();
-        sinon.assert.called(requestListStub);
+        expect(requestListStub).toBeCalled();
         expect(count).toBe(7);
-        sinon.restore();
+        jest.restoreAllMocks();
 
         requestList = new RequestList({ sources: sourcesCopy });
         await requestList.initialize();
-        const listStub = sinon
-            .stub(requestList, 'handledCount')
-            .returns(20);
-
-        const queueStub = sinon
-            .stub(requestQueue, 'handledCount')
-            .returns(Promise.resolve(33));
-
-        const addRequestStub = sinon
-            .stub(requestQueue, 'addRequest')
-            .returns(Promise.resolve() as unknown as Promise<QueueOperationInfo>);
+        const listStub = jest.spyOn(requestList, 'handledCount').mockReturnValue(20);
+        const queueStub = jest.spyOn(requestQueue, 'handledCount').mockResolvedValue(33);
+        const addRequestStub = jest.spyOn(requestQueue, 'addRequest').mockReturnValue(Promise.resolve() as any);
 
         count = 0;
         crawler = new BasicCrawler({
@@ -591,11 +542,13 @@ describe('BasicCrawler', () => {
         });
 
         await crawler.run();
-        sinon.assert.called(queueStub);
-        sinon.assert.notCalled(listStub);
-        sinon.assert.callCount(addRequestStub, 7);
+
+        expect(queueStub).toBeCalled();
+        expect(listStub).not.toBeCalled();
+        expect(addRequestStub).toBeCalledTimes(7);
         expect(count).toBe(7);
-        sinon.restore();
+
+        jest.restoreAllMocks();
     });
 
     test('should timeout after handleRequestTimeoutSecs', async () => {

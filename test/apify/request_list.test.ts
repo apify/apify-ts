@@ -1,8 +1,19 @@
 import log from '@apify/log';
 import { ACTOR_EVENT_NAMES_EX, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
-import { shuffle } from 'underscore';
 import LocalStorageDirEmulator from './local_storage_dir_emulator';
+
+/**
+ * Stand-in for underscore.js shuffle (weird, but how else?)
+ */
+function shuffle(array: unknown[]) : unknown[] {
+    const out = [...array];
+    for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+}
 
 jest.mock('@crawlers/utils/src/internals/request', () => {
     const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
@@ -619,7 +630,7 @@ describe('RequestList', () => {
             reqs.push(request);
         }
 
-        reqs = shuffle(reqs);
+        reqs = shuffle(reqs) as typeof reqs;
 
         for (let i = 0; i < reqs.length; i++) {
             await requestList.reclaimRequest(reqs[i]); // eslint-disable-line
