@@ -2,7 +2,6 @@
 import log from '@apify/log';
 import { AutoscaledPool } from '@crawlers/core';
 import { sleep } from '@crawlers/utils';
-import _ from 'underscore';
 
 /* eslint-disable no-underscore-dangle */
 
@@ -18,7 +17,7 @@ describe('AutoscaledPool', () => {
     });
 
     test('should work with concurrency 1', async () => {
-        const range = _.range(0, 10);
+        const range = [...Array(10).keys()];
         const result: number[] = [];
 
         let isFinished = false;
@@ -44,11 +43,11 @@ describe('AutoscaledPool', () => {
         });
         await pool.run();
 
-        expect(result).toEqual(_.range(0, 10));
+        expect(result).toEqual([...Array(10).keys()]);
     });
 
     test('should work with concurrency 10', async () => {
-        const range = _.range(0, 100);
+        const range = [...Array(100).keys()];
         const result: number[] = [];
 
         let isFinished = false;
@@ -75,11 +74,11 @@ describe('AutoscaledPool', () => {
 
         await pool.run();
 
-        expect(result).toEqual(_.range(0, 100));
+        expect(result).toEqual([...Array(100).keys()]);
     });
 
     test('enables setting concurrency', async () => {
-        const range = _.range(0, 100);
+        const range = [...Array(100).keys()];
         const result: number[] = [];
 
         let isFinished = false;
@@ -123,7 +122,7 @@ describe('AutoscaledPool', () => {
 
         await promise;
 
-        expect(result).toEqual(_.range(0, 100));
+        expect(result).toEqual([...Array(100).keys()]);
     });
 
     describe('should scale correctly', () => {

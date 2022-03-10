@@ -1,6 +1,4 @@
 import path from 'path';
-import _ from 'underscore';
-import sinon from 'sinon';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { sleep } from '@crawlers/utils';
@@ -96,6 +94,41 @@ const setEnv = (env: ApifyEnv) => {
     if (env.memoryMbytes) process.env.APIFY_MEMORY_MBYTES = env.memoryMbytes.toString();
 };
 
+const globalOptions = {
+    token: 'some-token',
+    actId: 'some-act-id',
+    defaultKeyValueStoreId: 'some-store-id',
+    input: { foo: 'bar' },
+    contentType: 'application/json',
+    outputKey: 'OUTPUT',
+    outputValue: 'some-output',
+    build: 'xxx',
+    taskId: 'some-task-id',
+    runId: 'some-run-id',
+    targetActorId: 'some-target-actor-id',
+};
+
+const runKeys = ['run', 'output', 'finishedRun', 'failedRun', 'runningRun', 'readyRun', 'expected'] as const;
+
+// @ts-expect-error
+const runConfigs : Record<typeof runKeys[number], any> = {
+    run: { id: globalOptions.runId, actId: globalOptions.actId, defaultKeyValueStoreId: globalOptions.defaultKeyValueStoreId },
+    output: { contentType: globalOptions.contentType, key: globalOptions.outputKey, value: globalOptions.outputValue },
+    init() {
+        // @ts-expect-error
+        this.finishedRun = { ...this.run, status: ACT_JOB_STATUSES.SUCCEEDED };
+        // @ts-expect-error
+        this.failedRun = { ...this.run, status: ACT_JOB_STATUSES.ABORTED };
+        // @ts-expect-error
+        this.runningRun = { ...this.run, status: ACT_JOB_STATUSES.RUNNING };
+        // @ts-expect-error
+        this.readyRun = { ...this.run, status: ACT_JOB_STATUSES.READY };
+        // @ts-expect-error
+        this.expected = { ...this.finishedRun, output: { contentType: globalOptions.contentType, body: globalOptions.outputValue } };
+        return this;
+    },
+}.init();
+
 describe('Actor.getEnv()', () => {
     let prevEnv: ApifyEnv;
 
@@ -118,18 +151,20 @@ describe('Actor.getEnv()', () => {
     });
 
     test('works with with non-null values', () => {
-        const expectedEnv = _.extend(getEmptyEnv(), {
+        const expectedEnv = {
+            ...getEmptyEnv(),
+            ...{
             // internalPort: 12345,
-            actorId: 'test actId',
-            actorRunId: 'test actId',
-            userId: 'some user',
-            token: 'auth token',
-            startedAt: new Date('2017-01-01'),
-            timeoutAt: new Date(),
-            defaultKeyValueStoreId: 'some store',
-            defaultDatasetId: 'some dataset',
-            memoryMbytes: 1234,
-        });
+                actorId: 'test actId',
+                actorRunId: 'test actId',
+                userId: 'some user',
+                token: 'auth token',
+                startedAt: new Date('2017-01-01'),
+                timeoutAt: new Date(),
+                defaultKeyValueStoreId: 'some store',
+                defaultDatasetId: 'some dataset',
+                memoryMbytes: 1234,
+            } };
         setEnv(expectedEnv);
 
         const env = Actor.getEnv();
@@ -205,56 +240,30 @@ describe('Actor.main()', () => {
 });
 
 // TODO we should remove the duplication if possible
-describe.skip('Actor.call()', () => {
-    const token = 'some-token';
-    const actId = 'some-act-id';
-    const defaultKeyValueStoreId = 'some-store-id';
-    const input = 'something';
-    const contentType = 'text/plain';
-    const outputKey = 'OUTPUT';
-    const outputValue = 'some-output';
-    const build = 'xxx';
+describe('Actor.call()', () => {
+    afterEach(() => jest.restoreAllMocks());
 
-    const run = { id: 'some-run-id', actId, defaultKeyValueStoreId };
-    const finishedRun = { ...run, status: ACT_JOB_STATUSES.SUCCEEDED };
-    const failedRun = { ...run, status: ACT_JOB_STATUSES.ABORTED };
-    const runningRun = { ...run, status: ACT_JOB_STATUSES.RUNNING };
-    const readyRun = { ...run, status: ACT_JOB_STATUSES.READY };
-
-    const output = { contentType, key: outputKey, value: outputValue };
-    const expected = { ...finishedRun, output: { contentType, body: outputValue } };
+    const { contentType, build, actId, input, token } = globalOptions;
 
     test('works as expected', async () => {
         const memory = 1024;
         const timeout = 60;
         const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('actor')
-            .once()
-            .withArgs('some-act-id')
-            .returns({ call: async () => finishedRun });
+        const options = { contentType, build, memory, timeout, webhooks };
 
-        const callOutput = await Actor.call(actId, input, { contentType, build, memory, timeout, webhooks });
+        const callStub = jest.fn(
+            async () => runConfigs.finishedRun,
+        );
 
-        expect(callOutput).toEqual(expected);
-        clientMock.verify();
-    });
+        const actor = jest.spyOn(Actor.apifyClient, 'actor')
+        // @ts-expect-error
+            .mockReturnValueOnce({ call: callStub });
 
-    test('works as expected with fetchOutput = false', async () => {
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('actor')
-            .once()
-            .withArgs('some-act-id')
-            .returns({ call: async () => finishedRun });
+        await Actor.call(actId, input, options);
 
-        clientMock.expects('keyValueStore')
-            .never();
-
-        const callOutput = await Actor.call(actId, undefined);
-
-        expect(callOutput).toEqual(finishedRun);
-        clientMock.restore();
+        expect(actor).toBeCalledWith(actId);
+        expect(callStub).toBeCalledWith(input, options);
     });
 
     test('works with token', async () => {
@@ -262,256 +271,114 @@ describe.skip('Actor.call()', () => {
         const timeout = 60;
         const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
-        // TODO spy on `Configuration.newClient()` probably?
-        // const utilsMock = sinon.mock(utils);
-        const callStub = sinon.stub().resolves(finishedRun);
-        const getRecordStub = sinon.stub().resolves(output);
-        const keyValueStoreStub = sinon.stub().returns({ getRecord: getRecordStub });
-        const actorStub = sinon.stub().returns({ call: callStub });
-        // utilsMock.expects('newClient')
-        //     .once()
-        //     .withArgs({ token })
-        //     .returns({
-        //         actor: actorStub,
-        //         keyValueStore: keyValueStoreStub,
-        //     });
-        const callOutput = await Actor.call(actId, input, { contentType, token, build, memory, timeout, webhooks });
+        const callStub = jest.fn(async () => runConfigs.finishedRun);
+        const actorStub = jest.fn(() => ({ call: callStub }));
 
-        expect(callOutput).toEqual(expected);
-        expect(actorStub.calledOnceWith(actId));
-        expect(callStub.args[0]).toEqual([input, {
+        const createClient = jest.spyOn(Actor.config, 'createClient')
+            .mockReturnValueOnce({
+                actor: actorStub,
+            } as any);
+
+        await Actor.call(actId, input, { contentType, build, token, memory, timeout, webhooks });
+
+        expect(actorStub).toBeCalledWith(actId);
+
+        expect(callStub).toBeCalledWith(input, {
             build,
-            contentType: `${contentType}; charset=utf-8`,
+            contentType,
             memory,
             timeout,
             webhooks,
-        }]);
-        expect(keyValueStoreStub.calledOnceWith(run.defaultKeyValueStoreId));
-        expect(getRecordStub.calledOnceWith('OUTPUT', { buffer: true }));
-        // utilsMock.verify();
-    });
+        });
 
-    test('works as expected with unfinished run', async () => {
-        const waitForFinish = 1;
-
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('actor')
-            .once()
-            .withArgs('some-act-id')
-            .returns({ call: async () => runningRun });
-
-        clientMock.expects('keyValueStore')
-            .never();
-
-        const callOutput = await Actor.call(actId, undefined, { waitForFinish });
-
-        expect(callOutput).toEqual(runningRun);
-        clientMock.verify();
-    });
-
-    test('returns immediately with zero', async () => {
-        const waitForFinish = 0;
-
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('actor')
-            .once()
-            .withArgs('some-act-id')
-            .returns({ call: async () => readyRun });
-
-        clientMock.expects('keyValueStore')
-            .never();
-
-        const callOutput = await Actor.call(actId, undefined, { waitForFinish });
-
-        expect(callOutput).toEqual(readyRun);
-        clientMock.restore();
-    });
-
-    test(`throws if run doesn't succeed`, async () => {
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('actor')
-            .once()
-            .withArgs('some-act-id')
-            .returns({ call: async () => failedRun });
-
-        try {
-            await Actor.call(actId, null);
-            throw new Error('This was suppose to fail!');
-        } catch (err) {
-            clientMock.restore();
-        }
+        expect(createClient).toBeCalledWith({ token });
     });
 });
 
 // TODO we should remove the duplication if possible
-describe.skip('Actor.callTask()', () => {
-    const taskId = 'some-task-id';
-    const actId = 'xxx';
-    const token = 'some-token';
-    const defaultKeyValueStoreId = 'some-store-id';
-    const run = { id: 'some-run-id', actId, defaultKeyValueStoreId };
-    const readyRun = { ...run, status: ACT_JOB_STATUSES.READY };
-    const runningRun = { ...run, status: ACT_JOB_STATUSES.RUNNING };
-    const finishedRun = { ...run, status: ACT_JOB_STATUSES.SUCCEEDED };
-    const failedRun = { ...run, status: ACT_JOB_STATUSES.ABORTED };
-    const contentType = 'application/json';
-    const outputKey = 'OUTPUT';
-    const outputValue = 'some-output';
-    const output = { contentType, key: outputKey, value: outputValue };
-    const expected = { ...finishedRun, output: { contentType, body: outputValue } };
-    const input = { foo: 'bar' };
-    const memory = 256; // mb
-    const timeout = 60; // sec
-    const build = 'beta';
+describe('Actor.callTask()', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    const memory = 256; // m
+    const timeout = 60; // se
     const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
+    const { input, taskId, token, build } = globalOptions;
+    const { finishedRun } = runConfigs;
+
     test('works as expected', async () => {
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('task')
-            .once()
-            .withArgs('some-task-id')
-            .returns({ call: async () => finishedRun });
+        const callStub = jest.fn(async () => finishedRun);
+        const taskStub = jest.spyOn(Actor.apifyClient, 'task')
+            .mockReturnValueOnce({ call: callStub } as any);
 
-        clientMock.expects('keyValueStore')
-            .once()
-            .withArgs('some-store-id')
-            .returns({ getRecord: async () => output });
+        const options = { memory, timeout, build, webhooks };
 
-        const callOutput = await Actor.callTask(taskId, input, { memory, timeout, build, webhooks });
+        const callOutput = await Actor.callTask(taskId, input, options);
 
-        expect(callOutput).toEqual(expected);
-        clientMock.restore();
+        expect(callOutput).toEqual(finishedRun);
+
+        expect(taskStub).toBeCalledTimes(1);
+        expect(taskStub).toBeCalledWith(taskId);
+
+        expect(callStub).toBeCalledTimes(1);
+        expect(callStub).toBeCalledWith(input, options);
     });
 
     test('works with token', async () => {
-        // TODO spy on `Configuration.newClient()` probably?
-        // const utilsMock = sinon.mock(utils);
-        const callStub = sinon.stub().resolves(finishedRun);
-        const getRecordStub = sinon.stub().resolves(output);
-        const keyValueStoreStub = sinon.stub().returns({ getRecord: getRecordStub });
-        const taskStub = sinon.stub().returns({ call: callStub });
-        // utilsMock.expects('newClient')
-        //     .once()
-        //     .withArgs({ token })
-        //     .returns({
-        //         task: taskStub,
-        //         keyValueStore: keyValueStoreStub,
-        //     });
-        const callOutput = await Actor.callTask(taskId, input, { token, build, memory, timeout, webhooks });
+        const options = { memory, timeout, build, webhooks };
 
-        expect(callOutput).toEqual(expected);
-        expect(taskStub.calledOnceWith(taskId));
-        expect(callStub.args[0]).toEqual([input, {
-            build,
-            memory,
-            timeout,
-            webhooks,
-        }]);
-        expect(keyValueStoreStub.calledOnceWith(run.defaultKeyValueStoreId));
-        expect(getRecordStub.calledOnceWith('OUTPUT', { buffer: true }));
-        // utilsMock.verify();
-    });
+        const callTaskStub = jest.fn(async () => finishedRun);
+        const taskStub = jest.fn(() => ({ call: callTaskStub }));
 
-    test('works as expected with fetchOutput = false', async () => {
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('task')
-            .once()
-            .withArgs('some-task-id')
-            .returns({ call: async () => finishedRun });
+        const createClient = jest.spyOn(Actor.config, 'createClient')
+            .mockReturnValueOnce({
+                task: taskStub,
+            } as any);
 
-        clientMock.expects('keyValueStore')
-            .never();
+        const callOutput = await Actor.callTask(taskId, input, { token, ...options });
 
-        const callOutput = await Actor.callTask(taskId);
+        expect(createClient).toBeCalledWith({ token });
+
+        expect(taskStub).toBeCalledWith(taskId);
+        expect(callTaskStub).toBeCalledWith(input, options);
 
         expect(callOutput).toEqual(finishedRun);
-        clientMock.restore();
-    });
-
-    test('works as expected with unfinished run', async () => {
-        // ensure waitForFinish and waitSecs is the same, if not we have wrong types in client
-        const waitForFinish = 1;
-
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('task')
-            .once()
-            .withArgs('some-task-id')
-            .returns({ call: async () => runningRun });
-
-        clientMock.expects('keyValueStore')
-            .never();
-
-        const callOutput = await Actor.callTask(taskId, undefined, { waitForFinish });
-
-        expect(callOutput).toEqual(runningRun);
-        clientMock.verify();
-    });
-
-    test('returns immediately with zero', async () => {
-        const waitForFinish = 0;
-
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('task')
-            .once()
-            .withArgs('some-task-id')
-            .returns({ call: async () => readyRun });
-
-        clientMock.expects('keyValueStore')
-            .never();
-
-        const callOutput = await Actor.callTask(taskId, undefined, { waitForFinish });
-
-        expect(callOutput).toEqual(readyRun);
-        clientMock.restore();
-    });
-
-    test(`throws if run doesn't succeed`, async () => {
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('task')
-            .once()
-            .withArgs('some-task-id')
-            .returns({ call: async () => failedRun });
-
-        try {
-            await Actor.callTask(taskId);
-            throw new Error('This was suppose to fail!');
-        } catch (err) {
-            clientMock.restore();
-        }
     });
 });
 
 // TODO we should remove the duplication if possible
-describe.skip('Actor.metamorph()', () => {
-    const runId = 'some-run-id';
-    const actorId = 'some-actor-id';
-    const targetActorId = 'some-target-actor-id';
-    const contentType = 'application/json';
-    const input = '{ "foo": "bar" }';
-    const build = 'beta';
-    const run = { id: runId, actId: actorId };
+describe('Actor.metamorph()', () => {
+    const { actId, runId, targetActorId, input, contentType, build } = globalOptions;
+
+    const { run } = runConfigs;
 
     beforeEach(() => {
-        process.env[ENV_VARS.ACTOR_ID] = actorId;
+        process.env[ENV_VARS.ACTOR_ID] = actId;
         process.env[ENV_VARS.ACTOR_RUN_ID] = runId;
+        process.env[ENV_VARS.IS_AT_HOME] = '1';
     });
 
     afterEach(() => {
         delete process.env[ENV_VARS.ACTOR_ID];
         delete process.env[ENV_VARS.ACTOR_RUN_ID];
+        delete process.env[ENV_VARS.IS_AT_HOME];
+        jest.restoreAllMocks();
     });
 
     test('works as expected', async () => {
         const metamorphMock = jest.fn();
         metamorphMock.mockResolvedValueOnce(run);
+
         const runSpy = jest.spyOn(ApifyClient.prototype, 'run');
         runSpy.mockReturnValueOnce({ metamorph: metamorphMock } as any);
 
         await Actor.metamorph(targetActorId, input, { contentType, build, customAfterSleepMillis: 1 });
 
+        expect(runSpy).toBeCalledTimes(1);
+
         expect(metamorphMock).toBeCalledWith(targetActorId, input, {
             build,
-            contentType: `${contentType}; charset=utf-8`,
+            contentType,
         });
     });
 
@@ -528,7 +395,9 @@ describe.skip('Actor.metamorph()', () => {
 });
 
 describe('Actor.addWebhook()', () => {
-    const runId = 'my-run-id';
+    afterEach(() => jest.restoreAllMocks());
+
+    const { runId } = globalOptions;
     const expectedEventTypes = ['ACTOR.RUN.SUCCEEDED'] as const;
     const expectedRequestUrl = 'http://example.com/api';
     const expectedPayloadTemplate = '{"hello":{{world}}';
@@ -548,10 +417,8 @@ describe('Actor.addWebhook()', () => {
         process.env[ENV_VARS.ACTOR_RUN_ID] = runId;
         process.env[ENV_VARS.IS_AT_HOME] = '1';
 
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('webhooks')
-            .once()
-            .returns({ create: async () => webhook });
+        const clientMock = jest.spyOn(Actor.apifyClient, 'webhooks')
+            .mockReturnValueOnce({ create: async () => webhook } as any);
 
         await Actor.addWebhook({
             eventTypes: expectedEventTypes,
@@ -563,33 +430,27 @@ describe('Actor.addWebhook()', () => {
         delete process.env[ENV_VARS.ACTOR_RUN_ID];
         delete process.env[ENV_VARS.IS_AT_HOME];
 
-        clientMock.verify();
+        expect(clientMock).toBeCalledTimes(1);
     });
 
     test('on local logs warning and does nothing', async () => {
-        const clientMock = sinon.mock(Actor.apifyClient);
-        clientMock.expects('webhooks')
-            .never();
+        const clientMock = jest.spyOn(Actor.apifyClient, 'webhooks')
+            .mockImplementation();
 
-        const logMock = sinon.mock(log);
-        logMock.expects('warning').once();
+        const warningStub = jest.spyOn(log, 'warning').mockImplementation();
 
         await Actor.addWebhook({ eventTypes: expectedEventTypes, requestUrl: expectedRequestUrl });
 
-        clientMock.verify();
-        logMock.verify();
+        expect(warningStub).toBeCalledTimes(1);
+        expect(clientMock).toBeCalledTimes(0);
     });
 
     test('should fail without actor run ID', async () => {
         process.env[ENV_VARS.IS_AT_HOME] = '1';
 
-        let isThrow;
-        try {
-            await Actor.addWebhook({ eventTypes: expectedEventTypes, requestUrl: expectedRequestUrl });
-        } catch (err) {
-            isThrow = true;
-        }
-        expect(isThrow).toBe(true);
+        await expect(async () => Actor.addWebhook({ eventTypes: expectedEventTypes, requestUrl: expectedRequestUrl }))
+            .rejects
+            .toThrow();
 
         delete process.env[ENV_VARS.IS_AT_HOME];
     });
