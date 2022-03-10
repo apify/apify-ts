@@ -1,28 +1,7 @@
 ---
-id: migration-to-v1
-title: Migration to version 1
+id: upgrading-to-v1
+title: Upgrading to v1
 ---
-
-- [Summary](#summary)
-- [Migration Guide](#migration-guide)
-- [Installation](#installation)
-- [Running on Apify Platform](#running-on-apify-platform)
-- [Handler arguments are now Crawling Context](#handler-arguments-are-now-crawling-context)
-  - [`Map` of crawling contexts and their IDs](#map-of-crawling-contexts-and-their-ids)
-  - [`autoscaledPool` was moved under `crawlingContext.crawler`](#autoscaledpool-was-moved-under-crawlingcontextcrawler)
-- [Replacement of `PuppeteerPool` with `BrowserPool`](#replacement-of-puppeteerpool-with-browserpool)
-  - [Access to running `BrowserPool`](#access-to-running-browserpool)
-  - [Pages now have IDs](#pages-now-have-ids)
-  - [Configuration and lifecycle hooks](#configuration-and-lifecycle-hooks)
-  - [Introduction of `BrowserController`](#introduction-of-browsercontroller)
-  - [`BrowserPool` methods vs `PuppeteerPool`](#browserpool-methods-vs-puppeteerpool)
-- [Updated `PuppeteerCrawlerOptions`](#updated-puppeteercrawleroptions)
-  - [Removal of `gotoFunction`](#removal-of-gotofunction)
-  - [`launchPuppeteerOptions` => `launchContext`](#launchpuppeteeroptions--launchcontext)
-  - [Removal of `launchPuppeteerFunction`](#removal-of-launchpuppeteerfunction)
-- [Launch functions](#launch-functions)
-  - [Updated arguments](#updated-arguments)
-  - [Custom modules](#custom-modules)
 
 ## Summary
 After 3.5 years of rapid development and a lot of breaking changes and deprecations,

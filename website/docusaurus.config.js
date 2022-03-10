@@ -1,6 +1,5 @@
 const { createHref } = require('./tools/utils/createHref');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
-// const versions = require('./versions.json');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
@@ -17,16 +16,6 @@ module.exports = {
             html: true,
         },
         gaGtag: true,
-        deletedDocs: {
-            '1.0.0': [
-                'api/puppeteer-pool',
-                'typedefs/puppeteer-pool-options',
-                'typedefs/launch-puppeteer-function',
-                'typedefs/launch-puppeteer-options',
-                'typedefs/puppeteer-goto',
-                'typedefs/puppeteer-goto-inputs',
-            ],
-        },
         repoUrl: 'https://github.com/apify/apify-ts',
     },
     onBrokenLinks:
@@ -42,7 +31,7 @@ module.exports = {
                     showLastUpdateAuthor: true,
                     showLastUpdateTime: true,
                     path: '../docs',
-                    sidebarPath: './sidebars.json',
+                    sidebarPath: './sidebars.js',
                     rehypePlugins: [externalLinkProcessor],
                 },
                 theme: {
@@ -69,9 +58,6 @@ module.exports = {
                     {
                         path: 'packages/storage',
                     },
-                    // {
-                    //     path: 'packages/crawlers',
-                    // },
                     {
                         path: 'packages/basic-crawler',
                     },
@@ -108,12 +94,14 @@ module.exports = {
             },
             items: [
                 {
-                    to: 'docs/',
-                    label: 'Guide',
+                    type: 'docsVersion',
+                    to: 'docs',
+                    label: 'Guides',
                     position: 'left',
                 },
                 {
-                    to: 'docs/examples/crawl-multiple-urls',
+                    type: 'docsVersion',
+                    to: 'docs/examples/accept-user-input',
                     label: 'Examples',
                     position: 'left',
                 },
@@ -131,6 +119,20 @@ module.exports = {
                 {
                     type: 'docsVersionDropdown',
                     position: 'right',
+                    dropdownItemsAfter: [
+                        // {
+                        //     href: 'https://sdk.apify.com/docs/guides/getting-started',
+                        //     label: '2.2.0',
+                        // },
+                        {
+                            href: 'https://sdk.apify.com/docs/1.3.1/guides/getting-started',
+                            label: '1.3.1',
+                        },
+                        {
+                            href: 'https://sdk.apify.com/docs/0.22.4/guides/getting-started',
+                            label: '0.22.4',
+                        },
+                    ],
                 },
                 {
                     href: 'https://github.com/apify/apify-js',
@@ -166,16 +168,16 @@ module.exports = {
                     title: 'Docs',
                     items: [
                         {
-                            label: 'Guide',
-                            to: 'docs/',
+                            label: 'Guides',
+                            to: 'docs/guides',
                         },
                         {
                             label: 'Examples',
-                            to: 'docs/examples/crawl-multiple-urls',
+                            to: 'docs/examples',
                         },
                         {
                             label: 'API reference',
-                            to: 'docs/api/apify',
+                            to: 'api',
                         },
                     ],
                 },
