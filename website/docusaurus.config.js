@@ -28,6 +28,13 @@ module.exports = {
             /** @type {import('@docusaurus/preset-classic').Options} */
             ({
                 docs: {
+                    disableVersioning: true,
+                    lastVersion: 'current',
+                    versions: {
+                        current: {
+                            label: '3.0.0',
+                        },
+                    },
                     showLastUpdateAuthor: true,
                     showLastUpdateTime: true,
                     path: '../docs',
@@ -95,18 +102,19 @@ module.exports = {
             items: [
                 {
                     type: 'docsVersion',
-                    to: 'docs',
+                    to: 'docs/guides',
                     label: 'Guides',
                     position: 'left',
                 },
                 {
                     type: 'docsVersion',
-                    to: 'docs/examples/accept-user-input',
+                    to: 'docs/examples',
                     label: 'Examples',
                     position: 'left',
                 },
                 {
-                    to: 'api',
+                    type: 'docsVersion',
+                    to: 'api/core',
                     label: 'API reference',
                     position: 'left',
                 },
@@ -120,17 +128,17 @@ module.exports = {
                     type: 'docsVersionDropdown',
                     position: 'right',
                     dropdownItemsAfter: [
-                        // {
-                        //     href: 'https://sdk.apify.com/docs/guides/getting-started',
-                        //     label: '2.2.0',
-                        // },
+                        {
+                            href: 'https://sdk.apify.com/docs/guides/getting-started',
+                            label: '2.2',
+                        },
                         {
                             href: 'https://sdk.apify.com/docs/1.3.1/guides/getting-started',
-                            label: '1.3.1',
+                            label: '1.3',
                         },
                         {
                             href: 'https://sdk.apify.com/docs/0.22.4/guides/getting-started',
-                            label: '0.22.4',
+                            label: '0.22',
                         },
                     ],
                 },
@@ -177,7 +185,7 @@ module.exports = {
                         },
                         {
                             label: 'API reference',
-                            to: 'api',
+                            to: 'api/core',
                         },
                     ],
                 },
