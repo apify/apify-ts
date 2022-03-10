@@ -4,11 +4,11 @@ title: Puppeteer crawler
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import VersionedApiLink from '@site/src/components/VersionedApiLink';
+import ApiLink from '@site/src/components/ApiLink';
 import CrawlSource from '!!raw-loader!./puppeteer_crawler.ts';
 
-This example demonstrates how to use <VersionedApiLink apiPath="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</VersionedApiLink> in combination
-with <VersionedApiLink apiPath="core/class/RequestQueue">`RequestQueue`</VersionedApiLink> 
+This example demonstrates how to use <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> in combination
+with <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>
 to recursively scrape the [Hacker News website](https://news.ycombinator.com) using headless Chrome / Puppeteer.
 
 The crawler starts with a single URL, finds links to next pages, enqueues them and continues until no more desired links are available. The results

@@ -210,8 +210,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
  * [Apify Actor documentation](https://docs.apify.com/actor/build#base-images)
  * for details.
  *
- * For an example of usage, see the [Synchronous run Example](../examples/synchronous-run)
- * or the [Puppeteer proxy Example](../examples/puppeteer-with-proxy)
+ * For an example of usage, see the [Puppeteer proxy Example](/docs/examples/puppeteer-with-proxy).
  *
  * @param [launchContext]
  *   All `PuppeteerLauncher` parameters are passed via an launchContext object.

@@ -3,6 +3,9 @@ id: getting-started
 title: Getting Started
 ---
 
+
+import ApiLink from '@site/src/components/ApiLink';
+
 Without the right tools, crawling and scraping the web can be difficult. At the very least, you need an HTTP client to make the necessary
 requests, but that only gets you raw HTML and sometimes not even that. Then you have to read this HTML and extract the data you're interested in. Once
 extracted, it must be stored in a machine-readable format and easily accessible for further processing, because it is the processed data that holds
@@ -26,10 +29,10 @@ environment and let's get into it.
 To run Apify SDK on your own computer, you need to meet the following pre-requisites first:
 
 1. Have Node.js version 10.17 or higher, with the exception of Node.js 11, installed.
-    - Visit [Node.js website](https://nodejs.org/en/download/) to download or use
-      [nvm](https://github.com/creationix/nvm)
+ - Visit [Node.js website](https://nodejs.org/en/download/) to download or use
+[nvm](https://github.com/creationix/nvm)
 2. Have NPM installed.
-    - NPM comes bundled with Node.js so you should already have it. If not, reinstall Node.js.
+ - NPM comes bundled with Node.js so you should already have it. If not, reinstall Node.js.
 
 If you're not certain, confirm the prerequisites by running:
 
@@ -128,7 +131,7 @@ introduce all the Apify SDK classes necessary to make it happen.
 
 ### The general idea
 
-There are 4 crawler classes available for use in the Apify SDK. [`BasicCrawler`](../api/basic-crawler), [`CheerioCrawler`](../api/cheerio-crawler), [`PuppeteerCrawler`](../api/puppeteer-crawler) and [`PlaywrightCrawler`](../api/playwright-crawler). We'll talk about their differences later. Now, let's talk about what they have in common.
+There are 4 crawler classes available for use in the Apify SDK. <ApiLink to="basic-crawler/class/BasicCrawler">`BasicCrawler`</ApiLink>, <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>, <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> and <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>. We'll talk about their differences later. Now, let's talk about what they have in common.
 
 The general idea of each crawler is to go to a web page, open it, do some stuff there, save some results and continue to the next page, until it's done
 its job. So the crawler always needs to find answers to two questions: **Where should I go?** and **What should I do there?** Answering those two
@@ -136,16 +139,16 @@ questions is the only setup mandatory for running the crawlers.
 
 ### The Where - `Request`, `RequestList` and `RequestQueue`
 
-All crawlers use instances of the [`Request`](../api/request) class to determine where they need to go. Each request may hold a lot of information,
+All crawlers use instances of the <ApiLink to="core/class/Request">`Request`</ApiLink> class to determine where they need to go. Each request may hold a lot of information,
 but at the very least, it must hold a URL - a web page to open. But having only one URL would not make sense for crawling. We need to either have a
 pre-existing list of our own URLs that we wish to visit, perhaps a thousand, or a million, or we need to build this list dynamically as we crawl,
 adding more and more URLs to the list as we progress.
 
-A representation of the pre-existing list is an instance of the [`RequestList`](../api/request-list) class. It is a static, immutable list of URLs and
-other metadata (see the [`Request`](../api/request) object) that the crawler will visit, one by one, retrying whenever an error occurs, until there
+A representation of the pre-existing list is an instance of the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class. It is a static, immutable list of URLs and
+other metadata (see the <ApiLink to="core/class/Request">`Request`</ApiLink> object) that the crawler will visit, one by one, retrying whenever an error occurs, until there
 are no more `Requests` to process.
 
-[`RequestQueue`](../api/request-queue) on the other hand, represents a dynamic queue of `Requests`. One that can be updated at runtime by adding more
+<ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> on the other hand, represents a dynamic queue of `Requests`. One that can be updated at runtime by adding more
 pages - `Requests` to process. This allows the crawler to open one page, extract interesting URLs, such as links to other pages on the same domain,
 add them to the queue (called _enqueuing_) and repeat this process to build a queue of tens of thousands or more URLs while knowing only a single one
 at the beginning.
@@ -158,11 +161,7 @@ crawlers. At least one of them always needs to be provided while setting up. You
 The `handlePageFunction` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data
 from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
 
-The `handlePageFunction` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or
-`RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it
-always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and
-related metadata) and the `autoscaledPool` property, which is an instance of the [`AutoscaledPool`](../api/autoscaled-pool) class and we'll talk about
-it in detail later.
+The `handlePageFunction` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
 
 ```js
 // The object received as a single argument by the handlePageFunction
@@ -174,14 +173,12 @@ it in detail later.
 
 ### Putting it all together
 
-Enough theory! Let's put some of those hard-learned facts into practice. We learned above that we need `Requests` and a `handlePageFunction` to setup
-a crawler. We will also use the [`Apify.main()`](../api/apify#main) function. It's not mandatory, but it makes our life easier. We'll
-learn about it in detail later on.
+Enough theory! Let's put some of those hard-learned facts into practice. We learned above that we need `Requests` and a `handlePageFunction` to setup a crawler. We will also use the <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function. It's not mandatory, but it makes our life easier. We'll learn about it in detail later on.
 
 Let's start with something super easy. Visit a page, get its title and close. First of all we need to require Apify, to make all of its features available to us:
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 ```
 
 Easy, right? It really doesn't get much more difficult than that. For the purposes of this tutorial, we'll be scraping our own webpage
@@ -189,12 +186,12 @@ Easy, right? It really doesn't get much more difficult than that. For the purpos
 `RequestList` or `RequestQueue`. Let's go with `RequestQueue` for now.
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-// This is how you use the Apify.main() function.
-Apify.main(async () => {
+// This is how you use the Actor.main() function.
+Actor.main(async () => {
     // First we create the request queue instance.
-    const requestQueue = await Apify.openRequestQueue();
+    const requestQueue = await RequestQueue.open();
     // And then we add a request to it.
     await requestQueue.addRequest({ url: 'https://apify.com' });
 });
@@ -203,7 +200,7 @@ Apify.main(async () => {
 > If you're not familiar with the `async` and `await` keywords used in the example, you should know that these are native syntax in modern JavaScript. You can
 > [learn more about them here](https://nikgrozev.com/2017/10/01/async-await/).
 
-The [`requestQueue.addRequest()`](../api/request-queue#addrequest) function automatically converts the plain object we passed to it to a
+The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a
 `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the
 `handlePageFunction`.
 
@@ -223,10 +220,10 @@ will always have a `request` property, but it will also have other properties, d
 by the `CheerioCrawler` class, which we'll set up right now.
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
+Actor.main(async () => {
+    const requestQueue = await RequestQueue.open();
     await requestQueue.addRequest({ url: 'https://apify.com' });
 
     const handlePageFunction = async ({ request, $ }) => {
@@ -236,7 +233,7 @@ Apify.main(async () => {
     };
 
     // Set up the crawler, passing a single options object as an argument.
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         requestQueue,
         handlePageFunction,
     });
@@ -254,28 +251,28 @@ created earlier and run `apify run` from that project's directory.
 To run the code on Apify Platform, just replace the original example with your new code and hit Run.
 
 Whichever environment you choose, you should see the message
-`The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Apify.` printed to the screen. If you do, congratulations and
+`The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.` printed to the screen. If you do, congratulations and
 let's move onto some bigger challenges! And if you feel like you don't really know what just happened there, no worries, it will all become clear when
 you learn more about `CheerioCrawler`.
 
 ## CheerioCrawler aka jQuery crawler
 
 This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If you're familiar with `jQuery`, you'll
-understand [`CheerioCrawler`](../api/cheerio-crawler) in minutes. [Cheerio](https://www.npmjs.com/package/cheerio) is
+understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is
 essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. You can use it, as you would `jQuery`, for manipulating
-the DOM of a HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in.
+the DOM of an HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in.
 But `jQuery` runs in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of
-[`CheerioCrawler`](../api/cheerio-crawler) comes in.
+<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
 
 ### Overview
 
-[`CheerioCrawler`](../api/cheerio-crawler) crawls by making plain HTTP requests to the provided URLs. As you remember from the previous section, the
-URLs are fed to the crawler using either the [`RequestList`](../api/cheerio-crawler) or the [`RequestQueue`](../api/cheerio-crawler). The HTTP responses
+<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As you remember from the previous section, the
+URLs are fed to the crawler using either the <ApiLink to="cheerio-crawler/class/CheerioCrawler">`RequestList`](../api/cheerio-crawler) or the [`RequestQueue`</ApiLink>. The HTTP responses
 it gets back are HTML pages, the same pages you would get in your browser when you first load a URL.
 
 > Note, however, that modern web pages often do not serve all of their content in the first HTML response, but rather the first HTML contains links to
 > other resources such as CSS and JavaScript that get downloaded afterwards and together they create the final page. See our
-> [`PuppeteerCrawler`](../api/puppeteer-crawler) to crawl those.
+<ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to crawl those.
 
 Once the page's HTML is retrieved, the crawler will pass it to [Cheerio](https://www.npmjs.com/package/cheerio) for
 parsing. The result is the typical `$` function, which should be familiar to `jQuery` users. You can use this `$` to do all sorts of lookups and
@@ -304,9 +301,9 @@ Even though using `CheerioCrawler` is extremely easy, it probably will not be yo
 environments. Since most websites nowadays use modern JavaScript to create rich, responsive and data-driven user experiences, the plain HTTP requests
 the crawler uses may just fall short of your needs.
 
-But [`CheerioCrawler`](../api/cheerio-crawler) is far from useless! It really shines when you need to cope with extremely high workloads. With just 4 GBs of memory and a single CPU
+But <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> is far from useless! It really shines when you need to cope with extremely high workloads. With just 4 GBs of memory and a single CPU
 core, you can scrape 500 or more pages a minute! _(assuming each page contains approximately 400KB of HTML)_ To scrape this fast with a full browser
-scraper, such as the [`PuppeteerCrawler`](../api/puppeteer-crawler), you'd need significantly more computing power.
+scraper, such as the <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink>, you'd need significantly more computing power.
 
 **Advantages:**
 
@@ -333,10 +330,10 @@ Just to refresh your memory, in the previous section we built a very simple craw
 it to the console. This is the original source code:
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
+Actor.main(async () => {
+    const requestQueue = await RequestQueue.open();
     await requestQueue.addRequest({ url: 'https://apify.com' });
 
     const handlePageFunction = async ({ request, $ }) => {
@@ -346,7 +343,7 @@ Apify.main(async () => {
     };
 
     // Set up the crawler, passing a single options object as an argument.
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         requestQueue,
         handlePageFunction,
     });
@@ -379,11 +376,11 @@ const links = $('a[href]')
 Our new function finds all the `<a>` elements that contain the `href` attribute and extracts the attributes into an array of strings. But there's a problem. There could be relative links in the list and those can't be used on their own. We need to resolve them using our domain as base URL and
 we will use one of Node.js' standard libraries to do this.
 
-Apify exposes two URL properties: [`request.url`](../api/request#url) and [`request.loadedUrl`](../api/request#loadedurl). What's the difference? Well, `request.url` is the URL of the first request. In case of redirects, the URL changes. The final one is stored as `request.loadedUrl`.
+Apify exposes two URL properties: <ApiLink to="core/class/Request#url">`request.url`</ApiLink> and <ApiLink to="core/class/Request#loadedUrl">`request.loadedUrl`</ApiLink>. What's the difference? Well, `request.url` is the URL of the first request. In case of redirects, the URL changes. The final one is stored as `request.loadedUrl`.
 
 ```js
 // At the top of the file:
-const { URL } = require('url');
+import { URL } from 'url';
 
 // ...
 
@@ -401,7 +398,7 @@ keep the ones that lead to the same domain.
 
 ```js
 // At the top of the file:
-const { URL } = require('url');
+import { URL } from 'url';
 
 // ...
 
@@ -435,7 +432,7 @@ links. This will add them to the end of the queue for processing.
 
 ```js
 // At the top of the file:
-const { URL } = require('url');
+import { URL } from 'url';
 
 // ...
 
@@ -471,7 +468,7 @@ very useful when you're just testing your code or when your crawler could potent
 add it to the crawler options like this:
 
 ```js
-const crawler = new Apify.CheerioCrawler({
+const crawler = new CheerioCrawler({
     maxRequestsPerCrawl: 20,
     requestQueue,
     handlePageFunction,
@@ -485,11 +482,11 @@ will be allowed to finish too.
 #### Putting it all together
 
 ```js
-const { URL } = require('url'); // <------ This is new.
-const Apify = require('apify');
+import { URL } from 'url'; // <------ This is new.
+import { Actor } from 'apify';
 
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
+Actor.main(async () => {
+    const requestQueue = await RequestQueue.open();
     await requestQueue.addRequest({ url: 'https://apify.com' });
 
     const handlePageFunction = async ({ request, $ }) => {
@@ -512,7 +509,7 @@ Apify.main(async () => {
         }
     };
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 20, // <------ This is new too.
         requestQueue,
         handlePageFunction,
@@ -539,13 +536,13 @@ Well, the obvious reason is practice. This is a tutorial after all. The other re
 together, so that in the end, a new page, not previously entered in by you, can be scraped. We think that by seeing the bigger picture, you will be
 able to get the most out of Apify SDK.
 
-### Meet `Apify.utils`
+### Meet `Actor.utils`
 
-We will talk at length about them later, but in short, `Apify.utils` is a namespace where you can find various helpful functions and constants that
-make your life easier. One of the available functions is `Apify.utils.enqueueLinks()` which encapsulates the whole enqueueing process and even adds
+We will talk at length about them later, but in short, `Actor.utils` is a namespace where you can find various helpful functions and constants that
+make your life easier. One of the available functions is `Actor.utils.enqueueLinks()` which encapsulates the whole enqueueing process and even adds
 some extra functionality.
 
-### Introduction to `Apify.utils.enqueueLinks()`
+### Introduction to `Actor.utils.enqueueLinks()`
 
 Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as
 possible. With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`.
@@ -553,13 +550,13 @@ It also allows you to modify the resulting `Requests` to match your crawling nee
 
 `enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because you don't have to
 remember their order! But also because we can easily extend its API and add new features. You can
-[find the full reference here](../api/utils#enqueuelinks).
+<ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
 
-We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of the `utils` object, so you don't have to type `Apify.utils` all the
+We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of the `utils` object, so you don't have to type `Actor.utils` all the
 time.
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 const {
     utils: { enqueueLinks },
 } = Apify;
@@ -682,7 +679,7 @@ That's been quite a lot of theory and examples. We might as well put it to pract
 two arguments. The source, in our case the `$` object, and the destination - the `requestQueue`. To filter links, we need to add a third argument:
 `pseudoUrls`.
 
-The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. [See the reference](../api/utils#enqueueLinks)
+The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. <ApiLink to="utils#enqueueLinks">See the reference</ApiLink>
 for all of them. Since we just need to filter out same domain links, we'll keep it simple and use a pseudo-URL `string`.
 
 ```js
@@ -743,11 +740,11 @@ That was fairly easy, wasn't it. That ticks number 2 off our list and we're done
 enqueued all the links manually.
 
 ```js
-const { URL } = require('url'); // <------ This is new.
-const Apify = require('apify');
+import { URL } from 'url'; // <------ This is new.
+import { Actor } from 'apify';
 
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
+Actor.main(async () => {
+    const requestQueue = await RequestQueue.open();
     await requestQueue.addRequest({ url: 'https://apify.com' });
 
     const handlePageFunction = async ({ request, $ }) => {
@@ -770,7 +767,7 @@ Apify.main(async () => {
         }
     };
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 20, // <------ This is new too.
         requestQueue,
         handlePageFunction,
@@ -783,13 +780,13 @@ Apify.main(async () => {
 Since we've already prepared the `enqueueLinks()` options, we can just replace all the above enqueuing logic with a single function call, as promised.
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 const {
     utils: { enqueueLinks },
 } = Apify;
 
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
+Actor.main(async () => {
+    const requestQueue = await RequestQueue.open();
     await requestQueue.addRequest({ url: 'https://apify.com' });
 
     const handlePageFunction = async ({ request, $ }) => {
@@ -806,7 +803,7 @@ Apify.main(async () => {
         console.log(`Enqueued ${enqueued.length} URLs.`);
     };
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 20,
         requestQueue,
         handlePageFunction,
@@ -820,8 +817,8 @@ And that's it! No more parsing the links from HTML using Cheerio, filtering them
 `enqueueLinks()` is just one example of Apify SDK's powerful helper functions. They're all designed to make your life easier so you can focus on
 getting your data, while leaving the mundane crawling management to your tools.
 
-`Apify.utils.enqueueLinks()` has a lot more tricks up its sleeve. Make sure to check out the
-[reference documentation](../api/utils#enqueueLinks) to see what else it can do for you. Namely the feature to prepopulate the `Request`
+`Actor.utils.enqueueLinks()` has a lot more tricks up its sleeve. Make sure to check out the
+<ApiLink to="utils#enqueueLinks">reference documentation</ApiLink> to see what else it can do for you. Namely the feature to prepopulate the `Request`
 instances it creates with `userData` of your choice is extremely useful!
 
 ## Getting some real-world data
@@ -940,10 +937,10 @@ const sources = [
     'https://apify.com/store?category=ENTERTAINMENT',
 ];
 
-const requestList = await Apify.openRequestList('categories', sources);
+const requestList = await RequestList.open('categories', sources);
 ```
 
-As you can see, similarly to the `Apify.openRequestQueue()` function, there is an `Apify.openRequestList()` function that will create a `RequestList`
+As you can see, similarly to the `RequestQueue.open()` function, there is an `RequestList.open()` function that will create a `RequestList`
 instance for you. The first argument is the name of the `RequestList`. It is used to persist the crawling state of the list. This is useful when you
 want to continue where you left off after an error or a process restart. The second argument is the `sources` array, which is nothing more than a list
 of URLs you wish to crawl.
@@ -961,7 +958,7 @@ answer to the second one is simple. `RequestList` and `RequestQueue` are made to
 use them both and the crawlers will do the rest.
 
 ```js
-const crawler = new Apify.CheerioCrawler({
+const crawler = new CheerioCrawler({
     requestList,
     requestQueue,
     handlePageFunction,
@@ -983,18 +980,18 @@ the category URLs we selected and print the text content of all the actors in th
 You should see, albeit very badly formatted, the text of the individual actor cards that are displayed in the selected categories.
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-Apify.main(async () => {
+Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
         'https://apify.com/store?category=ENTERTAINMENT',
     ];
 
-    const requestList = await Apify.openRequestList('categories', sources);
+    const requestList = await RequestList.open('categories', sources);
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         requestList,
         handlePageFunction: async ({ $, request }) => {
             // Select all the actor cards.
@@ -1055,7 +1052,7 @@ You will see that only the actor cards will be returned, and nothing else.
 
 #### Enqueueing the detail links using a custom selector
 
-In the previous chapter, we used the `Apify.utils.enqueueLinks()` function like this:
+In the previous chapter, we used the `Actor.utils.enqueueLinks()` function like this:
 
 ```js
 await enqueueLinks({
@@ -1076,7 +1073,7 @@ const handlePageFunction = async ({ $, request }) => {
 
     // Only enqueue new links from the category pages.
     if (!request.userData.detailPage) {
-        await Apify.utils.enqueueLinks({
+        await Actor.utils.enqueueLinks({
             $,
             requestQueue,
             selector: 'div.item > a',
@@ -1123,19 +1120,19 @@ with a `RequestList`, because we were not enqueueing anything, don't forget to a
 test it out!
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-Apify.main(async () => {
+Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
         'https://apify.com/store?category=ENTERTAINMENT',
     ];
 
-    const requestList = await Apify.openRequestList('categories', sources);
-    const requestQueue = await Apify.openRequestQueue(); // <----------------
+    const requestList = await RequestList.open('categories', sources);
+    const requestQueue = await RequestQueue.open(); // <----------------
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 50, // <----------------------------------------
         requestList,
         requestQueue, // <---------------------------------------------------
@@ -1144,7 +1141,7 @@ Apify.main(async () => {
 
             // Only enqueue new links from the category pages.
             if (!request.userData.detailPage) {
-                await Apify.utils.enqueueLinks({
+                await Actor.utils.enqueueLinks({
                     $,
                     requestQueue,
                     selector: 'div.item > a',
@@ -1335,19 +1332,19 @@ console.log('RESULTS: ', results);
 We have everything we need so just grab our newly created scraping logic, dump it into our original `handlePageFunction()` and see the magic happen!
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-Apify.main(async () => {
+Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
         'https://apify.com/store?category=ENTERTAINMENT',
     ];
 
-    const requestList = await Apify.openRequestList('categories', sources);
-    const requestQueue = await Apify.openRequestQueue();
+    const requestList = await RequestList.open('categories', sources);
+    const requestQueue = await RequestQueue.open();
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 50,
         requestList,
         requestQueue,
@@ -1381,7 +1378,7 @@ Apify.main(async () => {
 
             // Only enqueue new links from the category pages.
             if (!request.userData.detailPage) {
-                await Apify.utils.enqueueLinks({
+                await Actor.utils.enqueueLinks({
                     $,
                     requestQueue,
                     selector: 'div.item > a',
@@ -1412,25 +1409,25 @@ this chapter so make sure to pay attention very carefully!
 First, replace the `console.log('RESULTS', results)` call with
 
 ```js
-await Apify.pushData(results);
+await Actor.pushData(results);
 ```
 
 and that's it. Unlike in the previous paragraph, I'm being serious now. That's it, we're done. The final code therefore looks exactly like this:
 
 ```js
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-Apify.main(async () => {
+Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
         'https://apify.com/store?category=ENTERTAINMENT',
     ];
 
-    const requestList = await Apify.openRequestList('categories', sources);
-    const requestQueue = await Apify.openRequestQueue();
+    const requestList = await RequestList.open('categories', sources);
+    const requestQueue = await RequestQueue.open();
 
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 50,
         requestList,
         requestQueue,
@@ -1459,12 +1456,12 @@ Apify.main(async () => {
                             .replace(',', ''),
                     ),
                 };
-                await Apify.pushData(results);
+                await Actor.pushData(results);
             }
 
             // Only enqueue new links from the category pages.
             if (!request.userData.detailPage) {
-                await Apify.utils.enqueueLinks({
+                await Actor.utils.enqueueLinks({
                     $,
                     requestQueue,
                     selector: 'div.item > a',
@@ -1482,11 +1479,9 @@ Apify.main(async () => {
 });
 ```
 
-#### What's `Apify.pushData()`
+#### What's `Actor.pushData()`
 
-[`Apify.pushData()`](../api/apify#pushdata) is a helper function that saves data to the default [`Dataset`](../api/dataset). `Dataset` is a
-storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Apify.pushData()` a new row in the
-table is created, with the property names serving as column titles.
+<ApiLink to="core/class/Dataset#pushData">`Actor.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Actor.pushData()` a new row in the table is created, with the property names serving as column titles.
 
 > Each actor run has one default `Dataset` so no need to initialize it or create an instance first. It just gets done automatically for you. You can
 > also create named datasets at will.
@@ -1511,7 +1506,7 @@ this tutorial anyway, you'll find your data in your local Apify Storage.
 ```
 
 The above folder will hold all your saved data in numbered files, as they were pushed into the dataset. Each file represents one invocation of
-`Apify.pushData()` or one table row.
+`Actor.pushData()` or one table row.
 
 > Unfortunately, the local datasets don't yet support the export in various formats functionality that the Platform Dataset page offers, so for the
 > time being, we're stuck with JSON.
@@ -1529,17 +1524,17 @@ actor code.
 #### Meet the `INPUT`
 
 `INPUT` is just a convention on how we call the actor's input. Because there's no magic in actors, just features, the `INPUT` is actually nothing more
-than a key in the default [`KeyValueStore`](../api/key-value-store) that's, by convention, used as input on the Apify platform. Also by convention, the
+than a key in the default <ApiLink to="core/class/KeyValueStore">`KeyValueStore`</ApiLink> that's, by convention, used as input on the Apify platform. Also by convention, the
 `INPUT` is mostly expected to be of `Content-Type: application/json`.
 
 We will not go into `KeyValueStore` details here, but for the sake of `INPUT` you need to remember that there is a function that helps you get it.
 
 ```js
-const input = await Apify.getInput();
+const input = await Actor.getInput();
 ```
 
 On the Apify Platform, the actor's input that you can set in the Console is automatically saved to the default `KeyValueStore` under the key `INPUT`
-and by calling [`Apify.getInput()`](../api/apify#getvalue) you retrieve the value from the `KeyValueStore`.
+and by calling <ApiLink to="apify/class/Actor#getvalue">`Actor.getInput()`</ApiLink> you retrieve the value from the `KeyValueStore`.
 
 Running locally, you need to place an `INPUT.json` file in your default key value store for this to work.
 
@@ -1566,7 +1561,7 @@ automatically contain this `userData`.
 
 ```js
 // ...
-const input = await Apify.getInput();
+const input = await Actor.getInput();
 
 const sources = input.map(category => ({
     url: `https://apify.com/store?category=${category}`,
@@ -1575,7 +1570,7 @@ const sources = input.map(category => ({
     },
 }));
 
-const requestList = await Apify.openRequestList('categories', sources);
+const requestList = await RequestList.open('categories', sources);
 // ...
 ```
 
@@ -1593,7 +1588,7 @@ importantly - easier to reason about and make changes to.
 In the following code we've made several changes.
 
 -   Split the code into multiple files.
--   Added the `Apify.utils.log` and replaced `console.log` with it.
+-   Added the `Actor.utils.log` and replaced `console.log` with it.
 -   Added a `getSources()` function to encapsulate `INPUT` consumption.
 -   Added a `createRouter()` function to make our routing cleaner, without nested `if` clauses.
 -   Removed the `maxRequestsPerCrawl` limit.
@@ -1604,20 +1599,18 @@ In our `main.js` file, we place the general structure of the crawler:
 
 ```js
 // main.js
-const Apify = require('apify');
-const tools = require('./tools');
-const {
-    utils: { log },
-} = Apify;
+import { Actor } from 'apify';
+import { CheerioCrawler, log } from '@crawlers/cheerio';
+import * as tools from './tools';
 
-Apify.main(async () => {
+Actor.main(async () => {
     log.info('Starting actor.');
-    const requestList = await Apify.openRequestList('categories', await tools.getSources());
-    const requestQueue = await Apify.openRequestQueue();
+    const requestList = await RequestList.open('categories', await tools.getSources());
+    const requestQueue = await RequestQueue.open();
     const router = tools.createRouter({ requestQueue });
 
     log.debug('Setting up crawler.');
-    const crawler = new Apify.CheerioCrawler({
+    const crawler = new CheerioCrawler({
         requestList,
         requestQueue,
         handlePageFunction: async context => {
@@ -1637,24 +1630,22 @@ Then in a separate `tools.js`, we add our helper functions:
 
 ```js
 // tools.js
-const Apify = require('apify');
-const routes = require('./routes');
-const {
-    utils: { log },
-} = Apify;
+import { Actor } from 'apify';
+import { log } from '@crawlers/core';
+import * as routes from './routes';
 
-exports.getSources = async () => {
+export async function getSources() {
     log.debug('Getting sources.');
-    const input = await Apify.getInput();
+    const input = await Actor.getInput();
     return input.map(category => ({
         url: `https://apify.com/store?category=${category}`,
         userData: {
             label: 'CATEGORY',
         },
     }));
-};
+}
 
-exports.createRouter = globalContext => {
+export async function createRouter(globalContext) {
     return async function(routeName, requestContext) {
         const route = routes[routeName];
         if (!route) throw new Error(`No route for name: ${routeName}`);
@@ -1668,15 +1659,11 @@ And finally our routes in a separate `routes.js` file:
 
 ```js
 // routes.js
-const Apify = require('apify');
-const {
-    utils: { log },
-} = Apify;
+import { Actor } from 'apify';
+import { log } from '@crawlers/core';
 
-exports.CATEGORY = async ({ $, request }, { requestQueue }) => {
-    return Apify.utils.enqueueLinks({
-        $,
-        requestQueue,
+export const CATEGORY = async ({ enqueueLinks }) => {
+    return enqueueLinks({
         selector: 'div.item > a',
         baseUrl: request.loadedUrl,
         transformRequestFunction: req => {
@@ -1686,7 +1673,7 @@ exports.CATEGORY = async ({ $, request }, { requestQueue }) => {
     });
 };
 
-exports.DETAIL = async ({ $, request }) => {
+export const DETAIL = async ({ $, request }) => {
     const urlArr = request.url.split('/').slice(-2);
 
     log.debug('Scraping results.');
@@ -1710,7 +1697,7 @@ exports.DETAIL = async ({ $, request }) => {
     };
 
     log.debug('Pushing data to dataset.');
-    await Apify.pushData(results);
+    await Actor.pushData(results);
 };
 ```
 
@@ -1722,9 +1709,9 @@ manageable.
 This was not always the case, but now that the Apify platform has a multifile editor, there's no reason not to split your code into multiple files and keep
 your logic separate. Less code in a single file means less code you need to think about at any time, and that's a great thing!
 
-#### Using `Apify.utils.log` instead of `console.log`
+#### Using `Actor.utils.log` instead of `console.log`
 
-We wont go to great lengths here to talk about `utils.log`, because you can read [it all in the documentation](../api/log), but there's just
+We wont go to great lengths here to talk about `utils.log`, because you can read <ApiLink to="core/class/Log">it all in the documentation</ApiLink>, but there's just
 one thing that we need to stress: **log levels**.
 
 `utils.log` enables you to use different log levels, such as `log.debug`, `log.info` or `log.warning`. It not only makes your log more readable, but
@@ -1732,7 +1719,7 @@ it also allows selective turning off of some levels by either calling the `utils
 This is huge! Because you can now add a lot of debug logs in your actor, which will help you when something goes wrong and turn them on or off with a
 simple `INPUT` change, or by setting an environment variable.
 
-The punch line? Use `Apify.utils.log` instead of `console.log` now and thank us later when something goes wrong!
+The punch line? Use `Actor.utils.log` instead of `console.log` now and thank us later when something goes wrong!
 
 #### Using a router to structure your crawling
 

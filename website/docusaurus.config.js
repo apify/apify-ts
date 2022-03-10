@@ -19,9 +19,9 @@ module.exports = {
         repoUrl: 'https://github.com/apify/apify-ts',
     },
     onBrokenLinks:
-    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('log'),
+    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('error'),
     onBrokenMarkdownLinks:
-    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('log'),
+    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('error'),
     presets: /** @type {import('@docusaurus/types').PresetConfig[]} */ ([
         [
             '@docusaurus/preset-classic',
@@ -135,10 +135,6 @@ module.exports = {
                         {
                             href: 'https://sdk.apify.com/docs/1.3.1/guides/getting-started',
                             label: '1.3',
-                        },
-                        {
-                            href: 'https://sdk.apify.com/docs/0.22.4/guides/getting-started',
-                            label: '0.22',
                         },
                     ],
                 },

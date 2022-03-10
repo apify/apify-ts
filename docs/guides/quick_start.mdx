@@ -3,6 +3,8 @@ id: quick-start
 title: Quick Start
 ---
 
+import ApiLink from '@site/src/components/ApiLink';
+
 This short tutorial will set you up to start using Apify SDK in a minute or two.
 If you want to learn more, proceed to the [Getting Started](../guides/getting-started)
 tutorial that will take you step by step through creating your first scraper.
@@ -27,15 +29,15 @@ Run the following example to perform a recursive crawl of a website using Playwr
 [see the Examples section of the documentation](../examples/crawl-multiple-urls).
 
 ```javascript title="src/main.js"
-const Apify = require('apify');
+import { Actor } from 'apify';
 
-// Apify.main is a helper function, you don't need to use it.
-Apify.main(async () => {
-    const requestQueue = await Apify.openRequestQueue();
+// Actor.main is a helper function, you don't need to use it.
+Actor.main(async () => {
+    const requestQueue = await RequestQueue.open();
     // Choose the first URL to open.
     await requestQueue.addRequest({ url: 'https://www.iana.org/' });
 
-    const crawler = new Apify.PlaywrightCrawler({
+    const crawler = new PlaywrightCrawler({
         requestQueue,
         handlePageFunction: async ({ request, page }) => {
             // Extract HTML title of the page.
@@ -43,7 +45,7 @@ Apify.main(async () => {
             console.log(`Title of ${request.url}: ${title}`);
 
             // Add URLs that match the provided pattern.
-            await Apify.utils.enqueueLinks({
+            await Actor.utils.enqueueLinks({
                 page,
                 requestQueue,
                 pseudoUrls: ['https://www.iana.org/[.*]'],

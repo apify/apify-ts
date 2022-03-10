@@ -3,6 +3,8 @@ id: type-script-actor
 title: TypeScript Actors
 ---
 
+import ApiLink from '@site/src/components/ApiLink';
+
 Apify SDK supports TypeScript by covering public APIs with type declarations. This
 allows writing code with auto-completion for TypeScript and JavaScript code alike.
 Besides that, actors written in TypeScript can take advantage of compile-time
@@ -109,7 +111,7 @@ interface MySchema {
     expectedParam2?: number;
 }
 
-const input: MySchema = (await Apify.getInput()) as any; // getInput returns Promise<Object<string, *>|string|Buffer|null> here
+const input: MySchema = (await Actor.getInput()) as any; // getInput returns Promise<Object<string, *>|string|Buffer|null> here
 
 if (!input?.expectedParam1) { // input is MySchema now and you can check in a type-safe way
     throw new Error('Missing expectedParam1');
@@ -124,7 +126,7 @@ interface ExpectedShape {
     someFields: Fields[];
 }
 
-const dataset = await Apify.openDataset();
+const dataset = await Actor.openDataset();
 await dataset.forEach((item: ExpectedShape) => {
     // deal with item.id / item.someFields
     // otherwise item is "any"

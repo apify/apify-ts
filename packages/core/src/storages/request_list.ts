@@ -194,7 +194,7 @@ export interface RequestListOptions {
  * ```javascript
  * // Use a helper function to simplify request list initialization.
  * // State and sources are automatically persisted. This is a preferred usage.
- * const requestList = await Apify.openRequestList('my-request-list', [
+ * const requestList = await RequestList.open('my-request-list', [
  *     'http://www.example.com/page-1',
  *     { url: 'http://www.example.com/page-2', method: 'POST', userData: { foo: 'bar' }},
  *     { requestsFromUrl: 'http://www.example.com/my-url-list.txt', userData: { isFromUrl: true } },
@@ -773,7 +773,7 @@ export class RequestList {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Apify.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -828,64 +828,6 @@ export class RequestList {
     private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp }): Promise<string[]> {
         return downloadListOfUrls(options);
     }
-}
-
-/**
- * Opens a request list and returns a promise resolving to an instance
- * of the {@link RequestList} class that is already initialized.
- *
- * {@link RequestList} represents a list of URLs to crawl, which is always stored in memory.
- * To enable picking up where left off after a process restart, the request list sources
- * are persisted to the key-value store at initialization of the list. Then, while crawling,
- * a small state object is regularly persisted to keep track of the crawling status.
- *
- * For more details and code examples, see the {@link RequestList} class.
- *
- * **Example usage:**
- *
- * ```javascript
- * const sources = [
- *     'https://www.example.com',
- *     'https://www.google.com',
- *     'https://www.bing.com'
- * ];
- *
- * const requestList = await Apify.openRequestList('my-name', sources);
- * ```
- *
- * @param listName
- *   Name of the request list to be opened. Setting a name enables the `RequestList`'s state to be persisted
- *   in the key-value store. This is useful in case of a restart or migration. Since `RequestList` is only
- *   stored in memory, a restart or migration wipes it clean. Setting a name will enable the `RequestList`'s
- *   state to survive those situations and continue where it left off.
- *
- *   The name will be used as a prefix in key-value store, producing keys such as `NAME-REQUEST_LIST_STATE`
- *   and `NAME-REQUEST_LIST_SOURCES`.
- *
- *   If `null`, the list will not be persisted and will only be stored in memory. Process restart
- *   will then cause the list to be crawled again from the beginning. We suggest always using a name.
- * @param sources
- *  An array of sources of URLs for the {@link RequestList}. It can be either an array of strings,
- *  plain objects that define at least the `url` property, or an array of {@link Request} instances.
- *
- *  **IMPORTANT:** The `sources` array will be consumed (left empty) after {@link RequestList} initializes.
- *  This is a measure to prevent memory leaks in situations when millions of sources are
- *  added.
- *
- *  Additionally, the `requestsFromUrl` property may be used instead of `url`,
- *  which will instruct {@link RequestList} to download the source URLs from a given remote location.
- *  The URLs will be parsed from the received response. In this case you can limit the URLs
- *  using `regex` parameter containing regular expression pattern for URLs to be included.
- *
- *  For details, see the {@link RequestListOptions.sources}
- * @param [options]
- *   The {@link RequestList} options. Note that the `listName` parameter supersedes
- *   the {@link RequestListOptions.persistStateKey} and {@link RequestListOptions.persistRequestsKey}
- *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
- * @deprecated use `RequestList.open()` instead
- */
-export async function openRequestList(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
-    return RequestList.open(listName, sources, options);
 }
 
 /**

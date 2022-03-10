@@ -167,7 +167,7 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  * Typically it is used to store crawling results.
  *
  * Do not instantiate this class directly, use the
- * {@link Apify.openDataset} function instead.
+ * {@link Actor.openDataset} function instead.
  *
  * `Dataset` stores its data either on local disk or in the Apify cloud,
  * depending on whether the `APIFY_LOCAL_STORAGE_DIR` or `APIFY_TOKEN` environment variables are set.
@@ -184,7 +184,7 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` not, the data is stored in the
  * [Apify Dataset](https://docs.apify.com/storage/dataset)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify.openDataset} function,
+ * option to {@link Actor.openDataset} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
