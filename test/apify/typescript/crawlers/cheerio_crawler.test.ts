@@ -1,15 +1,15 @@
 import * as cheerio from 'cheerio';
 import {
     CheerioCrawler,
-    CheerioHandlePage,
-    CheerioHandlePageInputs,
+    CheerioRequestHandler,
+    CheerioRequestHandlerInputs,
     RequestList,
     Request,
 } from '@crawlers/cheerio';
 
 describe('CheerioCrawler TS', () => {
-    describe('CheerioHandlePage', () => {
-        let testInputs: CheerioHandlePageInputs;
+    describe('CheerioRequestHandler', () => {
+        let testInputs: CheerioRequestHandlerInputs;
 
         beforeEach(() => {
             const body = '<a href="#">';
@@ -28,17 +28,17 @@ describe('CheerioCrawler TS', () => {
             };
         });
 
-        test('Can pass around and call `handler(var: CheerioHandlePageInputs)`', async () => {
+        test('Can pass around and call `handler(var: CheerioRequestHandlerInputs)`', async () => {
             // This form can be easily reused returning arbitrary type by passing `inputs` from another handler function and
             //   processing the return value there. If returning anything, this function can't be used directly in a crawler.
             // Auto-completion works on all input variables in parameter `inputs`.
-            const x = async (inputs: CheerioHandlePageInputs) => {
+            const x = async (inputs: CheerioRequestHandlerInputs) => {
                 expect(inputs.$!('a').attr('href')).toEqual('#');
             };
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const crawlerX = new CheerioCrawler({
-                handlePageFunction: x,
+                requestHandler: x,
                 requestList: new RequestList({ sources: [] }),
             });
 
@@ -54,27 +54,27 @@ describe('CheerioCrawler TS', () => {
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const crawler = new CheerioCrawler({
-                handlePageFunction: y,
+                requestHandler: y,
                 requestList: new RequestList({ sources: [] }),
             });
 
             await y(testInputs);
         });
 
-        test('Can pass around and call `handler: CheerioHandlePage`', async () => {
+        test('Can pass around and call `handler: CheerioRequestHandler`', async () => {
             // In this form, the return type of the function is strictly enforced to be `Promise<void>`. This form can be reused
             //   if it produces the desired side-effects (or nothing) without returning a value. On the other hand, we can describe
             //   the parameter list in any of the above styles without attaching a typing to input variables.
             // Auto-completion works in both cases.
             // Type-checking guards from potential errors in logic, be raising an error if return type does not match what is
             //   expected by the crawler.
-            const z: CheerioHandlePage = async ({ $ = null }) => {
+            const z: CheerioRequestHandler = async ({ $ = null }) => {
                 expect($!('a').attr('href')).toEqual('#');
             };
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const crawler = new CheerioCrawler({
-                handlePageFunction: z,
+                requestHandler: z,
                 requestList: new RequestList({ sources: [] }),
             });
 

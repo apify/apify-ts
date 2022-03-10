@@ -178,13 +178,13 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         if (this.input.ignoreCorsAndCsp) args.push('--disable-web-security');
 
         const options: PuppeteerCrawlerOptions = {
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._requestHandler.bind(this),
             requestList: this.requestList,
             requestQueue: this.requestQueue,
-            handlePageTimeoutSecs: this.devtools ? DEVTOOLS_TIMEOUT_SECS : this.input.pageFunctionTimeoutSecs,
+            requestHandlerTimeoutSecs: this.devtools ? DEVTOOLS_TIMEOUT_SECS : this.input.pageFunctionTimeoutSecs,
             preNavigationHooks: [],
             postNavigationHooks: [],
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._failedRequestHandler.bind(this),
             maxConcurrency: this.input.maxConcurrency,
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
@@ -269,7 +269,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         options.postNavigationHooks!.push(...this.evaledPostNavigationHooks);
     }
 
-    private _handleFailedRequestFunction({ request }: BrowserCrawlerHandleFailedRequestInput) {
+    private _failedRequestHandler({ request }: BrowserCrawlerHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
@@ -286,7 +286,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
      */
-    private async _handlePageFunction(crawlingContext: PuppeteerCrawlContext) {
+    private async _requestHandler(crawlingContext: PuppeteerCrawlContext) {
         const { request, response, crawler } = crawlingContext;
 
         /**

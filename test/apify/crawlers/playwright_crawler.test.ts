@@ -5,8 +5,8 @@ import {
     Configuration,
     PlaywrightCrawler,
     PlaywrightGotoOptions,
-    PlaywrightHandlePageFunction,
-    PlaywrightHandlePageFunctionParam,
+    PlaywrightRequestHandler,
+    PlaywrightRequestHandlerParam,
     Request,
     RequestList,
 } from '@crawlers/playwright';
@@ -52,7 +52,7 @@ describe('PlaywrightCrawler', () => {
             const processed: Request[] = [];
             const failed: Request[] = [];
             const requestListLarge = new RequestList({ sources: sourcesLarge });
-            const handlePageFunction = async ({ page, request, response }: Parameters<PlaywrightHandlePageFunction>[0]) => {
+            const requestHandler = async ({ page, request, response }: Parameters<PlaywrightRequestHandler>[0]) => {
                 expect(response.status()).toBe(200);
                 request.userData.title = await page.title();
                 processed.push(request);
@@ -65,8 +65,8 @@ describe('PlaywrightCrawler', () => {
                 requestList: requestListLarge,
                 minConcurrency: 1,
                 maxConcurrency: 1,
-                handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => {
+                requestHandler,
+                failedRequestHandler: ({ request }) => {
                     failed.push(request);
                 },
             });
@@ -92,7 +92,7 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {
+            requestHandler: () => {
             },
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
@@ -110,18 +110,18 @@ describe('PlaywrightCrawler', () => {
     });
     test('should support custom gotoFunction', async () => {
         const functions = {
-            handlePageFunction: () => { },
-            gotoFunction: ({ page, request }: PlaywrightHandlePageFunctionParam, options: PlaywrightGotoOptions) => {
+            requestHandler: () => { },
+            gotoFunction: ({ page, request }: PlaywrightRequestHandlerParam, options: PlaywrightGotoOptions) => {
                 return page.goto(request.url, options);
             },
         };
         jest.spyOn(functions, 'gotoFunction');
-        jest.spyOn(functions, 'handlePageFunction');
+        jest.spyOn(functions, 'requestHandler');
         const playwrightCrawler = new PlaywrightCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: functions.handlePageFunction,
+            requestHandler: functions.requestHandler,
             gotoFunction: functions.gotoFunction,
         });
 
@@ -130,7 +130,7 @@ describe('PlaywrightCrawler', () => {
         await playwrightCrawler.run();
 
         expect(functions.gotoFunction).toBeCalled();
-        expect(functions.handlePageFunction).toBeCalled();
+        expect(functions.requestHandler).toBeCalled();
     });
 
     test('should override goto timeout with navigationTimeoutSecs', async () => {
@@ -140,7 +140,7 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {
+            requestHandler: () => {
             },
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;

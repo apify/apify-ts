@@ -13,7 +13,7 @@ import {
     CheerioCrawlingContext,
     createProxyConfiguration,
     Dataset,
-    CheerioHandleFailedRequestInput,
+    CheerioFailedRequestHandlerInput,
     KeyValueStore,
     PrepareRequestInputs,
     ProxyConfiguration,
@@ -159,16 +159,16 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
         const options: CheerioCrawlerOptions = {
             proxyConfiguration: this.proxyConfiguration,
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._requestHandler.bind(this),
             preNavigationHooks: this.evaledPreNavigationHooks,
             postNavigationHooks: this.evaledPostNavigationHooks,
             requestList: this.requestList,
             requestQueue: this.requestQueue,
-            handlePageTimeoutSecs: this.input.pageFunctionTimeoutSecs,
-            prepareRequestFunction: this._prepareRequestFunction.bind(this),
             requestTimeoutSecs: this.input.pageLoadTimeoutSecs,
+            requestHandlerTimeoutSecs: this.input.pageFunctionTimeoutSecs,
+            prepareRequestFunction: this._prepareRequestFunction.bind(this),
             ignoreSslErrors: this.input.ignoreSslErrors,
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._failedRequestHandler.bind(this),
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
             additionalMimeTypes: this.input.additionalMimeTypes,
@@ -229,7 +229,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         }
     }
 
-    private _handleFailedRequestFunction({ request }: CheerioHandleFailedRequestInput) {
+    private _failedRequestHandler({ request }: CheerioFailedRequestHandlerInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
@@ -246,7 +246,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
      */
-    private async _handlePageFunction(crawlingContext: CheerioCrawlingContext) {
+    private async _requestHandler(crawlingContext: CheerioCrawlingContext) {
         const { request, response, $, crawler } = crawlingContext;
         const pageFunctionArguments: Dictionary = {};
 
@@ -327,7 +327,6 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         await enqueueLinks({
             selector: this.input.linkSelector,
             pseudoUrls: this.input.pseudoUrls,
-            baseUrl: request.loadedUrl,
             transformRequestFunction: (requestOptions) => {
                 requestOptions.userData ??= {};
                 requestOptions.userData[META_KEY] = {
