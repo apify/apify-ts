@@ -1066,6 +1066,7 @@ interface EnqueueLinksInternalOptions {
     defaultBaseUrl?: string;
 }
 
+/** @internal */
 export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
@@ -1076,6 +1077,7 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, def
     const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
+        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
         baseUrl,
@@ -1092,7 +1094,6 @@ interface RequestFunctionOptions {
 
 /**
  * Extracts URLs from a given Cheerio object.
- * @todo how to support cheerio.Selector?
  * @ignore
  */
 function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: string): string[] {

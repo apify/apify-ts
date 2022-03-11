@@ -665,6 +665,7 @@ export abstract class BrowserCrawler<
     }
 }
 
+/** @internal */
 interface EnqueueLinksInternalOptions {
     options?: BrowserCrawlerEnqueueLinksOptions;
     page: CommonPage;
@@ -672,12 +673,14 @@ interface EnqueueLinksInternalOptions {
     defaultBaseUrl?: string;
 }
 
+/** @internal */
 export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     const baseUrl = options?.baseUrl ?? defaultBaseUrl;
 
     const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
+        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
         baseUrl,

@@ -37,6 +37,7 @@ export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFaile
     crawler: BasicCrawler;
 }
 
+/** @internal */
 export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue'>
 
 /**
@@ -903,8 +904,10 @@ export class BasicCrawler<
     }
 }
 
+/** @internal */
 export async function basicCrawlerEnqueueLinks(options: BasicCrawlerEnqueueLinksOptions, requestQueue?: RequestQueue) {
     return enqueueLinks({
+        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
         requestQueue: requestQueue ?? await RequestQueue.open(),
         ...options,
     });
