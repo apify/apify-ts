@@ -62,7 +62,6 @@
         "@crawlers/utils": "^3.0.0",
         "@types/mime-types": "^2.1.1",
         "@types/stream-json": "^1.7.1",
-        "apify-client": "^2.2.1-beta.1",
         "browser-pool": "^3.1.1-beta.1",
         "content-type": "^1.0.4",
         "got-scraping": "^3.2.7",

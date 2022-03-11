@@ -23,7 +23,7 @@ import {
     RequestOptions,
     RequestQueueOperationOptions,
     addRequestsToQueueInBatches,
-    createRequests,
+    createRequests, Configuration,
 } from '@crawlers/core';
 import { Awaitable } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
@@ -374,7 +374,7 @@ export class BasicCrawler<
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions<Context, ErrorContext>) {
+    constructor(options: BasicCrawlerOptions<Context, ErrorContext>, readonly config = Configuration.getGlobalConfig()) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {
@@ -579,7 +579,7 @@ export class BasicCrawler<
         // Initialize AutoscaledPool before awaiting _loadHandledRequestCount(),
         // so that the caller can get a reference to it before awaiting the promise returned from run()
         // (otherwise there would be no way)
-        this.autoscaledPool = new AutoscaledPool(this.autoscaledPoolOptions);
+        this.autoscaledPool = new AutoscaledPool(this.autoscaledPoolOptions, this.config);
 
         if (this.useSessionPool) {
             this.sessionPool = await SessionPool.open(this.sessionPoolOptions);

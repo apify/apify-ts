@@ -2,15 +2,14 @@ import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { ListDictionary, LruCache } from '@apify/datastructures';
 import { storage } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient } from 'apify-client';
 import crypto from 'crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
+import { Dictionary, entries } from '../typedefs';
+import { StorageManager } from './storage_manager';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
-import { entries } from '../typedefs';
-import { StorageManager, StorageManagerOptions } from './storage_manager';
+import { StorageClient, RequestQueueClient, RequestQueueInfo } from './storage';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -109,7 +108,12 @@ export interface RequestQueueOperationOptions {
  * To add a single URL multiple times to the queue,
  * corresponding {@link Request} objects will need to have different `uniqueKey` properties.
  *
+<<<<<<< Updated upstream
  * Do not instantiate this class directly, use the {@link RequestQueue.open} function instead.
+=======
+ * Do not instantiate this class directly, use the
+ * {@link RequestQueue.open} function instead.
+>>>>>>> Stashed changes
  *
  * `RequestQueue` is used by {@link BasicCrawler}, {@link CheerioCrawler}, {@link PuppeteerCrawler}
  * and {@link PlaywrightCrawler} as a source of URLs to crawl.
@@ -148,7 +152,6 @@ export class RequestQueue {
     log = log.child({ prefix: 'RequestQueue' });
     id: string;
     name?: string;
-    isLocal?: boolean;
     clientKey = cryptoRandomObjectId();
     client: RequestQueueClient;
 
@@ -192,7 +195,6 @@ export class RequestQueue {
     constructor(options: RequestQueueOptions) {
         this.id = options.id;
         this.name = options.name;
-        this.isLocal = options.isLocal;
         this.client = options.client.requestQueue(this.id, {
             clientKey: this.clientKey,
         }) as RequestQueueClient;
@@ -281,12 +283,13 @@ export class RequestQueue {
         // TODO: compatibility fix for old/broken request queues with null Request props
         const optionsWithoutNulls = entries(requestOptions).reduce((opts, [key, value]) => {
             if (value !== null) {
-                opts[key] = value as any;
+                opts[key] = value;
             }
-            return opts;
-        }, {} as RequestOptions);
 
-        return new Request(optionsWithoutNulls);
+            return opts;
+        }, {} as Dictionary);
+
+        return new Request(optionsWithoutNulls as unknown as RequestOptions);
     }
 
     /**
@@ -508,10 +511,10 @@ export class RequestQueue {
                 .then(({ items, queueModifiedAt, hadMultipleClients }) => {
                     items.forEach(({ id: requestId, uniqueKey }) => {
                         // Queue head index might be behind the main table, so ensure we don't recycle requests
-                        if (this.inProgress.has(requestId) || this.recentlyHandled.get(requestId)) return;
+                        if (this.inProgress.has(requestId) || this.recentlyHandled.get(requestId!)) return;
 
-                        this.queueHeadDict.add(requestId, requestId, false);
-                        this._cacheRequest(getRequestId(uniqueKey), { requestId, wasAlreadyHandled: false });
+                        this.queueHeadDict.add(requestId!, requestId!, false);
+                        this._cacheRequest(getRequestId(uniqueKey!), { requestId: requestId!, wasAlreadyHandled: false });
                     });
 
                     // This is needed so that the next call to _ensureHeadIsNonEmpty() will fetch the queue head again.
@@ -606,8 +609,8 @@ export class RequestQueue {
      */
     async handledCount(): Promise<number> {
         // NOTE: We keep this function for compatibility with RequestList.handledCount()
-        const { handledRequestCount } = await this.getInfo();
-        return handledRequestCount;
+        const { handledRequestCount } = await this.getInfo() ?? {};
+        return handledRequestCount ?? 0;
     }
 
     /**
@@ -634,8 +637,8 @@ export class RequestQueue {
      * }
      * ```
      */
-    async getInfo(): Promise<RequestQueueInfo> {
-        return this.client.get() as Promise<RequestQueueInfo>;
+    async getInfo(): Promise<RequestQueueInfo | undefined> {
+        return this.client.get();
     }
 
     /**
@@ -654,21 +657,17 @@ export class RequestQueue {
      *   the function returns the default request queue associated with the actor run.
      * @param [options] Open Request Queue options.
      */
-    static async open(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
+    static async open(queueIdOrName?: string | null): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
-        ow(options, ow.object.exactShape({
-            forceCloud: ow.optional.boolean,
-        }));
         const manager = new StorageManager(RequestQueue);
-        return manager.openStorage(queueIdOrName, options);
+        return manager.openStorage(queueIdOrName);
     }
 }
 
 export interface RequestQueueOptions {
     id: string;
     name?: string;
-    isLocal?: boolean;
-    client: ApifyClient | ApifyStorageLocal;
+    client: StorageClient;
 }
 
 export interface QueueOperationInfoOptions {

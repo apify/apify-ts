@@ -1,12 +1,10 @@
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import type { PaginatedList } from 'apify-client';
-import { ApifyClient, Dataset as ClientDataset, DatasetClient } from 'apify-client';
 import ow from 'ow';
 import { Configuration } from '../configuration';
 import { log } from '../log';
 import { Awaitable, Dictionary } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
+import { DatasetClient, DatasetInfo, PaginatedList, StorageClient } from './storage';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;
@@ -210,7 +208,6 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
 export class Dataset<Data extends Dictionary = Dictionary> {
     id: string;
     name?: string;
-    isLocal?: boolean;
     client: DatasetClient<Data>;
     log = log.child({ prefix: 'Dataset' });
 
@@ -220,7 +217,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     constructor(options: DatasetOptions) {
         this.id = options.id;
         this.name = options.name;
-        this.isLocal = options.isLocal;
         this.client = options.client.dataset(this.id) as DatasetClient<Data>;
     }
 
@@ -311,7 +307,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * }
      * ```
      */
-    async getInfo(): Promise<ClientDataset | undefined> {
+    async getInfo(): Promise<DatasetInfo | undefined> {
         return this.client.get();
     }
 
@@ -435,12 +431,11 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     static async open<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
-            forceCloud: ow.optional.boolean,
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
         const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
-        return manager.openStorage(datasetIdOrName, options);
+        return manager.openStorage(datasetIdOrName);
     }
 }
 
@@ -488,9 +483,10 @@ export function openDataset<Data extends Dictionary = Dictionary>(
  *
  * @param {object} item Object or array of objects containing data to be stored in the default dataset.
  * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
+ * @param [options] Storage manager options.
  */
-export async function pushData(item: Dictionary | Dictionary[]): Promise<void> {
-    const dataset = await Dataset.open();
+export async function pushData(item: Dictionary | Dictionary[], options: StorageManagerOptions = {}): Promise<void> {
+    const dataset = await Dataset.open(undefined, options);
     return dataset.pushData(item);
 }
 
@@ -538,8 +534,21 @@ export interface DatasetReducer<T, Data> {
 export interface DatasetOptions {
     id: string;
     name?: string;
-    client: ApifyClient | ApifyStorageLocal;
-    isLocal?: boolean;
+    client: StorageClient;
 }
 
-export interface DatasetContent<T> extends PaginatedList<T> {}
+// FIXME duplicity with `PaginationList` interface?
+export interface DatasetContent<Data> {
+    /** Total count of entries in the dataset. */
+    total: number;
+    /** Count of dataset entries returned in this set. */
+    count: number;
+    /** Position of the first returned entry in the dataset. */
+    offset: number;
+    /** Maximum number of dataset entries requested. */
+    limit: number;
+    /** Should the results be in descending order. */
+    desc: boolean;
+    /** Dataset entries based on chosen format parameter. */
+    items: Data[];
+}

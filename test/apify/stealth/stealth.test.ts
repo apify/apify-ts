@@ -4,7 +4,7 @@ import scanner from 'fpscanner';
 import path from 'path';
 import { Configuration, launchPuppeteer, PuppeteerCrawler, puppeteerUtils, RequestList } from '@crawlers/puppeteer';
 import { Browser, Page } from 'puppeteer';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 const fingerPrintPath = require.resolve('fpcollect/dist/fpCollect.min.js');
 const pathToHTML = path.join(__dirname, 'test_html.html');

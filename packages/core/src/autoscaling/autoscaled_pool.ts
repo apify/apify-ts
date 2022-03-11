@@ -2,6 +2,7 @@ import { Log } from '@apify/log';
 import { addTimeoutToPromise } from '@apify/timeout';
 import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
 import ow from 'ow';
+import { Configuration } from '../configuration';
 import { log as defaultLog } from '../log';
 import { Snapshotter, SnapshotterOptions } from './snapshotter';
 import { SystemInfo, SystemStatus, SystemStatusOptions } from './system_status';
@@ -196,7 +197,10 @@ export class AutoscaledPool {
     private queryingIsTaskReady!: boolean;
     private queryingIsFinished!: boolean;
 
-    constructor(options: AutoscaledPoolOptions) {
+    constructor(
+        options: AutoscaledPoolOptions,
+        private readonly config = Configuration.getGlobalConfig(),
+    ) {
         ow(options, ow.object.exactShape({
             runTaskFunction: ow.function,
             isFinishedFunction: ow.function,
@@ -252,7 +256,7 @@ export class AutoscaledPool {
         // Internal properties.
         this._minConcurrency = minConcurrency;
         this._maxConcurrency = maxConcurrency;
-        this._desiredConcurrency = typeof desiredConcurrency === 'number' ? desiredConcurrency : minConcurrency;
+        this._desiredConcurrency = desiredConcurrency ?? minConcurrency;
         this._currentConcurrency = 0;
         this.isStopped = false;
         this.lastLoggingTime = 0;
@@ -263,7 +267,7 @@ export class AutoscaledPool {
 
         // Create instances with correct options.
         const ssoCopy = { ...systemStatusOptions };
-        if (!ssoCopy.snapshotter) ssoCopy.snapshotter = new Snapshotter({ ...snapshotterOptions, log: this.log });
+        if (!ssoCopy.snapshotter) ssoCopy.snapshotter = new Snapshotter({ ...snapshotterOptions, log: this.log, client: this.config.getClient() });
         this.snapshotter = ssoCopy.snapshotter;
         this.systemStatus = new SystemStatus(ssoCopy);
     }
