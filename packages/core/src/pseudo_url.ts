@@ -51,7 +51,7 @@ const parsePurl = (purl: string) => {
 /**
  * Represents a pseudo-URL (PURL) - an URL pattern used by web crawlers
  * to specify which URLs should the crawler visit.
- * This class is used by the {@link utils.enqueueLinks} function.
+ * This class is used by the {@link enqueueLinks} function.
  *
  * A PURL is simply a URL with special directives enclosed in `[]` brackets.
  * Currently, the only supported directive is `[RegExp]`,
@@ -86,12 +86,12 @@ const parsePurl = (purl: string) => {
  *
  * ```javascript
  * // Using a pseudo-URL string
- * const purl = new Apify.PseudoUrl('http://www.example.com/pages/[(\\w|-)+]', {
+ * const purl = new PseudoUrl('http://www.example.com/pages/[(\\w|-)+]', {
  *   userData: { foo: 'bar' },
  * });
  *
  * // Using a regular expression
- * const purl2 = new Apify.PseudoUrl(/http:\/\/www\.example\.com\/pages\/(\w|-)+/);
+ * const purl2 = new PseudoUrl(/http:\/\/www\.example\.com\/pages\/(\w|-)+/);
  *
  * if (purl.matches('http://www.example.com/pages/my-awesome-page')) console.log('Match!');
  * ```
@@ -107,7 +107,7 @@ export class PseudoUrl {
      *   such as making the matching case sensitive.
      * @param requestTemplate
      *   Options for the new {@link Request} instances created for matching URLs
-     *   by the {@link utils.enqueueLinks} function.
+     *   by the {@link enqueueLinks} function.
      */
     constructor(purl: string | RegExp, readonly requestTemplate: Partial<RequestOptions> = {}) {
         ow(purl, ow.any(ow.string, ow.regExp));

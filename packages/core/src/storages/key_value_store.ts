@@ -81,12 +81,12 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  *
  * ```javascript
  * // Get actor input from the default key-value store.
- * const input = await Apify.getInput();
+ * const input = await Actor.getInput();
  * // Get some value from the default key-value store.
- * const otherValue = await Apify.getValue('my-key');
+ * const otherValue = await Actor.getValue('my-key');
  *
  * // Write actor output to the default key-value store.
- * await Apify.setValue('OUTPUT', { myResult: 123 });
+ * await Actor.setValue('OUTPUT', { myResult: 123 });
  *
  * // Open a named key-value store
  * const store = await KeyValueStore.open('some-name');

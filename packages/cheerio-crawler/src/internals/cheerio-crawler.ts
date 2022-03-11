@@ -86,7 +86,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      *   // For other content types it's null.
      *   json: Object,
      *
-     *   // Apify.Request object with details of the requested web page
+     *   // Request object with details of the requested web page
      *   request: Request,
      *
      *   // Parsed Content-Type HTTP header: { type, encoding }
@@ -148,7 +148,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      *   // For other content types it's null.
      *   json: Object,
      *
-     *   // Apify.Request object with details of the requested web page
+     *   // Request object with details of the requested web page
      *   request: Request,
      *
      *   // Parsed Content-Type HTTP header: { type, encoding }
@@ -522,7 +522,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *
  * ```javascript
  * // Prepare a list of URLs to crawl
- * const requestList = new Apify.RequestList({
+ * const requestList = new RequestList({
  *   sources: [
  *       { url: 'http://www.example.com/page-1' },
  *       { url: 'http://www.example.com/page-2' },
@@ -531,7 +531,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * await requestList.initialize();
  *
  * // Crawl the URLs
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *     requestList,
  *     handlePageFunction: async ({ request, response, body, contentType, $ }) => {
  *         const data = [];
@@ -542,7 +542,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *         });
  *
  *         // Save the data to dataset.
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             url: request.url,
  *             html: body,
  *             data,

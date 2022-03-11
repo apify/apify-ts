@@ -106,13 +106,13 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  * **Example usage:**
  *
  * ```javascript
- * const crawler = new Apify.PuppeteerCrawler({
+ * const crawler = new PuppeteerCrawler({
  *     requestList,
  *     handlePageFunction: async ({ page, request }) => {
  *         // This function is called to extract data from a single web page
  *         // 'page' is an instance of Puppeteer.Page with page.goto(request.url) already called
  *         // 'request' is an instance of Request class with information about the page to load
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             title: await page.title(),
  *             url: request.url,
  *             succeeded: true,
@@ -120,7 +120,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  *     },
  *     handleFailedRequestFunction: async ({ request }) => {
  *         // This function is called when the crawling of a request failed too many times
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             url: request.url,
  *             succeeded: false,
  *             errors: request.errorMessages,

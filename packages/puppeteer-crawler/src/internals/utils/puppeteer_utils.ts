@@ -6,10 +6,10 @@
  *
  * ```javascript
  * const Apify = require('apify');
- * const { puppeteer } = Apify.utils;
+ * const { puppeteer } = Actor.utils;
  *
  * // Open https://www.example.com in Puppeteer
- * const browser = await Apify.launchPuppeteer();
+ * const browser = await Actor.launchPuppeteer();
  * const page = await browser.newPage();
  * await page.goto('https://www.example.com');
  *
@@ -140,7 +140,7 @@ export async function injectFile(page: Page, filePath: string, options: InjectFi
  *
  * **Example usage:**
  * ```javascript
- * await Apify.utils.puppeteer.injectJQuery(page);
+ * await Actor.utils.puppeteer.injectJQuery(page);
  * const title = await page.evaluate(() => {
  *   return $('head title').text();
  * });
@@ -185,11 +185,11 @@ export function injectJQuery(page: Page): Promise<unknown> {
  * ```javascript
  * const Apify = require('apify');
  *
- * const browser = await Apify.launchPuppeteer();
+ * const browser = await Actor.launchPuppeteer();
  * const page = await browser.newPage();
  *
  * // Block all requests to URLs that include `adsbygoogle.js` and also all defaults.
- * await Apify.utils.puppeteer.blockRequests(page, {
+ * await Actor.utils.puppeteer.blockRequests(page, {
  *     extraUrlPatterns: ['adsbygoogle.js'],
  * });
  *
@@ -219,12 +219,12 @@ export async function blockRequests(page: Page, options: BlockRequestsOptions = 
 
 /**
  * `blockResources()` has a high impact on performance in recent versions of Puppeteer.
- * Until this resolves, please use `Apify.utils.puppeteer.blockRequests()`.
+ * Until this resolves, please use `Actor.utils.puppeteer.blockRequests()`.
  * @deprecated
  */
 export const blockResources = async (page: Page, resourceTypes = ['stylesheet', 'font', 'image', 'media']) => {
-    log.deprecated('Apify.utils.puppeteer.blockResources() has a high impact on performance in recent versions of Puppeteer. '
-        + 'Until this resolves, please use Apify.utils.puppeteer.blockRequests()');
+    log.deprecated('Actor.utils.puppeteer.blockResources() has a high impact on performance in recent versions of Puppeteer. '
+        + 'Until this resolves, please use Actor.utils.puppeteer.blockRequests()');
     await addInterceptRequestHandler(page, async (request) => {
         const type = request.resourceType();
         if (resourceTypes.includes(type)) await request.abort();
@@ -253,7 +253,7 @@ export async function cacheResponses(page: Page, cache: Dictionary<Partial<Respo
     ow(cache, ow.object);
     ow(responseUrlRules, ow.array.ofType(ow.any(ow.string, ow.regExp)));
 
-    log.deprecated('Apify.utils.puppeteer.cacheResponses() has a high impact on performance '
+    log.deprecated('Actor.utils.puppeteer.cacheResponses() has a high impact on performance '
         + 'in recent versions of Puppeteer so it\'s use is discouraged until this issue resolves.');
 
     await addInterceptRequestHandler(page, async (request) => {
@@ -340,7 +340,7 @@ export function compileScript(scriptString: string, context: Dictionary = Object
 /**
  * Extended version of Puppeteer's `page.goto()` allowing to perform requests with HTTP method other than GET,
  * with custom headers and POST payload. URL, method, headers and payload are taken from
- * request parameter that must be an instance of Apify.Request class.
+ * request parameter that must be an instance of Request class.
  *
  * *NOTE:* In recent versions of Puppeteer using requests other than GET, overriding headers and adding payloads disables
  * browser cache which degrades performance.

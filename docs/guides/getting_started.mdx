@@ -139,27 +139,17 @@ questions is the only setup mandatory for running the crawlers.
 
 ### The Where - `Request`, `RequestList` and `RequestQueue`
 
-All crawlers use instances of the <ApiLink to="core/class/Request">`Request`</ApiLink> class to determine where they need to go. Each request may hold a lot of information,
-but at the very least, it must hold a URL - a web page to open. But having only one URL would not make sense for crawling. We need to either have a
-pre-existing list of our own URLs that we wish to visit, perhaps a thousand, or a million, or we need to build this list dynamically as we crawl,
-adding more and more URLs to the list as we progress.
+All crawlers use instances of the <ApiLink to="core/class/Request">`Request`</ApiLink> class to determine where they need to go. Each request may hold a lot of information, but at the very least, it must hold a URL - a web page to open. But having only one URL would not make sense for crawling. We need to either have a pre-existing list of our own URLs that we wish to visit, perhaps a thousand, or a million, or we need to build this list dynamically as we crawl, adding more and more URLs to the list as we progress.
 
-A representation of the pre-existing list is an instance of the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class. It is a static, immutable list of URLs and
-other metadata (see the <ApiLink to="core/class/Request">`Request`</ApiLink> object) that the crawler will visit, one by one, retrying whenever an error occurs, until there
-are no more `Requests` to process.
+A representation of the pre-existing list is an instance of the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class. It is a static, immutable list of URLs and other metadata (see the <ApiLink to="core/class/Request">`Request`</ApiLink> object) that the crawler will visit, one by one, retrying whenever an error occurs, until there are no more `Requests` to process.
 
-<ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> on the other hand, represents a dynamic queue of `Requests`. One that can be updated at runtime by adding more
-pages - `Requests` to process. This allows the crawler to open one page, extract interesting URLs, such as links to other pages on the same domain,
-add them to the queue (called _enqueuing_) and repeat this process to build a queue of tens of thousands or more URLs while knowing only a single one
-at the beginning.
+&#8203;<ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> on the other hand, represents a dynamic queue of `Requests`. One that can be updated at runtime by adding more pages - `Requests` to process. This allows the crawler to open one page, extract interesting URLs, such as links to other pages on the same domain, add them to the queue (called _enqueuing_) and repeat this process to build a queue of tens of thousands or more URLs while knowing only a single one at the beginning.
 
-`RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Requests` = "pages to crawl" to the
-crawlers. At least one of them always needs to be provided while setting up. You can also use both at the same time, if you wish.
+`RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Requests` = "pages to crawl" to the crawlers. At least one of them always needs to be provided while setting up. You can also use both at the same time, if you wish.
 
 ### The What - `handlePageFunction`
 
-The `handlePageFunction` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data
-from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
+The `handlePageFunction` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
 
 The `handlePageFunction` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
 
@@ -181,9 +171,7 @@ Let's start with something super easy. Visit a page, get its title and close. Fi
 import { Actor } from 'apify';
 ```
 
-Easy, right? It really doesn't get much more difficult than that. For the purposes of this tutorial, we'll be scraping our own webpage
-[https://apify.com](https://apify.com). Now, to get there, we need a `Request` with the page's URL in one of our sources,
-`RequestList` or `RequestQueue`. Let's go with `RequestQueue` for now.
+Easy, right? It really doesn't get much more difficult than that. For the purposes of this tutorial, we'll be scraping our own webpage [https://apify.com](https://apify.com). Now, to get there, we need a `Request` with the page's URL in one of our sources, `RequestList` or `RequestQueue`. Let's go with `RequestQueue` for now.
 
 ```js
 import { Actor } from 'apify';
@@ -200,9 +188,7 @@ Actor.main(async () => {
 > If you're not familiar with the `async` and `await` keywords used in the example, you should know that these are native syntax in modern JavaScript. You can
 > [learn more about them here](https://nikgrozev.com/2017/10/01/async-await/).
 
-The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a
-`Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the
-`handlePageFunction`.
+The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `handlePageFunction`.
 
 ```js
 // We'll define the function separately so it's more obvious.
@@ -215,9 +201,7 @@ const handlePageFunction = async ({ request, $ }) => {
 };
 ```
 
-Wait, where did the `$` come from? Remember what we learned about the `handlePageFunction` earlier. It expects a plain `Object` as an argument that
-will always have a `request` property, but it will also have other properties, depending on the chosen crawler class. Well, `$` is a property provided
-by the `CheerioCrawler` class, which we'll set up right now.
+Wait, where did the `$` come from? Remember what we learned about the `handlePageFunction` earlier. It expects a plain `Object` as an argument that will always have a `request` property, but it will also have other properties, depending on the chosen crawler class. Well, `$` is a property provided by the `CheerioCrawler` class, which we'll set up right now.
 
 ```js
 import { Actor } from 'apify';
@@ -242,37 +226,23 @@ Actor.main(async () => {
 });
 ```
 
-And we're done! You just created your first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element, get
-its text content and print it to console. Good job!
+And we're done! You just created your first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element, get its text content and print it to console. Good job!
 
-To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.js` file in the `my-new-project` we
-created earlier and run `apify run` from that project's directory.
+To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.js` file in the `my-new-project` we created earlier and run `apify run` from that project's directory.
 
 To run the code on Apify Platform, just replace the original example with your new code and hit Run.
 
-Whichever environment you choose, you should see the message
-`The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.` printed to the screen. If you do, congratulations and
-let's move onto some bigger challenges! And if you feel like you don't really know what just happened there, no worries, it will all become clear when
-you learn more about `CheerioCrawler`.
+Whichever environment you choose, you should see the message `The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.` printed to the screen. If you do, congratulations and let's move onto some bigger challenges! And if you feel like you don't really know what just happened there, no worries, it will all become clear when you learn more about `CheerioCrawler`.
 
 ## CheerioCrawler aka jQuery crawler
 
-This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If you're familiar with `jQuery`, you'll
-understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is
-essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. You can use it, as you would `jQuery`, for manipulating
-the DOM of an HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in.
-But `jQuery` runs in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of
-<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
+This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If you're familiar with `jQuery`, you'll understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. You can use it, as you would `jQuery`, for manipulating the DOM of an HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in. But `jQuery` runs in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
 
 ### Overview
 
-<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As you remember from the previous section, the
-URLs are fed to the crawler using either the <ApiLink to="cheerio-crawler/class/CheerioCrawler">`RequestList`](../api/cheerio-crawler) or the [`RequestQueue`</ApiLink>. The HTTP responses
-it gets back are HTML pages, the same pages you would get in your browser when you first load a URL.
+&#8203;<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As you remember from the previous section, the URLs are fed to the crawler using either the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> or the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>. The HTTP responses it gets back are HTML pages, the same pages you would get in your browser when you first load a URL.
 
-> Note, however, that modern web pages often do not serve all of their content in the first HTML response, but rather the first HTML contains links to
-> other resources such as CSS and JavaScript that get downloaded afterwards and together they create the final page. See our
-<ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to crawl those.
+> Note, however, that modern web pages often do not serve all of their content in the first HTML response, but rather the first HTML contains links to other resources such as CSS and JavaScript that get downloaded afterwards and together they create the final page. See our <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to crawl those.
 
 Once the page's HTML is retrieved, the crawler will pass it to [Cheerio](https://www.npmjs.com/package/cheerio) for
 parsing. The result is the typical `$` function, which should be familiar to `jQuery` users. You can use this `$` to do all sorts of lookups and
@@ -544,16 +514,11 @@ some extra functionality.
 
 ### Introduction to `Actor.utils.enqueueLinks()`
 
-Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as
-possible. With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`.
-It also allows you to modify the resulting `Requests` to match your crawling needs.
+Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as possible. With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`. It also allows you to modify the resulting `Requests` to match your crawling needs.
 
-`enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because you don't have to
-remember their order! But also because we can easily extend its API and add new features. You can
-<ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
+`enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because you don't have to remember their order! But also because we can easily extend its API and add new features. You can <ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
 
-We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of the `utils` object, so you don't have to type `Actor.utils` all the
-time.
+We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of the `utils` object, so you don't have to type `Actor.utils` all the time.
 
 ```js
 import { Actor } from 'apify';
@@ -569,8 +534,7 @@ await enqueueLinks({
 
 ### Basic use of `enqueueLinks()` with `CheerioCrawler`
 
-We already implemented logic that takes care of enqueueing new links to a `RequestQueue` in the previous chapter on `CheerioCrawler`. Let's look at
-that logic and implement the same functionality using `enqueueLinks()`.
+We already implemented logic that takes care of enqueueing new links to a `RequestQueue` in the previous chapter on `CheerioCrawler`. Let's look at that logic and implement the same functionality using `enqueueLinks()`.
 
 We found that the crawler needed to do these 4 things to crawl `apify.com`:
 
@@ -579,26 +543,20 @@ We found that the crawler needed to do these 4 things to crawl `apify.com`:
 3. Enqueue them to the `RequestQueue`
 4. Scrape the newly enqueued links
 
-Using `enqueueLinks()` we can squash the first 3 into a single function call, if we set the options correctly. For now, let's just stick to the
-basics. At the very least, we need a source where to find the links and the queue to enqueue them to. The `$` Cheerio object is one of the sources the
-function accepts and we already know how to work with it in the `handlePageFunction`. We also know how to get a `requestQueue` instance.
+Using `enqueueLinks()` we can squash the first 3 into a single function call, if we set the options correctly. For now, let's just stick to the basics. At the very least, we need a source where to find the links and the queue to enqueue them to. The `$` Cheerio object is one of the sources the function accepts, and we already know how to work with it in the `handlePageFunction`. We also know how to get a `requestQueue` instance.
 
 ```js
 // Assuming previous existence of the '$' and 'requestQueue' variables.
 await enqueueLinks({ $, requestQueue });
 ```
 
-That's all we need to do to enqueue all `<a href="...">` links from the given page to the given queue. Easy, right? Scratch number 1 and 3 off the
-list. Only number 2 remains and to tackle this one, we need to talk about yet another new concept, the pseudo-URL.
+That's all we need to do to enqueue all `<a href="...">` links from the given page to the given queue. Easy, right? Scratch number 1 and 3 off the list. Only number 2 remains and to tackle this one, we need to talk about yet another new concept, the pseudo-URL.
 
 #### Introduction to pseudo-URLs
 
-Pseudo-URLs are represented by our `PseudoUrl` class and even though the name sounds discouraging, they're a pretty simple concept. They're just URLs
-with some parts replaced by wildcards (read <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">regular
-expressions</a>). They are matched against URLs to find specific links, domains, patterns, file extensions and so on.
+Pseudo-URLs are represented by our `PseudoUrl` class and even though the name sounds discouraging, they're a pretty simple concept. They're just URLs with some parts replaced by wildcards (read [regular expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)). They are matched against URLs to find specific links, domains, patterns, file extensions and so on.
 
-In scraping, there are usually patterns to be found in website URLs that can be leveraged to scrape only the pages we're interested in. Imagine
-a typical online store. It has different categories which list different items The URL for might looks something like this:
+In scraping, there are usually patterns to be found in website URLs that can be leveraged to scrape only the pages we're interested in. Imagine a typical online store. It has different categories which list different items The URL for might looks something like this:
 
 ```
 https://www.online-store.com/categories
@@ -616,13 +574,11 @@ Going to this page would produce a list of offered computers. Then, clicking on 
 https://www.online-store.com/items/613804
 ```
 
-As you can see, there's a structure to the links. In the real world, the structure might not always be perfectly obvious, but it's very often there.
-Pseudo-URLs help to use this structure to select only the relevant links from a given page.
+As you can see, there's a structure to the links. In the real world, the structure might not always be perfectly obvious, but it's very often there. Pseudo-URLs help to use this structure to select only the relevant links from a given page.
 
 #### Structure of a pseudo-URL
 
-A pseudo-URL is a URL with [regular expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)) enclosed
-in `[]` brackets. Since we're running Node.js, the regular expressions should follow the JavaScript style.
+A pseudo-URL is a URL with [regular expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) enclosed in `[]` brackets. Since we're running Node.js, the regular expressions should follow the JavaScript style.
 
 For example, a pseudo-URL
 
@@ -647,8 +603,7 @@ https://www.online-store.com/items/613804
 
 This way, you can easily find just the URLs that you're looking for while ignoring the rest.
 
-A pseudo-URL may include any number of bracketed regular expressions, so you can compose much more complex matching logic. The following Pseudo URL
-will match the items in the store even if the links use the non-secure `http` protocol, omit the `www` from the hostname or use a different TLD.
+A pseudo-URL may include any number of bracketed regular expressions, so you can compose much more complex matching logic. The following Pseudo URL will match the items in the store even if the links use the non-secure `http` protocol, omit the `www` from the hostname or use a different TLD.
 
 ```
 http[s?]://[(www)?\.]online-store.[com|net|org]/items/[\d+]
@@ -674,13 +629,9 @@ www.online-store.org/items/7003
 
 #### Using `enqueueLinks()` to filter links
 
-That's been quite a lot of theory and examples. We might as well put it to practice. Going back to our `CheerioCrawler` exercise, we still have number
-2 left to cross off the list - filter links pointing to `apify.com`. We've already shown that at the very least, the `enqueueLinks()` function needs
-two arguments. The source, in our case the `$` object, and the destination - the `requestQueue`. To filter links, we need to add a third argument:
-`pseudoUrls`.
+That's been quite a lot of theory and examples. We might as well put it to practice. Going back to our `CheerioCrawler` exercise, we still have number 2 left to cross off the list - filter links pointing to `apify.com`. We've already shown that at the very least, the `enqueueLinks()` function needs two arguments. The source, in our case the `$` object, and the destination - the `requestQueue`. To filter links, we need to add a third argument: `pseudoUrls`.
 
-The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. <ApiLink to="utils#enqueueLinks">See the reference</ApiLink>
-for all of them. Since we just need to filter out same domain links, we'll keep it simple and use a pseudo-URL `string`.
+The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. <ApiLink to="utils#enqueueLinks">See the reference</ApiLink> for all of them. Since we just need to filter out same domain links, we'll keep it simple and use a pseudo-URL `string`.
 
 ```js
 // Assuming previous existence of the '$' and 'requestQueue' variables.

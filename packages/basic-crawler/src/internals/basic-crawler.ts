@@ -262,7 +262,7 @@ export interface BasicCrawlerOptions<
  *
  * ```javascript
  * // Prepare a list of URLs to crawl
- * const requestList = new Apify.RequestList({
+ * const requestList = new RequestList({
  *   sources: [
  *       { url: 'http://www.example.com/page-1' },
  *       { url: 'http://www.example.com/page-2' },
@@ -271,13 +271,13 @@ export interface BasicCrawlerOptions<
  * await requestList.initialize();
  *
  * // Crawl the URLs
- * const crawler = new Apify.BasicCrawler({
+ * const crawler = new BasicCrawler({
  *     requestList,
  *     handleRequestFunction: async ({ request }) => {
  *         // 'request' contains an instance of the Request class
  *         // Here we simply fetch the HTML of the page and store it to a dataset
- *         const { body } = await Apify.utils.requestAsBrowser(request);
- *         await Apify.pushData({
+ *         const { body } = await Actor.utils.requestAsBrowser(request);
+ *         await Actor.pushData({
  *             url: request.url,
  *             html: body,
  *         })

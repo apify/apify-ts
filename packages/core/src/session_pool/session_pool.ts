@@ -72,7 +72,7 @@ export interface SessionPoolOptions {
  * **Example usage:**
  *
  * ```javascript
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *     useSessionPool: true,
  *     persistCookiesPerSession: true,
  *     // ...

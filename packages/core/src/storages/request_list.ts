@@ -182,7 +182,7 @@ export interface RequestListOptions {
  * which are in progress and which were reclaimed. The state may be automatically persisted to the default
  * {@link KeyValueStore} by setting the `persistStateKey` option so that if the Node.js process is restarted,
  * the crawling can continue where it left off. The automated persisting is launched upon receiving the `persistState`
- * event that is periodically emitted by {@link events|Apify.events}.
+ * event that is periodically emitted by {@link events|Actor.events}.
  *
  * The internal state is closely tied to the provided sources (URLs). If the sources change on actor restart, the state will become corrupted and
  * `RequestList` will raise an exception. This typically happens when the sources is a list of URLs downloaded from the web.
@@ -204,7 +204,7 @@ export interface RequestListOptions {
  * **Advanced usage:**
  * ```javascript
  * // Use the constructor to get more control over the initialization.
- * const requestList = new Apify.RequestList({
+ * const requestList = new RequestList({
  *     sources: [
  *         // Separate requests
  *         { url: 'http://www.example.com/page-1', method: 'GET', headers: { ... } },

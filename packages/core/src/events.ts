@@ -14,7 +14,7 @@ import { log as defaultLog } from './log';
  * **Example usage:**
  *
  * ```javascript
- * Apify.events.on('cpuInfo', (data) => {
+ * Actor.events.on('cpuInfo', (data) => {
  *   if (data.isCpuOverloaded) console.log('Oh no, the CPU is overloaded!');
  * });
  * ```
@@ -68,8 +68,8 @@ const emitPersistStateEvent = (isMigrating = false) => {
 };
 
 /**
- * Initializes `Apify.events` event emitter by creating a connection to a websocket that provides them.
- * This is an internal function that is automatically called by `Apify.main()`.
+ * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
+ * This is an internal function that is automatically called by `Actor.main()`.
  * @ignore
  */
 export function initializeEvents(config = Configuration.getGlobalConfig()) {
@@ -108,7 +108,7 @@ export function initializeEvents(config = Configuration.getGlobalConfig()) {
         }
     });
     eventsWs.on('error', (err) => {
-        // Don't print this error as this happens in the case of very short Apify.main().
+        // Don't print this error as this happens in the case of very short Actor.main().
         if (err.message === 'WebSocket was closed before the connection was established') return;
 
         log.exception(err, 'web socket connection failed');
@@ -122,7 +122,7 @@ export function initializeEvents(config = Configuration.getGlobalConfig()) {
 /**
  * Closes websocket providing events from Actor infrastructure and also stops sending internal events
  * of Apify package such as `persistState`.
- * This is automatically called at the end of `Apify.main()`.
+ * This is automatically called at the end of `Actor.main()`.
  * @ignore
  */
 export function stopEvents() {

@@ -520,7 +520,7 @@ export class Actor {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Actor.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -602,7 +602,7 @@ export class Actor {
      *     countryCode: 'US'
      * });
      *
-     * const crawler = new Actor.CheerioCrawler({
+     * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
      *   handlePageFunction: ({ proxyInfo }) => {
@@ -981,7 +981,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for {@link KeyValueStore#getValue | `keyValueStore.getValue('INPUT')`}.
+     * This is just a convenient shortcut for {@link KeyValueStore.getValue | `keyValueStore.getValue('INPUT')`}.
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -1047,7 +1047,7 @@ export class Actor {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Actor.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -1122,7 +1122,7 @@ export class Actor {
      *     countryCode: 'US'
      * });
      *
-     * const crawler = new Actor.CheerioCrawler({
+     * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
      *   handlePageFunction: ({ proxyInfo }) => {

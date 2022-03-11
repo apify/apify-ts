@@ -202,21 +202,21 @@ export interface SocialHandles {
  * The function removes duplicates from the resulting arrays and sorts the items alphabetically.
  *
  * Note that the `phones` field contains phone numbers extracted from the special phone links
- * such as `[call us](tel:+1234556789)` (see {@link social.phonesFromUrls})
+ * such as `[call us](tel:+1234556789)` (see {@link phonesFromUrls})
  * and potentially other sources with high certainty, while `phonesUncertain` contains phone numbers
  * extracted from the plain text, which might be very inaccurate.
  *
  * **Example usage:**
- * ```javascript
- * // TODO: update example
- * const Apify = require('apify');
+ * ```typescript
+ * import { launchPuppeteer } from '@crawlers/puppeteer';
+ * import { social } from '@crawlers/utils';
  *
- * const browser = await Apify.launchPuppeteer();
+ * const browser = await launchPuppeteer();
  * const page = await browser.newPage();
  * await page.goto('http://www.example.com');
  * const html = await page.content();
  *
- * const result = Apify.utils.social.parseHandlesFromHtml(html);
+ * const result = social.parseHandlesFromHtml(html);
  * console.log('Social handles:');
  * console.dir(result);
  * ```
@@ -295,7 +295,9 @@ export function parseHandlesFromHtml(html: string, data: Record<string, unknown>
  *
  * Example usage:
  * ```
- * if (Apify.utils.social.LINKEDIN_REGEX.test('https://www.linkedin.com/in/alan-turing')) {
+ * import { social } from '@crawlers/utils';
+ *
+ * if (social.LINKEDIN_REGEX.test('https://www.linkedin.com/in/alan-turing')) {
  *     console.log('Match!');
  * }
  * ```
@@ -323,7 +325,9 @@ export const LINKEDIN_REGEX = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * const matches = text.match(Apify.utils.social.LINKEDIN_REGEX_GLOBAL);
+ * import { social } from '@crawlers/utils';
+ *
+ * const matches = text.match(social.LINKEDIN_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} LinkedIn profiles found!`);
  * ```
  */
@@ -346,7 +350,9 @@ export const LINKEDIN_REGEX_GLOBAL = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * if (Apify.utils.social.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague')) {
+ * import { social } from '@crawlers/utils';
+ *
+ * if (social.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague')) {
  *     console.log('Match!');
  * }
  * ```
@@ -374,7 +380,9 @@ export const INSTAGRAM_REGEX = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * const matches = text.match(Apify.utils.social.INSTAGRAM_REGEX_GLOBAL);
+ * import { social } from '@crawlers/utils';
+ *
+ * const matches = text.match(social.INSTAGRAM_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Instagram profiles found!`);
  * ```
  */
@@ -396,7 +404,9 @@ export const INSTAGRAM_REGEX_GLOBAL = new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * if (Apify.utils.social.TWITTER_REGEX.test('https://www.twitter.com/apify')) {
+ * import { social } from '@crawlers/utils';
+ *
+ * if (social.TWITTER_REGEX.test('https://www.twitter.com/apify')) {
  *     console.log('Match!');
  * }
  * ```
@@ -423,7 +433,9 @@ export const TWITTER_REGEX = new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * const matches = text.match(Apify.utils.social.TWITTER_REGEX_STRING);
+ * import { social } from '@crawlers/utils';
+ *
+ * const matches = text.match(social.TWITTER_REGEX_STRING);
  * if (matches) console.log(`${matches.length} Twitter profiles found!`);
  * ```
  */
@@ -447,7 +459,9 @@ export const TWITTER_REGEX_GLOBAL = new RegExp(TWITTER_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * if (Apify.utils.social.FACEBOOK_REGEX.test('https://www.facebook.com/apifytech')) {
+ * import { social } from '@crawlers/utils';
+ *
+ * if (social.FACEBOOK_REGEX.test('https://www.facebook.com/apifytech')) {
  *     console.log('Match!');
  * }
  * ```
@@ -475,7 +489,9 @@ export const FACEBOOK_REGEX = new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * const matches = text.match(Apify.utils.social.FACEBOOK_REGEX_GLOBAL);
+ * import { social } from '@crawlers/utils';
+ *
+ * const matches = text.match(social.FACEBOOK_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Facebook profiles found!`);
  * ```
  */
@@ -496,7 +512,9 @@ export const FACEBOOK_REGEX_GLOBAL = new RegExp(FACEBOOK_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * if (Apify.utils.social.YOUTUBE_REGEX.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
+ * import { social } from '@crawlers/utils';
+ *
+ * if (social.YOUTUBE_REGEX.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
  *     console.log('Match!');
  * }
  * ```
@@ -518,7 +536,9 @@ export const YOUTUBE_REGEX = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * const matches = text.match(Apify.utils.social.YOUTUBE_REGEX_GLOBAL);
+ * import { social } from '@crawlers/utils';
+ *
+ * const matches = text.match(social.YOUTUBE_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Youtube videos found!`);
  * ```
  */

@@ -163,6 +163,7 @@ module.exports = {
             defaultLanguage: 'typescript',
             theme: require('prism-react-renderer/themes/github'),
             darkTheme: require('prism-react-renderer/themes/dracula'),
+            additionalLanguages: ['docker'],
         },
         metadata: [],
         image: 'img/apify_og_SDK.png',

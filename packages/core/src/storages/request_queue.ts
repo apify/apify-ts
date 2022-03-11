@@ -71,7 +71,7 @@ export function getRequestId(uniqueKey: string) {
 
 /**
  * A helper class that is used to report results from various
- * {@link RequestQueue} functions as well as {@link utils.enqueueLinks}.
+ * {@link RequestQueue} functions as well as {@link enqueueLinks}.
  */
 export interface QueueOperationInfo {
 
@@ -125,7 +125,7 @@ export interface RequestQueueOperationOptions {
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` is not, the data is stored in the
  * [Apify Request Queue](https://docs.apify.com/storage/request-queue)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Actor.openRequestQueue} function,
+ * option to {@link RequestQueue.open} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
@@ -213,7 +213,7 @@ export class RequestQueue {
      * {@link QueueOperationInfo} object.
      *
      * To add multiple requests to the queue by extracting links from a webpage,
-     * see the {@link utils.enqueueLinks} helper function.
+     * see the {@link enqueueLinks} helper function.
      *
      * @param requestLike {@link Request} object or vanilla object with request data.
      * Note that the function sets the `uniqueKey` and `id` fields to the passed Request.
