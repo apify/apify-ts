@@ -3,19 +3,19 @@ import { addTimeoutToPromise } from '@apify/timeout';
 import { Request, log } from '@crawlers/core';
 import { tools } from '@apify/scraper-tools';
 import { Actor } from 'apify';
-import { isAtHome, printOutdatedSdkWarning } from 'apify/src/utils';
+import { printOutdatedSdkWarning } from 'apify/src/utils';
 import semver from 'semver';
 import { IncomingMessage } from 'node:http';
 
 const { createRequestDebugInfo } = tools;
 
-describe('isAtHome()', () => {
+describe('Actor.isAtHome()', () => {
     test('works', () => {
-        expect(isAtHome()).toBe(false);
+        expect(Actor.isAtHome()).toBe(false);
         process.env[ENV_VARS.IS_AT_HOME] = '1';
-        expect(isAtHome()).toBe(true);
+        expect(Actor.isAtHome()).toBe(true);
         delete process.env[ENV_VARS.IS_AT_HOME];
-        expect(isAtHome()).toBe(false);
+        expect(Actor.isAtHome()).toBe(false);
     });
 });
 

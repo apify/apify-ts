@@ -2,7 +2,7 @@ import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import { EventEmitter } from 'events';
 import WebSocket from 'ws';
 import { Configuration } from './configuration';
-import { ACTOR_EVENT_NAMES_EX } from './constants';
+import { EVENT_PERSIST_STATE } from './constants';
 import { log as defaultLog } from './log';
 
 /**
@@ -64,7 +64,7 @@ let persistStateInterval: any = null;
  * @ignore
  */
 const emitPersistStateEvent = (isMigrating = false) => {
-    events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, { isMigrating });
+    events.emit(EVENT_PERSIST_STATE, { isMigrating });
 };
 
 /**

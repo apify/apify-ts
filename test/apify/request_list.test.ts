@@ -1,7 +1,7 @@
 import log from '@apify/log';
 import { ACTOR_EVENT_NAMES_EX, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
-import LocalStorageDirEmulator from './local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
  * Stand-in for underscore.js shuffle (weird, but how else?)

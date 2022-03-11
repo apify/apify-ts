@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import ow from 'ow';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
+import { EVENT_PERSIST_STATE } from '../constants';
 import { events } from '../events';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
@@ -192,7 +192,7 @@ export class Statistics {
             this.state.crawlerStartedAt = new Date();
         }
 
-        events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this.listener);
+        events.on(EVENT_PERSIST_STATE, this.listener);
 
         this.logInterval = setInterval(() => {
             this.log.info(this.logMessage, {
@@ -280,7 +280,7 @@ export class Statistics {
 
     protected _teardown(): void {
         // this can be called before a call to startCapturing happens (or in a 'finally' block)
-        events.removeListener(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this.listener);
+        events.removeListener(EVENT_PERSIST_STATE, this.listener);
 
         if (this.logInterval) {
             clearInterval(this.logInterval as number);

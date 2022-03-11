@@ -1,7 +1,7 @@
 import { SessionPool, events, Session, KeyValueStore, Configuration, ACTOR_EVENT_NAMES_EX } from '@crawlers/core';
 import { entries } from '@crawlers/utils';
 import { Log } from '@apify/log';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('SessionPool - testing session pool', () => {
     let sessionPool: SessionPool;
@@ -388,23 +388,5 @@ describe('SessionPool - testing session pool', () => {
         expect(sessionPool.sessions.length).toEqual(1);
         expect(sessionPool.sessionMap.size).toEqual(1);
         expect(sessionPool.sessions.length).toEqual(sessionPool.sessionMap.size);
-    });
-
-    // FIXME how to deal with this? session pool opens KV store that uses the config instance, where we have the WAL mode option
-    test.skip('respects `localStorageEnableWalMode` option (gh issue #956)', async () => {
-        // delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-        // delete process.env[ENV_VARS.TOKEN];
-        //
-        // const sessionPool1 = await SessionPool.open();
-        // expect(sessionPool1).toBeInstanceOf(SessionPool);
-        // const storage1 = sdk1.config.getStorageLocal();
-        // expect(storage1.enableWalMode).toBe(true);
-        //
-        // const sessionPool2 = await SessionPool.open({ localStorageEnableWalMode: false });
-        // expect(sessionPool2).toBeInstanceOf(SessionPool);
-        // const storage2 = sdk2.config.getStorageLocal();
-        // expect(storage2.enableWalMode).toBe(false);
-        //
-        // delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
     });
 });

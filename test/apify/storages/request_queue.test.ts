@@ -2,7 +2,6 @@ import {
     QUERY_HEAD_MIN_LENGTH,
     API_PROCESSED_REQUESTS_DELAY_MILLIS,
     STORAGE_CONSISTENCY_DELAY_MILLIS,
-    StorageManager,
     RequestQueue,
     Request,
     Configuration,
@@ -10,26 +9,14 @@ import {
 import { sleep } from '@crawlers/utils';
 
 describe('RequestQueue remote', () => {
-    const apifyClient = Configuration.getDefaultClient();
+    const storageClient = Configuration.getStorageClient();
 
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    test('openRequestQueue should open storage', async () => {
-        const openStorageSpy = jest.spyOn(StorageManager.prototype, 'openStorage');
-        openStorageSpy.mockResolvedValueOnce(jest.fn());
-        const queueId = 'abc';
-        const options = { forceCloud: true };
-        await RequestQueue.open(queueId, options);
-        expect(openStorageSpy).toBeCalledTimes(1);
-        expect(openStorageSpy).toBeCalledWith(queueId, options);
-    });
-
     test('should work', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
-        // @ts-expect-error Accessing private property
-        expect(typeof queue.client.clientKey).toBe('string');
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
         const firstResolveValue = {
             requestId: 'a',
             wasAlreadyHandled: false,
@@ -189,7 +176,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should cache new requests locally', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         const requestA = new Request({ url: 'http://example.com/a' });
         const requestB = new Request({ url: 'http://example.com/a' }); // Has same uniqueKey as A
@@ -218,7 +205,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should cache requests locally with info if request was already handled', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         const requestX = new Request({ url: 'http://example.com/x' });
         const requestY = new Request({ url: 'http://example.com/x' }); // Has same uniqueKey as X
@@ -247,7 +234,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should cache requests from queue head', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         // Query queue head with request A
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
@@ -275,7 +262,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should handle situation when newly created request is not available yet', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-queue', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-queue', client: storageClient });
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
 
         const requestA = new Request({ url: 'http://example.com/a' });
@@ -328,7 +315,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should not add handled request to queue head dict', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         const requestA = new Request({ url: 'http://example.com/a' });
 
@@ -358,7 +345,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should accept plain object in addRequest()', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
         const addRequestMock = jest.spyOn(queue.client, 'addRequest');
         addRequestMock.mockResolvedValueOnce({
             requestId: 'xxx',
@@ -373,7 +360,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should return correct handledCount', async () => {
-        const queue = new RequestQueue({ id: 'id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'id', client: storageClient });
         const getMock = jest.spyOn(queue.client, 'get');
         getMock.mockResolvedValueOnce({
             handledRequestCount: 33,
@@ -385,7 +372,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should always wait for a queue head to become consistent before marking queue as finished (hadMultipleClients = true)', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
 
         // Return head with modifiedAt = now so it will retry the call.
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
@@ -411,7 +398,7 @@ describe('RequestQueue remote', () => {
 
     test('should always wait for a queue head to become consistent before marking queue as finished (hadMultipleClients = false)', async () => {
         const queueId = 'some-id';
-        const queue = new RequestQueue({ id: queueId, name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: queueId, name: 'some-name', client: storageClient });
 
         expect(queue.assumedTotalCount).toBe(0);
         expect(queue.assumedHandledCount).toBe(0);
@@ -545,7 +532,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('getInfo() should work', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
 
         const expected = {
             id: 'WkzbQMuFYuamGv3YF',
@@ -572,7 +559,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('drop() works', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
         const deleteMock = jest
             .spyOn(queue.client, 'delete')
             .mockResolvedValueOnce(undefined);
@@ -585,13 +572,11 @@ describe('RequestQueue remote', () => {
     test('getRequest should remove nulls from stored requests', async () => {
         const url = 'http://example.com';
         const method = 'POST';
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
         const getRequestMock = jest
             .spyOn(queue.client, 'getRequest')
             .mockResolvedValueOnce({
                 url,
-                // TODO: loadedUrl does not exist on the return type
-                // @ts-expect-error
                 loadedUrl: null,
                 errorMessages: null,
                 handledAt: null,

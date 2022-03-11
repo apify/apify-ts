@@ -1,7 +1,7 @@
 import { ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
 import { Configuration, KeyValueStore } from '@crawlers/core';
 import { Actor } from 'apify';
-import LocalStorageDirEmulator from './local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 describe('Apify functions for storages', () => {
     let localStorageEmulator: LocalStorageDirEmulator;
