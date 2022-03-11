@@ -414,11 +414,11 @@ export class CrawlerSetup implements CrawlerSetupOptions {
                 output.pageFunctionResult = await window[namespc].pageFunction(context);
             } catch (err) {
                 const casted = err as Error;
-                output.pageFunctionError = (Object.getOwnPropertyNames(casted) as (keyof Error)[])
+                output.pageFunctionError = Object.getOwnPropertyNames(casted)
                     .reduce((memo, name) => {
-                        memo[name] = casted[name]!;
+                        memo[name] = casted[name as keyof Error];
                         return memo;
-                    }, {} as { [K in keyof Error]: Error[K] });
+                    }, {} as Dictionary);
             }
 
             // This needs to be added after pageFunction has run.
