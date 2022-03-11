@@ -1,6 +1,6 @@
 import { downloadListOfUrls } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
+import { EVENT_PERSIST_STATE } from '../constants';
 import { events } from '../events';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
@@ -339,7 +339,7 @@ export class RequestList {
         this.isInitialized = true;
         if (this.persistRequestsKey && !this.areRequestsPersisted) await this._persistRequests();
         if (this.persistStateKey) {
-            events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this.persistState.bind(this));
+            events.on(EVENT_PERSIST_STATE, this.persistState.bind(this));
         }
     }
 

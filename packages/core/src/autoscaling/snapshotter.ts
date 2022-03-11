@@ -8,6 +8,7 @@ import { Configuration } from '../configuration';
 import { events } from '../events';
 import { log as defaultLog } from '../log';
 import { SystemInfo } from './system_status';
+import { StorageClient } from '../storages/storage';
 
 const RESERVE_MEMORY_RATIO = 0.5;
 const CLIENT_RATE_LIMIT_ERROR_RETRY_COUNT = 2;
@@ -80,7 +81,11 @@ export interface SnapshotterOptions {
      */
     snapshotHistorySecs?: number;
 
+    /** @internal */
     log?: Log;
+
+    /** @internal */
+    client?: StorageClient;
 }
 
 type MemorySnapshot = { createdAt: Date; isOverloaded: boolean; usedBytes?: number };
@@ -115,6 +120,7 @@ type ClientSnapshot = { createdAt: Date; isOverloaded: boolean; rateLimitErrorCo
  */
 export class Snapshotter {
     log: Log;
+    client: StorageClient;
     eventLoopSnapshotIntervalMillis: number;
     memorySnapshotIntervalMillis: number;
     clientSnapshotIntervalMillis: number;
@@ -153,6 +159,7 @@ export class Snapshotter {
             maxUsedCpuRatio: ow.optional.number,
             maxClientErrors: ow.optional.number,
             log: ow.optional.object,
+            client: ow.optional.object,
         }));
 
         const {
@@ -166,9 +173,11 @@ export class Snapshotter {
             maxUsedCpuRatio = 0.95,
             maxClientErrors = 3,
             log = defaultLog,
+            client = Configuration.getStorageClient(),
         } = options;
 
         this.log = log.child({ prefix: 'Snapshotter' });
+        this.client = client;
 
         this.eventLoopSnapshotIntervalMillis = eventLoopSnapshotIntervalSecs * 1000;
         this.memorySnapshotIntervalMillis = memorySnapshotIntervalSecs * 1000;
@@ -433,7 +442,7 @@ export class Snapshotter {
         const now = new Date();
         this._pruneSnapshots(this.clientSnapshots, now);
 
-        const allErrorCounts = Configuration.getDefaultClient().stats.rateLimitErrors;
+        const allErrorCounts = this.client.stats?.rateLimitErrors ?? []; // storage client might not support this
         const currentErrCount = allErrorCounts[CLIENT_RATE_LIMIT_ERROR_RETRY_COUNT] || 0;
 
         // Handle empty snapshots array

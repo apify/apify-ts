@@ -29,7 +29,7 @@ import iconv from 'iconv-lite';
 import { AddressInfo } from 'net';
 import path from 'path';
 import { Readable } from 'stream';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 const HOST = '127.0.0.1';
 

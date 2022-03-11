@@ -1,13 +1,15 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@crawlers/storage';
-import { ApifyClient, ApifyClientOptions } from 'apify-client';
 import { EventEmitter } from 'events';
 import { join } from 'path';
 import { entries } from './typedefs';
+import { StorageClient } from './storages/storage';
 
+// FIXME many of the options are apify specific, if they should be somewhere, its in the actor sdk
 export interface ConfigurationOptions {
     token?: string;
+    storageClient?: StorageClient;
     localStorageDir?: string;
     localStorageEnableWalMode?: boolean;
     defaultDatasetId?: string;
@@ -224,52 +226,14 @@ export class Configuration {
      * multiple instances, one for each variant of the options.
      * @internal
      */
-    getClient(options: ApifyClientOptions = {}): ApifyClient {
-        const baseUrl = options.baseUrl ?? this.get('apiBaseUrl');
-        const token = options.token ?? this.get('token');
-        const cacheKey = `${baseUrl}~${token}`;
-
-        return this._getService('ApifyClient', () => this.createClient(options), cacheKey);
-    }
-
-    /**
-     * Returns cached instance of {@link ApifyStorageLocal} using options as defined in the environment variables or in
-     * this {@link Configuration} instance. Only first call of this method will create the client, following calls will return
-     * the same client instance.
-     *
-     * Caching works based on the `storageDir` option, so calling this method with different `storageDir` will return
-     * multiple instances, one for each directory.
-     * @internal
-     */
-    getStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
-        const cacheKey = options.storageDir ?? this.get('localStorageDir');
-        return this._getService('ApifyStorageLocal', () => this.createStorageLocal(options), cacheKey);
-    }
-
-    /**
-     * Returns cached (singleton) instance of a service by its name. If the service does not exist yet, it will be created
-     * via the `createCallback`. To have multiple instances of one service, we can use unique values in the `cacheKey`.
-     */
-    private _getService<T = unknown>(name: string, createCallback: () => T, cacheKey = name): T {
-        cacheKey = `${name}~${cacheKey}`;
-
-        if (!this.services.has(cacheKey)) {
-            this.services.set(cacheKey, createCallback());
+    getClient(): StorageClient {
+        if (this.options.has('storageClient')) {
+            return this.options.get('storageClient') as StorageClient;
         }
 
-        return this.services.get(cacheKey) as T;
-    }
-
-    /**
-     * Creates an instance of ApifyClient using options as defined in the environment variables or in this `Configuration` instance.
-     * @internal
-     */
-    createClient(options: ApifyClientOptions = {}): ApifyClient {
-        return new ApifyClient({
-            baseUrl: this.get('apiBaseUrl'),
-            token: this.get('token'),
-            ...options, // allow overriding the instance configuration
-        });
+        // TODO allow passing storage client options
+        const options = {};
+        return this.createStorageLocal(options) as any;
     }
 
     /**
@@ -279,7 +243,18 @@ export class Configuration {
     createStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
         const storageDir = options.storageDir ?? this.get('localStorageDir');
         const enableWalMode = options.enableWalMode ?? this.get('localStorageEnableWalMode');
-        const storage = new ApifyStorageLocal({ ...options, storageDir, enableWalMode });
+        const cacheKey = `ApifyStorageLocal~${storageDir}~${enableWalMode}`;
+
+        if (this.services.has(cacheKey)) {
+            return this.services.get(cacheKey) as ApifyStorageLocal;
+        }
+
+        const storage = new ApifyStorageLocal({
+            ...options,
+            storageDir,
+            enableWalMode,
+        });
+        this.services.set(cacheKey, storage);
 
         process.on('exit', () => {
             // TODO this is not public API, need to update storage local with some teardown
@@ -287,6 +262,10 @@ export class Configuration {
         });
 
         return storage;
+    }
+
+    useStorageClient(client: StorageClient): void {
+        this.options.set('storageClient', client);
     }
 
     /**
@@ -302,9 +281,9 @@ export class Configuration {
     }
 
     /**
-     * Gets default {@link ApifyClient} instance.
+     * Gets default {@link StorageClient} instance.
      */
-    static getDefaultClient(): ApifyClient {
+    static getStorageClient(): StorageClient {
         return this.getGlobalConfig().getClient();
     }
 

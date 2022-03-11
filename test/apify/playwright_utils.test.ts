@@ -4,7 +4,7 @@ import log from '@apify/log';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { Configuration, Request, playwrightUtils } from '@crawlers/playwright';
-import LocalStorageDirEmulator from './local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const HOSTNAME = '127.0.0.1';

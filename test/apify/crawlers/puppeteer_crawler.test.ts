@@ -21,7 +21,7 @@ import os from 'os';
 import { Server as ProxyChainServer } from 'proxy-chain';
 import { promisify } from 'util';
 import { createProxyServer } from '../create-proxy-server';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('PuppeteerCrawler', () => {
     let prevEnvHeadless: string;

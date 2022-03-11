@@ -10,7 +10,7 @@ import {
     Request,
     RequestList,
 } from '@crawlers/playwright';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('PlaywrightCrawler', () => {
     let prevEnvHeadless: string;

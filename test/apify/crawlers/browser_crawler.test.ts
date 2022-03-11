@@ -22,7 +22,7 @@ import {
     createProxyConfiguration,
 } from 'crawlers';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 
 jest.mock('@crawlers/utils/src/internals/request', () => {

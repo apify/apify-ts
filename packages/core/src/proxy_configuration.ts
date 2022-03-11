@@ -357,8 +357,10 @@ export class ProxyConfiguration {
     protected async _setPasswordIfToken(): Promise<void> {
         const token = this.config.get('token');
         if (token) {
-            const { proxy } = await Configuration.getDefaultClient().user().get();
-            const { password } = proxy!;
+            // FIXME we probably dont want this endpoint on the shared interface
+            // const { proxy } = await Configuration.getStorageClient().user().get();
+            // const { password } = proxy!;
+            const password: string = undefined!;
 
             if (this.password) {
                 if (this.password !== password) {

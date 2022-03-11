@@ -11,5 +11,4 @@ export * from './request';
 export * from './serialization';
 export * from './session_pool';
 export * from './storages';
-export { ActorRunWithOutput } from './typedefs';
 export * from './validators';

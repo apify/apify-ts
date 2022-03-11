@@ -20,7 +20,7 @@ const DEFAULT_FOLDERS = Object.values(LOCAL_STORAGE_SUBDIRS)
  * Basic usage: Create and initialize `LocalStorageDirEmulator` in beforeAll hook,
  * call `clean()` in afterEach hook and finally call `destroy()` in afterAll hook.
  */
-class LocalStorageDirEmulator {
+export class LocalStorageDirEmulator {
     localStorageDirs: string[] = [];
 
     async init(dirName = cryptoRandomObjectId(10)) {
@@ -55,5 +55,3 @@ class LocalStorageDirEmulator {
         return Promise.all(promises);
     }
 }
-
-export default LocalStorageDirEmulator;
