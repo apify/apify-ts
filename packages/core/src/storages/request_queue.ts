@@ -109,8 +109,7 @@ export interface RequestQueueOperationOptions {
  * To add a single URL multiple times to the queue,
  * corresponding {@link Request} objects will need to have different `uniqueKey` properties.
  *
- * Do not instantiate this class directly, use the
- * {@link Apify.openRequestQueue} function instead.
+ * Do not instantiate this class directly, use the {@link RequestQueue.open} function instead.
  *
  * `RequestQueue` is used by {@link BasicCrawler}, {@link CheerioCrawler}, {@link PuppeteerCrawler}
  * and {@link PlaywrightCrawler} as a source of URLs to crawl.
@@ -126,17 +125,17 @@ export interface RequestQueueOperationOptions {
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` is not, the data is stored in the
  * [Apify Request Queue](https://docs.apify.com/storage/request-queue)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify.openRequestQueue} function,
+ * option to {@link Actor.openRequestQueue} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
  *
  * ```javascript
  * // Open the default request queue associated with the actor run
- * const queue = await Apify.openRequestQueue();
+ * const queue = await RequestQueue.open();
  *
  * // Open a named request queue
- * const queueWithName = await Apify.openRequestQueue('some-name');
+ * const queueWithName = await RequestQueue.open('some-name');
  *
  * // Enqueue few requests
  * await queue.addRequest({ url: 'http://example.com/aaa' });
@@ -663,27 +662,6 @@ export class RequestQueue {
         const manager = new StorageManager(RequestQueue);
         return manager.openStorage(queueIdOrName, options);
     }
-}
-
-/**
- * Opens a request queue and returns a promise resolving to an instance
- * of the {@link RequestQueue} class.
- *
- * {@link RequestQueue} represents a queue of URLs to crawl, which is stored either on local filesystem or in the cloud.
- * The queue is used for deep crawling of websites, where you start with several URLs and then
- * recursively follow links to other pages. The data structure supports both breadth-first
- * and depth-first crawling orders.
- *
- * For more details and code examples, see the {@link RequestQueue} class.
- *
- * @param [queueIdOrName]
- *   ID or name of the request queue to be opened. If `null` or `undefined`,
- *   the function returns the default request queue associated with the actor run.
- * @param [options] Open Request Queue options.
- * @deprecated use `RequestQueue.open()` instead
- */
-export async function openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
-    return RequestQueue.open(queueIdOrName, options);
 }
 
 export interface RequestQueueOptions {

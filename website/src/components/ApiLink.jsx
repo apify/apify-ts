@@ -1,25 +1,22 @@
 import React from 'react';
+import Link from '@docusaurus/Link';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { useDocsVersion } from '@docusaurus/theme-common';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-const VersionedApiLink = ({ apiPath, children }) => {
+const ApiLink = ({ to, children }) => {
     const version = useDocsVersion();
     const { siteConfig } = useDocusaurusContext();
 
     if (siteConfig.presets[0][1].docs.disableVersioning) {
         return (
-            <a href={`${siteConfig.baseUrl}api/${apiPath}`}>
-                {children}
-            </a>
+            <Link to={`/api/${to}`}>{children}</Link>
         );
     }
 
     return (
-        <a href={`${siteConfig.baseUrl}api/${version.version === 'current' ? 'next' : version.version}/${apiPath}`}>
-            {children}
-        </a>
+        <Link to={`/api/${version.version === 'current' ? 'next' : version.version}/${to}`}>{children}</Link>
     );
 };
 
-export default VersionedApiLink;
+export default ApiLink;

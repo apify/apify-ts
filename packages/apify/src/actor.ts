@@ -446,7 +446,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](core/class/KeyValueStore#getValue).
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -981,7 +981,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+     * This is just a convenient shortcut for {@link KeyValueStore#getValue | `keyValueStore.getValue('INPUT')`}.
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -997,8 +997,7 @@ export class Actor {
      * If you need to use the input multiple times in your actor,
      * it is far more efficient to read it once and store it locally.
      *
-     * For more information, see  {@link Actor.openKeyValueStore}
-     * and {@link KeyValueStore.getValue}.
+     * For more information, see {@link Actor.openKeyValueStore} and {@link KeyValueStore.getValue}.
      *
      * @returns
      *   Returns a promise that resolves to an object, string

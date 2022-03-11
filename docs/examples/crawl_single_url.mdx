@@ -4,14 +4,14 @@ title: Crawl a single URL
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import VersionedApiLink from '@site/src/components/VersionedApiLink';
+import ApiLink from '@site/src/components/ApiLink';
 import CrawlSource from '!!raw-loader!./crawl_single_url.ts';
 
-This example uses the <VersionedApiLink apiPath="utils/function/requestAsBrowser">`requestAsBrowser()`</VersionedApiLink>
+This example uses the <ApiLink to="utils/function/requestAsBrowser">`requestAsBrowser()`</ApiLink>
 function to grab the HTML of a web page.
 
 <CodeBlock className="language-js">
 	{CrawlSource}
 </CodeBlock>
 
-If you don't want to hard-code the URL into the script, refer to the [Accept User Input](./basic/accept-user-input) example.
+If you don't want to hard-code the URL into the script, refer to the [Accept User Input](./accept-user-input) example.

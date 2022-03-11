@@ -614,7 +614,7 @@ export class BasicCrawler<
                     .catch((err) => {
                         if (err.message.includes('Cannot persist state.')) {
                             this.log.error('The crawler attempted to persist its request list\'s state and failed due to missing or '
-                                + 'invalid config. Make sure to use either Apify.openRequestList() or the "stateKeyPrefix" option of RequestList '
+                                + 'invalid config. Make sure to use either RequestList.open() or the "stateKeyPrefix" option of RequestList '
                                 + 'constructor to ensure your crawling state is persisted through host migrations and restarts.');
                         } else {
                             this.log.exception(err, 'An unexpected error occured when the crawler '
