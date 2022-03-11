@@ -1,4 +1,4 @@
-import { SessionPool, events, Session, KeyValueStore, Configuration, ACTOR_EVENT_NAMES_EX } from '@crawlers/core';
+import { SessionPool, events, Session, KeyValueStore, Configuration, EVENT_PERSIST_STATE } from '@crawlers/core';
 import { entries } from '@crawlers/utils';
 import { Log } from '@apify/log';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
@@ -18,7 +18,7 @@ describe('SessionPool - testing session pool', () => {
     });
 
     afterEach(async () => {
-        events.removeAllListeners(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        events.removeAllListeners(EVENT_PERSIST_STATE);
     });
 
     afterAll(async () => {
@@ -218,7 +218,7 @@ describe('SessionPool - testing session pool', () => {
 
             expect(sessionPool.sessions.length).toBe(1);
 
-            events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+            events.emit(EVENT_PERSIST_STATE);
 
             await new Promise<void>((resolve) => {
                 const interval = setInterval(async () => {
@@ -323,9 +323,9 @@ describe('SessionPool - testing session pool', () => {
     });
 
     it('should remove persist state event listener', async () => {
-        expect(events.listenerCount(ACTOR_EVENT_NAMES_EX.PERSIST_STATE)).toEqual(1);
+        expect(events.listenerCount(EVENT_PERSIST_STATE)).toEqual(1);
         await sessionPool.teardown();
-        expect(events.listenerCount(ACTOR_EVENT_NAMES_EX.PERSIST_STATE)).toEqual(0);
+        expect(events.listenerCount(EVENT_PERSIST_STATE)).toEqual(0);
     });
 
     test('should be able to create session with provided id', async () => {

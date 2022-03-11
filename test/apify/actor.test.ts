@@ -3,7 +3,7 @@ import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { sleep } from '@crawlers/utils';
 import { Actor, ApifyEnv } from 'apify';
-import { ApifyClient, WebhookUpdateData } from 'apify-client';
+import { ApifyClient, ActorClient, TaskClient, WebhookUpdateData } from 'apify-client';
 
 /**
  * Helper function that enables testing of main()
@@ -252,18 +252,12 @@ describe('Actor.call()', () => {
 
         const options = { contentType, build, memory, timeout, webhooks };
 
-        const callStub = jest.fn(
-            async () => runConfigs.finishedRun,
-        );
-
-        const actor = jest.spyOn(Actor.apifyClient, 'actor')
-        // @ts-expect-error
-            .mockReturnValueOnce({ call: callStub });
-
+        const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
+        const callSpy = jest.spyOn(ActorClient.prototype, 'call').mockReturnValue(runConfigs.finishedRun);
         await Actor.call(actId, input, options);
 
-        expect(actor).toBeCalledWith(actId);
-        expect(callStub).toBeCalledWith(input, options);
+        expect(actorSpy).toBeCalledWith(actId);
+        expect(callSpy).toBeCalledWith(input, options);
     });
 
     test('works with token', async () => {
@@ -271,27 +265,20 @@ describe('Actor.call()', () => {
         const timeout = 60;
         const webhooks = [{ a: 'a' }, { b: 'b' }] as unknown as WebhookUpdateData[];
 
-        const callStub = jest.fn(async () => runConfigs.finishedRun);
-        const actorStub = jest.fn(() => ({ call: callStub }));
-
-        const createClient = jest.spyOn(Actor.config, 'createClient')
-            .mockReturnValueOnce({
-                actor: actorStub,
-            } as any);
-
+        const newClientSpy = jest.spyOn(Actor.prototype, 'newClient');
+        const actorSpy = jest.spyOn(ApifyClient.prototype, 'actor');
+        const callSpy = jest.spyOn(ActorClient.prototype, 'call').mockReturnValue(runConfigs.finishedRun);
         await Actor.call(actId, input, { contentType, build, token, memory, timeout, webhooks });
 
-        expect(actorStub).toBeCalledWith(actId);
-
-        expect(callStub).toBeCalledWith(input, {
+        expect(newClientSpy).toBeCalledWith({ token });
+        expect(actorSpy).toBeCalledWith(actId);
+        expect(callSpy).toBeCalledWith(input, {
             build,
             contentType,
             memory,
             timeout,
             webhooks,
         });
-
-        expect(createClient).toBeCalledWith({ token });
     });
 });
 
@@ -307,40 +294,32 @@ describe('Actor.callTask()', () => {
     const { finishedRun } = runConfigs;
 
     test('works as expected', async () => {
-        const callStub = jest.fn(async () => finishedRun);
-        const taskStub = jest.spyOn(Actor.apifyClient, 'task')
-            .mockReturnValueOnce({ call: callStub } as any);
+        const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
+        const callSpy = jest.spyOn(TaskClient.prototype, 'call').mockReturnValue(finishedRun);
 
         const options = { memory, timeout, build, webhooks };
-
         const callOutput = await Actor.callTask(taskId, input, options);
 
         expect(callOutput).toEqual(finishedRun);
 
-        expect(taskStub).toBeCalledTimes(1);
-        expect(taskStub).toBeCalledWith(taskId);
+        expect(taskSpy).toBeCalledTimes(1);
+        expect(taskSpy).toBeCalledWith(taskId);
 
-        expect(callStub).toBeCalledTimes(1);
-        expect(callStub).toBeCalledWith(input, options);
+        expect(callSpy).toBeCalledTimes(1);
+        expect(callSpy).toBeCalledWith(input, options);
     });
 
     test('works with token', async () => {
         const options = { memory, timeout, build, webhooks };
 
-        const callTaskStub = jest.fn(async () => finishedRun);
-        const taskStub = jest.fn(() => ({ call: callTaskStub }));
-
-        const createClient = jest.spyOn(Actor.config, 'createClient')
-            .mockReturnValueOnce({
-                task: taskStub,
-            } as any);
-
+        const newClientSpy = jest.spyOn(Actor.prototype, 'newClient');
+        const taskSpy = jest.spyOn(ApifyClient.prototype, 'task');
+        const callSpy = jest.spyOn(TaskClient.prototype, 'call').mockReturnValue(finishedRun);
         const callOutput = await Actor.callTask(taskId, input, { token, ...options });
 
-        expect(createClient).toBeCalledWith({ token });
-
-        expect(taskStub).toBeCalledWith(taskId);
-        expect(callTaskStub).toBeCalledWith(input, options);
+        expect(newClientSpy).toBeCalledWith({ token });
+        expect(taskSpy).toBeCalledWith(taskId);
+        expect(callSpy).toBeCalledWith(input, options);
 
         expect(callOutput).toEqual(finishedRun);
     });

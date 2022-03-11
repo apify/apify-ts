@@ -1,5 +1,5 @@
 import log from '@apify/log';
-import { ACTOR_EVENT_NAMES_EX, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
+import { EVENT_PERSIST_STATE, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
@@ -478,7 +478,7 @@ describe('RequestList', () => {
 
         // Persist state.
         setValueSpy.mockResolvedValueOnce();
-        events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        events.emit(EVENT_PERSIST_STATE);
         await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 
@@ -488,7 +488,7 @@ describe('RequestList', () => {
         await requestList.markRequestHandled(request2);
         expect(requestList.isStatePersisted).toBe(false);
         setValueSpy.mockResolvedValueOnce();
-        events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        events.emit(EVENT_PERSIST_STATE);
         await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 

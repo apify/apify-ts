@@ -1,5 +1,5 @@
 import { ENV_VARS } from '@apify/consts';
-import { ACTOR_EVENT_NAMES_EX, events, initializeEvents, stopEvents } from '@crawlers/core';
+import { EVENT_PERSIST_STATE, events, initializeEvents, stopEvents } from '@crawlers/core';
 import { Dictionary, sleep } from '@crawlers/utils';
 import { Actor } from 'apify';
 import WebSocket from 'ws';
@@ -132,7 +132,7 @@ describe('events', () => {
 
     test('should send persist state events in regular interval', () => {
         const eventsReceived = [];
-        events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, (data) => eventsReceived.push(data));
+        events.on(EVENT_PERSIST_STATE, (data) => eventsReceived.push(data));
         initializeEvents();
         jest.advanceTimersByTime(60001);
         jest.advanceTimersByTime(60001);
