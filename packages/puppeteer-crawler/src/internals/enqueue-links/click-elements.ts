@@ -423,6 +423,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         function finish() {
             page.off(PageEmittedEvents.Request, activityHandler);
             page.off(PageEmittedEvents.FrameNavigated, activityHandler);
+            // @ts-expect-error browser event
             page.off('targetcreated', newTabTracker);
             resolve();
         }
