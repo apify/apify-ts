@@ -56,7 +56,7 @@
         "@crawlers/browser": "^3.0.0"
     },
     "peerDependencies": {
-        "puppeteer": "^9.0.0 || ^10.0.0"
+        "puppeteer": ">= 9.x <= 13.x"
     },
     "peerDependenciesMeta": {
         "puppeteer": {
