@@ -11,7 +11,7 @@ import {
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlers/utils';
 import ow from 'ow';
-import { BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
+import { BrowserContextEmittedEvents, BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
 import { URL } from 'url';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
@@ -401,6 +401,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
     return new Promise<void>((resolve) => {
         let timeout: NodeJS.Timeout;
         let maxTimeout: NodeJS.Timeout;
+        const context = page.browserContext();
 
         function newTabTracker(target: Target) {
             if (isTargetRelevant(page, target)) activityHandler();
@@ -423,7 +424,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         function finish() {
             page.off(PageEmittedEvents.Request, activityHandler);
             page.off(PageEmittedEvents.FrameNavigated, activityHandler);
-            page.off('targetcreated', newTabTracker);
+            context.off(BrowserContextEmittedEvents.TargetCreated, newTabTracker);
             resolve();
         }
 
@@ -431,8 +432,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on(PageEmittedEvents.Request, activityHandler);
         page.on(PageEmittedEvents.FrameNavigated, activityHandler);
-        // @ts-expect-error browser event
-        page.on('targetcreated', newTabTracker);
+        context.on(BrowserContextEmittedEvents.TargetCreated, newTabTracker);
     });
 }
 
