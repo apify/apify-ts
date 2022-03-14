@@ -423,6 +423,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         function finish() {
             page.off(PageEmittedEvents.Request, activityHandler);
             page.off(PageEmittedEvents.FrameNavigated, activityHandler);
+            // FIXME: this event is only emitted at the browser/context level
             // @ts-expect-error browser event
             page.off('targetcreated', newTabTracker);
             resolve();
@@ -432,6 +433,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on(PageEmittedEvents.Request, activityHandler);
         page.on(PageEmittedEvents.FrameNavigated, activityHandler);
+        // FIXME: this event is only emitted at the browser/context level
         // @ts-expect-error browser event
         page.on('targetcreated', newTabTracker);
     });
