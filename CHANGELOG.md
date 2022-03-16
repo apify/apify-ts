@@ -12,6 +12,7 @@
 - (internal) `Request.handledAt` is now string date in ISO format
 - (perf/internal) `Request.inProgress` and `Request.reclaimed` are now `Set`s instead of dictionaries
 - `injectUnderscore` from puppeteer utils has been removed
+- `APIFY_MEMORY_MBYTES` is no longer taken into account, use `AVAILABLE_MEMORY_RATIO` instead
 
 2.2.2 / 2022/01/xx
 ====================

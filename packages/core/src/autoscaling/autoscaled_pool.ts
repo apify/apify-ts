@@ -267,7 +267,13 @@ export class AutoscaledPool {
 
         // Create instances with correct options.
         const ssoCopy = { ...systemStatusOptions };
-        if (!ssoCopy.snapshotter) ssoCopy.snapshotter = new Snapshotter({ ...snapshotterOptions, log: this.log, client: this.config.getClient() });
+        ssoCopy.snapshotter ??= new Snapshotter({
+            ...snapshotterOptions,
+            log: this.log,
+            config: this.config,
+            client: this.config.getClient(),
+        });
+        ssoCopy.config ??= this.config;
         this.snapshotter = ssoCopy.snapshotter;
         this.systemStatus = new SystemStatus(ssoCopy);
     }

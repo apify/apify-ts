@@ -6,7 +6,7 @@ import {
     Configuration,
     ConfigurationOptions,
     Dataset,
-    initializeEvents,
+    EventManager,
     IStorage,
     KeyValueStore,
     ProxyConfiguration,
@@ -16,11 +16,11 @@ import {
     RequestListOptions,
     RequestQueue,
     Source,
-    stopEvents,
     StorageManager,
 } from '@crawlers/core';
 import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
+import { PlatformEventManager } from './platform_event_manager';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -43,12 +43,19 @@ export class Actor {
      */
     readonly apifyClient: ApifyClient;
 
+    /**
+     * Default {@link EventManager} instance.
+     * @internal
+     */
+    readonly eventManager: EventManager;
+
     private readonly storageManagers = new Map<Constructor, StorageManager>();
 
     constructor(options: ConfigurationOptions = {}) {
         // use default configuration object if nothing overridden (it fallbacks to env vars)
         this.config = Object.keys(options).length === 0 ? Configuration.getGlobalConfig() : new Configuration(options);
         this.apifyClient = this.newClient();
+        this.eventManager = new PlatformEventManager(this.config);
     }
 
     /**
@@ -121,43 +128,44 @@ export class Actor {
         }
 
         const run = async () => {
-            this.start();
+            await this.start();
 
             try {
                 await userFunc();
-                this.exit({ exitCode: EXIT_CODES.SUCCESS });
+                await this.exit({ exitCode: EXIT_CODES.SUCCESS });
             } catch (err: any) {
                 log.exception(err, err.message);
-                this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
+                await this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
             }
         };
 
         run().catch((err) => {
             log.exception(err, err.message);
-            this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
+            return this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
         });
     }
 
     /**
      * @ignore
      */
-    start(options?: { forceCloud?: boolean }): void {
+    async start(): Promise<void> {
         logSystemInfo();
         printOutdatedSdkWarning();
-        initializeEvents();
 
-        const isLocal = !!(this.config.get('localStorageDir') && !options?.forceCloud);
+        await this.eventManager.start();
 
-        if (!isLocal) {
+        if (this.isAtHome()) {
+            this.config.set('availableMemoryRatio', 1);
             this.config.useStorageClient(this.apifyClient);
+            this.config.useEvents(this.eventManager);
         }
     }
 
     /**
      * @ignore
      */
-    exit(options: ExitOptions = {}): void {
-        stopEvents();
+    async exit(options: ExitOptions = {}): Promise<void> {
+        await this.eventManager.stop();
 
         if (options.exit ?? true) {
             process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
@@ -696,7 +704,7 @@ export class Actor {
      * @ignore
      */
     isAtHome(): boolean {
-        return !!this.config.get('isAtHome');
+        return !!process.env[ENV_VARS.IS_AT_HOME];
     }
 
     /**
@@ -766,11 +774,11 @@ export class Actor {
         return Actor.getDefaultInstance().main(userFunc);
     }
 
-    static start(options?: { forceCloud?: boolean }): void {
-        return Actor.getDefaultInstance().start(options);
+    static async start(): Promise<void> {
+        return Actor.getDefaultInstance().start();
     }
 
-    static exit(options: ExitOptions = {}): void {
+    static async exit(options: ExitOptions = {}): Promise<void> {
         return Actor.getDefaultInstance().exit(options);
     }
 

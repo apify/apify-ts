@@ -5,23 +5,27 @@ import { EventEmitter } from 'events';
 import { join } from 'path';
 import { entries } from './typedefs';
 import { StorageClient } from './storages/storage';
+import { EventManager, LocalEventManager } from './events';
 
 // FIXME many of the options are apify specific, if they should be somewhere, its in the actor sdk
 export interface ConfigurationOptions {
-    token?: string;
     storageClient?: StorageClient;
-    localStorageDir?: string;
-    localStorageEnableWalMode?: boolean;
+    eventManager?: EventManager;
     defaultDatasetId?: string;
     defaultKeyValueStoreId?: string;
     defaultRequestQueueId?: string;
-    metamorphAfterSleepMillis?: number;
+    maxUsedCpuRatio?: number;
+    availableMemoryRatio?: number;
     persistStateIntervalMillis?: number;
-    actorEventsWsUrl?: string;
+    systemInfoIntervalMillis?: number;
+
+    token?: string;
+    localStorageDir?: string;
+    localStorageEnableWalMode?: boolean;
+    metamorphAfterSleepMillis?: number;
     inputKey?: string;
     actorId?: string;
     apiBaseUrl?: string;
-    isAtHome?: boolean;
     actorRunId?: string;
     actorTaskId?: string;
     containerPort?: number;
@@ -65,7 +69,6 @@ export interface ConfigurationOptions {
  *
  * Key | Environment Variable | Default Value
  * ---|---|---
- * `actorEventsWsUrl` | `APIFY_ACTOR_EVENTS_WS_URL` | -
  * `actorId` | `APIFY_ACTOR_ID` | -
  * `actorRunId` | `APIFY_ACTOR_RUN_ID` | -
  * `actorTaskId` | `APIFY_ACTOR_TASK_ID` | -
@@ -73,7 +76,6 @@ export interface ConfigurationOptions {
  * `containerPort` | `APIFY_CONTAINER_PORT` | `4321`
  * `containerUrl` | `APIFY_CONTAINER_URL` | `'http://localhost:4321'`
  * `inputKey` | `APIFY_INPUT_KEY` | `'INPUT'`
- * `isAtHome` | `APIFY_IS_AT_HOME` | -
  * `metamorphAfterSleepMillis` | `APIFY_METAMORPH_AFTER_SLEEP_MILLIS` | `300e3`
  * `proxyHostname` | `APIFY_PROXY_HOSTNAME` | `'proxy.apify.com'`
  * `proxyPassword` | `APIFY_PROXY_PASSWORD` | -
@@ -102,11 +104,9 @@ export class Configuration {
         APIFY_METAMORPH_AFTER_SLEEP_MILLIS: 'metamorphAfterSleepMillis',
         APIFY_PERSIST_STATE_INTERVAL_MILLIS: 'persistStateIntervalMillis',
         APIFY_TEST_PERSIST_INTERVAL_MILLIS: 'persistStateIntervalMillis', // for BC, seems to be unused
-        APIFY_ACTOR_EVENTS_WS_URL: 'actorEventsWsUrl',
         APIFY_INPUT_KEY: 'inputKey',
         APIFY_ACTOR_ID: 'actorId',
         APIFY_API_BASE_URL: 'apiBaseUrl',
-        APIFY_IS_AT_HOME: 'isAtHome',
         APIFY_ACTOR_RUN_ID: 'actorRunId',
         APIFY_ACTOR_TASK_ID: 'actorTaskId',
         APIFY_CONTAINER_PORT: 'containerPort',
@@ -140,6 +140,8 @@ export class Configuration {
         defaultKeyValueStoreId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID],
         defaultDatasetId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_DATASET_ID],
         defaultRequestQueueId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_REQUEST_QUEUE_ID],
+        maxUsedCpuRatio: 0.95,
+        availableMemoryRatio: 0.25,
         inputKey: 'INPUT',
         apiBaseUrl: 'https://api.apify.com',
         proxyStatusUrl: 'http://proxy.apify.com',
@@ -148,7 +150,8 @@ export class Configuration {
         containerPort: +LOCAL_ENV_VARS[ENV_VARS.CONTAINER_PORT],
         containerUrl: LOCAL_ENV_VARS[ENV_VARS.CONTAINER_URL],
         metamorphAfterSleepMillis: 300_000,
-        persistStateIntervalMillis: 60_000, // This value is mentioned in jsdoc in `events.js`, if you update it here, update it there too.
+        persistStateIntervalMillis: 60_000,
+        systemInfoIntervalMillis: 60_000,
         localStorageEnableWalMode: true,
     };
 
@@ -218,7 +221,7 @@ export class Configuration {
     }
 
     /**
-     * Returns cached instance of {@link ApifyClient} using options as defined in the environment variables or in
+     * Returns cached instance of {@link StorageClient} using options as defined in the environment variables or in
      * this {@link Configuration} instance. Only first call of this method will create the client, following calls will
      * return the same client instance.
      *
@@ -236,6 +239,21 @@ export class Configuration {
         return this.createStorageLocal(options) as any;
     }
 
+    getEvents(): EventManager {
+        if (this.options.has('eventManager')) {
+            return this.options.get('eventManager') as EventManager;
+        }
+
+        if (this.services.has('eventManager')) {
+            return this.services.get('eventManager') as EventManager;
+        }
+
+        const eventManager = new LocalEventManager(this);
+        this.services.set('eventManager', eventManager);
+
+        return eventManager;
+    }
+
     /**
      * Creates an instance of ApifyStorageLocal using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
@@ -243,7 +261,7 @@ export class Configuration {
     createStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
         const storageDir = options.storageDir ?? this.get('localStorageDir');
         const enableWalMode = options.enableWalMode ?? this.get('localStorageEnableWalMode');
-        const cacheKey = `ApifyStorageLocal~${storageDir}~${enableWalMode}`;
+        const cacheKey = `StorageLocal~${storageDir}~${enableWalMode}`;
 
         if (this.services.has(cacheKey)) {
             return this.services.get(cacheKey) as ApifyStorageLocal;
@@ -266,6 +284,10 @@ export class Configuration {
 
     useStorageClient(client: StorageClient): void {
         this.options.set('storageClient', client);
+    }
+
+    useEvents(events: EventManager): void {
+        this.options.set('eventManager', events);
     }
 
     /**

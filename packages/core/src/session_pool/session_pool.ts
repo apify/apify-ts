@@ -2,12 +2,11 @@ import { Log } from '@apify/log';
 import { EventEmitter } from 'events';
 import ow from 'ow';
 import { Configuration } from '../configuration';
-import { EVENT_PERSIST_STATE } from '../constants';
-import { events } from '../events';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
 import { Dictionary } from '../typedefs';
 import { Session, SessionOptions } from './session';
+import { EventManager, EventType } from '../events/event_manager';
 
 /**
  * Factory user-function which creates customized {@link Session} instances.
@@ -119,6 +118,7 @@ export class SessionPool extends EventEmitter {
     persistStateKeyValueStoreId?: string;
     persistStateKey: string;
     private _listener!: () => Promise<void>;
+    private events: EventManager;
 
     /**
      * @internal
@@ -148,6 +148,7 @@ export class SessionPool extends EventEmitter {
         } = options;
 
         this.config = config;
+        this.events = config.getEvents();
         this.log = log.child({ prefix: 'SessionPool' });
 
         // Pool Configuration
@@ -199,7 +200,7 @@ export class SessionPool extends EventEmitter {
 
         this._listener = this.persistState.bind(this);
 
-        events.on(EVENT_PERSIST_STATE, this._listener);
+        this.events.on(EventType.PERSIST_STATE, this._listener);
     }
 
     /**
@@ -300,7 +301,7 @@ export class SessionPool extends EventEmitter {
      * This function should be called after you are done with using the `SessionPool` instance.
      */
     async teardown(): Promise<void> {
-        events.removeListener(EVENT_PERSIST_STATE, this._listener);
+        this.events.off(EventType.PERSIST_STATE, this._listener);
         await this.persistState();
     }
 

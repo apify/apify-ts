@@ -1,4 +1,4 @@
-import { Statistics, events, EVENT_PERSIST_STATE, Configuration } from '@crawlers/core';
+import { Statistics, Configuration, EventType } from '@crawlers/core';
 import { Dictionary } from '@crawlers/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
@@ -9,6 +9,7 @@ describe('Statistics', () => {
 
     let stats: Statistics;
     let localStorageEmulator: LocalStorageDirEmulator;
+    const events = Configuration.getGlobalConfig().getEvents();
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();
@@ -22,7 +23,7 @@ describe('Statistics', () => {
     });
 
     afterEach(async () => {
-        events.removeAllListeners(EVENT_PERSIST_STATE);
+        events.off(EventType.PERSIST_STATE);
         stats = null;
     });
 
@@ -158,15 +159,15 @@ describe('Statistics', () => {
 
         test('should remove persist state event listener', async () => {
             await stats.startCapturing();
-            expect(events.listenerCount(EVENT_PERSIST_STATE)).toEqual(1);
+            expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(1);
             await stats.stopCapturing();
 
-            expect(events.listenerCount(EVENT_PERSIST_STATE)).toEqual(0);
+            expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(0);
             await stats.startCapturing();
-            expect(events.listenerCount(EVENT_PERSIST_STATE)).toEqual(1);
+            expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(1);
             stats.reset();
 
-            expect(events.listenerCount(EVENT_PERSIST_STATE)).toEqual(0);
+            expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(0);
         });
 
         test('on persistState event', async () => {
@@ -180,7 +181,7 @@ describe('Statistics', () => {
             // @ts-expect-error Accessing private prop
             const setValueSpy = jest.spyOn(stats.keyValueStore, 'setValue');
 
-            events.emit(EVENT_PERSIST_STATE);
+            events.emit(EventType.PERSIST_STATE);
 
             // TODO: these properties don't exist on the calculate return type
             // @ts-expect-error Incorrect types?

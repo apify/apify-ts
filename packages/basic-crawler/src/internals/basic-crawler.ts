@@ -1,4 +1,3 @@
-import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import defaultLog, { Log } from '@apify/log';
 import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
@@ -8,7 +7,6 @@ import {
     EnqueueLinksOptions,
     CrawlerHandleFailedRequestInput,
     enqueueLinks,
-    events,
     ProxyInfo,
     QueueOperationInfo,
     Request,
@@ -23,7 +21,10 @@ import {
     RequestOptions,
     RequestQueueOperationOptions,
     addRequestsToQueueInBatches,
-    createRequests, Configuration,
+    createRequests,
+    Configuration,
+    EventManager,
+    EventType,
 } from '@crawlers/core';
 import { Awaitable } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
@@ -340,6 +341,7 @@ export class BasicCrawler<
     protected crawlingContexts = new Map<string, Context>();
     protected isRunningPromise?: Promise<void>;
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
+    protected events: EventManager;
 
     protected static optionsShape = {
         requestList: ow.optional.object.validate(validators.requestList),
@@ -412,6 +414,7 @@ export class BasicCrawler<
         this.requestList = requestList;
         this.requestQueue = requestQueue;
         this.log = log;
+        this.events = config.getEvents();
 
         this._handlePropertyNameChange({
             newName: 'requestHandler',
@@ -453,7 +456,7 @@ export class BasicCrawler<
         this.internalTimeoutMillis = Math.max(this.requestHandlerTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
         this.maxRequestRetries = maxRequestRetries;
         this.handledRequestsCount = 0;
-        this.stats = new Statistics({ logMessage: `${log.getOptions().prefix} request statistics:` });
+        this.stats = new Statistics({ logMessage: `${log.getOptions().prefix} request statistics:`, config });
         this.sessionPoolOptions = {
             ...sessionPoolOptions,
             log,
@@ -518,8 +521,8 @@ export class BasicCrawler<
         this.isRunningPromise = undefined;
 
         // Attach a listener to handle migration and aborting events gracefully.
-        events.on(ACTOR_EVENT_NAMES.MIGRATING, this._pauseOnMigration.bind(this));
-        events.on(ACTOR_EVENT_NAMES.ABORTING, this._pauseOnMigration.bind(this));
+        this.events.on(EventType.MIGRATING, this._pauseOnMigration.bind(this));
+        this.events.on(EventType.ABORTING, this._pauseOnMigration.bind(this));
     }
 
     /**

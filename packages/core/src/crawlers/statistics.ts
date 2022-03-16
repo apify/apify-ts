@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import ow from 'ow';
-import { EVENT_PERSIST_STATE } from '../constants';
-import { events } from '../events';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
+import { EventManager, EventType } from '../events/event_manager';
+import { Configuration } from '../configuration';
 
 /**
  * @ignore
@@ -65,6 +65,7 @@ export class Statistics {
     private readonly log = defaultLog.child({ prefix: 'Statistics' });
     private instanceStart!: number;
     private logInterval: unknown;
+    private events: EventManager;
 
     /**
      * @internal
@@ -73,16 +74,19 @@ export class Statistics {
         ow(options, ow.object.exactShape({
             logIntervalSecs: ow.optional.number,
             logMessage: ow.optional.string,
+            config: ow.optional.object,
         }));
 
         const {
             logIntervalSecs = 60,
             logMessage = 'Statistics',
+            config = Configuration.getGlobalConfig(),
         } = options;
 
         this.logIntervalMillis = logIntervalSecs * 1000;
         this.logMessage = logMessage;
         this.listener = this.persistState.bind(this);
+        this.events = config.getEvents();
 
         // initialize by "resetting"
         this.reset();
@@ -192,7 +196,7 @@ export class Statistics {
             this.state.crawlerStartedAt = new Date();
         }
 
-        events.on(EVENT_PERSIST_STATE, this.listener);
+        this.events.on(EventType.PERSIST_STATE, this.listener);
 
         this.logInterval = setInterval(() => {
             this.log.info(this.logMessage, {
@@ -280,7 +284,7 @@ export class Statistics {
 
     protected _teardown(): void {
         // this can be called before a call to startCapturing happens (or in a 'finally' block)
-        events.removeListener(EVENT_PERSIST_STATE, this.listener);
+        this.events.off(EventType.PERSIST_STATE, this.listener);
 
         if (this.logInterval) {
             clearInterval(this.logInterval as number);
@@ -312,6 +316,7 @@ export class Statistics {
 interface StatisticsOptions {
     logIntervalSecs?: number;
     logMessage?: string;
+    config?: Configuration;
 }
 
 /**

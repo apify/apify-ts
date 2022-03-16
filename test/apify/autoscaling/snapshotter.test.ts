@@ -1,11 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 
-import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
+import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
-import { Configuration, events, Snapshotter } from '@crawlers/core';
+import { Configuration, EventType, Snapshotter } from '@crawlers/core';
 import { MemoryInfo, sleep } from '@crawlers/utils';
 import os from 'os';
-import { Actor } from 'apify';
 
 const toBytes = (x: number) => x * 1024 * 1024;
 
@@ -105,11 +104,10 @@ describe('Snapshotter', () => {
     });
 
     test('correctly marks CPU overloaded using Platform event', async () => {
-        Actor.start({ forceCloud: true }); // TODO move to actor sdk tests
         process.env[ENV_VARS.IS_AT_HOME] = '1'; // TODO this should not be needed, snapshotter depends on this currently
         let count = 0;
         const emitAndWait = async (delay: number) => {
-            events.emit(ACTOR_EVENT_NAMES.SYSTEM_INFO, {
+            Configuration.getGlobalConfig().getEvents().emit(EventType.SYSTEM_INFO, {
                 isCpuOverloaded: count % 2 === 0,
                 createdAt: new Date().toISOString(),
                 cpuCurrentUsage: 66.6,
@@ -137,8 +135,6 @@ describe('Snapshotter', () => {
         } finally {
             delete process.env[ENV_VARS.IS_AT_HOME];
         }
-
-        Actor.exit({ exit: false });
     });
 
     test('correctly marks CPU overloaded using OS metrics', () => {

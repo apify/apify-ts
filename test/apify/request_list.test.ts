@@ -1,5 +1,5 @@
 import log from '@apify/log';
-import { EVENT_PERSIST_STATE, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
+import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlers/core';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
@@ -38,6 +38,8 @@ afterAll(() => {
 describe('RequestList', () => {
     let ll: number;
     let localStorageEmulator: LocalStorageDirEmulator;
+    const events = Configuration.getGlobalConfig().getEvents();
+
     beforeAll(() => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
@@ -478,7 +480,7 @@ describe('RequestList', () => {
 
         // Persist state.
         setValueSpy.mockResolvedValueOnce();
-        events.emit(EVENT_PERSIST_STATE);
+        events.emit(EventType.PERSIST_STATE);
         await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 
@@ -488,7 +490,7 @@ describe('RequestList', () => {
         await requestList.markRequestHandled(request2);
         expect(requestList.isStatePersisted).toBe(false);
         setValueSpy.mockResolvedValueOnce();
-        events.emit(EVENT_PERSIST_STATE);
+        events.emit(EventType.PERSIST_STATE);
         await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 

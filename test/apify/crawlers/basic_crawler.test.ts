@@ -1,4 +1,3 @@
-import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import log from '@apify/log';
 import {
     CrawlingContext,
@@ -6,13 +5,11 @@ import {
     FailedRequestHandler,
     RequestHandler,
     Request,
-    QueueOperationInfo,
     RequestQueue,
     RequestList,
-    events,
     Configuration,
     BasicCrawler,
-    KeyValueStore,
+    KeyValueStore, EventType,
 } from 'crawlers';
 import { sleep } from '@crawlers/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
@@ -20,6 +17,7 @@ import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 describe('BasicCrawler', () => {
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
+    const events = Configuration.getGlobalConfig().getEvents();
 
     beforeAll(async () => {
         logLevel = log.getLevel();
@@ -64,7 +62,7 @@ describe('BasicCrawler', () => {
         expect(await requestList.isEmpty()).toBe(true);
     });
 
-    const { MIGRATING, ABORTING } = ACTOR_EVENT_NAMES;
+    const { MIGRATING, ABORTING } = EventType;
 
     test.each([MIGRATING, ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
         const sources = [...Array(500).keys()].map((index) => ({ url: `https://example.com/${index + 1}` }));
@@ -650,7 +648,7 @@ describe('BasicCrawler', () => {
             const url = 'https://example.com';
             const requestList = new RequestList({ sources: [{ url }] });
             await requestList.initialize();
-            events.removeAllListeners(ACTOR_EVENT_NAMES.PERSIST_STATE);
+            events.off(EventType.PERSIST_STATE);
 
             const crawler = new BasicCrawler({
                 requestList,
@@ -667,11 +665,11 @@ describe('BasicCrawler', () => {
             // @ts-expect-error Accessing private prop
             crawler._loadHandledRequestCount = () => { // eslint-disable-line
                 expect(crawler.sessionPool).toBeDefined();
-                expect(events.listenerCount(ACTOR_EVENT_NAMES.PERSIST_STATE)).toEqual(1);
+                expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(1);
             };
 
             await crawler.run();
-            expect(events.listenerCount(ACTOR_EVENT_NAMES.PERSIST_STATE)).toEqual(0);
+            expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(0);
             expect(crawler.sessionPool.maxPoolSize).toEqual(10);
         });
     });
