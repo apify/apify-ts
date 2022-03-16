@@ -84,6 +84,7 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
 
 /**
  * @ignore
+ * @deprecated Use {@link RequestQueue#addRequests} instead
  */
 export async function addRequestsToQueueInBatches(requests: Request[], requestQueue: RequestQueue, batchSize = 5): Promise<QueueOperationInfo[]> {
     const queueOperationInfos: Promise<QueueOperationInfo>[] = [];
