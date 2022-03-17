@@ -149,6 +149,7 @@ export class RequestQueue {
     id: string;
     name?: string;
     isLocal?: boolean;
+    timeoutSecs = 30;
     clientKey = cryptoRandomObjectId();
     client: RequestQueueClient;
 
@@ -195,6 +196,7 @@ export class RequestQueue {
         this.isLocal = options.isLocal;
         this.client = options.client.requestQueue(this.id, {
             clientKey: this.clientKey,
+            timeoutSecs: this.timeoutSecs,
         }) as RequestQueueClient;
     }
 
