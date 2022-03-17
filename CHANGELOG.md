@@ -16,6 +16,7 @@
 2.2.2 / 2022/01/xx
 ====================
 - fix: ensure `request.headers` is set
+- Lower RequestQueue timeout to 30 seconds
 
 2.2.1 / 2022/01/03
 ====================
