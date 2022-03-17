@@ -1,4 +1,5 @@
 import os from 'os';
+import fs from 'fs';
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
 import {
@@ -147,11 +148,30 @@ export abstract class BrowserLauncher<
      * Gets a typical path to Chrome executable, depending on the current operating system.
      */
     protected _getTypicalChromeExecutablePath(): string {
+        /**
+         * Return path of Chrome executable by its OS environment variable to deal with non-english language OS.
+         * Taking also in account the old [chrome 380177 issue](https://bugs.chromium.org/p/chromium/issues/detail?id=380177).
+         *
+         * @returns {string}
+         * @ignore
+         */
+        const getWin32Path = () => {
+            let chromeExecutablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            const path00 = `${process.env.ProgramFiles}\\Google\\Chrome\\Application\\chrome.exe`;
+            const path86 = `${process.env['ProgramFiles(x86)']}\\Google\\Chrome\\Application\\chrome.exe`;
+
+            if (fs.existsSync(path00)) {
+                chromeExecutablePath = path00;
+            } else if (fs.existsSync(path86)) {
+                chromeExecutablePath = path86;
+            }
+            return chromeExecutablePath;
+        };
         switch (os.platform()) {
             case 'darwin':
                 return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
             case 'win32':
-                return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+                return getWin32Path();
             default:
                 return '/usr/bin/google-chrome';
         }
