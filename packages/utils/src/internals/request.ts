@@ -78,8 +78,7 @@ export interface RequestAsBrowserOptions extends Omit<GotOptionsInit, 'json'> {
     /**
      * If set to false, it will prevent use of HTTP2 requests. This is strongly discouraged. Websites
      * expect HTTP2 connections, because browsers use HTTP2 by default. It will automatically downgrade
-     * to HTTP/1.1 for websites that do not support HTTP2. For Node 10 this option is always set to `false`
-     * because Node 10 does not support HTTP2 very well. Upgrade to Node 12 for better performance.
+     * to HTTP/1.1 for websites that do not support HTTP2.
      */
     useHttp2?: boolean;
 
