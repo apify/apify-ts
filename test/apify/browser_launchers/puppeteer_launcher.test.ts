@@ -228,6 +228,8 @@ describe('launchPuppeteer()', () => {
             browser = await launchPuppeteer(opts);
             const page = await browser.newPage();
 
+            await page.setDefaultNavigationTimeout(0);
+
             // Add a test to go to an actual domain because we've seen issues
             // where pages would not load at all with Chrome.
             await page.goto(`http://${HOSTNAME}:${port}/example`);
