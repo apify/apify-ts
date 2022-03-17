@@ -30,6 +30,8 @@ describe('PuppeteerCrawler', () => {
     let requestList: RequestList;
     let servers: ProxyChainServer[];
     let target: Server;
+    let serverUrl: string;
+    let proxyConfiguration: ProxyConfiguration;
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -39,11 +41,14 @@ describe('PuppeteerCrawler', () => {
         localStorageEmulator = new LocalStorageDirEmulator();
 
         target = createServer((request, response) => {
+            response.write(`<html><head><title>Example Domain</title></head></html>`);
             response.end(request.socket.remoteAddress);
         });
 
         target.listen(0, '127.0.0.1');
         await once(target, 'listening');
+
+        serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
 
         servers = [
             createProxyServer('127.0.0.2', '', ''),
@@ -52,12 +57,20 @@ describe('PuppeteerCrawler', () => {
         ];
 
         await Promise.all(servers.map((server) => server.listen()));
+
+        proxyConfiguration = new ProxyConfiguration({
+            proxyUrls: [
+                `http://127.0.0.2:${servers[0].port}`,
+                `http://127.0.0.3:${servers[1].port}`,
+                `http://127.0.0.4:${servers[2].port}`,
+            ],
+        });
     });
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
         Configuration.getGlobalConfig().set('localStorageDir', storageDir);
-        const sources = ['http://example.com/'];
+        const sources = [serverUrl];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });
 
@@ -72,12 +85,12 @@ describe('PuppeteerCrawler', () => {
 
     test('should work', async () => {
         const sourcesLarge = [
-            { url: 'http://example.com/?q=1' },
-            { url: 'http://example.com/?q=2' },
-            { url: 'http://example.com/?q=3' },
-            { url: 'http://example.com/?q=4' },
-            { url: 'http://example.com/?q=5' },
-            { url: 'http://example.com/?q=6' },
+            { url: `${serverUrl}/?q=1` },
+            { url: `${serverUrl}/?q=2` },
+            { url: `${serverUrl}/?q=3` },
+            { url: `${serverUrl}/?q=4` },
+            { url: `${serverUrl}/?q=5` },
+            { url: `${serverUrl}/?q=6` },
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
         const processed: Request[] = [];
@@ -198,11 +211,9 @@ describe('PuppeteerCrawler', () => {
         expect.hasAssertions();
     });
 
-    // FIXME: ~I have no idea why but this test hangs~
-    //  -> it hangs because we need to teardown the crawler
-    test.skip('supports useChrome option', async () => {
+    test('supports useChrome option', async () => {
         // const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
-        const puppeteerCrawler = new PuppeteerCrawler({ //eslint-disable-line
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -214,6 +225,7 @@ describe('PuppeteerCrawler', () => {
             },
             requestHandler: () => {},
         });
+        await puppeteerCrawler.run();
 
         // expect(spy.calledOnce).toBe(true);
         // spy.restore();
@@ -246,7 +258,7 @@ describe('PuppeteerCrawler', () => {
 
     test('timeout via preNavigationHooks will abort the page function as early as possible (gh #1216)', async () => {
         const requestQueue = await RequestQueue.open();
-        await requestQueue.addRequest({ url: 'http://www.example.com' });
+        await requestQueue.addRequest({ url: serverUrl });
         const requestHandler = jest.fn();
 
         const crawler = new PuppeteerCrawler({
@@ -298,7 +310,7 @@ describe('PuppeteerCrawler', () => {
 
     test('timeout in preLaunchHooks will abort the page function as early as possible (gh #1216)', async () => {
         const requestQueue = await RequestQueue.open();
-        await requestQueue.addRequest({ url: 'http://www.example.com' });
+        await requestQueue.addRequest({ url: serverUrl });
         const requestHandler = jest.fn();
 
         const crawler = new PuppeteerCrawler({
@@ -354,7 +366,7 @@ describe('PuppeteerCrawler', () => {
         const cookies: PuppeteerCookie[] = [
             {
                 name: 'example_cookie_name',
-                domain: '.example.com',
+                domain: '127.0.0.1',
                 value: 'example_cookie_value',
                 expires: -1,
             } as never,
@@ -370,13 +382,13 @@ describe('PuppeteerCrawler', () => {
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {
                     const session = new Session({ sessionPool });
-                    session.setPuppeteerCookies(cookies, 'http://www.example.com');
+                    session.setPuppeteerCookies(cookies, serverUrl);
                     return session;
                 },
             },
             requestHandler: async ({ page, session }) => {
                 pageCookies = await page.cookies().then((cks) => cks.map((c) => `${c.name}=${c.value}`).join('; '));
-                sessionCookies = session.getCookieString('http://www.example.com');
+                sessionCookies = session.getCookieString(serverUrl);
             },
         });
 
@@ -388,15 +400,6 @@ describe('PuppeteerCrawler', () => {
     test('proxy rotation', async () => {
         const proxies = new Set();
         const sessions = new Set();
-        // @ts-expect-error Property 'port' does not exist on type 'string | AddressInfo'.
-        const serverUrl = `http://127.0.0.1:${target.address().port}`;
-        const proxyConfiguration = new ProxyConfiguration({
-            proxyUrls: [
-                `http://127.0.0.2:${servers[0].port}`,
-                `http://127.0.0.3:${servers[1].port}`,
-                `http://127.0.0.4:${servers[2].port}`,
-            ],
-        });
         const puppeteerCrawler = new PuppeteerCrawler({
             requestList: await RequestList.open(null, [
                 { url: `${serverUrl}/?q=1` },
@@ -428,16 +431,6 @@ describe('PuppeteerCrawler', () => {
 
     if (os.platform() !== 'darwin') {
         test('proxy per page', async () => {
-            const proxyConfiguration = new ProxyConfiguration({
-                proxyUrls: [
-                    `http://127.0.0.2:${servers[0].port}`,
-                    `http://127.0.0.3:${servers[1].port}`,
-                    `http://127.0.0.4:${servers[2].port}`,
-                ],
-            });
-
-            const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
-
             const requestListLarge = new RequestList({
                 sources: [
                     { url: `${serverUrl}/?q=1` },
