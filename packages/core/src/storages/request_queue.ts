@@ -1,6 +1,5 @@
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { ListDictionary, LruCache } from '@apify/datastructures';
-import { storage } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@crawlers/storage';
 import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient } from 'apify-client';
@@ -383,9 +382,9 @@ export class RequestQueue {
             return null;
         }
 
-        if (!request.handledAt) request.handledAt = new Date().toISOString();
-
-        const queueOperationInfo = await this.client.updateRequest(request);
+        const handledAt = request.handledAt ?? new Date().toISOString();
+        const queueOperationInfo = await this.client.updateRequest({ ...request, handledAt });
+        request.handledAt = handledAt;
 
         this.inProgress.delete(request.id);
         this.recentlyHandled.add(request.id, true);
@@ -429,12 +428,6 @@ export class RequestQueue {
         // Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
         // This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
         setTimeout(() => {
-            const signal = storage.getStore()?.cancelTask?.signal;
-
-            if (signal?.aborted) {
-                return;
-            }
-
             if (!this.inProgress.has(request.id)) {
                 this.log.debug('The request is no longer marked as in progress in the queue?!', { requestId: request.id });
                 return;
