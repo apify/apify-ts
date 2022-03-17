@@ -384,7 +384,7 @@ export class Snapshotter {
      */
     protected _snapshotCpuOnLocal(intervalCallback: () => unknown): void {
         const now = new Date();
-        this._pruneSnapshots(this.eventLoopSnapshots, now);
+        this._pruneSnapshots(this.cpuSnapshots, now);
 
         const ticks = this._getCurrentCpuTicks();
         const snapshot = {
