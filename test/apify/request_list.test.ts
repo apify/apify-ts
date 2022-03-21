@@ -1,6 +1,7 @@
 import log from '@apify/log';
 import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlee/core';
-import { requestAsBrowser, sleep } from '@crawlee/utils';
+import { sleep } from '@crawlee/utils';
+import { gotScraping } from 'got-scraping';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
@@ -15,24 +16,24 @@ function shuffle(array: unknown[]) : unknown[] {
     return out;
 }
 
-jest.mock('@crawlee/utils/src/internals/request', () => {
-    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
+jest.mock('got-scraping', () => {
+    const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
     return {
         ...original,
-        requestAsBrowser: jest.fn(original.requestAsBrowser),
+        gotScraping: jest.fn(original.gotScraping),
     };
 });
 
-const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
-const originalRequestAsBrowserImplementation = requestAsBrowserSpy.getMockImplementation()!;
+const gotScrapingSpy = gotScraping as jest.MockedFunction<typeof gotScraping>;
+const originalGotScraping = gotScrapingSpy.getMockImplementation()!;
 
 afterEach(() => {
-    requestAsBrowserSpy.mockReset();
-    requestAsBrowserSpy.mockImplementation(originalRequestAsBrowserImplementation);
+    gotScrapingSpy.mockReset();
+    gotScrapingSpy.mockImplementation(originalGotScraping);
 });
 
 afterAll(() => {
-    jest.unmock('@crawlee/utils/src/internals/request');
+    jest.unmock('got-scraping');
 });
 
 describe('RequestList', () => {
@@ -185,7 +186,7 @@ describe('RequestList', () => {
     test('should use regex parameter to parse urls', async () => {
         const listStr = 'kjnjkn"https://example.com/a/b/c?q=1#abc";,"HTTP://google.com/a/b/c";dgg:dd';
         const listArr = ['https://example.com', 'HTTP://google.com'];
-        requestAsBrowserSpy.mockResolvedValue({ body: listStr } as any);
+        gotScrapingSpy.mockResolvedValue({ body: listStr } as any);
 
         const regex = /(https:\/\/example.com|HTTP:\/\/google.com)/g;
         const requestList = new RequestList({
@@ -203,8 +204,8 @@ describe('RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[1] });
 
-        expect(requestAsBrowserSpy).toBeCalledWith({ url: 'http://example.com/list-1', encoding: 'utf8' });
-        requestAsBrowserSpy.mockRestore();
+        expect(gotScrapingSpy).toBeCalledWith({ url: 'http://example.com/list-1', encoding: 'utf8' });
+        gotScrapingSpy.mockRestore();
     });
 
     test('should fix gdoc sharing url in `requestsFromUrl` automatically (GH issue #639)', async () => {
@@ -223,7 +224,7 @@ describe('RequestList', () => {
         ];
         const correctUrl = 'https://docs.google.com/spreadsheets/d/11UGSBOSXy5Ov2WEP9nr4kSIxQJmH18zh-5onKtBsovU/gviz/tq?tqx=out:csv';
 
-        requestAsBrowserSpy.mockResolvedValueOnce({ body: JSON.stringify(list) } as any);
+        gotScrapingSpy.mockResolvedValueOnce({ body: JSON.stringify(list) } as any);
 
         const requestList = new RequestList({
             sources: wrongUrls.map((requestsFromUrl) => ({ requestsFromUrl })),
@@ -235,8 +236,8 @@ describe('RequestList', () => {
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[1] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[2] });
 
-        expect(requestAsBrowserSpy).toBeCalledWith({ url: correctUrl, encoding: 'utf8' });
-        requestAsBrowserSpy.mockRestore();
+        expect(gotScrapingSpy).toBeCalledWith({ url: correctUrl, encoding: 'utf8' });
+        gotScrapingSpy.mockRestore();
     });
 
     test('should handle requestsFromUrl with no URLs', async () => {

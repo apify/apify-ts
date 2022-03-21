@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { requestAsBrowser } from './request';
+import { gotScraping } from 'got-scraping';
 import { URL_NO_COMMAS_REGEX } from './general';
 
 export interface DownloadListOfUrlsOptions {
@@ -42,7 +42,7 @@ export async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Pr
         fixedUrl = `${match[1]}/gviz/tq?tqx=out:csv`;
     }
 
-    const { body: string } = await requestAsBrowser({ url: fixedUrl, encoding });
+    const { body: string } = await gotScraping({ url: fixedUrl, encoding });
     return extractUrls({ string, urlRegExp });
 }
 

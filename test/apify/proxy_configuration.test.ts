@@ -1,5 +1,5 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { requestAsBrowser } from '@crawlee/utils';
+import { gotScraping } from 'got-scraping';
 import { UserClient } from 'apify-client';
 import { Actor, ProxyConfiguration } from 'apify';
 
@@ -17,18 +17,18 @@ const basicOpts = {
 const basicOptsProxyUrl = 'http://groups-GROUP1+GROUP2,session-538909250932,country-CZ:test12345@proxy.apify.com:8000';
 const proxyUrlNoSession = 'http://groups-GROUP1+GROUP2,country-CZ:test12345@proxy.apify.com:8000';
 
-jest.mock('@crawlee/utils/src/internals/request', () => {
-    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
+jest.mock('got-scraping', () => {
+    const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
     return {
         ...original,
-        requestAsBrowser: jest.fn(),
+        gotScraping: jest.fn(),
     };
 });
 
-const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+const gotScrapingSpy = gotScraping as jest.MockedFunction<typeof gotScraping>;
 
 afterAll(() => {
-    jest.unmock('@crawlee/utils/src/internals/request');
+    jest.unmock('got-scraping');
 });
 
 afterEach(() => {
@@ -323,7 +323,7 @@ describe('Actor.createProxyConfiguration()', () => {
         const status = { connected: true };
         const proxyUrl = proxyUrlNoSession;
         const url = 'http://proxy.apify.com/?format=json';
-        requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
+        gotScrapingSpy.mockResolvedValueOnce({ body: status } as any);
 
         const proxyConfiguration = await Actor.createProxyConfiguration(basicOpts);
 
@@ -339,7 +339,7 @@ describe('Actor.createProxyConfiguration()', () => {
         // @ts-expect-error private property
         expect(proxyConfiguration.port).toBe(port);
 
-        expect(requestAsBrowserSpy).toBeCalledWith({ url, proxyUrl, timeout: { request: 4000 }, responseType: 'json' });
+        expect(gotScrapingSpy).toBeCalledWith({ url, proxyUrl, timeout: { request: 4000 }, responseType: 'json' });
     });
 
     test('should work without password (with token)', async () => {
@@ -350,7 +350,7 @@ describe('Actor.createProxyConfiguration()', () => {
         const getUserSpy = jest.spyOn(UserClient.prototype, 'get');
         const status = { connected: true };
 
-        requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
+        gotScrapingSpy.mockResolvedValueOnce({ body: status } as any);
         getUserSpy.mockResolvedValueOnce(userData as any);
 
         // FIXME this fails + 2 more tests here, probably another isAtHome?
@@ -366,7 +366,7 @@ describe('Actor.createProxyConfiguration()', () => {
         // @ts-expect-error private property
         expect(proxyConfiguration.port).toBe(port);
 
-        requestAsBrowserSpy.mockRestore();
+        gotScrapingSpy.mockRestore();
         getUserSpy.mockRestore();
     });
 
@@ -377,7 +377,7 @@ describe('Actor.createProxyConfiguration()', () => {
         const status = { connected: true };
         const fakeUserData = { proxy: { password: 'some-other-users-password' } };
         getUserSpy.mockResolvedValueOnce(fakeUserData as any);
-        requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
+        gotScrapingSpy.mockResolvedValueOnce({ body: status } as any);
 
         // eslint-disable-next-line no-unused-vars
         const proxyConfiguration = new ProxyConfiguration(basicOpts);
@@ -388,7 +388,7 @@ describe('Actor.createProxyConfiguration()', () => {
 
         logMock.mockRestore();
         getUserSpy.mockRestore();
-        requestAsBrowserSpy.mockRestore();
+        gotScrapingSpy.mockRestore();
     });
 
     test('should throw missing password', async () => {
@@ -401,11 +401,11 @@ describe('Actor.createProxyConfiguration()', () => {
             return { body: status };
         };
 
-        requestAsBrowserSpy.mockImplementationOnce(fakeCall as any);
+        gotScrapingSpy.mockImplementationOnce(fakeCall as any);
 
         await expect(Actor.createProxyConfiguration()).rejects.toThrow('Apify Proxy password must be provided');
 
-        requestAsBrowserSpy.mockRestore();
+        gotScrapingSpy.mockRestore();
     });
 
     test('should throw when group is not available', async () => {
@@ -415,18 +415,18 @@ describe('Actor.createProxyConfiguration()', () => {
         const status = { connected: false, connectionError };
         const getUserSpy = jest.spyOn(UserClient.prototype, 'get');
         getUserSpy.mockResolvedValue(userData as any);
-        requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
+        gotScrapingSpy.mockResolvedValueOnce({ body: status } as any);
 
         await expect(Actor.createProxyConfiguration({ groups })).rejects.toThrow(connectionError);
 
-        requestAsBrowserSpy.mockRestore();
+        gotScrapingSpy.mockRestore();
         getUserSpy.mockRestore();
     });
 
     test('should not throw when access check is unresponsive', async () => {
         process.env.APIFY_PROXY_PASSWORD = '123456789';
-        requestAsBrowserSpy.mockRejectedValueOnce(new Error('some error'));
-        requestAsBrowserSpy.mockRejectedValueOnce(new Error('some error'));
+        gotScrapingSpy.mockRejectedValueOnce(new Error('some error'));
+        gotScrapingSpy.mockRejectedValueOnce(new Error('some error'));
 
         const proxyConfiguration = new ProxyConfiguration();
         // @ts-expect-error private property
@@ -435,7 +435,7 @@ describe('Actor.createProxyConfiguration()', () => {
         await proxyConfiguration.initialize();
         expect(logMock).toBeCalledTimes(1);
 
-        requestAsBrowserSpy.mockRestore();
+        gotScrapingSpy.mockRestore();
         logMock.mockRestore();
     });
 
@@ -444,10 +444,10 @@ describe('Actor.createProxyConfiguration()', () => {
         process.env.APIFY_PROXY_HOSTNAME = 'proxy-domain.apify.com';
         process.env.APIFY_PROXY_PASSWORD = password;
 
-        requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as any);
+        gotScrapingSpy.mockResolvedValueOnce({ body: { connected: true } } as any);
 
         await Actor.createProxyConfiguration();
-        expect(requestAsBrowserSpy).toBeCalledWith({
+        expect(gotScrapingSpy).toBeCalledWith({
             url: `${process.env.APIFY_PROXY_STATUS_URL}/?format=json`,
             proxyUrl: `http://auto:${password}@${process.env.APIFY_PROXY_HOSTNAME}:8000`,
             responseType: 'json',
@@ -456,6 +456,6 @@ describe('Actor.createProxyConfiguration()', () => {
             },
         });
 
-        requestAsBrowserSpy.mockRestore();
+        gotScrapingSpy.mockRestore();
     });
 });

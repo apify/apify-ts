@@ -26,13 +26,10 @@ import {
     CheerioRoot,
     entries,
     parseContentTypeFromResponse,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
-    RequestAsBrowserResult,
 } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { Method, TimeoutError } from 'got-scraping';
+import { gotScraping, OptionsInit, Method, TimeoutError } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
@@ -411,7 +408,7 @@ export interface PrepareRequestInputs<JSONData = unknown> {
 export type PrepareRequest<JSONData = unknown> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
 export type CheerioHook<JSONData = unknown> = (
     crawlingContext: CheerioCrawlingContext<JSONData>,
-    requestAsBrowserOptions: RequestAsBrowserOptions,
+    requestAsBrowserOptions: OptionsInit,
 ) => Awaitable<void>;
 
 export interface PostResponseInputs<JSONData = unknown> {
@@ -598,6 +595,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * All `CheerioCrawler` parameters are passed via an options object.
      */
+    // @ts-expect-error `super` is correctly used here
     constructor(options: CheerioCrawlerOptions<JSONData>) {
         ow(options, 'CheerioCrawlerOptions', ow.object.exactShape(CheerioCrawler.optionsShape));
 
@@ -793,7 +791,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             tryCancel();
         }
 
-        const requestAsBrowserOptions = {} as RequestAsBrowserOptions;
+        const requestAsBrowserOptions = {} as OptionsInit;
 
         if (this.useSessionPool) {
             this._applySessionCookie(crawlingContext, requestAsBrowserOptions);
@@ -831,13 +829,13 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      *
      * This way we can still use both `requestAsBrowserOptions` and `context.request` in the hooks (not both).
      */
-    private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, requestAsBrowserOptions: RequestAsBrowserOptions) {
+    private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, requestAsBrowserOptions: OptionsInit) {
         const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers?.Cookie ?? request.headers?.cookie);
 
         if (cookieDiff.length > 0) {
             requestAsBrowserOptions.headers ??= {};
             requestAsBrowserOptions.headers!.Cookie = mergeCookies(request.url, [
-                requestAsBrowserOptions.headers!.Cookie,
+                requestAsBrowserOptions.headers!.Cookie as string,
                 cookieDiff,
             ]);
         }
@@ -853,6 +851,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         let responseWithStream: IncomingMessage;
 
         try {
+            // @ts-expect-error FIXME
             responseWithStream = await this._requestAsBrowser(opts);
         } catch (e) {
             if (e instanceof TimeoutError) {
@@ -869,7 +868,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      * Sets the cookie header to `requestAsBrowserOptions` based on provided session and request. If some cookies were already set,
      * the session cookie will be merged with them. User provided cookies on `request` object have precedence.
      */
-    private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: RequestAsBrowserOptions): void {
+    private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: OptionsInit): void {
         const userCookie = request.headers?.Cookie ?? request.headers?.cookie;
         const sessionCookie = session!.getCookieString(request.url);
         const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie!]);
@@ -916,8 +915,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * Combines the provided `requestOptions` with mandatory (non-overridable) values.
      */
-    protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: RequestAsBrowserOptions) {
-        const requestOptions: RequestAsBrowserOptions = {
+    protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: OptionsInit) {
+        const requestOptions: OptionsInit = {
             url: request.url,
             method: request.method as Method,
             proxyUrl,
@@ -1054,9 +1053,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * @internal wraps public utility for mocking purposes
      */
-    private _requestAsBrowser(options: RequestAsBrowserOptions): Promise<RequestAsBrowserResult> {
-        return requestAsBrowser(options);
-    }
+    private _requestAsBrowser = gotScraping;
 }
 
 interface EnqueueLinksInternalOptions {
@@ -1089,7 +1086,7 @@ interface RequestFunctionOptions {
     request: Request;
     session?: Session;
     proxyUrl?: string;
-    requestAsBrowserOptions: RequestAsBrowserOptions;
+    requestAsBrowserOptions: OptionsInit;
 }
 
 /**

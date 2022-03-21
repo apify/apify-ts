@@ -1,6 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import log, { Log } from '@apify/log';
-import { requestAsBrowser, RequestAsBrowserOptions, sleep, Dictionary, entries } from '@crawlee/utils';
+import { sleep, Dictionary, entries } from '@crawlee/utils';
+import { gotScraping, OptionsInit } from 'got-scraping';
 import bodyParser from 'body-parser';
 import { Actor } from 'apify';
 import {
@@ -146,24 +147,24 @@ app.get('/timeout', async (_req, res) => {
     res.type('html').send('<div>TEST</div>');
 });
 
-jest.mock('@crawlee/utils/src/internals/request', () => {
-    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
+jest.mock('@crawlers/utils/src/internals/request', () => {
+    const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
     return {
         ...original,
-        requestAsBrowser: jest.fn(original.requestAsBrowser),
+        gotScraping: jest.fn(original.gotScraping),
     };
 });
 
-const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
-const originalRequestAsBrowserImplementation = requestAsBrowserSpy.getMockImplementation()!;
+const gotScrapingSpy = gotScraping as jest.MockedFunction<typeof gotScraping>;
+const originalGotScraping = gotScrapingSpy.getMockImplementation()!;
 
 afterAll(() => {
     jest.unmock('@crawlee/utils/src/internals/request');
 });
 
 afterEach(() => {
-    requestAsBrowserSpy.mockReset();
-    requestAsBrowserSpy.mockImplementation(originalRequestAsBrowserImplementation);
+    gotScrapingSpy.mockReset();
+    gotScrapingSpy.mockImplementation(originalGotScraping);
 });
 
 /* eslint-disable no-underscore-dangle */
@@ -968,14 +969,15 @@ describe('CheerioCrawler', () => {
             await crawler.run();
             requests.forEach((_req, i) => {
                 if (i >= 1) {
-                    expect(requestAsBrowserSpy.mock.calls[i][0].headers.Cookie).toBe(cookie);
+                    // @ts-expect-error FIXME
+                    expect(gotScrapingSpy.mock.calls[i][0].headers.Cookie).toBe(cookie);
                 }
             });
         });
 
         test('should merge cookies set in pre-nav hook with the session ones', async () => {
             const responses: unknown[] = [];
-            const requestAsBrowserOptions: RequestAsBrowserOptions[] = [];
+            const gotOptions: OptionsInit[] = [];
             const crawler = new CheerioCrawler({
                 requestList: await RequestList.open(null, [{
                     url: `http://${HOST}:${port}/headers`,
@@ -990,7 +992,7 @@ describe('CheerioCrawler', () => {
                     responses.push(json);
                 },
                 preNavigationHooks: [(_context, options) => {
-                    requestAsBrowserOptions.push(options);
+                    gotOptions.push(options);
                 }],
             });
 
@@ -1003,8 +1005,8 @@ describe('CheerioCrawler', () => {
                     cookie: 'foo=bar2; other=cookie1; coo=kie; baz=123',
                 },
             });
-            expect(requestAsBrowserOptions).toHaveLength(1);
-            expect(requestAsBrowserOptions[0]).toMatchObject({
+            expect(gotOptions).toHaveLength(1);
+            expect(gotOptions[0]).toMatchObject({
                 headers: {
                     Cookie: 'foo=bar2; other=cookie1; coo=kie; baz=123', // header name normalized to `Cookie`
                 },
@@ -1122,15 +1124,15 @@ describe('CheerioCrawler', () => {
 
             const requestListNew = new RequestList({ sources: sourcesNew });
             let usedSession: Session;
-            const usedRequests: RequestAsBrowserOptions[] = [];
+            const usedRequests: OptionsInit[] = [];
             const status = { connected: true };
 
-            const fakeCall = (opt: RequestAsBrowserOptions) => {
+            const fakeCall = (opt: OptionsInit) => {
                 usedRequests.push(opt);
                 return { body: status } as never;
             };
 
-            requestAsBrowserSpy.mockImplementation(fakeCall);
+            gotScrapingSpy.mockImplementation(fakeCall);
 
             const proxyConfiguration = await Actor.createProxyConfiguration();
             const cheerioCrawler = new CheerioCrawler({
@@ -1222,7 +1224,7 @@ describe('CheerioCrawler', () => {
         test('failedRequestHandler contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
 
-            requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
+            gotScrapingSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
             const proxyConfiguration = await Actor.createProxyConfiguration();
 

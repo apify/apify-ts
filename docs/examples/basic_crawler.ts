@@ -1,5 +1,5 @@
 import { BasicCrawler, Dataset } from '@crawlee/basic';
-import { requestAsBrowser } from '@crawlee/utils';
+import { gotScraping } from 'got-scraping';
 
 // Create a dataset where we will store the results.
 const dataset = await Dataset.open();
@@ -12,8 +12,8 @@ const crawler = new BasicCrawler({
         const { url } = request;
         console.log(`Processing ${url}...`);
 
-        // Fetch the page HTML via Apify utils requestAsBrowser
-        const { body } = await requestAsBrowser({ url });
+        // Fetch the page HTML via Apify utils gotScraping
+        const { body } = await gotScraping({ url });
 
         // Store the HTML and URL to the default dataset.
         await dataset.pushData({

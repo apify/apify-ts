@@ -86,6 +86,7 @@ const crawler = new PuppeteerCrawler({
 **Example usage in <ApiLink to="basic-crawler/class/BasicCrawler">`BasicCrawler`</ApiLink>**
 
 ```javascript
+ const { gotScraping } = require('got-scraping');
  const proxyConfiguration = await Actor.createProxyConfiguration();
 
  const crawler = new BasicCrawler({
@@ -112,7 +113,7 @@ const crawler = new PuppeteerCrawler({
         let response;
 
         try {
-            response = await Actor.utils.requestAsBrowser(requestOptions);
+            response = await gotScraping(requestOptions);
         } catch (e) {
             if (e === "SomeNetworkError") {
                 // If a network error happens, such as timeout, socket hangup etc...
