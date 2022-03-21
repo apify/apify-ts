@@ -595,7 +595,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * All `CheerioCrawler` parameters are passed via an options object.
      */
-    // @ts-expect-error `super` is correctly used here
     constructor(options: CheerioCrawlerOptions<JSONData>) {
         ow(options, 'CheerioCrawlerOptions', ow.object.exactShape(CheerioCrawler.optionsShape));
 
