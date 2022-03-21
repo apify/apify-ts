@@ -20,7 +20,7 @@ jest.mock('got-scraping', () => {
 const gotScrapingSpy = gotScraping as jest.MockedFunction<typeof gotScraping>;
 
 afterAll(() => {
-    jest.unmock('@crawlee/utils/src/internals/request');
+    jest.unmock('got-scraping');
 });
 
 describe('downloadListOfUrls()', () => {

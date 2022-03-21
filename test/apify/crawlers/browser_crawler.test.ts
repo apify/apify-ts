@@ -27,7 +27,7 @@ import { sleep } from '@crawlee/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
+jest.mock('got-scraping', () => {
     const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
     return {
         ...original,

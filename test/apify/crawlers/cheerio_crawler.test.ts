@@ -147,7 +147,7 @@ app.get('/timeout', async (_req, res) => {
     res.type('html').send('<div>TEST</div>');
 });
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
+jest.mock('got-scraping', () => {
     const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
     return {
         ...original,
@@ -159,7 +159,7 @@ const gotScrapingSpy = gotScraping as jest.MockedFunction<typeof gotScraping>;
 const originalGotScraping = gotScrapingSpy.getMockImplementation()!;
 
 afterAll(() => {
-    jest.unmock('@crawlee/utils/src/internals/request');
+    jest.unmock('got-scraping');
 });
 
 afterEach(() => {
