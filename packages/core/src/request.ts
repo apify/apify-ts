@@ -160,7 +160,7 @@ export class Request {
         this.errorMessages = [...errorMessages];
         this.headers = { ...headers };
         this.userData = { ...userData };
-        this.handledAt = handledAt instanceof Date ? handledAt.toISOString() : handledAt!;
+        this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
     }
 
     /**
@@ -309,6 +309,9 @@ export interface RequestOptions {
 
     /** @internal */
     id?: string;
+
+    /** @internal */
+    handledAt?: string;
 
 }
 

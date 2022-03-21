@@ -31,10 +31,10 @@ jobs:
                 access_token: ${{ github.token }}
 
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v2
+              uses: actions/setup-node@v3
               with:
                   node-version: ${{ matrix.node-version }}
                   cache: 'npm'
@@ -64,10 +64,10 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Use Node.js 16
-              uses: actions/setup-node@v2
+              uses: actions/setup-node@v3
               with:
                   node-version: 16
                   cache: 'npm'
@@ -96,8 +96,8 @@ jobs:
 #        needs: [ lint, build_and_test ]
 #        runs-on: ubuntu-latest
 #        steps:
-#            -   uses: actions/checkout@v2
-#            -   uses: actions/setup-node@v2
+#            -   uses: actions/checkout@v3
+#            -   uses: actions/setup-node@v3
 #                with:
 #                    node-version: 16
 #                    registry-url: https://registry.npmjs.org/

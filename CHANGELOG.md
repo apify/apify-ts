@@ -14,9 +14,12 @@
 - `injectUnderscore` from puppeteer utils has been removed
 - `APIFY_MEMORY_MBYTES` is no longer taken into account, use `AVAILABLE_MEMORY_RATIO` instead
 
-2.2.2 / 2022/01/xx
+2.2.2 / 2022/02/xx
 ====================
 - fix: ensure `request.headers` is set
+- fix: lower `RequestQueue` API timeout to 30 seconds
+- improve logging for fetching next request and timeouts
+
 
 2.2.1 / 2022/01/03
 ====================

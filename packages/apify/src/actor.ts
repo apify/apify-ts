@@ -131,7 +131,7 @@ export class Actor {
             await this.init();
 
             try {
-                await userFunc();
+                await Configuration.storage.run(this.config, userFunc);
                 await this.exit();
             } catch (err: any) {
                 log.exception(err, err.message);

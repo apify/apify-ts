@@ -234,6 +234,7 @@ describe('Apify.puppeteerUtils', () => {
             const getResourcesLoadedFromWiki = async () => {
                 let downloadedBytes = 0;
                 const page = await browser.newPage();
+                await page.setDefaultNavigationTimeout(0);
                 // Cache all javascript files, png files and svg files
                 await puppeteerUtils.cacheResponses(page, cache, ['.js', /.+\.png/i, /.+\.svg/i]);
                 page.on('response', async (response) => {
