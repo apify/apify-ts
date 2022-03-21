@@ -104,7 +104,7 @@ describe('launchPlaywright()', () => {
         await page.goto('https://www.example.com');
         const html = await page.content();
         expect(html).toMatch('<h1>Example Domain</h1>');
-        browser.close();
+        await browser.close();
     });
     describe('headful mode', () => {
         let browser: Browser;

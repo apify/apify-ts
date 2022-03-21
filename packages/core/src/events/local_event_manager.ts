@@ -19,21 +19,16 @@ export class LocalEventManager extends EventManager {
      * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
      * This is an internal function that is automatically called by `Actor.main()`.
      */
-    override async start() {
+    override async init() {
         if (this.initialized) {
             return;
         }
 
-        await super.start();
+        await super.init();
 
         const systemInfoIntervalMillis = this.config.get('systemInfoIntervalMillis')!;
-        this.intervals.systemInfo = betterSetInterval(async (intervalCallback: () => unknown) => {
-            const info = await this.createSystemInfo({
-                maxUsedCpuRatio: this.config.get('maxUsedCpuRatio'),
-            });
-            this.events.emit(EventType.SYSTEM_INFO, info);
-            intervalCallback();
-        }, systemInfoIntervalMillis);
+        this.emitSystemInfoEvent = this.emitSystemInfoEvent.bind(this);
+        this.intervals.systemInfo = betterSetInterval(this.emitSystemInfoEvent.bind(this), systemInfoIntervalMillis);
     }
 
     /**
@@ -41,12 +36,24 @@ export class LocalEventManager extends EventManager {
      * of Apify package such as `persistState`.
      * This is automatically called at the end of `Actor.main()`.
      */
-    override async stop() {
+    override async close() {
         if (!this.initialized) {
             return;
         }
 
+        await super.close();
         betterClearInterval(this.intervals.systemInfo!);
+    }
+
+    /**
+     * @internal
+     */
+    async emitSystemInfoEvent(intervalCallback: () => unknown) {
+        const info = await this.createSystemInfo({
+            maxUsedCpuRatio: this.config.get('maxUsedCpuRatio'),
+        });
+        this.events.emit(EventType.SYSTEM_INFO, info);
+        intervalCallback();
     }
 
     private getCurrentCpuTicks() {
@@ -75,7 +82,7 @@ export class LocalEventManager extends EventManager {
         const ticks = this.getCurrentCpuTicks();
         const idleTicksDelta = ticks.idle - this.previousTicks!.idle;
         const totalTicksDelta = ticks.total - this.previousTicks!.total;
-        const usedCpuRatio = 1 - (idleTicksDelta / totalTicksDelta);
+        const usedCpuRatio = totalTicksDelta ? 1 - (idleTicksDelta / totalTicksDelta) : 0;
         Object.assign(this.previousTicks, ticks);
 
         return {
@@ -86,7 +93,7 @@ export class LocalEventManager extends EventManager {
 
     private async createMemoryInfo() {
         try {
-            const memInfo = await getMemoryInfo();
+            const memInfo = await this._getMemoryInfo();
             const { mainProcessBytes, childProcessesBytes } = memInfo;
 
             return {
@@ -96,5 +103,12 @@ export class LocalEventManager extends EventManager {
             log.exception(err as Error, 'Memory snapshot failed.');
             return {};
         }
+    }
+
+    /**
+     * Helper method for easier mocking.
+     */
+    private async _getMemoryInfo() {
+        return getMemoryInfo();
     }
 }

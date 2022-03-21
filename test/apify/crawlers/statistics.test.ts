@@ -9,7 +9,7 @@ describe('Statistics', () => {
 
     let stats: Statistics;
     let localStorageEmulator: LocalStorageDirEmulator;
-    const events = Configuration.getGlobalConfig().getEvents();
+    const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();

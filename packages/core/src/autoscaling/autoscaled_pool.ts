@@ -271,7 +271,7 @@ export class AutoscaledPool {
             ...snapshotterOptions,
             log: this.log,
             config: this.config,
-            client: this.config.getClient(),
+            client: this.config.getStorageClient(),
         });
         ssoCopy.config ??= this.config;
         this.snapshotter = ssoCopy.snapshotter;

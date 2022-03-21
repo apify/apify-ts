@@ -311,7 +311,7 @@ export class RequestList {
         this.persistStateKey = persistStateKey ? `SDK_${persistStateKey}` : persistStateKey;
         this.persistRequestsKey = persistRequestsKey ? `SDK_${persistRequestsKey}` : persistRequestsKey;
         this.initialState = state;
-        this.events = config.getEvents();
+        this.events = config.getEventManager();
 
         // If this option is set then all requests will get a pre-generated unique ID and duplicate URLs will be kept in the list.
         this.keepDuplicateUrls = keepDuplicateUrls;

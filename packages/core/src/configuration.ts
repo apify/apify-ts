@@ -33,7 +33,6 @@ export interface ConfigurationOptions {
     userId?: string;
     proxyHostname?: string;
     proxyPassword?: string;
-    proxyStatusUrl?: string;
     proxyPort?: number;
 }
 
@@ -80,7 +79,6 @@ export interface ConfigurationOptions {
  * `proxyHostname` | `APIFY_PROXY_HOSTNAME` | `'proxy.apify.com'`
  * `proxyPassword` | `APIFY_PROXY_PASSWORD` | -
  * `proxyPort` | `APIFY_PROXY_PORT` | `8000`
- * `proxyStatusUrl` | `APIFY_PROXY_STATUS_URL` | `'http://proxy.apify.com'`
  * `userId` | `APIFY_USER_ID` | -
  *
  * ## Not Supported environment variables
@@ -95,6 +93,8 @@ export class Configuration {
      * Maps environment variables to config keys (e.g. `APIFY_PROXY_PORT` to `proxyPort`)
      */
     private static ENV_MAP = {
+        AVAILABLE_MEMORY_RATIO: 'availableMemoryRatio',
+
         APIFY_TOKEN: 'token',
         APIFY_LOCAL_STORAGE_DIR: 'localStorageDir',
         APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE: 'localStorageEnableWalMode',
@@ -114,7 +114,6 @@ export class Configuration {
         APIFY_USER_ID: 'userId',
         APIFY_PROXY_HOSTNAME: 'proxyHostname',
         APIFY_PROXY_PASSWORD: 'proxyPassword',
-        APIFY_PROXY_STATUS_URL: 'proxyStatusUrl',
         APIFY_PROXY_PORT: 'proxyPort',
 
         // not supported, use env vars directly:
@@ -144,7 +143,6 @@ export class Configuration {
         availableMemoryRatio: 0.25,
         inputKey: 'INPUT',
         apiBaseUrl: 'https://api.apify.com',
-        proxyStatusUrl: 'http://proxy.apify.com',
         proxyHostname: LOCAL_ENV_VARS[ENV_VARS.PROXY_HOSTNAME],
         proxyPort: +LOCAL_ENV_VARS[ENV_VARS.PROXY_PORT],
         containerPort: +LOCAL_ENV_VARS[ENV_VARS.CONTAINER_PORT],
@@ -229,7 +227,7 @@ export class Configuration {
      * multiple instances, one for each variant of the options.
      * @internal
      */
-    getClient(): StorageClient {
+    getStorageClient(): StorageClient {
         if (this.options.has('storageClient')) {
             return this.options.get('storageClient') as StorageClient;
         }
@@ -239,7 +237,7 @@ export class Configuration {
         return this.createStorageLocal(options) as any;
     }
 
-    getEvents(): EventManager {
+    getEventManager(): EventManager {
         if (this.options.has('eventManager')) {
             return this.options.get('eventManager') as EventManager;
         }
@@ -286,7 +284,7 @@ export class Configuration {
         this.options.set('storageClient', client);
     }
 
-    useEvents(events: EventManager): void {
+    useEventManager(events: EventManager): void {
         this.options.set('eventManager', events);
     }
 
@@ -306,7 +304,14 @@ export class Configuration {
      * Gets default {@link StorageClient} instance.
      */
     static getStorageClient(): StorageClient {
-        return this.getGlobalConfig().getClient();
+        return this.getGlobalConfig().getStorageClient();
+    }
+
+    /**
+     * Gets default {@link EventManager} instance.
+     */
+    static getEventManager(): EventManager {
+        return this.getGlobalConfig().getEventManager();
     }
 
     /**

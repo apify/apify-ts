@@ -17,7 +17,7 @@ import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 describe('BasicCrawler', () => {
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
-    const events = Configuration.getGlobalConfig().getEvents();
+    const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
         logLevel = log.getLevel();
@@ -62,9 +62,7 @@ describe('BasicCrawler', () => {
         expect(await requestList.isEmpty()).toBe(true);
     });
 
-    const { MIGRATING, ABORTING } = EventType;
-
-    test.each([MIGRATING, ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
+    test.each([EventType.MIGRATING, EventType.ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
         const sources = [...Array(500).keys()].map((index) => ({ url: `https://example.com/${index + 1}` }));
 
         let persistResolve: (value?: unknown) => void;
@@ -94,7 +92,7 @@ describe('BasicCrawler', () => {
         setValueSpy.mockImplementationOnce(persistResolve as any);
         // The crawler will pause after 200 requests
         const runPromise = basicCrawler.run();
-        runPromise.then(() => { finished = true; });
+        void runPromise.then(() => { finished = true; });
 
         // need to monkeypatch the stats class, otherwise it will never finish
         basicCrawler.stats.persistState = () => Promise.resolve();

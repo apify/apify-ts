@@ -46,7 +46,7 @@ export interface SnapshotterOptions {
      * Exceeding this limit overloads the CPU.
      * @default 0.95
      */
-    maxUsedCpuRatio?: number;
+    // maxUsedCpuRatio?: number; // FIXME no longer valid here
 
     /**
      * Defines the interval of measuring memory consumption.
@@ -129,7 +129,6 @@ export class Snapshotter {
     snapshotHistoryMillis: number;
     maxBlockedMillis: number;
     maxUsedMemoryRatio: number;
-    maxUsedCpuRatio: number;
     maxClientErrors: number;
     maxMemoryBytes!: number;
 
@@ -153,7 +152,6 @@ export class Snapshotter {
             snapshotHistorySecs: ow.optional.number,
             maxBlockedMillis: ow.optional.number,
             maxUsedMemoryRatio: ow.optional.number,
-            maxUsedCpuRatio: ow.optional.number,
             maxClientErrors: ow.optional.number,
             log: ow.optional.object,
             client: ow.optional.object,
@@ -166,24 +164,22 @@ export class Snapshotter {
             snapshotHistorySecs = 30,
             maxBlockedMillis = 50,
             maxUsedMemoryRatio = 0.7,
-            maxUsedCpuRatio = 0.95,
             maxClientErrors = 3,
             log = defaultLog,
             config = Configuration.getGlobalConfig(),
-            client = config.getClient(),
+            client = config.getStorageClient(),
         } = options;
 
         this.log = log.child({ prefix: 'Snapshotter' });
         this.client = client;
         this.config = config;
-        this.events = this.config.getEvents();
+        this.events = this.config.getEventManager();
 
         this.eventLoopSnapshotIntervalMillis = eventLoopSnapshotIntervalSecs * 1000;
         this.clientSnapshotIntervalMillis = clientSnapshotIntervalSecs * 1000;
         this.snapshotHistoryMillis = snapshotHistorySecs * 1000;
         this.maxBlockedMillis = maxBlockedMillis;
         this.maxUsedMemoryRatio = maxUsedMemoryRatio;
-        this.maxUsedCpuRatio = maxUsedCpuRatio;
         this.maxClientErrors = maxClientErrors;
 
         // We need to pre-bind those functions to be able to successfully remove listeners.
@@ -198,6 +194,9 @@ export class Snapshotter {
         const { totalBytes } = await this._getMemoryInfo();
         this.maxMemoryBytes = Math.ceil(totalBytes * this.config.get('availableMemoryRatio')!);
         this.log.debug(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. Use the AVAILABLE_MEMORY_RATIO environment variable to override it.`); // eslint-disable-line max-len
+
+        // Ensure events are initialized.
+        // await this.events.init();
 
         // Start snapshotting.
         this.eventLoopInterval = betterSetInterval(this._snapshotEventLoop.bind(this), this.eventLoopSnapshotIntervalMillis);
@@ -216,6 +215,7 @@ export class Snapshotter {
         this.events.off(EventType.SYSTEM_INFO, this._snapshotMemory);
         // Allow microtask queue to unwind before stop returns.
         await new Promise((resolve) => setImmediate(resolve));
+        // await this.events.close();
     }
 
     /**
@@ -278,11 +278,11 @@ export class Snapshotter {
      * using the Apify platform `systemInfo` event.
      */
     protected _snapshotMemory(systemInfo: SystemInfo) {
-        const now = new Date();
-        this._pruneSnapshots(this.memorySnapshots, now);
+        const createdAt = systemInfo.createdAt ? new Date(systemInfo.createdAt) : new Date();
+        this._pruneSnapshots(this.memorySnapshots, createdAt);
         const { memCurrentBytes } = systemInfo;
         const snapshot: MemorySnapshot = {
-            createdAt: now,
+            createdAt,
             isOverloaded: memCurrentBytes! / this.maxMemoryBytes! > this.maxUsedMemoryRatio,
             usedBytes: memCurrentBytes,
         };
@@ -294,9 +294,10 @@ export class Snapshotter {
     /**
      * Checks for critical memory overload and logs it to the console.
      */
-    protected _memoryOverloadWarning({ memCurrentBytes }: SystemInfo) {
-        const now = new Date();
-        if (this.lastLoggedCriticalMemoryOverloadAt && +now < +this.lastLoggedCriticalMemoryOverloadAt + CRITICAL_OVERLOAD_RATE_LIMIT_MILLIS) return;
+    protected _memoryOverloadWarning(systemInfo: SystemInfo) {
+        const { memCurrentBytes } = systemInfo;
+        const createdAt = systemInfo.createdAt ? new Date(systemInfo.createdAt) : new Date();
+        if (this.lastLoggedCriticalMemoryOverloadAt && +createdAt < +this.lastLoggedCriticalMemoryOverloadAt + CRITICAL_OVERLOAD_RATE_LIMIT_MILLIS) return;
 
         const maxDesiredMemoryBytes = this.maxUsedMemoryRatio * this.maxMemoryBytes!;
         const reserveMemory = this.maxMemoryBytes! * (1 - this.maxUsedMemoryRatio) * RESERVE_MEMORY_RATIO;
@@ -308,7 +309,7 @@ export class Snapshotter {
             const toMb = (bytes: number) => Math.round(bytes / (1024 ** 2));
             this.log.warning('Memory is critically overloaded. '
                 + `Using ${toMb(memCurrentBytes!)} MB of ${toMb(this.maxMemoryBytes!)} MB (${usedPercentage}%). Consider increasing the actor memory.`);
-            this.lastLoggedCriticalMemoryOverloadAt = now;
+            this.lastLoggedCriticalMemoryOverloadAt = createdAt;
         }
     }
 
@@ -343,7 +344,7 @@ export class Snapshotter {
      */
     protected _snapshotCpu(systemInfo: SystemInfo) {
         const { cpuCurrentUsage, isCpuOverloaded } = systemInfo;
-        const createdAt = new Date(systemInfo.createdAt!);
+        const createdAt = systemInfo.createdAt ? new Date(systemInfo.createdAt) : new Date();
         this._pruneSnapshots(this.cpuSnapshots, createdAt);
 
         this.cpuSnapshots.push({

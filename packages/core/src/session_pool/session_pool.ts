@@ -148,7 +148,7 @@ export class SessionPool extends EventEmitter {
         } = options;
 
         this.config = config;
-        this.events = config.getEvents();
+        this.events = config.getEventManager();
         this.log = log.child({ prefix: 'SessionPool' });
 
         // Pool Configuration

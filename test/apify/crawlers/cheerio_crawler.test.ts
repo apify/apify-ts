@@ -2,6 +2,7 @@ import { ENV_VARS } from '@apify/consts';
 import log, { Log } from '@apify/log';
 import { requestAsBrowser, RequestAsBrowserOptions, sleep } from '@crawlers/utils';
 import bodyParser from 'body-parser';
+import { Actor } from 'apify';
 import {
     AutoscaledPool,
     CheerioCrawler,
@@ -10,7 +11,7 @@ import {
     CheerioRequestHandlerInputs,
     Configuration,
     CrawlerExtension,
-    createProxyConfiguration,
+    ProxyConfiguration,
     Dictionary,
     entries,
     mergeCookies,
@@ -752,7 +753,7 @@ describe('CheerioCrawler', () => {
 
         test('should work with Apify Proxy configuration', async () => {
             const proxyUrl = `http://${HOST}:${port}/`;
-            const proxyConfiguration = await createProxyConfiguration({
+            const proxyConfiguration = new ProxyConfiguration({
                 proxyUrls: [proxyUrl],
             });
 
@@ -777,7 +778,7 @@ describe('CheerioCrawler', () => {
 
         test('requestHandler should expose the proxyInfo object with sessions correctly', async () => {
             const proxyUrls = [0, 1, 2, 3].map((n) => `http://${HOST}:${port}/proxy?x=${n}`);
-            const proxyConfiguration = await createProxyConfiguration({
+            const proxyConfiguration = new ProxyConfiguration({
                 proxyUrls,
             });
 
@@ -874,7 +875,9 @@ describe('CheerioCrawler', () => {
                 // TODO this test is flaky in CI and we need some more info to debug why.
                 // @ts-expect-error Accessing private prop
                 if (session.errorScore !== 1) {
+                    // eslint-disable-next-line no-console
                     console.log('SESSIONS:');
+                    // eslint-disable-next-line no-console
                     console.dir(sessions);
                 }
 
@@ -1131,7 +1134,7 @@ describe('CheerioCrawler', () => {
 
             requestAsBrowserSpy.mockImplementation(fakeCall);
 
-            const proxyConfiguration = await createProxyConfiguration();
+            const proxyConfiguration = await Actor.createProxyConfiguration();
             const cheerioCrawler = new CheerioCrawler({
                 requestList: requestListNew,
                 maxRequestRetries: 0,
@@ -1223,7 +1226,7 @@ describe('CheerioCrawler', () => {
 
             requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
-            const proxyConfiguration = await createProxyConfiguration();
+            const proxyConfiguration = await Actor.createProxyConfiguration();
 
             const cheerioCrawler = new CheerioCrawler({
                 requestList,

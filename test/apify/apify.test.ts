@@ -1,9 +1,9 @@
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS, WEBHOOK_EVENT_TYPES } from '@apify/consts';
 import log from '@apify/log';
 import path from 'node:path';
-import { Configuration, Dataset, KeyValueStore, ProxyConfiguration, RequestList, StorageManager } from '@crawlers/core';
+import { Configuration, Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlers/core';
 import { sleep } from '@crawlers/utils';
-import { Actor, ApifyEnv } from 'apify';
+import { Actor, ApifyEnv, ProxyConfiguration } from 'apify';
 import { ApifyClient, RunClient, WebhookUpdateData } from 'apify-client';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 

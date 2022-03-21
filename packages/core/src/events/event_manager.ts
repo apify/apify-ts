@@ -3,12 +3,14 @@ import { EventEmitter } from 'events';
 import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
 import { Configuration } from '../configuration';
 
-export enum EventType {
+export const enum EventType {
     PERSIST_STATE = 'persistState',
     SYSTEM_INFO = 'systemInfo',
     MIGRATING = 'migrating',
     ABORTING = 'aborting',
 }
+
+export type EventTypeName = EventType | 'systemInfo' | 'persistState' | 'migrating' | 'aborting';
 
 export abstract class EventManager {
     protected events = new EventEmitter();
@@ -22,7 +24,7 @@ export abstract class EventManager {
      * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
      * This is an internal function that is automatically called by `Actor.main()`.
      */
-    async start() {
+    async init() {
         if (this.initialized) {
             return;
         }
@@ -39,7 +41,7 @@ export abstract class EventManager {
      * Closes websocket providing events from Actor infrastructure and also stops sending internal events
      * of Apify package such as `persistState`. This is automatically called at the end of `Actor.main()`.
      */
-    async stop() {
+    async close() {
         if (!this.initialized) {
             return;
         }
@@ -48,11 +50,11 @@ export abstract class EventManager {
         this.initialized = false;
     }
 
-    on(event: EventType, listener: (...args: any[]) => any): void {
+    on(event: EventTypeName, listener: (...args: any[]) => any): void {
         this.events.on(event, listener);
     }
 
-    off(event: EventType, listener?: (...args: any[]) => any): void {
+    off(event: EventTypeName, listener?: (...args: any[]) => any): void {
         if (listener) {
             this.events.removeListener(event, listener);
         } else {
@@ -60,14 +62,14 @@ export abstract class EventManager {
         }
     }
 
-    emit(event: EventType, ...args: unknown[]): void {
+    emit(event: EventTypeName, ...args: unknown[]): void {
         this.events.emit(event, ...args);
     }
 
     /**
      * @internal
      */
-    listenerCount(event: EventType): number {
+    listenerCount(event: EventTypeName): number {
         return this.events.listenerCount(event);
     }
 }

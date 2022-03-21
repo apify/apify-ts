@@ -11,7 +11,6 @@ import {
     CheerioCrawler,
     CheerioCrawlerOptions,
     CheerioCrawlingContext,
-    createProxyConfiguration,
     Dataset,
     CheerioFailedRequestHandlerInput,
     KeyValueStore,
@@ -148,7 +147,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         this.keyValueStore = await KeyValueStore.open(this.keyValueStoreName);
 
         // Proxy configuration
-        this.proxyConfiguration = await createProxyConfiguration(this.input.proxyConfiguration);
+        this.proxyConfiguration = await Actor.createProxyConfiguration(this.input.proxyConfiguration);
     }
 
     /**

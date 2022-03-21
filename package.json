@@ -47,8 +47,8 @@
         "test:e2e": "node test/e2e/run.mjs",
         "coverage": "jest --coverage",
         "release": "npm run build && lerna version patch && lerna publish from-package --contents dist",
-        "lint": "eslint packages/*/src test",
-        "lint:fix": "eslint packages/*/src test --fix"
+        "lint": "eslint packages/*/src packages/*/test test",
+        "lint:fix": "eslint packages/*/src packages/*/test test --fix"
     },
     "devDependencies": {
         "@apify/eslint-config-ts": "^0.2.3",

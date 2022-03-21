@@ -7,10 +7,9 @@ import {
     ConfigurationOptions,
     Dataset,
     EventManager,
+    EventTypeName,
     IStorage,
     KeyValueStore,
-    ProxyConfiguration,
-    ProxyConfigurationOptions,
     RecordOptions,
     RequestList,
     RequestListOptions,
@@ -21,6 +20,7 @@ import {
 import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
+import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -128,11 +128,11 @@ export class Actor {
         }
 
         const run = async () => {
-            await this.start();
+            await this.init();
 
             try {
                 await userFunc();
-                await this.exit({ exitCode: EXIT_CODES.SUCCESS });
+                await this.exit();
             } catch (err: any) {
                 log.exception(err, err.message);
                 await this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
@@ -148,16 +148,16 @@ export class Actor {
     /**
      * @ignore
      */
-    async start(): Promise<void> {
+    async init(): Promise<void> {
         logSystemInfo();
         printOutdatedSdkWarning();
 
-        await this.eventManager.start();
+        await this.eventManager.init();
 
         if (this.isAtHome()) {
             this.config.set('availableMemoryRatio', 1);
             this.config.useStorageClient(this.apifyClient);
-            this.config.useEvents(this.eventManager);
+            this.config.useEventManager(this.eventManager);
         }
     }
 
@@ -165,11 +165,25 @@ export class Actor {
      * @ignore
      */
     async exit(options: ExitOptions = {}): Promise<void> {
-        await this.eventManager.stop();
+        await this.eventManager.close();
 
         if (options.exit ?? true) {
             process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
         }
+    }
+
+    /**
+     * @ignore
+     */
+    on(event: EventTypeName, listener: (...args: any[]) => any): void {
+        this.eventManager.on(event, listener);
+    }
+
+    /**
+     * @ignore
+     */
+    off(event: EventTypeName, listener?: (...args: any[]) => any): void {
+        this.eventManager.off(event, listener);
     }
 
     /**
@@ -774,12 +788,20 @@ export class Actor {
         return Actor.getDefaultInstance().main(userFunc);
     }
 
-    static async start(): Promise<void> {
-        return Actor.getDefaultInstance().start();
+    static async init(): Promise<void> {
+        return Actor.getDefaultInstance().init();
     }
 
     static async exit(options: ExitOptions = {}): Promise<void> {
         return Actor.getDefaultInstance().exit(options);
+    }
+
+    static on(event: EventTypeName, listener: (...args: any[]) => any): void {
+        Actor.getDefaultInstance().on(event, listener);
+    }
+
+    static off(event: EventTypeName, listener?: (...args: any[]) => any): void {
+        Actor.getDefaultInstance().off(event, listener);
     }
 
     /**

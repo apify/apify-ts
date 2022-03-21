@@ -414,7 +414,7 @@ export class BasicCrawler<
         this.requestList = requestList;
         this.requestQueue = requestQueue;
         this.log = log;
-        this.events = config.getEvents();
+        this.events = config.getEventManager();
 
         this._handlePropertyNameChange({
             newName: 'requestHandler',

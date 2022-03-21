@@ -243,9 +243,9 @@ function createInterceptRequestHandler(page: Page, requests: Set<string>): (req:
         }));
 
         if (req.redirectChain().length) {
-            req.respond({ body: '' }); // Prevents 301/302 redirect
+            await req.respond({ body: '' }); // Prevents 301/302 redirect
         } else {
-            req.abort('aborted'); // Prevents navigation by js
+            await req.abort('aborted'); // Prevents navigation by js
         }
     };
 }

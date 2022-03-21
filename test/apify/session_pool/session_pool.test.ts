@@ -6,7 +6,7 @@ import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 describe('SessionPool - testing session pool', () => {
     let sessionPool: SessionPool;
     let localStorageEmulator: LocalStorageDirEmulator;
-    const events = Configuration.getGlobalConfig().getEvents();
+    const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();

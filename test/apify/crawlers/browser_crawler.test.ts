@@ -19,8 +19,9 @@ import {
     EVENT_SESSION_RETIRED,
     Configuration,
     RequestList,
-    createProxyConfiguration,
+    ProxyConfiguration,
 } from 'crawlers';
+import { Actor } from 'apify';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
@@ -436,7 +437,9 @@ describe('BrowserCrawler', () => {
             // TODO this test is flaky in CI and we need some more info to debug why.
             if (cookie !== 'TEST=12321312312') {
                 // for some reason, the CI failures report the first cookie to be just empty string
+                // eslint-disable-next-line no-console
                 console.log('loadedCookies:');
+                // eslint-disable-next-line no-console
                 console.dir(loadedCookies);
             }
 
@@ -669,7 +672,7 @@ describe('BrowserCrawler', () => {
             };
 
             const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
-            const proxyConfiguration = await createProxyConfiguration();
+            const proxyConfiguration = await Actor.createProxyConfiguration();
             const generatedProxyUrl = new URL(proxyConfiguration.newUrl()).href;
             let browserProxy;
 
@@ -708,7 +711,7 @@ describe('BrowserCrawler', () => {
 
             const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
 
-            const proxyConfiguration = await createProxyConfiguration();
+            const proxyConfiguration = await Actor.createProxyConfiguration();
             const proxies: ProxyInfo[] = [];
             const sessions: Session[] = [];
             const requestHandler = async ({ session, proxyInfo }: BrowserCrawlingContext) => {
@@ -745,7 +748,7 @@ describe('BrowserCrawler', () => {
         test('browser should launch with rotated custom proxy', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
 
-            const proxyConfiguration = await createProxyConfiguration({
+            const proxyConfiguration = new ProxyConfiguration({
                 proxyUrls: ['http://proxy.com:1111', 'http://proxy.com:2222', 'http://proxy.com:3333'],
             });
 
@@ -856,7 +859,7 @@ describe('BrowserCrawler', () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
             const stub = requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
-            const proxyConfiguration = await createProxyConfiguration();
+            const proxyConfiguration = await Actor.createProxyConfiguration();
 
             const browserCrawler = new BrowserCrawlerTest({
                 browserPoolOptions: {

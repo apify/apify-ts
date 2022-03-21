@@ -12,7 +12,7 @@ import { betterClearInterval } from '@apify/utilities';
  * **Example usage:**
  *
  * ```javascript
- * Actor.events.on('cpuInfo', (data) => {
+ * Actor.on('cpuInfo', (data) => {
  *   if (data.isCpuOverloaded) console.log('Oh no, the CPU is overloaded!');
  * });
  * ```
@@ -48,12 +48,12 @@ export class PlatformEventManager extends EventManager {
      * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
      * This is an internal function that is automatically called by `Actor.main()`.
      */
-    override async start() {
+    override async init() {
         if (this.initialized) {
             return;
         }
 
-        await super.start();
+        await super.init();
         const eventsWsUrl = process.env[ENV_VARS.ACTOR_EVENTS_WS_URL];
 
         // Locally there is no web socket to connect, so just print a log message.
@@ -102,12 +102,12 @@ export class PlatformEventManager extends EventManager {
      * of Apify package such as `persistState`.
      * This is automatically called at the end of `Actor.main()`.
      */
-    override async stop() {
+    override async close() {
         if (!this.initialized) {
             return;
         }
 
-        await super.stop();
+        await super.close();
         this.eventsWs?.close();
     }
 }

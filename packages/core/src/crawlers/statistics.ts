@@ -86,7 +86,7 @@ export class Statistics {
         this.logIntervalMillis = logIntervalSecs * 1000;
         this.logMessage = logMessage;
         this.listener = this.persistState.bind(this);
-        this.events = config.getEvents();
+        this.events = config.getEventManager();
 
         // initialize by "resetting"
         this.reset();

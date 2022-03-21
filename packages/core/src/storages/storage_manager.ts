@@ -52,7 +52,7 @@ export class StorageManager<T extends IStorage = IStorage> {
         let storage = this.cache.get(cacheKey);
 
         if (!storage) {
-            client ??= this.config.getClient();
+            client ??= this.config.getStorageClient();
             const storageObject = await this._getOrCreateStorage(idOrName, this.name, client);
             storage = new this.StorageConstructor({
                 id: storageObject.id,
