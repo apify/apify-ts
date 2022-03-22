@@ -1,4 +1,6 @@
-import { setValue, Configuration, URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/core/dist/index.mjs';
+import { Configuration } from '../../packages/core/dist/index.mjs';
+import { Actor } from '../../packages/apify/dist/index.mjs';
+import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
 import { join } from 'path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -66,7 +68,7 @@ export async function run(url, scraper, input) {
 
     await purgeLocalStorage();
     const inputKey = Configuration.getGlobalConfig().get('inputKey');
-    await setValue(inputKey, input);
+    await Actor.setValue(inputKey, input);
 
     const exit = process.exit;
     process.exit = () => {};

@@ -13,8 +13,8 @@ import {
     Request,
     RequestList,
     RequestQueue,
+    log,
 } from '@crawlers/puppeteer';
-import log from '@apify/log';
 import { Awaitable, Dictionary } from '@crawlers/utils';
 import contentType from 'content-type';
 // TODO: type devtools module
