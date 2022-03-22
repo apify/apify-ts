@@ -21,7 +21,7 @@ export const validators = {
         message: (label: string) => `Expected argument '${label}' to be a RequestQueue, got something else.`,
     }),
     pseudoUrl: (value: Dictionary<any>) => ({
-        validator: ow.isValid(value, ow.object.hasKeys('regex', 'requestTemplate')),
+        validator: ow.isValid(value, ow.object.hasKeys('regex')),
         message: (label: string) => `Expected argument '${label}' to be a PseudoUrl, got something else.`,
     }),
 };

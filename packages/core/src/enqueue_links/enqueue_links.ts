@@ -1,6 +1,8 @@
 import ow from 'ow';
+import log from '@apify/log';
+import { makeRe } from 'minimatch';
 import {
-    constructPseudoUrlInstances,
+    constructRegExps,
     createRequests,
     addRequestsToQueueInBatches,
     createRequestOptions,
@@ -30,15 +32,38 @@ export interface EnqueueLinksOptions {
     baseUrl?: string;
 
     /**
-     * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
-     * or an array of strings or RegExps or plain Objects from which the {@link PseudoUrl}s can be constructed.
+     * An array of glob patterns matching the URLs to be enqueued.
      *
-     * The plain objects must include at least the `purl` property, which holds the pseudo-URL string or RegExp.
-     * All remaining keys will be used as the `requestTemplate` argument of the {@link PseudoUrl} constructor,
-     * which lets you specify special properties for the enqueued {@link Request} objects.
+     * The matching is always case-insensitive.
+     * If you need case-sensitive matching, use `regexps` property directly.
+     *
+     * If `globs` is an empty array, `null` or `undefined`, then the function
+     * enqueues all links found on the page.
+     */
+    globs?: string[] | null;
+
+    /**
+     * An array of regular expressions matching the URLs to be enqueued.
+     *
+     * If `regexps` is an empty array, `null` or `undefined`, then the function
+     * enqueues all links found on the page.
+     */
+    regexps?: RegExp[] | null;
+
+    /**
+     * *NOTE:* In future versions of SDK the options will be removed.
+     * Please use `globs` or `regexps` instead.
+     *
+     * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
+     * or an array of strings from which the {@link PseudoUrl}s can be constructed.
+     *
+     * With a pseudo-URL string, the matching is always case-insensitive.
+     * If you need case-sensitive matching, use `regexps` property directly.
      *
      * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
+     *
+     * @deprecated
      */
     pseudoUrls?: PseudoUrlInput[] | null;
 
@@ -101,20 +126,10 @@ export enum EnqueueStrategy {
  * });
  * ```
  *
- * @param options
- *   All `enqueueLinks()` parameters are passed via an options object.
- * @returns
- *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ * @param options All `enqueueLinks()` parameters are passed via an options object.
+ * @returns Promise that resolves to an array of {@link QueueOperationInfo} objects.
  */
 export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueOperationInfo[]> {
-    const {
-        requestQueue,
-        limit,
-        urls,
-        pseudoUrls,
-        transformRequestFunction,
-    } = options;
-
     ow(options, ow.object.exactShape({
         urls: ow.array.ofType(ow.string),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -123,10 +138,11 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         baseUrl: ow.optional.string,
         pseudoUrls: ow.any(ow.null, ow.optional.array.ofType(ow.any(
             ow.string,
-            ow.regExp,
             ow.object.hasKeys('purl'),
             ow.object.validate(validators.pseudoUrl),
         ))),
+        globs: ow.any(ow.null, ow.optional.array.ofType(ow.string)),
+        regexps: ow.any(ow.null, ow.optional.array.ofType(ow.regExp)),
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
             EnqueueStrategy.All,
@@ -134,7 +150,40 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         ]),
     }));
 
-    const extraPseudoUrls = [];
+    const {
+        requestQueue,
+        limit,
+        urls,
+        pseudoUrls,
+        globs,
+        regexps: regexpsInput,
+        transformRequestFunction,
+    } = options;
+
+    let regexps: RegExp[] = [];
+
+    if (pseudoUrls?.length) {
+        log.deprecated('`pseudoUrls` option is deprecated, use `globs` or `regexps` instead');
+        regexps = regexps.concat(constructRegExps(pseudoUrls));
+    }
+
+    if (globs?.length) {
+        for (const glob of globs) {
+            const trimmedGlob = glob.trim();
+            if (trimmedGlob.length === 0) throw new Error(`Cannot parse glob pattern '${trimmedGlob}': it must be an non-empty string`);
+
+            const re = makeRe(glob, { nocase: true });
+            if (re) {
+                regexps.push(re);
+            } else {
+                log.warning(`Provided glob pattern '${glob}' is invalid. Pattern will be skipped.`);
+            }
+        }
+    }
+
+    if (regexpsInput?.length) {
+        regexps.concat(regexpsInput);
+    }
 
     if (options.baseUrl) {
         switch (options.strategy ?? EnqueueStrategy.SameDomain) {
@@ -142,7 +191,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to a url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
-                extraPseudoUrls.push(`${new URL(options.baseUrl).origin}/[.*]`);
+                regexps.push(new RegExp(new URL(options.baseUrl).origin));
                 break;
             case EnqueueStrategy.All:
             default:
@@ -150,16 +199,13 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         }
     }
 
-    // Construct pseudoUrls from input where necessary.
-    const pseudoUrlInstances = constructPseudoUrlInstances((pseudoUrls ?? []).concat(extraPseudoUrls));
-
     let requestOptions = createRequestOptions(urls);
 
     if (transformRequestFunction) {
         requestOptions = requestOptions.map((request) => transformRequestFunction(request)).filter((r) => !!r);
     }
 
-    let requests = createRequests(requestOptions, pseudoUrlInstances);
+    let requests = createRequests(requestOptions, regexps);
     if (limit) requests = requests.slice(0, limit);
 
     return addRequestsToQueueInBatches(requests, requestQueue);

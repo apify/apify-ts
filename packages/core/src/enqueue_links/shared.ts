@@ -1,5 +1,5 @@
 import { URL } from 'url';
-import { PseudoUrl, PseudoUrlObject } from '../pseudo_url';
+import { PseudoUrl } from '@apify/pseudo_url';
 import { Request, RequestOptions } from '../request';
 import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 
@@ -13,57 +13,57 @@ const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
  */
 const enqueueLinksPseudoUrlCache = new Map();
 
-export type PseudoUrlInput = string | RegExp | PseudoUrl | PseudoUrlObject;
+export type PseudoUrlObject = { purl: string };
+
+export type PseudoUrlInput = string | PseudoUrl | PseudoUrlObject;
 
 /**
  * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function.
  * @ignore
  */
-export function constructPseudoUrlInstances(pseudoUrls: PseudoUrlInput[]): PseudoUrl[] {
+export function constructRegExps(pseudoUrls: PseudoUrlInput[]): RegExp[] {
     return pseudoUrls.map((item) => {
         // Get pseudoUrl instance from cache.
         let pUrl = enqueueLinksPseudoUrlCache.get(item);
         if (pUrl) return pUrl;
 
         // Nothing in cache, make a new instance.
-        // If it's already a PseudoURL, just save it.
-        if (item instanceof PseudoUrl) {
+        if (item instanceof PseudoUrl) { // If it's already a PseudoURL, just save it.
             pUrl = item;
-        } else if (typeof item === 'string' || item instanceof RegExp) { // If it's a string or RegExp, construct a PURL from it directly.
+        } else if (typeof item === 'string') { // If it's a string or RegExp, construct a PURL from it directly.
             pUrl = new PseudoUrl(item);
-        } else { // If it's an object, look for a purl property and use it and the rest to construct a PURL with a Request template.
-            const { purl, ...opts } = item;
-            pUrl = new PseudoUrl(purl, opts);
+        } else { // If it's an object, look for a purl property and use it to construct a PURL with a Request template.
+            const { purl } = item;
+            pUrl = new PseudoUrl(purl);
         }
-
+        // TODO check the cache (since only regex is returned now)
         // Manage cache
         enqueueLinksPseudoUrlCache.set(item, pUrl);
         if (enqueueLinksPseudoUrlCache.size > MAX_ENQUEUE_LINKS_CACHE_SIZE) {
             const key = enqueueLinksPseudoUrlCache.keys().next().value;
             enqueueLinksPseudoUrlCache.delete(key);
         }
-        return pUrl;
+        return pUrl.regex;
     });
 }
 
 /**
  * @ignore
  */
-export function createRequests(requestOptions: (string | RequestOptions)[], pseudoUrls?: PseudoUrl[]): Request[] {
-    if (!pseudoUrls || !pseudoUrls.length) {
-        return requestOptions.map((opts) => new Request(typeof opts === 'string' ? { url: opts } : opts));
+export function createRequests(requestOptions: (string | RequestOptions)[], regexps?: RegExp[]): Request[] {
+    if (!regexps || !regexps.length) {
+        return requestOptions
+            .map((opts) => new Request(typeof opts === 'string' ? { url: opts } : opts));
     }
 
     const requests: Request[] = [];
-    requestOptions.forEach((opts) => {
-        pseudoUrls
-            .filter((purl) => purl.matches(typeof opts === 'string' ? opts : opts.url))
-            .forEach((purl) => {
-                const request = purl.createRequest(opts);
-                requests.push(request);
-            });
-    });
-
+    for (const regexp of regexps) {
+        for (const opts of requestOptions) {
+            if ((typeof opts === 'string' ? opts : opts.url).match(regexp)) {
+                requests.push(new Request(typeof opts === 'string' ? { url: opts } : opts));
+            }
+        }
+    }
     return requests;
 }
 
@@ -79,7 +79,8 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
             } catch (err) {
                 return false;
             }
-        });
+        })
+        .map((requestOptions) => new Request(requestOptions) as RequestOptions);
 }
 
 /**
@@ -95,7 +96,7 @@ export async function addRequestsToQueueInBatches(requests: Request[], requestQu
 }
 
 /**
- * Takes an Apify {@link RequestOptions} object and changes it's attributes in a desired way. This user-function is used
+ * Takes an Apify {@link RequestOptions} object and changes its attributes in a desired way. This user-function is used
  * {@link utils.enqueueLinks} to modify requests before enqueuing them.
  */
 export interface RequestTransform {

@@ -86,7 +86,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // Validations
         this.input.pseudoUrls.forEach((purl) => {
             if (!tools.isPlainObject(purl)) throw new Error('The pseudoUrls Array must only contain Objects.');
-            if (purl.userData && !tools.isPlainObject(purl.userData)) throw new Error('The userData property of a pseudoUrl must be an Object.');
+            // if (purl.userData && !tools.isPlainObject(purl.userData)) throw new Error('The userData property of a pseudoUrl must be an Object.');
         });
 
         this.input.initialCookies.forEach((cookie) => {

@@ -1,6 +1,6 @@
 import {
     addRequestsToQueueInBatches,
-    constructPseudoUrlInstances,
+    constructRegExps,
     createRequestOptions,
     createRequests,
     PseudoUrlInput,
@@ -163,7 +163,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls || []);
+    const regexps = constructRegExps(pseudoUrls || []);
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
         selector,
@@ -174,7 +174,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     if (transformRequestFunction) {
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
-    const requests = createRequests(requestOptions, pseudoUrlInstances);
+    const requests = createRequests(requestOptions, regexps);
     return addRequestsToQueueInBatches(requests, requestQueue);
 }
 

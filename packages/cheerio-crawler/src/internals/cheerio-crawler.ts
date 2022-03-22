@@ -4,6 +4,7 @@ import {
     BasicCrawler,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+    RequestTransform,
 } from '@crawlers/basic';
 import {
     CrawlerExtension,
@@ -967,9 +968,10 @@ interface EnqueueLinksInternalOptions {
     $: CheerioRoot | null;
     requestQueue?: RequestQueue;
     defaultBaseUrl?: string;
+    transformRequestFunction?: RequestTransform;
 }
 
-export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl, transformRequestFunction }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
@@ -982,6 +984,7 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, def
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
         baseUrl,
+        transformRequestFunction,
         ...options,
     });
 }
