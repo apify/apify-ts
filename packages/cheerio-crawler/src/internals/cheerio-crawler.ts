@@ -4,7 +4,6 @@ import {
     BasicCrawler,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
-    RequestTransform,
 } from '@crawlers/basic';
 import {
     CrawlerExtension,
@@ -1065,16 +1064,16 @@ interface EnqueueLinksInternalOptions {
     $: CheerioRoot | null;
     requestQueue?: RequestQueue;
     defaultBaseUrl?: string;
-    transformRequestFunction?: RequestTransform;
 }
 
 /** @internal */
-export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl, transformRequestFunction }: EnqueueLinksInternalOptions) {
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
 
     const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+    const transformRequestFunction = options?.transformRequestFunction;
 
     const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 

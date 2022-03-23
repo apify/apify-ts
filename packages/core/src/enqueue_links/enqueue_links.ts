@@ -2,17 +2,19 @@ import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
 import { purlToRegExp } from '@apify/pseudo_url';
-import { makeRe } from 'minimatch';
 import {
-    constructRegExps,
+    constructRegExpsFromPseudoUrls,
+    constructRegExpsFromGlobs,
+    processRegexps,
     createRequests,
     addRequestsToQueueInBatches,
     createRequestOptions,
-    RequestTransform,
+    GlobInput,
     PseudoUrlInput,
+    RegExpInput,
+    RequestTransform,
 } from './shared';
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
-import { validators } from '../validators';
 
 export interface EnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
@@ -42,7 +44,7 @@ export interface EnqueueLinksOptions {
      * If `globs` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    globs?: string[] | null;
+    globs?: GlobInput[] | null;
 
     /**
      * An array of regular expressions matching the URLs to be enqueued.
@@ -50,7 +52,7 @@ export interface EnqueueLinksOptions {
      * If `regexps` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    regexps?: RegExp[] | null;
+    regexps?: RegExpInput[] | null;
 
     /**
      * *NOTE:* In future versions of SDK the options will be removed.
@@ -153,10 +155,15 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         pseudoUrls: ow.any(ow.null, ow.optional.array.ofType(ow.any(
             ow.string,
             ow.object.hasKeys('purl'),
-            ow.object.validate(validators.pseudoUrl),
         ))),
-        globs: ow.any(ow.null, ow.optional.array.ofType(ow.string)),
-        regexps: ow.any(ow.null, ow.optional.array.ofType(ow.regExp)),
+        globs: ow.any(ow.null, ow.optional.array.ofType(ow.any(
+            ow.string,
+            ow.object.hasKeys('glob'),
+        ))),
+        regexps: ow.any(ow.null, ow.optional.array.ofType(ow.any(
+            ow.regExp,
+            ow.object.hasKeys('regexp'),
+        ))),
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
             EnqueueStrategy.All,
@@ -179,25 +186,15 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
 
     if (pseudoUrls?.length) {
         log.deprecated('`pseudoUrls` option is deprecated, use `globs` or `regexps` instead');
-        regexps = regexps.concat(constructRegExps(pseudoUrls));
+        regexps = regexps.concat(constructRegExpsFromPseudoUrls(pseudoUrls));
     }
 
     if (globs?.length) {
-        for (const glob of globs) {
-            const trimmedGlob = glob.trim();
-            if (trimmedGlob.length === 0) throw new Error(`Cannot parse glob pattern '${trimmedGlob}': it must be an non-empty string`);
-
-            const re = makeRe(glob, { nocase: true });
-            if (re) {
-                regexps.push(re);
-            } else {
-                log.warning(`Provided glob pattern '${glob}' is invalid. Pattern will be skipped.`);
-            }
-        }
+        regexps = regexps.concat(constructRegExpsFromGlobs(globs));
     }
 
     if (regexpsInput?.length) {
-        regexps.concat(regexpsInput);
+        regexps = regexps.concat(processRegexps(regexpsInput));
     }
 
     if (options.baseUrl) {

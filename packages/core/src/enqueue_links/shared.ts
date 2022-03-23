@@ -1,5 +1,6 @@
 import { URL } from 'url';
-import { PseudoUrl } from '@apify/pseudo_url';
+import { purlToRegExp } from '@apify/pseudo_url';
+import { makeRe } from 'minimatch';
 import { Request, RequestOptions } from '../request';
 import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 
@@ -15,36 +16,101 @@ const enqueueLinksPseudoUrlCache = new Map();
 
 export type PseudoUrlObject = { purl: string };
 
-export type PseudoUrlInput = string | PseudoUrl | PseudoUrlObject;
+export type PseudoUrlInput = string | PseudoUrlObject;
+
+export type GlobObject = { glob: string };
+
+export type GlobInput = string | GlobObject;
+
+export type RegExpObject = { regexp: RegExp };
+
+export type RegExpInput = RegExp | RegExpObject;
 
 /**
- * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function.
+ * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function
+ * to construct RegExps from PseudoUrl strings.
  * @ignore
  */
-export function constructRegExps(pseudoUrls: PseudoUrlInput[]): RegExp[] {
+export function constructRegExpsFromPseudoUrls(pseudoUrls: PseudoUrlInput[]): RegExp[] {
     return pseudoUrls.map((item) => {
         // Get pseudoUrl instance from cache.
-        let pUrl = enqueueLinksPseudoUrlCache.get(item);
-        if (pUrl) return pUrl;
+        let regexp = enqueueLinksPseudoUrlCache.get(item);
+        if (regexp) return regexp;
 
-        // Nothing in cache, make a new instance.
-        if (item instanceof PseudoUrl) { // If it's already a PseudoURL, just save it.
-            pUrl = item;
-        } else if (typeof item === 'string') { // If it's a string or RegExp, construct a PURL from it directly.
-            pUrl = new PseudoUrl(item);
-        } else { // If it's an object, look for a purl property and use it to construct a PURL with a Request template.
+        if (typeof item === 'string') {
+            regexp = purlToRegExp(item);
+        } else {
             const { purl } = item;
-            pUrl = new PseudoUrl(purl);
+            regexp = purlToRegExp(purl);
         }
-        // TODO check the cache (since only regex is returned now)
+
         // Manage cache
-        enqueueLinksPseudoUrlCache.set(item, pUrl);
+        enqueueLinksPseudoUrlCache.set(item, regexp);
         if (enqueueLinksPseudoUrlCache.size > MAX_ENQUEUE_LINKS_CACHE_SIZE) {
             const key = enqueueLinksPseudoUrlCache.keys().next().value;
             enqueueLinksPseudoUrlCache.delete(key);
         }
-        return pUrl.regex;
+        return regexp;
     });
+}
+
+/**
+ * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function
+ * to construct RegExps from Glob pattern strings.
+ * @ignore
+ */
+export function constructRegExpsFromGlobs(globs: GlobInput[]): RegExp[] {
+    return globs.map((item) => {
+        // Get pseudoUrl instance from cache.
+        let regexp = enqueueLinksPseudoUrlCache.get(item);
+        if (regexp) return regexp;
+
+        if (typeof item === 'string') {
+            regexp = globToRegExp(item);
+        } else {
+            const { glob } = item;
+            regexp = globToRegExp(glob);
+        }
+
+        // Manage cache
+        enqueueLinksPseudoUrlCache.set(item, regexp);
+        if (enqueueLinksPseudoUrlCache.size > MAX_ENQUEUE_LINKS_CACHE_SIZE) {
+            const key = enqueueLinksPseudoUrlCache.keys().next().value;
+            enqueueLinksPseudoUrlCache.delete(key);
+        }
+        return regexp;
+    });
+}
+
+/**
+ * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function
+ * to check RegExps input and return valid RegExps.
+ * @ignore
+ */
+export function processRegexps(regexps: RegExpInput[]): RegExp[] {
+    return regexps.map((item) => {
+        if (item instanceof RegExp) {
+            return item;
+        }
+        const { regexp } = item;
+        return regexp;
+    });
+}
+
+/**
+ * @ignore
+ */
+export function globToRegExp(glob: string): RegExp {
+    const globTrimmed = glob.trim();
+    if (globTrimmed.length === 0) throw new Error(`Cannot parse Glob pattern '${globTrimmed}': it must be an non-empty string`);
+
+    let regex;
+    try {
+        regex = makeRe(glob.trim(), { nocase: true });
+    } catch (err) {
+        throw new Error(`Cannot parse Glob pattern '${globTrimmed}': ${err}`);
+    }
+    return regex;
 }
 
 /**
@@ -96,13 +162,8 @@ export async function addRequestsToQueueInBatches(requests: Request[], requestQu
 }
 
 /**
-<<<<<<< HEAD
  * Takes an Apify {@link RequestOptions} object and changes its attributes in a desired way. This user-function is used
- * {@link utils.enqueueLinks} to modify requests before enqueuing them.
-=======
- * Takes an Apify {@link RequestOptions} object and changes it's attributes in a desired way. This user-function is used
  * {@link enqueueLinks} to modify requests before enqueuing them.
->>>>>>> master
  */
 export interface RequestTransform {
     /**

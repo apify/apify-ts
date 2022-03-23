@@ -10,7 +10,6 @@ import {
     ProxyInfo,
     QueueOperationInfo,
     RequestQueue,
-    RequestTransform,
     Session,
     throwOnBlockedRequest,
     validators,
@@ -672,12 +671,12 @@ interface EnqueueLinksInternalOptions {
     page: CommonPage;
     requestQueue?: RequestQueue;
     defaultBaseUrl?: string;
-    transformRequestFunction?: RequestTransform;
 }
 
 /** @internal */
-export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl, transformRequestFunction }: EnqueueLinksInternalOptions) {
+export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+    const transformRequestFunction = options?.transformRequestFunction;
 
     const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 

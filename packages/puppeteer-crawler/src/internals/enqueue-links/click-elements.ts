@@ -1,6 +1,6 @@
 import {
     addRequestsToQueueInBatches,
-    constructRegExps,
+    constructRegExpsFromPseudoUrls,
     createRequestOptions,
     createRequests,
     PseudoUrlInput,
@@ -179,7 +179,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    const regexps = constructRegExps(pseudoUrls || []);
+    const regexps = constructRegExpsFromPseudoUrls(pseudoUrls || []);
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
         selector,
