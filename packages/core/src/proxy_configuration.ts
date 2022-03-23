@@ -78,7 +78,7 @@ export interface ProxyConfigurationOptions {
  *
  * ```javascript
  *
- * const proxyConfiguration = await Apify.createProxyConfiguration({
+ * const proxyConfiguration = await Actor.createProxyConfiguration({
  *   groups: ['GROUP1', 'GROUP2'] // List of Apify Proxy groups
  *   countryCode: 'US',
  * });
@@ -87,7 +87,7 @@ export interface ProxyConfigurationOptions {
  * const proxyInfo = proxyConfiguration.newProxyInfo();
  *
  * // In crawler
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
  *   handlePageFunction: ({ proxyInfo }) => {
@@ -165,12 +165,12 @@ export interface ProxyInfo {
  *
  * ```javascript
  *
- * const proxyConfiguration = await Apify.createProxyConfiguration({
+ * const proxyConfiguration = await Actor.createProxyConfiguration({
  *   groups: ['GROUP1', 'GROUP2'] // List of Apify Proxy groups
  *   countryCode: 'US',
  * });
  *
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
  *   handlePageFunction: ({ proxyInfo }) => {
@@ -500,12 +500,12 @@ export class ProxyConfiguration {
  * ```javascript
  *
  * // Returns initialized proxy configuration class
- * const proxyConfiguration = await Apify.createProxyConfiguration({
+ * const proxyConfiguration = await Actor.createProxyConfiguration({
  *     groups: ['GROUP1', 'GROUP2'] // List of Apify proxy groups
  *     countryCode: 'US'
  * });
  *
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
  *   handlePageFunction: ({ proxyInfo }) => {

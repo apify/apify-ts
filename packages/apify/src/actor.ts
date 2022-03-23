@@ -129,7 +129,7 @@ export class Actor {
             this.start();
 
             try {
-                await userFunc();
+                await Configuration.storage.run(this.config, userFunc);
                 this.exit({ exitCode: EXIT_CODES.SUCCESS });
             } catch (err: any) {
                 log.exception(err, err.message);
@@ -446,7 +446,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](core/class/KeyValueStore#getValue).
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -520,7 +520,7 @@ export class Actor {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Actor.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -602,7 +602,7 @@ export class Actor {
      *     countryCode: 'US'
      * });
      *
-     * const crawler = new Actor.CheerioCrawler({
+     * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
      *   handlePageFunction: ({ proxyInfo }) => {
@@ -981,7 +981,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+     * This is just a convenient shortcut for {@link KeyValueStore.getValue | `keyValueStore.getValue('INPUT')`}.
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -997,8 +997,7 @@ export class Actor {
      * If you need to use the input multiple times in your actor,
      * it is far more efficient to read it once and store it locally.
      *
-     * For more information, see  {@link Actor.openKeyValueStore}
-     * and {@link KeyValueStore.getValue}.
+     * For more information, see {@link Actor.openKeyValueStore} and {@link KeyValueStore.getValue}.
      *
      * @returns
      *   Returns a promise that resolves to an object, string
@@ -1048,7 +1047,7 @@ export class Actor {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Actor.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -1123,7 +1122,7 @@ export class Actor {
      *     countryCode: 'US'
      * });
      *
-     * const crawler = new Actor.CheerioCrawler({
+     * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
      *   handlePageFunction: ({ proxyInfo }) => {

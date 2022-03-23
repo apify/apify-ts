@@ -6,8 +6,8 @@ import {
     PuppeteerCookie,
     PuppeteerCrawler,
     PuppeteerGoToOptions,
-    PuppeteerHandlePage,
-    PuppeteerHandlePageFunctionParam,
+    PuppeteerRequestHandler,
+    PuppeteerRequestHandlerParam,
     Request,
     RequestList,
     RequestQueue,
@@ -30,6 +30,8 @@ describe('PuppeteerCrawler', () => {
     let requestList: RequestList;
     let servers: ProxyChainServer[];
     let target: Server;
+    let serverUrl: string;
+    let proxyConfiguration: ProxyConfiguration;
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -39,11 +41,14 @@ describe('PuppeteerCrawler', () => {
         localStorageEmulator = new LocalStorageDirEmulator();
 
         target = createServer((request, response) => {
+            response.write(`<html><head><title>Example Domain</title></head></html>`);
             response.end(request.socket.remoteAddress);
         });
 
         target.listen(0, '127.0.0.1');
         await once(target, 'listening');
+
+        serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
 
         servers = [
             createProxyServer('127.0.0.2', '', ''),
@@ -52,12 +57,20 @@ describe('PuppeteerCrawler', () => {
         ];
 
         await Promise.all(servers.map((server) => server.listen()));
+
+        proxyConfiguration = new ProxyConfiguration({
+            proxyUrls: [
+                `http://127.0.0.2:${servers[0].port}`,
+                `http://127.0.0.3:${servers[1].port}`,
+                `http://127.0.0.4:${servers[2].port}`,
+            ],
+        });
     });
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
         Configuration.getGlobalConfig().set('localStorageDir', storageDir);
-        const sources = ['http://example.com/'];
+        const sources = [serverUrl];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });
 
@@ -72,18 +85,18 @@ describe('PuppeteerCrawler', () => {
 
     test('should work', async () => {
         const sourcesLarge = [
-            { url: 'http://example.com/?q=1' },
-            { url: 'http://example.com/?q=2' },
-            { url: 'http://example.com/?q=3' },
-            { url: 'http://example.com/?q=4' },
-            { url: 'http://example.com/?q=5' },
-            { url: 'http://example.com/?q=6' },
+            { url: `${serverUrl}/?q=1` },
+            { url: `${serverUrl}/?q=2` },
+            { url: `${serverUrl}/?q=3` },
+            { url: `${serverUrl}/?q=4` },
+            { url: `${serverUrl}/?q=5` },
+            { url: `${serverUrl}/?q=6` },
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
         const processed: Request[] = [];
         const failed: Request[] = [];
         const requestListLarge = new RequestList({ sources: sourcesLarge });
-        const handlePageFunction = async ({ page, request, response }: Parameters<PuppeteerHandlePage>[0]) => {
+        const requestHandler = async ({ page, request, response }: Parameters<PuppeteerRequestHandler>[0]) => {
             await page.waitForSelector('title');
             expect(response.status()).toBe(200);
             request.userData.title = await page.title();
@@ -94,8 +107,8 @@ describe('PuppeteerCrawler', () => {
             requestList: requestListLarge,
             minConcurrency: 1,
             maxConcurrency: 1,
-            handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => {
+            requestHandler,
+            failedRequestHandler: ({ request }) => {
                 failed.push(request);
             },
         });
@@ -120,7 +133,7 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {},
+            requestHandler: () => {},
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
@@ -136,18 +149,18 @@ describe('PuppeteerCrawler', () => {
 
     test('should support custom gotoFunction', async () => {
         const functions = {
-            handlePageFunction: async () => {},
-            gotoFunction: ({ page, request }: PuppeteerHandlePageFunctionParam, options: PuppeteerGoToOptions) => {
+            requestHandler: async () => {},
+            gotoFunction: ({ page, request }: PuppeteerRequestHandlerParam, options: PuppeteerGoToOptions) => {
                 return page.goto(request.url, options);
             },
         };
         jest.spyOn(functions, 'gotoFunction');
-        jest.spyOn(functions, 'handlePageFunction');
+        jest.spyOn(functions, 'requestHandler');
         const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: functions.handlePageFunction,
+            requestHandler: functions.requestHandler,
             gotoFunction: functions.gotoFunction,
         });
 
@@ -156,7 +169,7 @@ describe('PuppeteerCrawler', () => {
         await puppeteerCrawler.run();
 
         expect(functions.gotoFunction).toBeCalled();
-        expect(functions.handlePageFunction).toBeCalled();
+        expect(functions.requestHandler).toBeCalled();
     });
 
     test('should override goto timeout with navigationTimeoutSecs ', async () => {
@@ -166,7 +179,7 @@ describe('PuppeteerCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {},
+            requestHandler: () => {},
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
             }],
@@ -189,7 +202,7 @@ describe('PuppeteerCrawler', () => {
                 launchContext: {
                     proxyUrl: 'http://localhost@1234',
                 },
-                handlePageFunction: () => {},
+                requestHandler: () => {},
             });
         } catch (e) {
             expect((e as Error).message).toMatch('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.');
@@ -198,11 +211,9 @@ describe('PuppeteerCrawler', () => {
         expect.hasAssertions();
     });
 
-    // FIXME: ~I have no idea why but this test hangs~
-    //  -> it hangs because we need to teardown the crawler
-    test.skip('supports useChrome option', async () => {
+    test('supports useChrome option', async () => {
         // const spy = sinon.spy(utils, 'getTypicalChromeExecutablePath');
-        const puppeteerCrawler = new PuppeteerCrawler({ //eslint-disable-line
+        const puppeteerCrawler = new PuppeteerCrawler({
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
@@ -212,8 +223,9 @@ describe('PuppeteerCrawler', () => {
                     headless: true,
                 },
             },
-            handlePageFunction: () => {},
+            requestHandler: () => {},
         });
+        await puppeteerCrawler.run();
 
         // expect(spy.calledOnce).toBe(true);
         // spy.restore();
@@ -234,7 +246,7 @@ describe('PuppeteerCrawler', () => {
             maxRequestRetries: 0,
             maxConcurrency: 1,
             launchContext: opts,
-            handlePageFunction: async ({ page }) => {
+            requestHandler: async ({ page }) => {
                 loadedUserAgent = await page.evaluate(() => window.navigator.userAgent);
             },
         });
@@ -246,19 +258,19 @@ describe('PuppeteerCrawler', () => {
 
     test('timeout via preNavigationHooks will abort the page function as early as possible (gh #1216)', async () => {
         const requestQueue = await RequestQueue.open();
-        await requestQueue.addRequest({ url: 'http://www.example.com' });
-        const handlePageFunction = jest.fn();
+        await requestQueue.addRequest({ url: serverUrl });
+        const requestHandler = jest.fn();
 
         const crawler = new PuppeteerCrawler({
             requestQueue,
-            handlePageTimeoutSecs: 0.005,
+            requestHandlerTimeoutSecs: 0.005,
             navigationTimeoutSecs: 0.005,
             preNavigationHooks: [
                 async () => {
                     await sleep(20);
                 },
             ],
-            handlePageFunction,
+            requestHandler,
         });
 
         // @ts-expect-error Overriding protected method
@@ -269,7 +281,7 @@ describe('PuppeteerCrawler', () => {
         await crawler.teardown();
         await requestQueue.drop();
 
-        expect(handlePageFunction).not.toBeCalled();
+        expect(requestHandler).not.toBeCalled();
         const exceptions = logSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
         expect(exceptions).toEqual([
             [
@@ -298,8 +310,8 @@ describe('PuppeteerCrawler', () => {
 
     test('timeout in preLaunchHooks will abort the page function as early as possible (gh #1216)', async () => {
         const requestQueue = await RequestQueue.open();
-        await requestQueue.addRequest({ url: 'http://www.example.com' });
-        const handlePageFunction = jest.fn();
+        await requestQueue.addRequest({ url: serverUrl });
+        const requestHandler = jest.fn();
 
         const crawler = new PuppeteerCrawler({
             requestQueue,
@@ -312,7 +324,7 @@ describe('PuppeteerCrawler', () => {
                     },
                 ],
             },
-            handlePageFunction,
+            requestHandler,
         });
 
         // @ts-expect-error Overriding protected method
@@ -323,7 +335,7 @@ describe('PuppeteerCrawler', () => {
         await crawler.teardown();
         await requestQueue.drop();
 
-        expect(handlePageFunction).not.toBeCalled();
+        expect(requestHandler).not.toBeCalled();
         const exceptions = logSpy.mock.calls.map((call) => [call[0].message, call[1], call[2].retryCount]);
         expect(exceptions).toEqual([
             [
@@ -354,7 +366,7 @@ describe('PuppeteerCrawler', () => {
         const cookies: PuppeteerCookie[] = [
             {
                 name: 'example_cookie_name',
-                domain: '.example.com',
+                domain: '127.0.0.1',
                 value: 'example_cookie_value',
                 expires: -1,
             } as never,
@@ -370,13 +382,13 @@ describe('PuppeteerCrawler', () => {
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {
                     const session = new Session({ sessionPool });
-                    session.setPuppeteerCookies(cookies, 'http://www.example.com');
+                    session.setPuppeteerCookies(cookies, serverUrl);
                     return session;
                 },
             },
-            handlePageFunction: async ({ page, session }) => {
+            requestHandler: async ({ page, session }) => {
                 pageCookies = await page.cookies().then((cks) => cks.map((c) => `${c.name}=${c.value}`).join('; '));
-                sessionCookies = session.getCookieString('http://www.example.com');
+                sessionCookies = session.getCookieString(serverUrl);
             },
         });
 
@@ -388,15 +400,6 @@ describe('PuppeteerCrawler', () => {
     test('proxy rotation', async () => {
         const proxies = new Set();
         const sessions = new Set();
-        // @ts-expect-error Property 'port' does not exist on type 'string | AddressInfo'.
-        const serverUrl = `http://127.0.0.1:${target.address().port}`;
-        const proxyConfiguration = new ProxyConfiguration({
-            proxyUrls: [
-                `http://127.0.0.2:${servers[0].port}`,
-                `http://127.0.0.3:${servers[1].port}`,
-                `http://127.0.0.4:${servers[2].port}`,
-            ],
-        });
         const puppeteerCrawler = new PuppeteerCrawler({
             requestList: await RequestList.open(null, [
                 { url: `${serverUrl}/?q=1` },
@@ -415,7 +418,7 @@ describe('PuppeteerCrawler', () => {
                 },
             },
             proxyConfiguration,
-            handlePageFunction: async ({ proxyInfo, session }) => {
+            requestHandler: async ({ proxyInfo, session }) => {
                 proxies.add(proxyInfo.url);
                 sessions.add(session.id);
             },
@@ -428,16 +431,6 @@ describe('PuppeteerCrawler', () => {
 
     if (os.platform() !== 'darwin') {
         test('proxy per page', async () => {
-            const proxyConfiguration = new ProxyConfiguration({
-                proxyUrls: [
-                    `http://127.0.0.2:${servers[0].port}`,
-                    `http://127.0.0.3:${servers[1].port}`,
-                    `http://127.0.0.4:${servers[2].port}`,
-                ],
-            });
-
-            const serverUrl = `http://127.0.0.1:${(target.address() as AddressInfo).port}`;
-
             const requestListLarge = new RequestList({
                 sources: [
                     { url: `${serverUrl}/?q=1` },
@@ -469,7 +462,7 @@ describe('PuppeteerCrawler', () => {
                     ],
                 },
                 proxyConfiguration,
-                handlePageFunction: async ({ page }) => {
+                requestHandler: async ({ page }) => {
                     const content = await page.content();
 
                     if (content.includes('127.0.0.2')) {

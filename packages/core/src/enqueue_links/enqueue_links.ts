@@ -1,5 +1,7 @@
+import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
+import { purlToRegExp } from '@apify/pseudo_url';
 import { makeRe } from 'minimatch';
 import {
     constructRegExps,
@@ -93,21 +95,33 @@ export interface EnqueueLinksOptions {
      * The strategy to use when enqueueing the urls.
      * @default EnqueueStrategy.SameDomain
      */
-    strategy?: EnqueueStrategy | 'all' | 'same-domain';
+    strategy?: EnqueueStrategy | 'all' | 'same-subdomain' | 'same-hostname';
 }
 
 export enum EnqueueStrategy {
+    /**
+     * Matches any URLs found
+     */
     All = 'all',
-    SameDomain = 'same-domain'
+    /**
+     * Matches any URLs that have the same subdomain as the base URL
+     */
+    SameSubdomain = 'same-subdomain',
+    /**
+     * Matches any URLs that have the same hostname.
+     * For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of
+     * `https://example.com`.
+     */
+    SameHostname = 'same-hostname',
 }
 
 /**
  * The function finds elements matching a specific CSS selector (HTML anchor (`<a>`) by default)
- * either in a Puppeteer page, or in a Cheerio object (parsed HTML),
+ * either in a Puppeteer/Playwright page, or in a Cheerio object (parsed HTML),
  * and enqueues the URLs in their `href` attributes to the provided {@link RequestQueue}.
  * If you're looking to find URLs in JavaScript heavy pages where links are not available
  * in `href` elements, but rather navigations are triggered in click handlers
- * see {@link utils.puppeteer.enqueueLinksByClickingElements}.
+ * see {@link puppeteerUtils.enqueueLinksByClickingElements}.
  *
  * Optionally, the function allows you to filter the target links' URLs using an array of {@link PseudoUrl} objects
  * and override settings of the enqueued {@link Request} objects.
@@ -115,7 +129,7 @@ export enum EnqueueStrategy {
  * **Example usage**
  *
  * ```javascript
- * await Apify.utils.enqueueLinks({
+ * await enqueueLinks({
  *   page,
  *   requestQueue,
  *   selector: 'a.product-detail',
@@ -146,7 +160,8 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
             EnqueueStrategy.All,
-            EnqueueStrategy.SameDomain,
+            EnqueueStrategy.SameSubdomain,
+            EnqueueStrategy.SameHostname,
         ]),
     }));
 
@@ -186,13 +201,34 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     }
 
     if (options.baseUrl) {
-        switch (options.strategy ?? EnqueueStrategy.SameDomain) {
-            case EnqueueStrategy.SameDomain:
+        switch (options.strategy ?? EnqueueStrategy.SameSubdomain) {
+            case EnqueueStrategy.SameSubdomain:
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to a url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
-                regexps.push(new RegExp(new URL(options.baseUrl).origin));
+                regexps.push(purlToRegExp(`${new URL(options.baseUrl).origin}/[.*]`));
                 break;
+            case EnqueueStrategy.SameHostname: {
+                const url = new URL(options.baseUrl);
+
+                // Get the actual hostname from the base url
+                const baseUrlHostname = getDomain(url.hostname, { mixedInputs: false });
+
+                if (baseUrlHostname) {
+                    // We have a hostname, so we can use it to match all links on the page that point to it and any subdomains of it
+                    url.hostname = baseUrlHostname;
+                    regexps.push(
+                        purlToRegExp(`${url.origin.replace(baseUrlHostname, `[.*].${baseUrlHostname}`)}/[.*]`),
+                        purlToRegExp(`${url.origin}/[.*]`),
+                    );
+                } else {
+                    // We don't have a hostname (can happen for ips for instance), so reproduce the same behavior
+                    // as SameDomainAndSubdomain
+                    regexps.push(purlToRegExp(`${url.origin}/[.*]`));
+                }
+
+                break;
+            }
             case EnqueueStrategy.All:
             default:
                 break;

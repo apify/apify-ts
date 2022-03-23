@@ -53,13 +53,13 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  * default key-value store under the `INPUT` and `OUTPUT` key, respectively.
  * Typically, input and output are JSON files, although it can be any other format.
  * To access the default key-value store directly, you can use the
- * {@link Apify.getValue} and {@link Apify.setValue} convenience functions.
+ * {@link Actor.getValue} and {@link Actor.setValue} convenience functions.
  *
- * To access the input, you can also use the {@link Apify.getInput} convenience function.
+ * To access the input, you can also use the {@link Actor.getInput} convenience function.
  *
  * `KeyValueStore` stores its data either on local disk or in the Apify cloud,
- * depending on whether the [`APIFY_LOCAL_STORAGE_DIR`](../guides/environment-variables#apify_local_storage_dir)
- * or [`APIFY_TOKEN`](../guides/environment-variables#apify_token) environment variables are set.
+ * depending on whether the [`APIFY_LOCAL_STORAGE_DIR`](/docs/guides/environment-variables#apify_local_storage_dir)
+ * or [`APIFY_TOKEN`](/docs/guides/environment-variables#apify_token) environment variables are set.
  *
  * If the `APIFY_LOCAL_STORAGE_DIR` environment variable is set, the data is stored in
  * the local directory in the following files:
@@ -70,23 +70,23 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  * unless you override it by setting the `APIFY_DEFAULT_KEY_VALUE_STORE_ID` environment variable.
  * The `{KEY}` is the key of the record and `{EXT}` corresponds to the MIME content type of the data value.
  *
- * If the [`APIFY_TOKEN`](../guides/environment-variables#apify_token) environment variable is set but
- * [`APIFY_LOCAL_STORAGE_DIR`](../guides/environment-variables#apify_local_storage_dir) not,
+ * If the [`APIFY_TOKEN`](/docs/guides/environment-variables#apify_token) environment variable is set but
+ * [`APIFY_LOCAL_STORAGE_DIR`](/docs/guides/environment-variables#apify_local_storage_dir) not,
  * the data is stored in the [Apify Key-value store](https://docs.apify.com/storage/key-value-store)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
  * option to {@link KeyValueStore.open} function, even if the
- * [`APIFY_LOCAL_STORAGE_DIR`](../guides/environment-variables#apify_local_storage_dir) variable is set.
+ * [`APIFY_LOCAL_STORAGE_DIR`](/docs/guides/environment-variables#apify_local_storage_dir) variable is set.
  *
  * **Example usage:**
  *
  * ```javascript
  * // Get actor input from the default key-value store.
- * const input = await Apify.getInput();
+ * const input = await Actor.getInput();
  * // Get some value from the default key-value store.
- * const otherValue = await Apify.getValue('my-key');
+ * const otherValue = await Actor.getValue('my-key');
  *
  * // Write actor output to the default key-value store.
- * await Apify.setValue('OUTPUT', { myResult: 123 });
+ * await Actor.setValue('OUTPUT', { myResult: 123 });
  *
  * // Open a named key-value store
  * const store = await KeyValueStore.open('some-name');

@@ -7,8 +7,8 @@
 		"scripts/**/*.ts",
 		"test/**/*.js",
 		"test/**/*.ts",
-		"packages/actor-scraper/*/test/**/*.js",
-		"packages/actor-scraper/*/test/**/*.ts",
-		"docs/examples/**/*"
+		"packages/**/test/**/*.js",
+		"packages/**/test/**/*.ts",
+    	"docs/examples/**/*"
 	]
 }

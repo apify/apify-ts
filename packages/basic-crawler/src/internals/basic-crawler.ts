@@ -1,6 +1,6 @@
 import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import defaultLog, { Log } from '@apify/log';
-import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
+import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import {
     AutoscaledPool,
@@ -37,6 +37,7 @@ export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFaile
     crawler: BasicCrawler;
 }
 
+/** @internal */
 export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue'>
 
 /**
@@ -50,9 +51,9 @@ export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'request
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export type HandleRequest<Context extends CrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Context) => Awaitable<void>;
+export type RequestHandler<Context extends CrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
-export type HandleFailedRequest<Inputs extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput> = (inputs: Inputs) => Awaitable<void>;
+export type FailedRequestHandler<Inputs extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput> = (inputs: Inputs) => Awaitable<void>;
 
 export interface BasicCrawlerOptions<
     Context extends CrawlingContext = BasicCrawlerCrawlingContext,
@@ -82,7 +83,35 @@ export interface BasicCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handleRequestFunction: HandleRequest<Context>;
+    requestHandler: RequestHandler<Context>;
+
+    /**
+     * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
+     *
+     * The function receives the following object as an argument:
+     * ```
+     * {
+     *     request: Request,
+     *     session: Session,
+     *     crawler: BasicCrawler,
+     * }
+     * ```
+     * where the {@link Request} instance represents the URL to crawl.
+     *
+     * The function must return a promise, which is then awaited by the crawler.
+     *
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
+     *
+     * @deprecated `handleRequestFunction` has been renamed to `requestHandler` and will be removed in a future version.
+     */
+    handleRequestFunction?: RequestHandler<Context>;
 
     /**
      * Static list of URLs to be processed.
@@ -97,8 +126,15 @@ export interface BasicCrawlerOptions<
     requestQueue?: RequestQueue;
 
     /**
-     * Timeout in which the function passed as `handleRequestFunction` needs to finish, in seconds.
+     * Timeout in which the function passed as `requestHandler` needs to finish, in seconds.
      * @default 60
+     */
+    requestHandlerTimeoutSecs?: number;
+
+    /**
+     * Timeout in which the function passed as `requestHandler` needs to finish, in seconds.
+     * @default 60
+     * @deprecated `handleRequestTimeoutSecs` has been renamed to `requestHandlerTimeoutSecs` and will be removed in a future version.
      */
     handleRequestTimeoutSecs?: number;
 
@@ -121,10 +157,33 @@ export interface BasicCrawlerOptions<
      * [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/basic_crawler.js#L11)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: HandleFailedRequest<ErrorContext>;
+    failedRequestHandler?: FailedRequestHandler<ErrorContext>;
 
     /**
-     * Indicates how many times the request is retried if {@link handleRequestFunction} or {@link handlePageFunction} fails.
+     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     *
+     * The function receives the following object as an argument:
+     * ```
+     * {
+     *     request: Request,
+     *     error: Error,
+     *     session: Session,
+     *     crawler: BasicCrawler,
+     * }
+     * ```
+     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * represents the last error thrown during processing of the request.
+     *
+     * See
+     * [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/basic_crawler.js#L11)
+     * for the default implementation of this function.
+     *
+     * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.
+     */
+    handleFailedRequestFunction?: FailedRequestHandler<ErrorContext>;
+
+    /**
+     * Indicates how many times the request is retried if {@link requestHandler} or {@link handlePageFunction} fails.
      * @default 3
      */
     maxRequestRetries?: number;
@@ -182,7 +241,7 @@ export interface BasicCrawlerOptions<
  * If you want a crawler that already facilitates this functionality,
  * please consider using {@link CheerioCrawler}, {@link PuppeteerCrawler} or {@link PlaywrightCrawler}.
  *
- * `BasicCrawler` invokes the user-provided {@link BasicCrawlerOptions.handleRequestFunction}
+ * `BasicCrawler` invokes the user-provided {@link BasicCrawlerOptions.requestHandler}
  * for each {@link Request} object, which represents a single URL to crawl.
  * The {@link Request} objects are fed from the {@link RequestList} or the {@link RequestQueue}
  * instances provided by the {@link BasicCrawlerOptions.requestList} or {@link BasicCrawlerOptions.requestQueue}
@@ -204,7 +263,7 @@ export interface BasicCrawlerOptions<
  *
  * ```javascript
  * // Prepare a list of URLs to crawl
- * const requestList = new Apify.RequestList({
+ * const requestList = new RequestList({
  *   sources: [
  *       { url: 'http://www.example.com/page-1' },
  *       { url: 'http://www.example.com/page-2' },
@@ -213,13 +272,13 @@ export interface BasicCrawlerOptions<
  * await requestList.initialize();
  *
  * // Crawl the URLs
- * const crawler = new Apify.BasicCrawler({
+ * const crawler = new BasicCrawler({
  *     requestList,
  *     handleRequestFunction: async ({ request }) => {
  *         // 'request' contains an instance of the Request class
  *         // Here we simply fetch the HTML of the page and store it to a dataset
- *         const { body } = await Apify.utils.requestAsBrowser(request);
- *         await Apify.pushData({
+ *         const { body } = await Actor.utils.requestAsBrowser(request);
+ *         await Actor.pushData({
  *             url: request.url,
  *             html: body,
  *         })
@@ -270,10 +329,9 @@ export class BasicCrawler<
     autoscaledPool?: AutoscaledPool;
 
     protected log: Log;
-    protected userProvidedHandler: HandleRequest<Context>;
-    protected failedContextHandler?: HandleFailedRequest<ErrorContext>;
-    protected handleFailedRequestFunction?: HandleFailedRequest<ErrorContext>;
-    protected handleRequestTimeoutMillis: number;
+    protected requestHandler!: RequestHandler<Context>;
+    protected failedRequestHandler?: FailedRequestHandler<ErrorContext>;
+    protected requestHandlerTimeoutMillis!: number;
     protected internalTimeoutMillis: number;
     protected maxRequestRetries: number;
     protected handledRequestsCount: number;
@@ -289,8 +347,15 @@ export class BasicCrawler<
         // Subclasses override this function instead of passing it
         // in constructor, so this validation needs to apply only
         // if the user creates an instance of BasicCrawler directly.
-        handleRequestFunction: ow.function as never,
+        // TODO: remove .optional from requestHandler once migration period is over
+        requestHandler: ow.optional.function,
+        // TODO: remove in a future release
+        handleRequestFunction: ow.optional.function,
+        requestHandlerTimeoutSecs: ow.optional.number,
+        // TODO: remove in a future release
         handleRequestTimeoutSecs: ow.optional.number,
+        failedRequestHandler: ow.optional.function,
+        // TODO: remove in a future release
         handleFailedRequestFunction: ow.optional.function,
         maxRequestRetries: ow.optional.number,
         maxRequestsPerCrawl: ow.optional.number,
@@ -315,9 +380,6 @@ export class BasicCrawler<
         const {
             requestList,
             requestQueue,
-            handleRequestFunction,
-            handleRequestTimeoutSecs = 60,
-            handleFailedRequestFunction,
             maxRequestRetries = 3,
             maxRequestsPerCrawl,
             autoscaledPoolOptions = {},
@@ -330,6 +392,16 @@ export class BasicCrawler<
 
             // internal
             log = defaultLog.child({ prefix: this.constructor.name }),
+
+            // Old and new request handler methods
+            handleRequestFunction,
+            requestHandler,
+
+            handleRequestTimeoutSecs,
+            requestHandlerTimeoutSecs,
+
+            handleFailedRequestFunction,
+            failedRequestHandler,
         } = options;
 
         if (!requestList && !requestQueue) {
@@ -340,12 +412,45 @@ export class BasicCrawler<
         this.requestList = requestList;
         this.requestQueue = requestQueue;
         this.log = log;
-        this.userProvidedHandler = handleRequestFunction;
-        this.failedContextHandler = handleFailedRequestFunction;
-        this.handleRequestTimeoutMillis = handleRequestTimeoutSecs * 1000;
-        this.internalTimeoutMillis = Math.max(this.handleRequestTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
-        // TODO remove `this.handleFailedRequestFunction` in favour of `this.failedContextHandler`
-        this.handleFailedRequestFunction = handleFailedRequestFunction;
+
+        this._handlePropertyNameChange({
+            newName: 'requestHandler',
+            oldName: 'handleRequestFunction',
+            propertyKey: 'requestHandler',
+            newProperty: requestHandler,
+            oldProperty: handleRequestFunction,
+        });
+
+        this._handlePropertyNameChange({
+            newName: 'failedRequestHandler',
+            oldName: 'handleFailedRequestFunction',
+            propertyKey: 'failedRequestHandler',
+            newProperty: failedRequestHandler,
+            oldProperty: handleFailedRequestFunction,
+            allowUndefined: true,
+        });
+
+        let newRequestHandlerTimeout: number | undefined;
+
+        if (!handleRequestTimeoutSecs) {
+            if (!requestHandlerTimeoutSecs) {
+                newRequestHandlerTimeout = 60_000;
+            } else {
+                newRequestHandlerTimeout = requestHandlerTimeoutSecs * 1000;
+            }
+        } else if (requestHandlerTimeoutSecs) {
+            newRequestHandlerTimeout = requestHandlerTimeoutSecs * 1000;
+        }
+
+        this._handlePropertyNameChange({
+            newName: 'requestHandlerTimeoutSecs',
+            oldName: 'handleRequestTimeoutSecs',
+            propertyKey: 'requestHandlerTimeoutMillis',
+            newProperty: newRequestHandlerTimeout,
+            oldProperty: handleRequestTimeoutSecs ? handleRequestTimeoutSecs * 1000 : undefined,
+        });
+
+        this.internalTimeoutMillis = Math.max(this.requestHandlerTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
         this.maxRequestRetries = maxRequestRetries;
         this.handledRequestsCount = 0;
         this.stats = new Statistics({ logMessage: `${log.getOptions().prefix} request statistics:` });
@@ -357,11 +462,11 @@ export class BasicCrawler<
         this.crawlingContexts = new Map();
 
         const maxSignedInteger = 2 ** 31 - 1;
-        if (this.handleRequestTimeoutMillis > maxSignedInteger) {
-            log.warning(`handleRequestTimeoutMillis ${this.handleRequestTimeoutMillis}`
+        if (this.requestHandlerTimeoutMillis > maxSignedInteger) {
+            log.warning(`handleRequestTimeoutMillis ${this.requestHandlerTimeoutMillis}`
                 + `does not fit a signed 32-bit integer. Limiting the value to ${maxSignedInteger}`);
 
-            this.handleRequestTimeoutMillis = maxSignedInteger;
+            this.requestHandlerTimeoutMillis = maxSignedInteger;
         }
 
         let shouldLogMaxPagesExceeded = true;
@@ -485,8 +590,8 @@ export class BasicCrawler<
         await this._loadHandledRequestCount();
     }
 
-    protected async _handleRequestFunction(crawlingContext: Context): Promise<void> {
-        await this.userProvidedHandler(crawlingContext);
+    protected async _runRequestHandler(crawlingContext: Context): Promise<void> {
+        await this.requestHandler(crawlingContext);
     }
 
     protected async _pauseOnMigration() {
@@ -510,7 +615,7 @@ export class BasicCrawler<
                     .catch((err) => {
                         if (err.message.includes('Cannot persist state.')) {
                             this.log.error('The crawler attempted to persist its request list\'s state and failed due to missing or '
-                                + 'invalid config. Make sure to use either Apify.openRequestList() or the "stateKeyPrefix" option of RequestList '
+                                + 'invalid config. Make sure to use either RequestList.open() or the "stateKeyPrefix" option of RequestList '
                                 + 'constructor to ensure your crawling state is persisted through host migrations and restarts.');
                         } else {
                             this.log.exception(err, 'An unexpected error occured when the crawler '
@@ -550,7 +655,7 @@ export class BasicCrawler<
     }
 
     /**
-     * Wrapper around handleRequestFunction that fetches requests from RequestList/RequestQueue
+     * Wrapper around requestHandler that fetches requests from RequestList/RequestQueue
      * then retries them in a case of an error, etc.
      */
     protected async _runTaskFunction() {
@@ -561,15 +666,23 @@ export class BasicCrawler<
 
         await this._timeoutAndRetry(
             async () => {
-                if (this.useSessionPool) {
-                    [request, session] = await Promise.all([this._fetchNextRequest(), this.sessionPool!.getSession()]);
-                } else {
-                    request = await this._fetchNextRequest();
-                }
+                request = await this._fetchNextRequest();
             },
             this.internalTimeoutMillis,
             `Fetching next request timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
         );
+
+        tryCancel();
+
+        if (this.useSessionPool) {
+            await this._timeoutAndRetry(
+                async () => {
+                    session = await this.sessionPool!.getSession();
+                },
+                this.internalTimeoutMillis,
+                `Fetching session timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
+            );
+        }
 
         tryCancel();
 
@@ -597,15 +710,15 @@ export class BasicCrawler<
 
         try {
             await addTimeoutToPromise(
-                () => this._handleRequestFunction(crawlingContext),
-                this.handleRequestTimeoutMillis,
-                `handleRequestFunction timed out after ${this.handleRequestTimeoutMillis / 1e3} seconds.`,
+                () => this._runRequestHandler(crawlingContext),
+                this.requestHandlerTimeoutMillis,
+                `handleRequestFunction timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds (${request.id}).`,
             );
 
             await this._timeoutAndRetry(
                 () => source.markRequestHandled(request!),
                 this.internalTimeoutMillis,
-                `Marking request ${request.url} as handled timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
+                `Marking request ${request.url} (${request.id}) as handled timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
             );
 
             this.stats.finishJob(statisticsId);
@@ -618,7 +731,7 @@ export class BasicCrawler<
                 await this._timeoutAndRetry(
                     () => this._requestFunctionErrorHandler(err as Error, crawlingContext, source),
                     this.internalTimeoutMillis,
-                    `Handling request failure of ${request.url} timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
+                    `Handling request failure of ${request.url} (${request.id}) timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
                 );
             } catch (secondaryError) {
                 this.log.exception(secondaryError as Error, 'runTaskFunction error handler threw an exception. '
@@ -639,14 +752,10 @@ export class BasicCrawler<
      */
     protected async _timeoutAndRetry(handler: () => Promise<unknown>, timeout: number, error: Error | string, maxRetries = 3, retried = 1): Promise<void> {
         try {
-            await addTimeoutToPromise(
-                handler,
-                timeout,
-                error,
-            );
+            await addTimeoutToPromise(handler, timeout, error);
         } catch (e) {
-            if (e instanceof TimeoutError && retried <= maxRetries) {
-                this.log.warning(`${e.message} (retrying ${retried}/${maxRetries})`);
+            if (retried <= maxRetries) { // we retry on any error, not just timeout
+                this.log.warning(`${(e as Error).message} (retrying ${retried}/${maxRetries})`);
                 return this._timeoutAndRetry(handler, timeout, error, maxRetries, retried + 1);
             }
 
@@ -714,13 +823,13 @@ export class BasicCrawler<
             const castedErrorContext = crawlingContext as ErrorContext;
             castedErrorContext.error = error;
 
-            await this._handleFailedRequestFunction(castedErrorContext); // This function prints an error message.
+            await this._handleFailedRequestHandler(castedErrorContext); // This function prints an error message.
         }
     }
 
-    protected async _handleFailedRequestFunction(crawlingContext: ErrorContext): Promise<void> {
-        if (this.failedContextHandler) {
-            await this.failedContextHandler(crawlingContext);
+    protected async _handleFailedRequestHandler(crawlingContext: ErrorContext): Promise<void> {
+        if (this.failedRequestHandler) {
+            await this.failedRequestHandler(crawlingContext);
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
             this.log.exception(
@@ -764,10 +873,45 @@ export class BasicCrawler<
             await this.sessionPool!.teardown();
         }
     }
+
+    protected _handlePropertyNameChange<New, Old>({
+        newProperty,
+        newName,
+        oldProperty,
+        oldName,
+        propertyKey,
+        allowUndefined = false,
+    }: HandlePropertyNameChangeData<New, Old>) {
+        if (newProperty && oldProperty) {
+            this.log.warning([
+                `Both "${newName}" and "${oldName}" were provided in the crawler options.`,
+                `"${oldName}" has been renamed to "${newName}", and will be removed in a future version.`,
+                `As such, "${newName}" will be used instead.`,
+            ].join('\n'));
+
+            // @ts-expect-error Assigning to possibly readonly properties
+            this[propertyKey] = newProperty;
+        } else if (oldProperty) {
+            this.log.warning([
+                `"${oldName}" has been renamed to "${newName}", and will be removed in a future version.`,
+                `The provided value will be used, but you should rename "${oldName}" to "${newName}" in your crawler options.`,
+            ].join('\n'));
+
+            // @ts-expect-error Assigning to possibly readonly properties
+            this[propertyKey] = oldProperty;
+        } else if (newProperty) {
+            // @ts-expect-error Assigning to possibly readonly properties
+            this[propertyKey] = newProperty;
+        } else if (!allowUndefined) {
+            throw new ArgumentError(`"${newName}" must be provided in the crawler options`, this.constructor);
+        }
+    }
 }
 
+/** @internal */
 export async function basicCrawlerEnqueueLinks(options: BasicCrawlerEnqueueLinksOptions, requestQueue?: RequestQueue) {
     return enqueueLinks({
+        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
         requestQueue: requestQueue ?? await RequestQueue.open(),
         ...options,
     });
@@ -777,4 +921,13 @@ export interface CreateContextOptions {
     request: Request;
     session?: Session;
     proxyInfo?: ProxyInfo;
+}
+
+interface HandlePropertyNameChangeData<New, Old> {
+    oldProperty?: Old;
+    newProperty?: New;
+    oldName: string;
+    newName: string;
+    propertyKey: string;
+    allowUndefined?: boolean;
 }

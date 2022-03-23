@@ -6,10 +6,10 @@
  *
  * ```javascript
  * const Apify = require('apify');
- * const { playwright } = Apify.utils;
+ * const { playwright } = Actor.utils;
  *
  * // Navigate to https://www.example.com in Playwright with a POST request
- * const browser = await Apify.launchPlaywright();
+ * const browser = await Actor.launchPlaywright();
  * const page = await browser.newPage();
  * await playwright.gotoExtended(page, {
  *     url: 'https://example.com,
@@ -53,7 +53,7 @@ export interface DirectNavigationOptions {
 /**
  * Extended version of Playwright's `page.goto()` allowing to perform requests with HTTP method other than GET,
  * with custom headers and POST payload. URL, method, headers and payload are taken from
- * request parameter that must be an instance of Apify.Request class.
+ * request parameter that must be an instance of Request class.
  *
  * *NOTE:* In recent versions of Playwright using requests other than GET, overriding headers and adding payloads disables
  * browser cache which degrades performance.

@@ -144,7 +144,7 @@ export interface AutoscaledPoolOptions {
  * **Example usage:**
  *
  * ```javascript
- * const pool = new Apify.AutoscaledPool({
+ * const pool = new AutoscaledPool({
  *     maxConcurrency: 50,
  *     runTaskFunction: async () => {
  *         // Run some resource-intensive asynchronous operation here.

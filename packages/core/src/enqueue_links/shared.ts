@@ -96,8 +96,13 @@ export async function addRequestsToQueueInBatches(requests: Request[], requestQu
 }
 
 /**
+<<<<<<< HEAD
  * Takes an Apify {@link RequestOptions} object and changes its attributes in a desired way. This user-function is used
  * {@link utils.enqueueLinks} to modify requests before enqueuing them.
+=======
+ * Takes an Apify {@link RequestOptions} object and changes it's attributes in a desired way. This user-function is used
+ * {@link enqueueLinks} to modify requests before enqueuing them.
+>>>>>>> master
  */
 export interface RequestTransform {
     /**

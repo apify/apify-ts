@@ -62,7 +62,7 @@ export interface SessionPoolOptions {
  * Handles the rotation, creation and persistence of user-like sessions.
  * Creates a pool of {@link Session} instances, that are randomly rotated.
  * When some session is marked as blocked, it is removed and new one is created instead (the pool never returns an unusable session).
- * Learn more in the [`Session management guide`](../guides/session-management).
+ * Learn more in the [Session management guide](../../../docs/guides/session-management).
  *
  * You can create one by calling the {@link SessionPool.open} function.
  *
@@ -72,7 +72,7 @@ export interface SessionPoolOptions {
  * **Example usage:**
  *
  * ```javascript
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *     useSessionPool: true,
  *     persistCookiesPerSession: true,
  *     // ...

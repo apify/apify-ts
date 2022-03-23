@@ -1,22 +1,43 @@
 import { ENV_VARS } from '@apify/consts';
+import os from 'os';
+import express from 'express';
 import playwright from 'playwright';
 import log from '@apify/log';
 import {
     Configuration,
     PlaywrightCrawler,
     PlaywrightGotoOptions,
-    PlaywrightHandlePageFunction,
-    PlaywrightHandlePageFunctionParam,
+    PlaywrightRequestHandler,
+    PlaywrightRequestHandlerParam,
     Request,
     RequestList,
 } from '@crawlers/playwright';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
+import { startExpressAppPromise } from '../../shared/_helper';
 import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+
+if (os.platform() === 'win32') jest.setTimeout(2 * 60 * 1e3);
 
 describe('PlaywrightCrawler', () => {
     let prevEnvHeadless: string;
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
     let requestList: RequestList;
+
+    const HOSTNAME = '127.0.0.1';
+    let port: number;
+    let server: Server;
+
+    beforeAll(async () => {
+        const app = express();
+        server = await startExpressAppPromise(app, 0);
+        port = (server.address() as AddressInfo).port;
+        app.get('/', (req, res) => {
+            res.send(`<html><head><title>Example Domain</title></head></html>`);
+            res.status(200);
+        });
+    });
 
     beforeAll(async () => {
         prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
@@ -28,7 +49,7 @@ describe('PlaywrightCrawler', () => {
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
         Configuration.getGlobalConfig().set('localStorageDir', storageDir);
-        const sources = ['http://example.com/'];
+        const sources = [`http://${HOSTNAME}:${[port]}/`];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });
     afterAll(async () => {
@@ -36,23 +57,27 @@ describe('PlaywrightCrawler', () => {
         process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
         await localStorageEmulator.destroy();
     });
+    afterAll(async () => {
+        server.close();
+    });
 
+    jest.setTimeout(2 * 60 * 1e3);
     describe('should work', () => {
-        // @TODO: add webkit and solve te timeout issue on github actions.
+        // @TODO: add webkit
         test.each(['chromium', 'firefox'] as const)('with %s', async (browser) => {
             const sourcesLarge = [
-                { url: 'http://example.com/?q=1' },
-                { url: 'http://example.com/?q=2' },
-                { url: 'http://example.com/?q=3' },
-                { url: 'http://example.com/?q=4' },
-                { url: 'http://example.com/?q=5' },
-                { url: 'http://example.com/?q=6' },
+                { url: `http://${HOSTNAME}:${port}/?q=1` },
+                { url: `http://${HOSTNAME}:${port}/?q=2` },
+                { url: `http://${HOSTNAME}:${port}/?q=3` },
+                { url: `http://${HOSTNAME}:${port}/?q=4` },
+                { url: `http://${HOSTNAME}:${port}/?q=5` },
+                { url: `http://${HOSTNAME}:${port}/?q=6` },
             ];
             const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
             const processed: Request[] = [];
             const failed: Request[] = [];
             const requestListLarge = new RequestList({ sources: sourcesLarge });
-            const handlePageFunction = async ({ page, request, response }: Parameters<PlaywrightHandlePageFunction>[0]) => {
+            const requestHandler = async ({ page, request, response }: Parameters<PlaywrightRequestHandler>[0]) => {
                 expect(response.status()).toBe(200);
                 request.userData.title = await page.title();
                 processed.push(request);
@@ -65,8 +90,8 @@ describe('PlaywrightCrawler', () => {
                 requestList: requestListLarge,
                 minConcurrency: 1,
                 maxConcurrency: 1,
-                handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => {
+                requestHandler,
+                failedRequestHandler: ({ request }) => {
                     failed.push(request);
                 },
             });
@@ -92,7 +117,7 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {
+            requestHandler: () => {
             },
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;
@@ -110,18 +135,18 @@ describe('PlaywrightCrawler', () => {
     });
     test('should support custom gotoFunction', async () => {
         const functions = {
-            handlePageFunction: () => { },
-            gotoFunction: ({ page, request }: PlaywrightHandlePageFunctionParam, options: PlaywrightGotoOptions) => {
+            requestHandler: () => { },
+            gotoFunction: ({ page, request }: PlaywrightRequestHandlerParam, options: PlaywrightGotoOptions) => {
                 return page.goto(request.url, options);
             },
         };
         jest.spyOn(functions, 'gotoFunction');
-        jest.spyOn(functions, 'handlePageFunction');
+        jest.spyOn(functions, 'requestHandler');
         const playwrightCrawler = new PlaywrightCrawler({ //eslint-disable-line
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: functions.handlePageFunction,
+            requestHandler: functions.requestHandler,
             gotoFunction: functions.gotoFunction,
         });
 
@@ -130,7 +155,7 @@ describe('PlaywrightCrawler', () => {
         await playwrightCrawler.run();
 
         expect(functions.gotoFunction).toBeCalled();
-        expect(functions.handlePageFunction).toBeCalled();
+        expect(functions.requestHandler).toBeCalled();
     });
 
     test('should override goto timeout with navigationTimeoutSecs', async () => {
@@ -140,7 +165,7 @@ describe('PlaywrightCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: () => {
+            requestHandler: () => {
             },
             preNavigationHooks: [(_context, gotoOptions) => {
                 options = gotoOptions;

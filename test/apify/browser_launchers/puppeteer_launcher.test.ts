@@ -8,7 +8,6 @@ import util from 'util';
 import portastic from 'portastic';
 // @ts-expect-error no types
 import basicAuthParser from 'basic-auth-parser';
-import _ from 'underscore';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
 import { BrowserLauncher, launchPuppeteer } from '@crawlers/puppeteer';
@@ -31,6 +30,11 @@ beforeAll(async () => {
 
     app.get('/getRawHeaders', (req, res) => {
         res.send(JSON.stringify(req.rawHeaders));
+    });
+
+    app.get('/example', (req, res) => {
+        res.send(`<html><head><title>Example Domain</title></head></html>`);
+        res.status(200);
     });
 
     app.all('/foo', (req, res) => {
@@ -70,7 +74,7 @@ beforeAll(() => {
                     return fn(null, false);
                 }
                 const parsed = basicAuthParser(auth);
-                const isEqual = _.isEqual(parsed, proxyAuth);
+                const isEqual = JSON.stringify(parsed) === JSON.stringify(proxyAuth);
                 if (isEqual) wasProxyCalled = true;
                 fn(null, isEqual);
             };
@@ -224,9 +228,11 @@ describe('launchPuppeteer()', () => {
             browser = await launchPuppeteer(opts);
             const page = await browser.newPage();
 
+            await page.setDefaultNavigationTimeout(0);
+
             // Add a test to go to an actual domain because we've seen issues
             // where pages would not load at all with Chrome.
-            await page.goto('https://example.com');
+            await page.goto(`http://${HOSTNAME}:${port}/example`);
             const title = await page.title();
             const version = await browser.version();
 

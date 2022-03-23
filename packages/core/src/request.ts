@@ -37,7 +37,7 @@ const requestOptionalPredicates = {
  * Example use:
  *
  * ```javascript
- * const request = new Apify.Request({
+ * const request = new Request({
  *     url: 'http://www.example.com',
  *     headers: { Accept: 'application/json' },
  * });

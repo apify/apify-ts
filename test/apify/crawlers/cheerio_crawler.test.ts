@@ -5,9 +5,9 @@ import bodyParser from 'body-parser';
 import {
     AutoscaledPool,
     CheerioCrawler,
-    CheerioHandleFailedRequestInput,
-    CheerioHandlePage,
-    CheerioHandlePageInputs,
+    CheerioFailedRequestHandlerInput,
+    CheerioRequestHandler,
+    CheerioRequestHandlerInputs,
     Configuration,
     CrawlerExtension,
     createProxyConfiguration,
@@ -208,7 +208,7 @@ describe('CheerioCrawler', () => {
         const requestList = await getRequestListForMirror(port);
         const processed: Request[] = [];
         const failed: Request[] = [];
-        const handlePageFunction: CheerioHandlePage = ({ $, body, request }) => {
+        const requestHandler: CheerioRequestHandler = ({ $, body, request }) => {
             request.userData.title = $('title').text();
             request.userData.body = body;
             processed.push(request);
@@ -218,8 +218,8 @@ describe('CheerioCrawler', () => {
             requestList,
             minConcurrency: 2,
             maxConcurrency: 2,
-            handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => {
+            requestHandler,
+            failedRequestHandler: ({ request }) => {
                 failed.push(request);
             },
         });
@@ -242,12 +242,12 @@ describe('CheerioCrawler', () => {
             { url: 'http://example.com/?q=1' },
         ];
         const requestList = new RequestList({ sources });
-        const handlePageFunction = () => {};
+        const requestHandler = () => {};
 
         const cheerioCrawler = new CheerioCrawler({
             requestList,
             maxConcurrency: 1,
-            handlePageFunction,
+            requestHandler,
         });
 
         await requestList.initialize();
@@ -266,15 +266,15 @@ describe('CheerioCrawler', () => {
         let failed = null;
         let success: Request;
         const requestList = new RequestList({ sources });
-        const handlePageFunction: CheerioHandlePage = ({ request }) => {
+        const requestHandler: CheerioRequestHandler = ({ request }) => {
             success = request;
         };
         await requestList.initialize();
 
         const cheerioCrawler = new CheerioCrawler({
             requestList,
-            handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => {
+            requestHandler,
+            failedRequestHandler: ({ request }) => {
                 failed = request;
             },
             prepareRequestFunction: ({ request }) => {
@@ -296,7 +296,7 @@ describe('CheerioCrawler', () => {
         await requestList.initialize();
         const processed: Request[] = [];
         const failed: Request[] = [];
-        const handlePageFunction: CheerioHandlePage = ({ $, body, request }) => {
+        const requestHandler: CheerioRequestHandler = ({ $, body, request }) => {
             request.userData.title = $('title').text();
             request.userData.body = body;
             processed.push(request);
@@ -306,8 +306,8 @@ describe('CheerioCrawler', () => {
             requestList,
             minConcurrency: 2,
             maxConcurrency: 2,
-            handlePageFunction,
-            handleFailedRequestFunction: ({ request }) => {
+            requestHandler,
+            failedRequestHandler: ({ request }) => {
                 failed.push(request);
             },
         });
@@ -336,7 +336,7 @@ describe('CheerioCrawler', () => {
             postResponseFunction: ({ response }) => {
                 response.headers['content-type'] = 'application/json; charset=utf-8'; // text/html is set
             },
-            handlePageFunction: ({ contentType }) => {
+            requestHandler: ({ contentType }) => {
                 const { type } = contentType;
                 expect(type).toEqual('application/json');
             },
@@ -354,7 +354,7 @@ describe('CheerioCrawler', () => {
             requestList,
             maxRequestRetries: 0,
             maxConcurrency: 1,
-            handlePageFunction: ({ $, body }) => {
+            requestHandler: ({ $, body }) => {
                 expect(body).toBe(responseSamples.html);
                 expect($.html()).toBe(body);
             },
@@ -383,7 +383,7 @@ describe('CheerioCrawler', () => {
             const processed: Request[] = [];
             const failed: Request[] = [];
             const requestList = new RequestList({ sources });
-            const handlePageFunction: CheerioHandlePage = ({ request }) => {
+            const requestHandler: CheerioRequestHandler = ({ request }) => {
                 processed.push(request);
             };
 
@@ -393,8 +393,8 @@ describe('CheerioCrawler', () => {
                 maxRequestRetries: 1,
                 minConcurrency: 2,
                 maxConcurrency: 2,
-                handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => {
+                requestHandler,
+                failedRequestHandler: ({ request }) => {
                     failed.push(request);
                 },
             });
@@ -418,21 +418,21 @@ describe('CheerioCrawler', () => {
             });
         });
 
-        test('after handlePageTimeoutSecs', async () => {
+        test('after requestHandlerTimeoutSecs', async () => {
             const failed: Request[] = [];
             const requestList = await getRequestListForMirror(port);
-            const handlePageFunction = async () => {
+            const requestHandler = async () => {
                 await sleep(2000);
             };
 
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
-                handlePageTimeoutSecs: 1,
+                requestHandlerTimeoutSecs: 1,
                 maxRequestRetries: 1,
                 minConcurrency: 2,
                 maxConcurrency: 2,
-                handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => {
+                requestHandler,
+                failedRequestHandler: ({ request }) => {
                     failed.push(request);
                 },
             });
@@ -447,8 +447,8 @@ describe('CheerioCrawler', () => {
 
             failed.forEach((request) => {
                 expect(request.errorMessages).toHaveLength(2);
-                expect(request.errorMessages[0]).toMatch('handlePageFunction timed out');
-                expect(request.errorMessages[1]).toMatch('handlePageFunction timed out');
+                expect(request.errorMessages[0]).toMatch('requestHandler timed out');
+                expect(request.errorMessages[1]).toMatch('requestHandler timed out');
             });
         });
     });
@@ -462,7 +462,7 @@ describe('CheerioCrawler', () => {
             const processed: Request[] = [];
             const failed: Request[] = [];
             const requestList = new RequestList({ sources });
-            const handlePageFunction: CheerioHandlePage = ({ request }) => {
+            const requestHandler: CheerioRequestHandler = ({ request }) => {
                 processed.push(request);
             };
 
@@ -472,8 +472,8 @@ describe('CheerioCrawler', () => {
                 requestTimeoutSecs: 35,
                 minConcurrency: 2,
                 maxConcurrency: 2,
-                handlePageFunction,
-                handleFailedRequestFunction: ({ request }) => {
+                requestHandler,
+                failedRequestHandler: ({ request }) => {
                     failed.push(request);
                 },
             });
@@ -492,7 +492,7 @@ describe('CheerioCrawler', () => {
             const requestList = await getRequestListForMirror(port);
             const crawler = new CheerioCrawler({
                 requestList,
-                handlePageFunction: ({ response }) => {
+                requestHandler: ({ response }) => {
                     // TODO: this accesses IncomingMessage#request, which doesn't exist according to types
                     // @ts-expect-error
                     headers.push(response.request.options.headers);
@@ -534,10 +534,10 @@ describe('CheerioCrawler', () => {
                         statusCode: 200,
                     }),
                     maxRequestRetries: 1,
-                    handlePageFunction: () => {
+                    requestHandler: () => {
                         handlePageInvocationCount++;
                     },
-                    handleFailedRequestFunction: ({ request }) => {
+                    failedRequestHandler: ({ request }) => {
                         errorMessages = [...errorMessages, ...request.errorMessages];
                     },
                 });
@@ -563,10 +563,10 @@ describe('CheerioCrawler', () => {
                         body: 'DATABASE ERRROR',
                     }),
                     maxRequestRetries: 1,
-                    handlePageFunction: () => {
+                    requestHandler: () => {
                         handlePageInvocationCount++;
                     },
-                    handleFailedRequestFunction: ({ request }) => {
+                    failedRequestHandler: ({ request }) => {
                         errorMessages = [...errorMessages, ...request.errorMessages];
                     },
                 });
@@ -581,10 +581,10 @@ describe('CheerioCrawler', () => {
                 crawler = new CheerioCrawler({
                     requestList: await getRequestListForMock(port, {}, 'jsonError'),
                     maxRequestRetries: 1,
-                    handlePageFunction: () => {
+                    requestHandler: () => {
                         handlePageInvocationCount++;
                     },
-                    handleFailedRequestFunction: ({ request }) => {
+                    failedRequestHandler: ({ request }) => {
                         errorMessages = [...errorMessages, ...request.errorMessages];
                     },
                 });
@@ -605,10 +605,10 @@ describe('CheerioCrawler', () => {
                         statusCode: 406,
                     }),
                     maxRequestRetries: 1,
-                    handlePageFunction: () => {
+                    requestHandler: () => {
                         handlePageInvocationCount++;
                     },
-                    handleFailedRequestFunction: ({ request }) => {
+                    failedRequestHandler: ({ request }) => {
                         errorMessages = [...errorMessages, ...request.errorMessages];
                     },
                 });
@@ -638,7 +638,7 @@ describe('CheerioCrawler', () => {
         await requestList.initialize();
         const crawler = new CheerioCrawler({
             requestList,
-            handlePageFunction: () => {
+            requestHandler: () => {
                 handledRequests++;
             },
         });
@@ -647,7 +647,7 @@ describe('CheerioCrawler', () => {
     });
 
     describe('should work with all content types from options.additionalMimeTypes', () => {
-        let handlePageInvocationParams: CheerioHandlePageInputs;
+        let handlePageInvocationParams: CheerioRequestHandlerInputs;
         let handleFailedInvoked = false;
         const runCrawler = async (url: string) => {
             const sources = [url];
@@ -656,10 +656,10 @@ describe('CheerioCrawler', () => {
                 requestList,
                 additionalMimeTypes: ['application/json', 'image/png', 'application/xml'],
                 maxRequestRetries: 1,
-                handlePageFunction: (params) => {
+                requestHandler: (params) => {
                     handlePageInvocationParams = params;
                 },
-                handleFailedRequestFunction: () => {
+                failedRequestHandler: () => {
                     handleFailedInvoked = true;
                 },
             });
@@ -705,7 +705,7 @@ describe('CheerioCrawler', () => {
 
             const crawler = new CheerioCrawler({
                 requestList,
-                handlePageFunction: () => {},
+                requestHandler: () => {},
                 suggestResponseEncoding,
             });
 
@@ -728,7 +728,7 @@ describe('CheerioCrawler', () => {
 
             const crawler = new CheerioCrawler({
                 requestList,
-                handlePageFunction: () => {},
+                requestHandler: () => {},
                 forceResponseEncoding,
             });
 
@@ -761,7 +761,7 @@ describe('CheerioCrawler', () => {
             const proxies: string[] = [];
             const crawler = new CheerioCrawler({
                 requestList,
-                handlePageFunction: ({ proxyInfo }) => {
+                requestHandler: ({ proxyInfo }) => {
                     proxies.push(proxyInfo.url);
                 },
                 proxyConfiguration,
@@ -775,7 +775,7 @@ describe('CheerioCrawler', () => {
             expect(proxies[3]).toEqual(proxyUrl);
         });
 
-        test('handlePageFunction should expose the proxyInfo object with sessions correctly', async () => {
+        test('requestHandler should expose the proxyInfo object with sessions correctly', async () => {
             const proxyUrls = [0, 1, 2, 3].map((n) => `http://${HOST}:${port}/proxy?x=${n}`);
             const proxyConfiguration = await createProxyConfiguration({
                 proxyUrls,
@@ -783,7 +783,7 @@ describe('CheerioCrawler', () => {
 
             const proxies: ProxyInfo[] = [];
             const sessions: Session[] = [];
-            const handlePageFunction = ({ session, proxyInfo }: CheerioHandlePageInputs) => {
+            const requestHandler = ({ session, proxyInfo }: CheerioRequestHandlerInputs) => {
                 proxies.push(proxyInfo);
                 sessions.push(session);
             };
@@ -792,7 +792,7 @@ describe('CheerioCrawler', () => {
 
             const crawler = new CheerioCrawler({
                 requestList,
-                handlePageFunction,
+                requestHandler,
                 proxyConfiguration,
                 useSessionPool: true,
             });
@@ -823,7 +823,7 @@ describe('CheerioCrawler', () => {
                 requestList,
                 useSessionPool: true,
                 persistCookiesPerSession: false,
-                handlePageFunction: ({ session }) => {
+                requestHandler: ({ session }) => {
                     expect(session).toBeInstanceOf(Session);
                 },
             });
@@ -842,7 +842,7 @@ describe('CheerioCrawler', () => {
                     },
                     persistStateKeyValueStoreId: 'abc',
                 },
-                handlePageFunction: () => {},
+                requestHandler: () => {},
             });
             // @ts-expect-error Accessing private prop
             expect(crawler.sessionPoolOptions.sessionOptions.maxUsageCount).toBe(1);
@@ -861,7 +861,7 @@ describe('CheerioCrawler', () => {
                 requestTimeoutSecs: 1,
                 maxConcurrency: 1,
                 useSessionPool: true,
-                handlePageFunction: async () => {
+                requestHandler: async () => {
                     await sleep(1);
                 },
             });
@@ -898,10 +898,10 @@ describe('CheerioCrawler', () => {
                     useSessionPool: true,
                     persistCookiesPerSession: false,
                     maxRequestRetries: 0,
-                    handlePageFunction: ({ session }) => {
+                    requestHandler: ({ session }) => {
                         sessions.push(session);
                     },
-                    handleFailedRequestFunction: ({ request }) => {
+                    failedRequestHandler: ({ request }) => {
                         failed.push(request);
                     },
                 });
@@ -935,7 +935,7 @@ describe('CheerioCrawler', () => {
                     useSessionPool: false,
                     persistCookiesPerSession: true,
                     maxRequestRetries: 0,
-                    handlePageFunction: () => {
+                    requestHandler: () => {
                     },
                 });
             } catch (e) {
@@ -958,7 +958,7 @@ describe('CheerioCrawler', () => {
                 },
                 maxRequestRetries: 1,
                 maxConcurrency: 1,
-                handlePageFunction: ({ request }) => {
+                requestHandler: ({ request }) => {
                     requests.push(request);
                 },
 
@@ -985,7 +985,7 @@ describe('CheerioCrawler', () => {
                 sessionPoolOptions: {
                     maxPoolSize: 1,
                 },
-                handlePageFunction: ({ json }) => {
+                requestHandler: ({ json }) => {
                     responses.push(json);
                 },
                 preNavigationHooks: [(_context, options) => {
@@ -1022,7 +1022,7 @@ describe('CheerioCrawler', () => {
                 sessionPoolOptions: {
                     maxPoolSize: 1,
                 },
-                handlePageFunction: ({ json }) => {
+                requestHandler: ({ json }) => {
                     responses.push(json);
                 },
                 preNavigationHooks: [({ request }) => {
@@ -1047,7 +1047,7 @@ describe('CheerioCrawler', () => {
                     url: `http://${HOST}:${port}/headers`,
                 }]),
                 useSessionPool: true,
-                handlePageFunction: async ({ json, request }) => {
+                requestHandler: async ({ json, request }) => {
                     responses.push(json);
                     requests.push(request);
                 },
@@ -1100,11 +1100,11 @@ describe('CheerioCrawler', () => {
         });
 
         test('should pass session to prepareRequestFunction when Session pool is used', async () => {
-            const handlePageFunction = () => {};
+            const requestHandler = () => {};
 
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
-                handlePageFunction,
+                requestHandler,
                 useSessionPool: true,
                 prepareRequestFunction: ({ session }) => {
                     expect(session.constructor.name).toEqual('Session');
@@ -1135,16 +1135,16 @@ describe('CheerioCrawler', () => {
             const cheerioCrawler = new CheerioCrawler({
                 requestList: requestListNew,
                 maxRequestRetries: 0,
-                handlePageFunction: () => {},
-                handleFailedRequestFunction: () => {},
+                requestHandler: () => {},
+                failedRequestHandler: () => {},
                 useSessionPool: true,
                 proxyConfiguration,
             });
 
             // @ts-expect-error Accessing private method
-            const oldHandleRequestF = cheerioCrawler._handleRequestFunction;
+            const oldHandleRequestF = cheerioCrawler._runRequestHandler;
             // @ts-expect-error Overriding private method
-            cheerioCrawler._handleRequestFunction = (opts) => {
+            cheerioCrawler._runRequestHandler = (opts) => {
                 usedSession = opts.session;
                 return oldHandleRequestF.call(cheerioCrawler, opts);
             };
@@ -1181,7 +1181,7 @@ describe('CheerioCrawler', () => {
                 expect(crawlingContext.session).toBeInstanceOf(Session);
             };
 
-            const handlePageFunction = (crawlingContext: CheerioHandlePageInputs) => {
+            const requestHandler = (crawlingContext: CheerioRequestHandlerInputs) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -1193,7 +1193,7 @@ describe('CheerioCrawler', () => {
                 throw new Error('some error');
             };
 
-            const handleFailedRequestFunction = (crawlingContext: CheerioHandleFailedRequestInput) => {
+            const failedRequestHandler = (crawlingContext: CheerioFailedRequestHandlerInput) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -1212,13 +1212,13 @@ describe('CheerioCrawler', () => {
                 maxConcurrency: 1,
                 useSessionPool: true,
                 prepareRequestFunction,
-                handlePageFunction,
-                handleFailedRequestFunction,
+                requestHandler,
+                failedRequestHandler,
             });
             await cheerioCrawler.run();
         });
 
-        test('handleFailedRequestFunction contains proxyInfo', async () => {
+        test('failedRequestHandler contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
 
             requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
@@ -1230,10 +1230,10 @@ describe('CheerioCrawler', () => {
                 maxRequestRetries: 0,
                 maxConcurrency: 1,
                 proxyConfiguration,
-                handlePageFunction: () => {
+                requestHandler: () => {
                     throw new Error('some error');
                 },
-                handleFailedRequestFunction: (crawlingContext) => {
+                failedRequestHandler: (crawlingContext) => {
                     expect(typeof crawlingContext.proxyInfo).toEqual('object');
                     expect(crawlingContext.proxyInfo.hasOwnProperty('url')).toEqual(true);
                 },
@@ -1267,9 +1267,9 @@ describe('CheerioCrawler', () => {
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
                 maxRequestRetries: 0,
-                handlePageFunction: () => {
+                requestHandler: () => {
                 },
-                handleFailedRequestFunction: () => {
+                failedRequestHandler: () => {
                 },
             });
             expect(
@@ -1285,8 +1285,8 @@ describe('CheerioCrawler', () => {
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
                 maxRequestRetries: 0,
-                handlePageFunction: () => {},
-                handleFailedRequestFunction: () => {},
+                requestHandler: () => {},
+                failedRequestHandler: () => {},
             });
             expect(
                 () => cheerioCrawler.use(extension),
@@ -1299,15 +1299,15 @@ describe('CheerioCrawler', () => {
             const extension = new DummyExtension({
                 useSessionPool: true,
                 prepareRequestFunction,
-                handlePageFunction: undefined,
+                requestHandler: undefined,
             });
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
                 useSessionPool: false,
                 maxRequestRetries: 0,
-                handlePageFunction: () => {
+                requestHandler: () => {
                 },
-                handleFailedRequestFunction: () => {
+                failedRequestHandler: () => {
                 },
             });
             // @ts-expect-error Accessing private prop
@@ -1318,9 +1318,9 @@ describe('CheerioCrawler', () => {
             // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.prepareRequestFunction).toEqual(prepareRequestFunction);
             // @ts-expect-error Accessing private prop
-            expect(cheerioCrawler.handlePageFunction).toBeUndefined();
+            expect(cheerioCrawler.requestHandler).toBeUndefined();
             // @ts-expect-error Accessing private prop
-            expect(cheerioCrawler.userProvidedHandler).toBeUndefined();
+            expect(cheerioCrawler.requestHandler).toBeUndefined();
         });
     });
 });

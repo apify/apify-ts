@@ -8,7 +8,7 @@ describe('BasicCrawler TS', () => {
             };
 
             const options: BasicCrawlerOptions = {
-                handleRequestFunction: null as any,
+                requestHandler: null as any,
                 requestQueue,
                 sessionPoolOptions: {
                     sessionOptions: {

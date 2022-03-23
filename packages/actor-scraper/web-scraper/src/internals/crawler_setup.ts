@@ -13,8 +13,8 @@ import {
     Request,
     RequestList,
     RequestQueue,
+    log,
 } from '@crawlers/puppeteer';
-import log from '@apify/log';
 import { Awaitable, Dictionary } from '@crawlers/utils';
 import contentType from 'content-type';
 // TODO: type devtools module
@@ -195,13 +195,13 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         if (this.isDevRun) args.push(`--remote-debugging-port=${CHROME_DEBUGGER_PORT}`);
 
         const options: PuppeteerCrawlerOptions = {
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._requestHandler.bind(this),
             requestList: this.requestList,
             requestQueue: this.requestQueue,
-            handlePageTimeoutSecs: this.isDevRun ? DEVTOOLS_TIMEOUT_SECS : this.input.pageFunctionTimeoutSecs,
+            requestHandlerTimeoutSecs: this.isDevRun ? DEVTOOLS_TIMEOUT_SECS : this.input.pageFunctionTimeoutSecs,
             preNavigationHooks: [],
             postNavigationHooks: [],
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._failedRequestHandler.bind(this),
             maxConcurrency: this.isDevRun ? MAX_CONCURRENCY_IN_DEVELOPMENT : this.input.maxConcurrency,
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
@@ -341,7 +341,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         });
     }
 
-    private _handleFailedRequestFunction({ request }: BrowserCrawlerHandleFailedRequestInput) {
+    private _failedRequestHandler({ request }: BrowserCrawlerHandleFailedRequestInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
@@ -358,7 +358,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
      */
-    private async _handlePageFunction(crawlingContext: PuppeteerCrawlContext) {
+    private async _requestHandler(crawlingContext: PuppeteerCrawlContext) {
         const { request, response, page, crawler, proxyInfo } = crawlingContext;
         const start = process.hrtime();
         const pageContext = this.pageContexts.get(page)!;
@@ -414,11 +414,11 @@ export class CrawlerSetup implements CrawlerSetupOptions {
                 output.pageFunctionResult = await window[namespc].pageFunction(context);
             } catch (err) {
                 const casted = err as Error;
-                output.pageFunctionError = (Object.getOwnPropertyNames(casted) as (keyof Error)[])
+                output.pageFunctionError = Object.getOwnPropertyNames(casted)
                     .reduce((memo, name) => {
-                        memo[name] = casted[name]!;
+                        memo[name] = casted[name as keyof Error];
                         return memo;
-                    }, {} as { [K in keyof Error]: Error[K] });
+                    }, {} as Dictionary);
             }
 
             // This needs to be added after pageFunction has run.

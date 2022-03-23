@@ -1,6 +1,5 @@
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { ListDictionary, LruCache } from '@apify/datastructures';
-import { storage } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@crawlers/storage';
 import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient } from 'apify-client';
@@ -71,7 +70,7 @@ export function getRequestId(uniqueKey: string) {
 
 /**
  * A helper class that is used to report results from various
- * {@link RequestQueue} functions as well as {@link utils.enqueueLinks}.
+ * {@link RequestQueue} functions as well as {@link enqueueLinks}.
  */
 export interface QueueOperationInfo {
 
@@ -109,8 +108,7 @@ export interface RequestQueueOperationOptions {
  * To add a single URL multiple times to the queue,
  * corresponding {@link Request} objects will need to have different `uniqueKey` properties.
  *
- * Do not instantiate this class directly, use the
- * {@link Apify.openRequestQueue} function instead.
+ * Do not instantiate this class directly, use the {@link RequestQueue.open} function instead.
  *
  * `RequestQueue` is used by {@link BasicCrawler}, {@link CheerioCrawler}, {@link PuppeteerCrawler}
  * and {@link PlaywrightCrawler} as a source of URLs to crawl.
@@ -126,17 +124,17 @@ export interface RequestQueueOperationOptions {
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` is not, the data is stored in the
  * [Apify Request Queue](https://docs.apify.com/storage/request-queue)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify.openRequestQueue} function,
+ * option to {@link RequestQueue.open} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
  *
  * ```javascript
  * // Open the default request queue associated with the actor run
- * const queue = await Apify.openRequestQueue();
+ * const queue = await RequestQueue.open();
  *
  * // Open a named request queue
- * const queueWithName = await Apify.openRequestQueue('some-name');
+ * const queueWithName = await RequestQueue.open('some-name');
  *
  * // Enqueue few requests
  * await queue.addRequest({ url: 'http://example.com/aaa' });
@@ -150,6 +148,7 @@ export class RequestQueue {
     id: string;
     name?: string;
     isLocal?: boolean;
+    timeoutSecs = 30;
     clientKey = cryptoRandomObjectId();
     client: RequestQueueClient;
 
@@ -196,6 +195,7 @@ export class RequestQueue {
         this.isLocal = options.isLocal;
         this.client = options.client.requestQueue(this.id, {
             clientKey: this.clientKey,
+            timeoutSecs: this.timeoutSecs,
         }) as RequestQueueClient;
     }
 
@@ -214,7 +214,7 @@ export class RequestQueue {
      * {@link QueueOperationInfo} object.
      *
      * To add multiple requests to the queue by extracting links from a webpage,
-     * see the {@link utils.enqueueLinks} helper function.
+     * see the {@link enqueueLinks} helper function.
      *
      * @param requestLike {@link Request} object or vanilla object with request data.
      * Note that the function sets the `uniqueKey` and `id` fields to the passed Request.
@@ -382,9 +382,9 @@ export class RequestQueue {
             return null;
         }
 
-        if (!request.handledAt) request.handledAt = new Date().toISOString();
-
-        const queueOperationInfo = await this.client.updateRequest(request);
+        const handledAt = request.handledAt ?? new Date().toISOString();
+        const queueOperationInfo = await this.client.updateRequest({ ...request, handledAt });
+        request.handledAt = handledAt;
 
         this.inProgress.delete(request.id);
         this.recentlyHandled.add(request.id, true);
@@ -428,12 +428,6 @@ export class RequestQueue {
         // Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
         // This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
         setTimeout(() => {
-            const signal = storage.getStore()?.cancelTask?.signal;
-
-            if (signal?.aborted) {
-                return;
-            }
-
             if (!this.inProgress.has(request.id)) {
                 this.log.debug('The request is no longer marked as in progress in the queue?!', { requestId: request.id });
                 return;
@@ -663,27 +657,6 @@ export class RequestQueue {
         const manager = new StorageManager(RequestQueue);
         return manager.openStorage(queueIdOrName, options);
     }
-}
-
-/**
- * Opens a request queue and returns a promise resolving to an instance
- * of the {@link RequestQueue} class.
- *
- * {@link RequestQueue} represents a queue of URLs to crawl, which is stored either on local filesystem or in the cloud.
- * The queue is used for deep crawling of websites, where you start with several URLs and then
- * recursively follow links to other pages. The data structure supports both breadth-first
- * and depth-first crawling orders.
- *
- * For more details and code examples, see the {@link RequestQueue} class.
- *
- * @param [queueIdOrName]
- *   ID or name of the request queue to be opened. If `null` or `undefined`,
- *   the function returns the default request queue associated with the actor run.
- * @param [options] Open Request Queue options.
- * @deprecated use `RequestQueue.open()` instead
- */
-export async function openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
-    return RequestQueue.open(queueIdOrName, options);
 }
 
 export interface RequestQueueOptions {

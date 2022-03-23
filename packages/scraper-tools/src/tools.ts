@@ -16,7 +16,7 @@ const randomBytes = promisify(callbackRandomBytes);
 /**
  * Creates a standardized debug info from request and response. This info is usually added to dataset under the hidden `#debug` field.
  *
- * @param request [Apify.Request](https://sdk.apify.com/docs/api/request) object.
+ * @param request [Request](https://sdk.apify.com/docs/api/request) object.
  * @param [response]
  *   Puppeteer [`Response`](https://pptr.dev/#?product=Puppeteer&version=v1.11.0&show=api-class-response)
  *   or NodeJS [`http.IncomingMessage`](https://nodejs.org/api/http.html#http_class_http_serverresponse).

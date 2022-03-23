@@ -75,6 +75,7 @@
         "ow": "^0.28.0",
         "proxy-chain": "^2.0.1-beta.0",
         "stream-json": "^1.7.3",
+        "tldts": "^5.7.69",
         "tough-cookie": "^4.0.0",
         "ws": "^7.5.3"
     }

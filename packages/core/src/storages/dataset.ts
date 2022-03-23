@@ -167,7 +167,7 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  * Typically it is used to store crawling results.
  *
  * Do not instantiate this class directly, use the
- * {@link Apify.openDataset} function instead.
+ * {@link Dataset.open} function instead.
  *
  * `Dataset` stores its data either on local disk or in the Apify cloud,
  * depending on whether the `APIFY_LOCAL_STORAGE_DIR` or `APIFY_TOKEN` environment variables are set.
@@ -184,17 +184,17 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` not, the data is stored in the
  * [Apify Dataset](https://docs.apify.com/storage/dataset)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify.openDataset} function,
+ * option to {@link Dataset.open} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
  *
  * ```javascript
  * // Write a single row to the default dataset
- * await Apify.pushData({ col1: 123, col2: 'val2' });
+ * await Actor.pushData({ col1: 123, col2: 'val2' });
  *
  * // Open a named dataset
- * const dataset = await Apify.openDataset('some-name');
+ * const dataset = await Dataset.open('some-name');
  *
  * // Write a single row
  * await dataset.pushData({ foo: 'bar' });
@@ -324,7 +324,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      *
      * **Example usage**
      * ```javascript
-     * const dataset = await Apify.openDataset('my-results');
+     * const dataset = await Dataset.open('my-results');
      * await dataset.forEach(async (item, index) => {
      *   console.log(`Item at ${index}: ${JSON.stringify(item)}`);
      * });
@@ -472,12 +472,12 @@ export function openDataset<Data extends Dictionary = Dictionary>(
  * This is just a convenient shortcut for {@link Dataset.pushData}.
  * For example, calling the following code:
  * ```javascript
- * await Apify.pushData({ myValue: 123 });
+ * await Actor.pushData({ myValue: 123 });
  * ```
  *
  * is equivalent to:
  * ```javascript
- * const dataset = await Apify.openDataset();
+ * const dataset = await Dataset.open();
  * await dataset.pushData({ myValue: 123 });
  * ```
  *

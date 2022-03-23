@@ -13,9 +13,12 @@
 - (perf/internal) `Request.inProgress` and `Request.reclaimed` are now `Set`s instead of dictionaries
 - `injectUnderscore` from puppeteer utils has been removed
 
-2.2.2 / 2022/01/xx
+2.2.2 / 2022/02/xx
 ====================
 - fix: ensure `request.headers` is set
+- fix: lower `RequestQueue` API timeout to 30 seconds
+- improve logging for fetching next request and timeouts
+
 
 2.2.1 / 2022/01/03
 ====================

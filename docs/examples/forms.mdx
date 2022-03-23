@@ -4,14 +4,14 @@ title: Forms
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import VersionedApiLink from '@site/src/components/VersionedApiLink';
+import ApiLink from '@site/src/components/ApiLink';
 import CrawlSource from '!!raw-loader!./forms.ts';
 
-This example demonstrates how to use <VersionedApiLink apiPath="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</VersionedApiLink> to
+This example demonstrates how to use <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to
 automatically fill and submit a search form to look up repositories on [GitHub](https://github.com) using headless Chrome / Puppeteer.
 The actor first fills in the search term, repository owner, start date and language of the repository, then submits the form
 and prints out the results. Finally, the results are saved either on the Apify platform to the
-default <VersionedApiLink apiPath="core/class/Dataset">`dataset`</VersionedApiLink> or on the local machine as JSON files in `./apify_storage/datasets/default`.
+default <ApiLink to="core/class/Dataset">`dataset`</ApiLink> or on the local machine as JSON files in `./apify_storage/datasets/default`.
 
 :::tip
 

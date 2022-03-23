@@ -11,7 +11,16 @@ import {
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlers/utils';
 import ow from 'ow';
-import { BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
+import {
+    BrowserContextEmittedEvents,
+    BrowserEmittedEvents,
+    ClickOptions,
+    Frame,
+    HTTPRequest as PuppeteerRequest,
+    Page,
+    PageEmittedEvents,
+    Target,
+} from 'puppeteer';
 import { URL } from 'url';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
@@ -30,10 +39,15 @@ export interface EnqueueLinksByClickingElementsOptions {
     requestQueue: RequestQueue;
 
     /**
-     * A CSS selector matching elements to be clicked on. Unlike in {@link utils.enqueueLinks}, there is no default
+     * A CSS selector matching elements to be clicked on. Unlike in {@link enqueueLinks}, there is no default
      * value. This is to prevent suboptimal use of this function by using it too broadly.
      */
     selector: string;
+
+    /**
+     * Click options for use in Puppeteer's click handler.
+     */
+    clickOptions?: ClickOptions;
 
     /**
      * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
@@ -104,7 +118,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  * requests, including their methods, headers and payloads are then enqueued to a provided
  * {@link RequestQueue}. This is useful to crawl JavaScript heavy pages where links are not available
  * in `href` elements, but rather navigations are triggered in click handlers.
- * If you're looking to find URLs in `href` attributes of the page, see {@link utils.enqueueLinks}.
+ * If you're looking to find URLs in `href` attributes of the page, see {@link enqueueLinks}.
  *
  * Optionally, the function allows you to filter the target links' URLs using an array of {@link PseudoUrl} objects
  * and override settings of the enqueued {@link Request} objects.
@@ -125,7 +139,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  * **Example usage**
  *
  * ```javascript
- * await Apify.utils.puppeteer.enqueueLinksByClickingElements({
+ * await Actor.utils.puppeteer.enqueueLinksByClickingElements({
  *   page,
  *   requestQueue,
  *   selector: 'a.product-detail',
@@ -144,6 +158,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
         selector: ow.string,
+        clickOptions: ow.optional.object.hasKeys('clickCount', 'delay'),
         pseudoUrls: ow.optional.array.ofType(ow.any(ow.string, ow.regExp, ow.object.hasKeys('purl'))),
         transformRequestFunction: ow.optional.function,
         waitForPageIdleSecs: ow.optional.number,
@@ -154,6 +169,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         page,
         requestQueue,
         selector,
+        clickOptions,
         pseudoUrls,
         transformRequestFunction,
         waitForPageIdleSecs = 1,
@@ -169,6 +185,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         selector,
         waitForPageIdleMillis,
         maxWaitForPageIdleMillis,
+        clickOptions,
     });
     let requestOptions = createRequestOptions(interceptedRequests);
     if (transformRequestFunction) {
@@ -186,6 +203,7 @@ interface WaitForPageIdleOptions {
 
 interface ClickElementsAndInterceptNavigationRequestsOptions extends WaitForPageIdleOptions {
     selector: string;
+    clickOptions?: ClickOptions;
 }
 
 /**
@@ -200,6 +218,7 @@ export async function clickElementsAndInterceptNavigationRequests(options: Click
         selector,
         waitForPageIdleMillis,
         maxWaitForPageIdleMillis,
+        clickOptions,
     } = options;
 
     const uniqueRequests = new Set<string>();
@@ -215,7 +234,7 @@ export async function clickElementsAndInterceptNavigationRequests(options: Click
 
     await preventHistoryNavigation(page);
 
-    await clickElements(page, selector);
+    await clickElements(page, selector, clickOptions);
     await waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdleMillis });
 
     await restoreHistoryNavigationAndSaveCapturedUrls(page, uniqueRequests);
@@ -342,7 +361,7 @@ async function preventHistoryNavigation(page: Page): Promise<unknown> {
  * for large element sets, this will take considerable amount of time.
  * @ignore
  */
-export async function clickElements(page: Page, selector: string): Promise<void> {
+export async function clickElements(page: Page, selector: string, clickOptions?: ClickOptions): Promise<void> {
     const elementHandles = await page.$$(selector);
     log.debug(`enqueueLinksByClickingElements: There are ${elementHandles.length} elements to click.`);
     let clickedElementsCount = 0;
@@ -351,7 +370,7 @@ export async function clickElements(page: Page, selector: string): Promise<void>
     for (const handle of elementHandles) {
         try {
             await page.evaluate(updateElementCssToEnableMouseClick, handle, zIndex++);
-            await handle.click();
+            await handle.click(clickOptions);
             clickedElementsCount++;
         } catch (err) {
             const e = err as Error;
@@ -401,6 +420,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
     return new Promise<void>((resolve) => {
         let timeout: NodeJS.Timeout;
         let maxTimeout: NodeJS.Timeout;
+        const context = page.browserContext();
 
         function newTabTracker(target: Target) {
             if (isTargetRelevant(page, target)) activityHandler();
@@ -423,7 +443,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         function finish() {
             page.off(PageEmittedEvents.Request, activityHandler);
             page.off(PageEmittedEvents.FrameNavigated, activityHandler);
-            page.off('targetcreated', newTabTracker);
+            context.off(BrowserContextEmittedEvents.TargetCreated, newTabTracker);
             resolve();
         }
 
@@ -431,8 +451,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on(PageEmittedEvents.Request, activityHandler);
         page.on(PageEmittedEvents.FrameNavigated, activityHandler);
-        // @ts-expect-error browser event
-        page.on('targetcreated', newTabTracker);
+        context.on(BrowserContextEmittedEvents.TargetCreated, newTabTracker);
     });
 }
 

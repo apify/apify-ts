@@ -7,13 +7,22 @@ import {
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserCrawlerHandleRequest,
-    BrowserCrawlerHandleFailedRequest,
     BrowserHook,
 } from '@crawlers/browser';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from './playwright-launcher';
 import { DirectNavigationOptions, gotoExtended } from './utils/playwright-utils';
 
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
+
+export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, PlaywrightController>
+
+export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
+
+export type PlaywrightRequestHandlerParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
+
+export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightRequestHandlerParam>;
+
+export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
 
 export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
     PlaywrightCrawlContext,
@@ -55,27 +64,46 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: PlaywrightHandlePageFunction;
+    requestHandler: PlaywrightRequestHandler;
 
     /**
-     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     * Function that is called to process each request.
+     * It is passed an object with the following fields:
      *
-     * The function receives the following object as an argument:
      * ```
      * {
-     * request: Request,
-     * response: Response,
-     * page: Page,
-     * session: Session,
-     * browserController: BrowserController,
-     * proxyInfo: ProxyInfo,
-     * crawler: PlaywrightCrawler,
+     *   request: Request,
+     *   response: Response,
+     *   page: Page,
+     *   session: Session,
+     *   browserController: BrowserController,
+     *   proxyInfo: ProxyInfo,
+     *   crawler: PlaywrightCrawler,
      * }
      * ```
-     * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
-     * represents the last error thrown during processing of the request.
+     *
+     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * `page` is an instance of the `Playwright`
+     * [`Page`](https://playwright.dev/docs/api/class-page)
+     * `browserController` is an instance of the
+     * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
+     * `response` is an instance of the `Playwright`
+     * [`Response`](https://playwright.dev/docs/api/class-response),
+     * which is the main resource response as returned by `page.goto(request.url)`.
+     * The function must return a promise, which is then awaited by the crawler.
+     *
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
+     *
+     * @deprecated `handlePageFunction` has been renamed to `requestHandler` and will be removed in a future version.
      */
-    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
+    handlePageFunction?: PlaywrightRequestHandler;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
@@ -120,16 +148,6 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
     // maxRequestRetries?: number;
 }
 
-export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
-
-export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, PlaywrightController>
-
-export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
-
-export type PlaywrightHandlePageFunctionParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
-
-export type PlaywrightHandlePageFunction = BrowserCrawlerHandleRequest<PlaywrightHandlePageFunctionParam>;
-
 /**
  * Provides a simple framework for parallel crawling of web pages
  * using headless Chromium, Firefox and Webkit browsers with [Playwright](https://github.com/microsoft/playwright).
@@ -165,13 +183,13 @@ export type PlaywrightHandlePageFunction = BrowserCrawlerHandleRequest<Playwrigh
  * **Example usage:**
  *
  * ```javascript
- * const crawler = new Apify.PlaywrightCrawler({
+ * const crawler = new PlaywrightCrawler({
  *     requestList,
  *     handlePageFunction: async ({ page, request }) => {
  *         // This function is called to extract data from a single web page
  *         // 'page' is an instance of Playwright.Page with page.goto(request.url) already called
  *         // 'request' is an instance of Request class with information about the page to load
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             title: await page.title(),
  *             url: request.url,
  *             succeeded: true,
@@ -179,7 +197,7 @@ export type PlaywrightHandlePageFunction = BrowserCrawlerHandleRequest<Playwrigh
  *     },
  *     handleFailedRequestFunction: async ({ request }) => {
  *         // This function is called when the crawling of a request failed too many times
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             url: request.url,
  *             succeeded: false,
  *             errors: request.errorMessages,

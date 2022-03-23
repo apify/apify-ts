@@ -8,7 +8,6 @@ import util from 'util';
 import portastic from 'portastic';
 // @ts-expect-error no types
 import basicAuthParser from 'basic-auth-parser';
-import _ from 'underscore';
 import { ENV_VARS } from '@apify/consts';
 import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlers/playwright';
 
@@ -42,7 +41,7 @@ beforeAll(() => {
                     return fn(null, false);
                 }
                 const parsed = basicAuthParser(auth);
-                const isEqual = _.isEqual(parsed, proxyAuth);
+                const isEqual = JSON.stringify(parsed) === JSON.stringify(proxyAuth);
                 if (isEqual) wasProxyCalled = true;
                 fn(null, isEqual);
             };
