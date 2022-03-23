@@ -1,7 +1,6 @@
 import { URL } from 'url';
 import { PseudoUrl, PseudoUrlObject } from '../pseudo_url';
 import { Request, RequestOptions } from '../request';
-import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 
 const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
 
