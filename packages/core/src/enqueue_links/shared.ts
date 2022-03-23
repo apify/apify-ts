@@ -83,19 +83,6 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
 }
 
 /**
- * @ignore
- * @deprecated Use {@link RequestQueue#addRequests} instead
- */
-export async function addRequestsToQueueInBatches(requests: Request[], requestQueue: RequestQueue, batchSize = 5): Promise<QueueOperationInfo[]> {
-    const queueOperationInfos: Promise<QueueOperationInfo>[] = [];
-    for (const request of requests) {
-        queueOperationInfos.push(requestQueue.addRequest(request));
-        if (queueOperationInfos.length % batchSize === 0) await Promise.all(queueOperationInfos);
-    }
-    return Promise.all(queueOperationInfos);
-}
-
-/**
  * Takes an Apify {@link RequestOptions} object and changes it's attributes in a desired way. This user-function is used
  * {@link enqueueLinks} to modify requests before enqueuing them.
  */
