@@ -192,16 +192,12 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            try {
-                await browserCrawlerEnqueueLinks({
-                    // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
-                    options: { selector: '.click', pseudoUrls },
-                    page,
-                    requestQueue,
-                });
-            } catch (err) {
-                expect((err as Error).message).toMatch(/Expected values to be of type `string` but received type `RegExp`/);
-            }
+            await expect(async () => browserCrawlerEnqueueLinks({
+                // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            })).rejects.toThrow(/Expected values to be of type `string` but received type `RegExp`/);
         });
 
         test('works with undefined pseudoUrls[]', async () => {
@@ -321,17 +317,12 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            try {
-                await browserCrawlerEnqueueLinks({
-                    options: { selector: '.click', pseudoUrls },
-                    page,
-                    requestQueue,
-                });
-                throw new Error('Wrong error.');
-            } catch (err) {
-                expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
-                expect(enqueued).toHaveLength(0);
-            }
+            await expect(async () => browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            })).rejects.toThrow(/\(array `pseudoUrls`\) Any predicate failed with the following errors/);
+            expect(enqueued).toHaveLength(0);
         });
 
         test('correctly resolves relative URLs with default strategy of same-subdomain', async () => {
@@ -541,16 +532,12 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            try {
-                await cheerioCrawlerEnqueueLinks({
-                    // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
-                    options: { selector: '.click', pseudoUrls },
-                    $,
-                    requestQueue,
-                });
-            } catch (err) {
-                expect((err as Error).message).toMatch(/Expected values to be of type `string` but received type `RegExp`/);
-            }
+            await expect(async () => cheerioCrawlerEnqueueLinks({
+                // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            })).rejects.toThrow(/Expected values to be of type `string` but received type `RegExp`/);
         });
 
         test('works with undefined pseudoUrls[]', async () => {
@@ -665,17 +652,12 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            try {
-                await cheerioCrawlerEnqueueLinks({
-                    options: { selector: '.click', pseudoUrls },
-                    $,
-                    requestQueue,
-                });
-                throw new Error('Wrong error.');
-            } catch (err) {
-                expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
-                expect(enqueued).toHaveLength(0);
-            }
+            await expect(() => cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            })).rejects.toThrow(/\(array `pseudoUrls`\) Any predicate failed with the following errors/);
+            expect(enqueued).toHaveLength(0);
         });
 
         test('correctly resolves relative URLs with the strategy of all', async () => {
@@ -789,16 +771,12 @@ describe('enqueueLinks()', () => {
             requestQueue.addRequest = async (request) => {
                 enqueued.push(request);
             };
-            try {
-                await cheerioCrawlerEnqueueLinks({
-                    options: {},
-                    $,
-                    requestQueue,
-                });
-                throw new Error('wrong error');
-            } catch (err) {
-                expect((err as Error).message).toMatch('/x/absolutepath');
-            }
+
+            await expect(() => cheerioCrawlerEnqueueLinks({
+                options: {},
+                $,
+                requestQueue,
+            })).rejects.toThrow(/\/x\/absolutepath/);
             expect(enqueued).toHaveLength(0);
         });
     });
