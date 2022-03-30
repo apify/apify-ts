@@ -3,15 +3,16 @@ import ow from 'ow';
 import log from '@apify/log';
 import { purlToRegExp } from '@apify/pseudo_url';
 import {
-    constructRegExpsFromPseudoUrls,
-    constructRegExpsFromGlobs,
-    processRegexps,
+    constructRegExpObjectsFromPseudoUrls,
+    constructRegExpObjectsFromGlobs,
+    constructRegExpObjectsFromRegExps,
     createRequests,
     addRequestsToQueueInBatches,
     createRequestOptions,
     GlobInput,
     PseudoUrlInput,
     RegExpInput,
+    RegExpObject,
     RequestTransform,
 } from './shared';
 import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
@@ -178,23 +179,23 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         urls,
         pseudoUrls,
         globs,
-        regexps: regexpsInput,
+        regexps,
         transformRequestFunction,
     } = options;
 
-    let regexps: RegExp[] = [];
+    let regExpObjects: RegExpObject[] = [];
 
     if (pseudoUrls?.length) {
         log.deprecated('`pseudoUrls` option is deprecated, use `globs` or `regexps` instead');
-        regexps = regexps.concat(constructRegExpsFromPseudoUrls(pseudoUrls));
+        regExpObjects = regExpObjects.concat(constructRegExpObjectsFromPseudoUrls(pseudoUrls));
     }
 
     if (globs?.length) {
-        regexps = regexps.concat(constructRegExpsFromGlobs(globs));
+        regExpObjects = regExpObjects.concat(constructRegExpObjectsFromGlobs(globs));
     }
 
-    if (regexpsInput?.length) {
-        regexps = regexps.concat(processRegexps(regexpsInput));
+    if (regexps?.length) {
+        regExpObjects = regExpObjects.concat(constructRegExpObjectsFromRegExps(regexps));
     }
 
     if (options.baseUrl) {
@@ -203,7 +204,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to a url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
-                regexps.push(purlToRegExp(`${new URL(options.baseUrl).origin}/[.*]`));
+                regExpObjects.push({ regexp: purlToRegExp(`${new URL(options.baseUrl).origin}/[.*]`) });
                 break;
             case EnqueueStrategy.SameHostname: {
                 const url = new URL(options.baseUrl);
@@ -214,14 +215,14 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
                 if (baseUrlHostname) {
                     // We have a hostname, so we can use it to match all links on the page that point to it and any subdomains of it
                     url.hostname = baseUrlHostname;
-                    regexps.push(
-                        purlToRegExp(`${url.origin.replace(baseUrlHostname, `[.*].${baseUrlHostname}`)}/[.*]`),
-                        purlToRegExp(`${url.origin}/[.*]`),
+                    regExpObjects.push(
+                        { regexp: purlToRegExp(`${url.origin.replace(baseUrlHostname, `[.*].${baseUrlHostname}`)}/[.*]`) },
+                        { regexp: purlToRegExp(`${url.origin}/[.*]`) },
                     );
                 } else {
                     // We don't have a hostname (can happen for ips for instance), so reproduce the same behavior
                     // as SameDomainAndSubdomain
-                    regexps.push(purlToRegExp(`${url.origin}/[.*]`));
+                    regExpObjects.push({ regexp: purlToRegExp(`${url.origin}/[.*]`) });
                 }
 
                 break;
@@ -238,7 +239,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         requestOptions = requestOptions.map((request) => transformRequestFunction(request)).filter((r) => !!r);
     }
 
-    let requests = createRequests(requestOptions, regexps);
+    let requests = createRequests(requestOptions, regExpObjects);
     if (limit) requests = requests.slice(0, limit);
 
     return addRequestsToQueueInBatches(requests, requestQueue);

@@ -7,50 +7,57 @@ import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
 
 /**
- * To enable direct use of the Actor UI `pseudoUrls` output while keeping high performance,
- * all the pseudoUrls from the output are only constructed once and kept in a cache
+ * To enable direct use of the Actor UI `globs`/`regexps`/`pseudoUrls` output while keeping high performance,
+ * all the regexps from the output are only constructed once and kept in a cache
  * by the `enqueueLinks()` function.
  * @ignore
  */
-const enqueueLinksPseudoUrlCache = new Map();
+const enqueueLinksRegexpCache = new Map();
 
-export type PseudoUrlObject = { purl: string };
+export type PseudoUrlObject = { purl: string } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
 
 export type PseudoUrlInput = string | PseudoUrlObject;
 
-export type GlobObject = { glob: string };
+export type GlobObject = { glob: string } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
 
 export type GlobInput = string | GlobObject;
 
-export type RegExpObject = { regexp: RegExp };
+export type RegExpObject = { regexp: RegExp } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
 
 export type RegExpInput = RegExp | RegExpObject;
+
+/**
+ * @ignore
+ */
+export function updateEnqueueLinksRegexpCache(item: GlobInput | RegExpInput | PseudoUrlInput, regexp: RegExp): void {
+    enqueueLinksRegexpCache.set(item, regexp);
+    if (enqueueLinksRegexpCache.size > MAX_ENQUEUE_LINKS_CACHE_SIZE) {
+        const key = enqueueLinksRegexpCache.keys().next().value;
+        enqueueLinksRegexpCache.delete(key);
+    }
+}
 
 /**
  * Helper factory used in the `enqueueLinks()` and enqueueLinksByClickingElements() function
  * to construct RegExps from PseudoUrl strings.
  * @ignore
  */
-export function constructRegExpsFromPseudoUrls(pseudoUrls: PseudoUrlInput[]): RegExp[] {
+export function constructRegExpObjectsFromPseudoUrls(pseudoUrls: PseudoUrlInput[]): RegExpObject[] {
     return pseudoUrls.map((item) => {
-        // Get pseudoUrl instance from cache.
-        let regexp = enqueueLinksPseudoUrlCache.get(item);
-        if (regexp) return regexp;
+        // Get pseudoUrl pattern from cache.
+        let regexpObject = enqueueLinksRegexpCache.get(item);
+        if (regexpObject) return regexpObject;
 
         if (typeof item === 'string') {
-            regexp = purlToRegExp(item);
+            regexpObject = { regexp: purlToRegExp(item) };
         } else {
-            const { purl } = item;
-            regexp = purlToRegExp(purl);
+            const { purl, ...requestOptions } = item;
+            regexpObject = { regexp: purlToRegExp(purl), ...requestOptions };
         }
 
-        // Manage cache
-        enqueueLinksPseudoUrlCache.set(item, regexp);
-        if (enqueueLinksPseudoUrlCache.size > MAX_ENQUEUE_LINKS_CACHE_SIZE) {
-            const key = enqueueLinksPseudoUrlCache.keys().next().value;
-            enqueueLinksPseudoUrlCache.delete(key);
-        }
-        return regexp;
+        updateEnqueueLinksRegexpCache(item, regexpObject);
+
+        return regexpObject;
     });
 }
 
@@ -59,26 +66,22 @@ export function constructRegExpsFromPseudoUrls(pseudoUrls: PseudoUrlInput[]): Re
  * to construct RegExps from Glob pattern strings.
  * @ignore
  */
-export function constructRegExpsFromGlobs(globs: GlobInput[]): RegExp[] {
+export function constructRegExpObjectsFromGlobs(globs: GlobInput[]): RegExpObject[] {
     return globs.map((item) => {
-        // Get pseudoUrl instance from cache.
-        let regexp = enqueueLinksPseudoUrlCache.get(item);
-        if (regexp) return regexp;
+        // Get glob pattern from cache.
+        let regexpObject = enqueueLinksRegexpCache.get(item);
+        if (regexpObject) return regexpObject;
 
         if (typeof item === 'string') {
-            regexp = globToRegExp(item);
+            regexpObject = { regexp: globToRegExp(item) };
         } else {
-            const { glob } = item;
-            regexp = globToRegExp(glob);
+            const { glob, ...requestOptions } = item;
+            regexpObject = { regexp: globToRegExp(glob), ...requestOptions };
         }
 
-        // Manage cache
-        enqueueLinksPseudoUrlCache.set(item, regexp);
-        if (enqueueLinksPseudoUrlCache.size > MAX_ENQUEUE_LINKS_CACHE_SIZE) {
-            const key = enqueueLinksPseudoUrlCache.keys().next().value;
-            enqueueLinksPseudoUrlCache.delete(key);
-        }
-        return regexp;
+        updateEnqueueLinksRegexpCache(item, regexpObject);
+
+        return regexpObject;
     });
 }
 
@@ -87,13 +90,18 @@ export function constructRegExpsFromGlobs(globs: GlobInput[]): RegExp[] {
  * to check RegExps input and return valid RegExps.
  * @ignore
  */
-export function processRegexps(regexps: RegExpInput[]): RegExp[] {
+export function constructRegExpObjectsFromRegExps(regexps: RegExpInput[]): RegExpObject[] {
     return regexps.map((item) => {
+        let regexpObject;
+
         if (item instanceof RegExp) {
-            return item;
+            regexpObject = { regexp: item };
+        } else {
+            const { regexp, ...requestOptions } = item;
+            regexpObject = { regexp, ...requestOptions };
         }
-        const { regexp } = item;
-        return regexp;
+
+        return regexpObject;
     });
 }
 
@@ -116,17 +124,21 @@ export function globToRegExp(glob: string): RegExp {
 /**
  * @ignore
  */
-export function createRequests(requestOptions: (string | RequestOptions)[], regexps?: RegExp[]): Request[] {
-    if (!regexps || !regexps.length) {
+export function createRequests(requestOptions: (string | RequestOptions)[], regExpObjects?: RegExpObject[]): Request[] {
+    if (!regExpObjects || !regExpObjects.length) {
         return requestOptions
             .map((opts) => new Request(typeof opts === 'string' ? { url: opts } : opts));
     }
 
     const requests: Request[] = [];
-    for (const regexp of regexps) {
+    for (const regExpObject of regExpObjects) {
         for (const opts of requestOptions) {
+            const { regexp, ...requestRegExpOptions } = regExpObject;
             if ((typeof opts === 'string' ? opts : opts.url).match(regexp)) {
-                requests.push(new Request(typeof opts === 'string' ? { url: opts } : opts));
+                const request = typeof opts === 'string'
+                    ? { url: opts, ...requestRegExpOptions }
+                    : { ...opts, ...requestRegExpOptions };
+                requests.push(request as Request);
             }
         }
     }
