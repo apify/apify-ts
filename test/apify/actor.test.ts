@@ -394,6 +394,33 @@ describe('Actor.metamorph()', () => {
     });
 });
 
+describe('Actor.reboot()', () => {
+    const { actId, runId } = globalOptions;
+
+    beforeEach(() => {
+        process.env[ENV_VARS.IS_AT_HOME] = '1';
+        process.env[ENV_VARS.ACTOR_ID] = actId;
+        process.env[ENV_VARS.ACTOR_RUN_ID] = runId;
+    });
+
+    afterEach(() => {
+        delete process.env[ENV_VARS.IS_AT_HOME];
+        delete process.env[ENV_VARS.ACTOR_ID];
+        delete process.env[ENV_VARS.ACTOR_RUN_ID];
+        jest.restoreAllMocks();
+    });
+
+    test('metamorphs to the same actor', async () => {
+        const metamorphSpy = jest.spyOn(Actor.prototype, 'metamorph');
+        metamorphSpy.mockResolvedValueOnce();
+
+        await Actor.reboot();
+
+        expect(metamorphSpy).toBeCalledTimes(1);
+        expect(metamorphSpy).toBeCalledWith(actId);
+    });
+});
+
 describe('Actor.addWebhook()', () => {
     afterEach(() => jest.restoreAllMocks());
 

@@ -3,10 +3,12 @@ import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import {
+    ACTOR_EVENT_NAMES_EX,
     ActorRunWithOutput,
     Configuration,
     ConfigurationOptions,
     Dataset,
+    events,
     initializeEvents,
     IStorage,
     KeyValueStore,
@@ -268,11 +270,40 @@ export class Actor {
             customAfterSleepMillis = this.config.get('metamorphAfterSleepMillis'),
             ...metamorphOpts
         } = options;
+
         const runId = this.config.get('actorRunId')!;
+
         await this.apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);
 
         // Wait some time for container to be stopped.
         await sleep(customAfterSleepMillis);
+    }
+
+    /**
+     * Internally reboots this actor. The system stops the current container and starts
+     * a new container with the same run ID.
+     *
+     * @param [_options]
+     * @ignore
+     */
+    async reboot(_options: RebootOptions = {}): Promise<void> {
+        if (!this.isAtHome()) {
+            log.warning('Actor.reboot() is only supported when running on the Apify platform.');
+            return;
+        }
+
+        // Waiting for all the listeners to finish, as `.metamorph()` kills the container.
+        await Promise.all(
+            [
+                // `persistState` for individual RequestLists, RequestQueue... instances to be persisted
+                ...events.listeners(ACTOR_EVENT_NAMES_EX.PERSIST_STATE).map((x) => x()),
+                // `migrating` to pause Apify crawlers
+                ...events.listeners(ACTOR_EVENT_NAMES_EX.MIGRATING).map((x) => x()),
+            ],
+        );
+
+        const actId = this.config.get('actorId');
+        await this.metamorph(actId!);
     }
 
     /**
@@ -852,6 +883,16 @@ export class Actor {
     }
 
     /**
+     * Internally reboots this actor run. The system stops the current container and starts
+     * a new container with the same run id.
+     *
+     * @param [options]
+     */
+    static async reboot(options: RebootOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().reboot(options);
+    }
+
+    /**
      * Creates an ad-hoc webhook for the current actor run, which lets you receive a notification when the actor run finished or failed.
      * For more information about Apify actor webhooks, please see the [documentation](https://docs.apify.com/webhooks).
      *
@@ -1325,6 +1366,10 @@ export interface MetamorphOptions {
 
     /** @internal */
     customAfterSleepMillis?: number;
+}
+
+export interface RebootOptions {
+
 }
 
 export interface ExitOptions {
