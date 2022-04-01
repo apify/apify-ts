@@ -37,7 +37,10 @@ export interface EnqueueLinksOptions {
     baseUrl?: string;
 
     /**
-     * An array of glob patterns matching the URLs to be enqueued.
+     * An array of glob pattern strings or plain objects
+     * containing glob pattern strings matching the URLs to be enqueued.
+     * All remaining keys will be used as request options
+     * for the corresponding enqueued {@link Request} objects.
      *
      * The matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
@@ -48,7 +51,10 @@ export interface EnqueueLinksOptions {
     globs?: GlobInput[] | null;
 
     /**
-     * An array of regular expressions matching the URLs to be enqueued.
+     * An array of regular expressions or plain objects
+     * containing regular expressions matching the URLs to be enqueued.
+     * All remaining keys will be used as request options
+     * for the corresponding enqueued {@link Request} objects.
      *
      * If `regexps` is an empty array, `null` or `undefined`, then the function
      * enqueues all links found on the page.
@@ -59,8 +65,10 @@ export interface EnqueueLinksOptions {
      * *NOTE:* In future versions of SDK the options will be removed.
      * Please use `globs` or `regexps` instead.
      *
-     * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
-     * or an array of strings from which the {@link PseudoUrl}s can be constructed.
+     * An array of {@link PseudoUrl} strings or plain objects
+     * containing {@link PseudoUrl} strings matching the URLs to be enqueued.
+     * All remaining keys will be used as request options
+     * for the corresponding enqueued {@link Request} objects.
      *
      * With a pseudo-URL string, the matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
@@ -92,8 +100,9 @@ export interface EnqueueLinksOptions {
      * }
      * ```
      *
-     * Note that if request options are specified together with `globs`, `regexps`, or `pseudoUrls`,
-     * `transformRequestFunction` would have a priority over these options and thus some of them could be over-written.
+     * Note that `transformRequestFunction` has a priority over request options
+     * specified in `globs`, `regexps`, or `pseudoUrls` objects,
+     * and thus some options could be over-written by `transformRequestFunction`.
      */
     transformRequestFunction?: RequestTransform;
 
