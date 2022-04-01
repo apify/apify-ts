@@ -676,7 +676,6 @@ interface EnqueueLinksInternalOptions {
 /** @internal */
 export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
     const baseUrl = options?.baseUrl ?? defaultBaseUrl;
-    const transformRequestFunction = options?.transformRequestFunction;
 
     const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
@@ -685,7 +684,6 @@ export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, 
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
         baseUrl,
-        transformRequestFunction,
         ...options,
     });
 }

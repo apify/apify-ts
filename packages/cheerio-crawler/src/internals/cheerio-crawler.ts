@@ -1073,7 +1073,6 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, def
     }
 
     const baseUrl = options?.baseUrl ?? defaultBaseUrl;
-    const transformRequestFunction = options?.transformRequestFunction;
 
     const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
@@ -1082,7 +1081,6 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, def
         requestQueue: requestQueue ?? await RequestQueue.open(),
         urls,
         baseUrl,
-        transformRequestFunction,
         ...options,
     });
 }
