@@ -215,7 +215,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to a url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
-                urlPatternObjects.push({ regexp: new RegExp(`^${new URL(options.baseUrl).origin}/(.*)$`, 'i') });
+                urlPatternObjects.push({ glob: `${new URL(options.baseUrl).origin}/**` });
                 break;
             case EnqueueStrategy.SameHostname: {
                 const url = new URL(options.baseUrl);
@@ -227,13 +227,13 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
                     // We have a hostname, so we can use it to match all links on the page that point to it and any subdomains of it
                     url.hostname = baseUrlHostname;
                     urlPatternObjects.push(
-                        { regexp: new RegExp(`^${url.origin.replace(baseUrlHostname, `(.*).${baseUrlHostname}`)}/(.*)$`, 'i') },
-                        { regexp: new RegExp(`^${url.origin}/(.*)$`, 'i') },
+                        { glob: `${url.origin.replace(baseUrlHostname, `*.${baseUrlHostname}`)}/**` },
+                        { glob: `${url.origin}/**` },
                     );
                 } else {
                     // We don't have a hostname (can happen for ips for instance), so reproduce the same behavior
                     // as SameDomainAndSubdomain
-                    urlPatternObjects.push({ regexp: new RegExp(`^${url.origin}/(.*)$`, 'i') });
+                    urlPatternObjects.push({ glob: `${url.origin}/**` });
                 }
 
                 break;
