@@ -514,7 +514,7 @@ describe('addRequest', () => {
     });
 });
 
-test.only('addRequests', async () => {
+test('addRequests', async () => {
     const queueName = 'batch-requests';
     const db = queueNameToDb(queueName);
     const startCount = 0;
