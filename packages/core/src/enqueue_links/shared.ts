@@ -110,8 +110,7 @@ export function constructRegExpObjectsFromRegExps(regexps: RegExpInput[]): RegEx
         if (item instanceof RegExp) {
             regexpObject = { regexp: item };
         } else {
-            const { regexp, ...requestOptions } = item;
-            regexpObject = { regexp, ...requestOptions };
+            regexpObject = item;
         }
 
         updateEnqueueLinksPatternCache(item, regexpObject);
