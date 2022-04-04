@@ -8,6 +8,8 @@ import { RequestQueueEmulator } from '@crawlers/storage/src/emulators/request_qu
 import { uniqueKeyToRequestId } from '@crawlers/storage/src/utils';
 import type { DatabaseConnectionCache } from '@crawlers/storage/src/database_connection_cache';
 import type { RequestModel } from '@crawlers/storage/src/resource_clients/request_queue';
+import { UnprocessedRequest } from 'packages/storage/src/emulators/batch_add_requests/unprocessed_request';
+import { ProcessedRequest } from 'packages/storage/src/emulators/batch_add_requests/processed_request';
 import { prepareTestDir, removeTestDir } from './_tools';
 
 const REQUESTS_TABLE_NAME = `${STORAGE_NAMES.REQUEST_QUEUES}_requests`;
@@ -26,6 +28,10 @@ const TEST_QUEUES = {
     2: {
         name: 'second',
         requestCount: 35,
+    },
+    3: {
+        name: 'batch-requests',
+        requestCount: 0,
     },
 };
 
@@ -506,6 +512,72 @@ describe('addRequest', () => {
             }
         });
     });
+});
+
+test.only('addRequests', async () => {
+    const queueName = 'batch-requests';
+    const db = queueNameToDb(queueName);
+    const startCount = 0;
+    const queue = storageLocal.requestQueue(queueName);
+
+    const requestA = numToRequest(startCount + 1);
+    const requestAId = requestA.id!;
+    requestA.id = undefined;
+
+    // Test adding 1 request
+    const firstRequestAdded = {
+        requestId: requestAId,
+        wasAlreadyHandled: false,
+        wasAlreadyPresent: false,
+        uniqueKey: requestA.uniqueKey,
+    };
+
+    const addRequestsResult1 = await queue.batchAddRequests([requestA]);
+
+    expect(addRequestsResult1.processedRequests).toHaveLength(1);
+    expect(addRequestsResult1.processedRequests[0]).toEqual({
+        ...firstRequestAdded,
+    });
+
+    // Try to add a request with the same URL again, expecting cached
+    const addRequestsResult2 = await queue.batchAddRequests([requestA]);
+    expect(addRequestsResult2.unprocessedRequests).toHaveLength(1);
+    expect(addRequestsResult2.unprocessedRequests[0]).toEqual<UnprocessedRequest>({
+        uniqueKey: requestAId,
+        url: requestA.url,
+        method: requestA.method,
+    });
+
+    // Adding more requests, forefront
+    const requestB = numToRequest(startCount + 2);
+    const requestBId = requestB.id!;
+    requestB.id = undefined;
+
+    const requestC = numToRequest(startCount + 3);
+    const requestCId = requestC.id!;
+    requestC.id = undefined;
+
+    const addRequestsResult3 = await queue.batchAddRequests([requestB, requestC], { forefront: true });
+    expect(addRequestsResult3.processedRequests).toHaveLength(2);
+    expect(addRequestsResult3.processedRequests[0]).toEqual<ProcessedRequest>({
+        requestId: requestBId,
+        uniqueKey: requestB.uniqueKey,
+        wasAlreadyHandled: false,
+        wasAlreadyPresent: false,
+    });
+    expect(addRequestsResult3.processedRequests[1]).toEqual<ProcessedRequest>({
+        requestId: requestCId,
+        uniqueKey: requestC.uniqueKey,
+        wasAlreadyHandled: false,
+        wasAlreadyPresent: false,
+    });
+
+    const requestModels = db.prepare(`
+        SELECT * FROM ${REQUESTS_TABLE_NAME}
+        WHERE queueId = ${QUEUE_ID};
+    `).all();
+
+    expect(requestModels).toHaveLength(3);
 });
 
 describe('getRequest', () => {
