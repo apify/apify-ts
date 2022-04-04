@@ -29,7 +29,7 @@ import {
 } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { gotScraping, OptionsInit, Method, TimeoutError } from 'got-scraping';
+import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
@@ -847,20 +847,17 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      */
     protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
         const opts = this._getRequestOptions(request, session, proxyUrl, requestAsBrowserOptions);
-        let responseWithStream: IncomingMessage;
 
         try {
-            // @ts-expect-error FIXME
-            responseWithStream = await this._requestAsBrowser(opts);
+            return await this._requestAsBrowser(opts);
         } catch (e) {
             if (e instanceof TimeoutError) {
                 this._handleRequestTimeout(session);
-            } else {
-                throw e;
+                return undefined;
             }
-        }
 
-        return responseWithStream!;
+            throw e;
+        }
     }
 
     /**
@@ -915,7 +912,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      * Combines the provided `requestOptions` with mandatory (non-overridable) values.
      */
     protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: OptionsInit) {
-        const requestOptions: OptionsInit = {
+        const requestOptions: OptionsInit & { isStream: true } = {
             url: request.url,
             method: request.method as Method,
             proxyUrl,
@@ -1052,7 +1049,16 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * @internal wraps public utility for mocking purposes
      */
-    private _requestAsBrowser = gotScraping;
+    private _requestAsBrowser = (options: OptionsInit & { isStream: true }) => {
+        return new Promise<IncomingMessage>((resolve, reject) => {
+            const stream = gotScraping(options);
+
+            stream.on('error', reject);
+            stream.on('response', () => {
+                resolve(addResponsePropertiesToStream(stream));
+            });
+        });
+    };
 }
 
 interface EnqueueLinksInternalOptions {
@@ -1108,4 +1114,42 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
                 ? (new URL(href, baseUrl)).href
                 : href;
         });
+}
+
+/**
+ * The stream object returned from got does not have the below properties.
+ * At the same time, you can't read data directly from the response stream,
+ * because they won't get emitted unless you also read from the primary
+ * got stream. To be able to work with only one stream, we move the expected props
+ * from the response stream to the got stream.
+ * @internal
+ */
+function addResponsePropertiesToStream(stream: GotRequest) {
+    const properties = [
+        'statusCode', 'statusMessage', 'headers',
+        'complete', 'httpVersion', 'rawHeaders',
+        'rawTrailers', 'trailers', 'url',
+        'request',
+    ];
+
+    const response = stream.response!;
+
+    response.on('end', () => {
+        // @ts-expect-error
+        Object.assign(stream.rawTrailers, response.rawTrailers);
+        // @ts-expect-error
+        Object.assign(stream.trailers, response.trailers);
+
+        // @ts-expect-error
+        stream.complete = response.complete;
+    });
+
+    for (const prop of properties) {
+        if (!(prop in stream)) {
+            // @ts-expect-error
+            stream[prop] = response[prop as keyof IncomingMessage];
+        }
+    }
+
+    return stream as unknown as IncomingMessage;
 }
