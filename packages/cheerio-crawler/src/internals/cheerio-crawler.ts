@@ -853,6 +853,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         } catch (e) {
             if (e instanceof TimeoutError) {
                 this._handleRequestTimeout(session);
+                // @ts-expect-error FIXME
                 return undefined;
             }
 
