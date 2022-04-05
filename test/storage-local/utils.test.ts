@@ -1,4 +1,4 @@
-import * as utils from '@crawlers/storage/src/utils';
+import * as utils from '@apify/storage-local/dist/utils';
 
 describe('utils', () => {
     describe('purgeNullsFromObject', () => {

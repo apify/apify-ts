@@ -56,7 +56,7 @@ describe('BrowserCrawler', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         puppeteerPlugin = new PuppeteerPlugin(puppeteer);
     });
 

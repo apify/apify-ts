@@ -1,7 +1,7 @@
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS, WEBHOOK_EVENT_TYPES } from '@apify/consts';
 import log from '@apify/log';
 import path from 'node:path';
-import { Configuration, Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlers/core';
+import { Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlers/core';
 import { sleep } from '@crawlers/utils';
 import { Actor, ApifyEnv, ProxyConfiguration } from 'apify';
 import { ApifyClient, RunClient, WebhookUpdateData } from 'apify-client';
@@ -126,20 +126,6 @@ describe('new Actor({ ... })', () => {
                 userFunc: () => {},
                 exitCode: 0,
             });
-        });
-
-        test('sets default APIFY_LOCAL_STORAGE_DIR', async () => {
-            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-            delete process.env[ENV_VARS.TOKEN];
-
-            await testMain({
-                userFunc: (sdk) => {
-                    expect(sdk.config.get('localStorageDir')).toEqual(path.join(process.cwd(), './apify_storage'));
-                },
-                exitCode: 0,
-            });
-
-            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
         });
 
         test.skip('respects `localStorageEnableWalMode` option (gh issue #956)', async () => {
@@ -269,7 +255,7 @@ describe('new Actor({ ... })', () => {
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
             keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
-            const callOutput = await new Actor({ token }).call(actId, input, {
+            const callOutput = await new Actor({ storageClientOptions: { token } }).call(actId, input, {
                 contentType,
                 build,
                 memory,
@@ -383,7 +369,7 @@ describe('new Actor({ ... })', () => {
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
             keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
-            const callOutput = await new Actor({ token }).callTask(taskId, input, {
+            const callOutput = await new Actor({ storageClientOptions: { token } }).callTask(taskId, input, {
                 build,
                 memory,
                 timeout,
@@ -587,7 +573,7 @@ describe('new Actor({ ... })', () => {
         let sdk: Actor;
 
         beforeAll(() => { localStorageEmulator = new LocalStorageDirEmulator(); });
-        beforeEach(async () => { sdk = new Actor({ localStorageDir: await localStorageEmulator.init() }); });
+        beforeEach(async () => { sdk = new Actor({ storageClientOptions: { storageDir: await localStorageEmulator.init() } }); });
         afterAll(() => localStorageEmulator.destroy());
 
         test('getInput()', async () => {
@@ -669,13 +655,6 @@ describe('new Actor({ ... })', () => {
             await sdk.openDataset(datasetName, options);
             expect(mockOpenStorage).toBeCalledTimes(1);
             expect(mockOpenStorage).toBeCalledWith(datasetName, sdk.apifyClient);
-        });
-
-        test('openRequestQueue works with APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE=false', async () => {
-            process.env.APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE = 'false';
-            const config = new Configuration();
-            const enableWalMode = config.get('localStorageEnableWalMode');
-            expect(enableWalMode).toBe(false);
         });
     });
 });

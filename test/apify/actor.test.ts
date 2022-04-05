@@ -1,4 +1,3 @@
-import path from 'path';
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { sleep } from '@crawlers/utils';
@@ -185,20 +184,6 @@ describe('Actor.main()', () => {
             userFunc: () => {},
             exitCode: 0,
         });
-    });
-
-    test('sets default APIFY_LOCAL_STORAGE_DIR', async () => {
-        delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-        delete process.env[ENV_VARS.TOKEN];
-
-        await testMain({
-            userFunc: () => {
-                expect(Actor.config.get('localStorageDir')).toEqual(path.join(process.cwd(), './apify_storage'));
-            },
-            exitCode: 0,
-        });
-
-        delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
     });
 
     test('works with promised user function', () => {

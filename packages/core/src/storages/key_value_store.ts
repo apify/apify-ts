@@ -56,8 +56,8 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  * To access the input, you can also use the {@link Actor.getInput} convenience function.
  *
  * `KeyValueStore` stores its data either on local disk or in the Apify cloud,
- * depending on whether the [`APIFY_LOCAL_STORAGE_DIR`](/docs/guides/environment-variables#apify_local_storage_dir)
- * or [`APIFY_TOKEN`](/docs/guides/environment-variables#apify_token) environment variables are set.
+ * depending on whether the [`APIFY_IS_AT_HOME`](/docs/guides/environment-variables#apify_is_at_home)
+ * environment variable is set.
  *
  * If the `APIFY_LOCAL_STORAGE_DIR` environment variable is set, the data is stored in
  * the local directory in the following files:

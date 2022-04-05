@@ -706,9 +706,11 @@ export class Actor {
      * @ignore
      */
     newClient(options: ApifyClientOptions = {}): ApifyClient {
+        const { storageDir, ...storageClientOptions } = this.config.get('storageClientOptions') as Dictionary;
         return new ApifyClient({
-            baseUrl: this.config.get('apiBaseUrl'),
-            token: this.config.get('token'),
+            baseUrl: process.env[ENV_VARS.API_BASE_URL] ?? 'https://api.apify.com',
+            token: process.env[ENV_VARS.TOKEN],
+            ...storageClientOptions,
             ...options, // allow overriding the instance configuration
         });
     }

@@ -47,7 +47,8 @@ describe('RequestList', () => {
     });
 
     beforeEach(async () => {
-        await localStorageEmulator.init();
+        const storageDir = await localStorageEmulator.init();
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         jest.restoreAllMocks();
     });
 

@@ -309,7 +309,10 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
      * Checks if Apify Token is provided in env and gets the password via API and sets it to env
      */
     protected async _setPasswordIfToken(): Promise<void> {
-        if (this.config.get('token')) {
+        const storageClientOptions = this.config.get('storageClientOptions') ?? {};
+        const token = process.env[ENV_VARS.TOKEN] ?? storageClientOptions.token;
+
+        if (token) {
             const { proxy } = await Actor.apifyClient.user().get();
             const { password } = proxy!;
 
@@ -322,6 +325,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
                 this.password = password;
             }
         }
+
         if (!this.password) {
             throw new Error(`Apify Proxy password must be provided using options.password or the "${ENV_VARS.PROXY_PASSWORD}" environment variable. `
                 + `If you add the "${ENV_VARS.TOKEN}" environment variable, the password will be automatically inferred.`);

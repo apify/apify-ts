@@ -69,7 +69,7 @@ describe('PuppeteerCrawler', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         const sources = [serverUrl];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });

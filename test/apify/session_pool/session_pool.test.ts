@@ -14,7 +14,7 @@ describe('SessionPool - testing session pool', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         sessionPool = await SessionPool.open();
     });
 

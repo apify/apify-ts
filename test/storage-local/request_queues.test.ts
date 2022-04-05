@@ -2,12 +2,12 @@ import { ensureDirSync, readdirSync } from 'fs-extra';
 import { ArgumentError } from 'ow';
 import { join } from 'path';
 import type { Database, Statement } from 'better-sqlite3-with-prebuilds';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@crawlers/storage/src/consts';
-import { RequestQueueEmulator } from '@crawlers/storage/src/emulators/request_queue_emulator';
-import { uniqueKeyToRequestId } from '@crawlers/storage/src/utils';
-import type { DatabaseConnectionCache } from '@crawlers/storage/src/database_connection_cache';
-import type { RequestModel } from '@crawlers/storage/src/resource_clients/request_queue';
+import { ApifyStorageLocal } from '@apify/storage-local';
+import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@apify/storage-local/dist/consts';
+import { RequestQueueEmulator } from '@apify/storage-local/dist/emulators/request_queue_emulator';
+import { uniqueKeyToRequestId } from '@apify/storage-local/dist/utils';
+import type { DatabaseConnectionCache } from '@apify/storage-local/dist/database_connection_cache';
+import type { RequestModel } from '@apify/storage-local/dist/resource_clients/request_queue';
 import { prepareTestDir, removeTestDir } from './_tools';
 
 const REQUESTS_TABLE_NAME = `${STORAGE_NAMES.REQUEST_QUEUES}_requests`;

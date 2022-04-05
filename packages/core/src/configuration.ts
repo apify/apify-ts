@@ -1,10 +1,8 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import log from '@apify/log';
-import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@crawlers/storage';
+import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@apify/storage-local';
 import { AsyncLocalStorage } from 'async_hooks';
 import { EventEmitter } from 'events';
-import { join } from 'path';
-import { entries } from './typedefs';
+import { Dictionary, entries } from './typedefs';
 import { StorageClient } from './storages/storage';
 import { EventManager, LocalEventManager } from './events';
 
@@ -12,6 +10,7 @@ import { EventManager, LocalEventManager } from './events';
 export interface ConfigurationOptions {
     storageClient?: StorageClient;
     eventManager?: EventManager;
+    storageClientOptions?: Dictionary;
     defaultDatasetId?: string;
     defaultKeyValueStoreId?: string;
     defaultRequestQueueId?: string;
@@ -20,13 +19,9 @@ export interface ConfigurationOptions {
     persistStateIntervalMillis?: number;
     systemInfoIntervalMillis?: number;
 
-    token?: string;
-    localStorageDir?: string;
-    localStorageEnableWalMode?: boolean;
     metamorphAfterSleepMillis?: number;
     inputKey?: string;
     actorId?: string;
-    apiBaseUrl?: string;
     actorRunId?: string;
     actorTaskId?: string;
     containerPort?: number;
@@ -60,10 +55,7 @@ export interface ConfigurationOptions {
  * `defaultDatasetId` | `APIFY_DEFAULT_DATASET_ID` | `'default'`
  * `defaultKeyValueStoreId` | `APIFY_DEFAULT_KEY_VALUE_STORE_ID` | `'default'`
  * `defaultRequestQueueId` | `APIFY_DEFAULT_REQUEST_QUEUE_ID` | `'default'`
- * `localStorageDir` | `APIFY_LOCAL_STORAGE_DIR` | `'./apify_storage'`
- * `localStorageEnableWalMode` | `APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE` | `true`
  * `persistStateIntervalMillis` | `APIFY_PERSIST_STATE_INTERVAL_MILLIS` | `60e3`
- * `token` | `APIFY_TOKEN` | -
  *
  * ## Advanced Configuration Options
  *
@@ -72,7 +64,6 @@ export interface ConfigurationOptions {
  * `actorId` | `APIFY_ACTOR_ID` | -
  * `actorRunId` | `APIFY_ACTOR_RUN_ID` | -
  * `actorTaskId` | `APIFY_ACTOR_TASK_ID` | -
- * `apiBaseUrl` | `APIFY_API_BASE_URL` | `'https://api.apify.com'`
  * `containerPort` | `APIFY_CONTAINER_PORT` | `4321`
  * `containerUrl` | `APIFY_CONTAINER_URL` | `'http://localhost:4321'`
  * `inputKey` | `APIFY_INPUT_KEY` | `'INPUT'`
@@ -94,11 +85,9 @@ export class Configuration {
      * Maps environment variables to config keys (e.g. `APIFY_PROXY_PORT` to `proxyPort`)
      */
     private static ENV_MAP = {
+        // TODO prefix once we have a package name
         AVAILABLE_MEMORY_RATIO: 'availableMemoryRatio',
 
-        APIFY_TOKEN: 'token',
-        APIFY_LOCAL_STORAGE_DIR: 'localStorageDir',
-        APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE: 'localStorageEnableWalMode',
         APIFY_DEFAULT_DATASET_ID: 'defaultDatasetId',
         APIFY_DEFAULT_KEY_VALUE_STORE_ID: 'defaultKeyValueStoreId',
         APIFY_DEFAULT_REQUEST_QUEUE_ID: 'defaultRequestQueueId',
@@ -107,7 +96,6 @@ export class Configuration {
         APIFY_TEST_PERSIST_INTERVAL_MILLIS: 'persistStateIntervalMillis', // for BC, seems to be unused
         APIFY_INPUT_KEY: 'inputKey',
         APIFY_ACTOR_ID: 'actorId',
-        APIFY_API_BASE_URL: 'apiBaseUrl',
         APIFY_ACTOR_RUN_ID: 'actorRunId',
         APIFY_ACTOR_TASK_ID: 'actorTaskId',
         APIFY_CONTAINER_PORT: 'containerPort',
@@ -132,7 +120,7 @@ export class Configuration {
         return obj;
     }, {} as Record<string, string>);
 
-    private static BOOLEAN_VARS = ['localStorageEnableWalMode'];
+    private static BOOLEAN_VARS: string[] = [];
 
     private static INTEGER_VARS = ['proxyPort', 'memoryMbytes', 'containerPort'];
 
@@ -142,8 +130,8 @@ export class Configuration {
         defaultRequestQueueId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_REQUEST_QUEUE_ID],
         maxUsedCpuRatio: 0.95,
         availableMemoryRatio: 0.25,
+        storageClientOptions: {},
         inputKey: 'INPUT',
-        apiBaseUrl: 'https://api.apify.com',
         proxyHostname: LOCAL_ENV_VARS[ENV_VARS.PROXY_HOSTNAME],
         proxyPort: +LOCAL_ENV_VARS[ENV_VARS.PROXY_PORT],
         containerPort: +LOCAL_ENV_VARS[ENV_VARS.CONTAINER_PORT],
@@ -151,7 +139,6 @@ export class Configuration {
         metamorphAfterSleepMillis: 300_000,
         persistStateIntervalMillis: 60_000,
         systemInfoIntervalMillis: 60_000,
-        localStorageEnableWalMode: true,
     };
 
     /**
@@ -169,13 +156,6 @@ export class Configuration {
      */
     constructor(options: ConfigurationOptions = {}) {
         this.options = new Map(entries(options));
-
-        if (!this.get('localStorageDir') && !this.get('token')) {
-            const dir = join(process.cwd(), './apify_storage');
-            this.set('localStorageDir', dir);
-            // eslint-disable-next-line max-len
-            log.warning(`Neither ${ENV_VARS.LOCAL_STORAGE_DIR} nor ${ENV_VARS.TOKEN} environment variable is set, defaulting to ${ENV_VARS.LOCAL_STORAGE_DIR}="${dir}"`);
-        }
 
         // Increase the global limit for event emitter memory leak warnings.
         EventEmitter.defaultMaxListeners = 50;
@@ -221,7 +201,7 @@ export class Configuration {
      * Sets value for given option. Only affects this `Configuration` instance, the value will not be propagated down to the env var.
      * To reset a value, we can omit the `value` argument or pass `undefined` there.
      */
-    set(key: keyof ConfigurationOptions, value?: string | number | boolean): void {
+    set(key: keyof ConfigurationOptions, value?: any): void {
         this.options.set(key, value);
     }
 
@@ -239,8 +219,7 @@ export class Configuration {
             return this.options.get('storageClient') as StorageClient;
         }
 
-        // TODO allow passing storage client options
-        const options = {};
+        const options = this.options.get('storageClientOptions') as Dictionary;
         return this.createStorageLocal(options) as any;
     }
 
@@ -264,19 +243,13 @@ export class Configuration {
      * @internal
      */
     createStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
-        const storageDir = options.storageDir ?? this.get('localStorageDir');
-        const enableWalMode = options.enableWalMode ?? this.get('localStorageEnableWalMode');
-        const cacheKey = `StorageLocal~${storageDir}~${enableWalMode}`;
+        const cacheKey = `StorageLocal~${JSON.stringify(options)}`;
 
         if (this.services.has(cacheKey)) {
             return this.services.get(cacheKey) as ApifyStorageLocal;
         }
 
-        const storage = new ApifyStorageLocal({
-            ...options,
-            storageDir,
-            enableWalMode,
-        });
+        const storage = new ApifyStorageLocal(options);
         this.services.set(cacheKey, storage);
 
         process.on('exit', () => {
