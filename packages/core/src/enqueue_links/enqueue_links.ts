@@ -45,7 +45,7 @@ export interface EnqueueLinksOptions {
      * If you need case-sensitive matching, use `regexps` property directly.
      *
      * If `globs` is an empty array or `undefined`, then the function
-     * enqueues all links found on the page.
+     * enqueues the links with the same subdomain.
      */
     globs?: GlobInput[];
 
@@ -56,7 +56,7 @@ export interface EnqueueLinksOptions {
      * for the corresponding enqueued {@link Request} objects.
      *
      * If `regexps` is an empty array or `undefined`, then the function
-     * enqueues all links found on the page.
+     * enqueues the links with the same subdomain.
      */
     regexps?: RegExpInput[];
 
@@ -73,7 +73,7 @@ export interface EnqueueLinksOptions {
      * If you need case-sensitive matching, use `regexps` property directly.
      *
      * If `pseudoUrls` is an empty array or `undefined`, then the function
-     * enqueues all links found on the page.
+     * enqueues the links with the same subdomain.
      *
      * @deprecated prefer using `globs` or `regexps` instead
      */
@@ -107,7 +107,7 @@ export interface EnqueueLinksOptions {
 
     /**
      * The strategy to use when enqueueing the urls.
-     * @default EnqueueStrategy.SameDomain
+     * @default EnqueueStrategy.SameSubdomain
      */
     strategy?: EnqueueStrategy | 'all' | 'same-subdomain' | 'same-hostname';
 }
