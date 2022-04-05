@@ -88,7 +88,7 @@ describe('sanity checks for seeded data', () => {
     });
 
     test('seeded queues exist', () => {
-        expect(counter.queues()).toBe(2);
+        expect(counter.queues()).toBe(3);
     });
 
     Object.values(TEST_QUEUES).forEach((queue) => {
@@ -331,7 +331,7 @@ describe('getOrCreate', () => {
         const queue = await storageLocal.requestQueues().getOrCreate('first');
         expect(queue.id).toBe('first');
         const count = counter.queues();
-        expect(count).toBe(2);
+        expect(count).toBe(3);
     });
 
     test('creates a new queue with name', async () => {
@@ -340,7 +340,7 @@ describe('getOrCreate', () => {
         expect(queue.id).toBe(queueName);
         expect(queue.name).toBe(queueName);
         const count = counter.queues();
-        expect(count).toBe(3);
+        expect(count).toBe(4);
     });
 });
 
@@ -348,7 +348,7 @@ describe('deleteQueue', () => {
     test('deletes correct queue', async () => {
         await storageLocal.requestQueue('first').delete();
         const count = counter.queues();
-        expect(count).toBe(1);
+        expect(count).toBe(2);
     });
 });
 
