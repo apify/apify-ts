@@ -283,10 +283,9 @@ export class Actor {
      * Internally reboots this actor. The system stops the current container and starts
      * a new container with the same run ID.
      *
-     * @param [_options]
      * @ignore
      */
-    async reboot(_options: RebootOptions = {}): Promise<void> {
+    async reboot(): Promise<void> {
         if (!this.isAtHome()) {
             log.warning('Actor.reboot() is only supported when running on the Apify platform.');
             return;
@@ -302,8 +301,8 @@ export class Actor {
             ],
         );
 
-        const actId = this.config.get('actorId');
-        await this.metamorph(actId!);
+        const actorId = this.config.get('actorId');
+        await this.metamorph(actorId!);
     }
 
     /**
@@ -888,8 +887,8 @@ export class Actor {
      *
      * @param [options]
      */
-    static async reboot(options: RebootOptions = {}): Promise<void> {
-        return Actor.getDefaultInstance().reboot(options);
+    static async reboot(): Promise<void> {
+        return Actor.getDefaultInstance().reboot();
     }
 
     /**
@@ -1366,10 +1365,6 @@ export interface MetamorphOptions {
 
     /** @internal */
     customAfterSleepMillis?: number;
-}
-
-export interface RebootOptions {
-
 }
 
 export interface ExitOptions {
