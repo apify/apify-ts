@@ -44,10 +44,10 @@ export interface EnqueueLinksOptions {
      * The matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
      *
-     * If `globs` is an empty array, `null` or `undefined`, then the function
+     * If `globs` is an empty array or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    globs?: GlobInput[] | null;
+    globs?: GlobInput[];
 
     /**
      * An array of regular expressions or plain objects
@@ -55,10 +55,10 @@ export interface EnqueueLinksOptions {
      * All remaining keys will be used as request options
      * for the corresponding enqueued {@link Request} objects.
      *
-     * If `regexps` is an empty array, `null` or `undefined`, then the function
+     * If `regexps` is an empty array or `undefined`, then the function
      * enqueues all links found on the page.
      */
-    regexps?: RegExpInput[] | null;
+    regexps?: RegExpInput[];
 
     /**
      * *NOTE:* In future versions of SDK the options will be removed.
@@ -72,12 +72,12 @@ export interface EnqueueLinksOptions {
      * With a pseudo-URL string, the matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
      *
-     * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
+     * If `pseudoUrls` is an empty array or `undefined`, then the function
      * enqueues all links found on the page.
      *
      * @deprecated
      */
-    pseudoUrls?: PseudoUrlInput[] | null;
+    pseudoUrls?: PseudoUrlInput[];
 
     /**
      * Just before a new {@link Request} is constructed and enqueued to the {@link RequestQueue}, this function can be used
@@ -164,18 +164,18 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         limit: ow.optional.number,
         selector: ow.optional.string,
         baseUrl: ow.optional.string,
-        pseudoUrls: ow.any(ow.null, ow.optional.array.ofType(ow.any(
+        pseudoUrls: ow.optional.array.ofType(ow.any(
             ow.string,
             ow.object.hasKeys('purl'),
-        ))),
-        globs: ow.any(ow.null, ow.optional.array.ofType(ow.any(
+        )),
+        globs: ow.optional.array.ofType(ow.any(
             ow.string,
             ow.object.hasKeys('glob'),
-        ))),
-        regexps: ow.any(ow.null, ow.optional.array.ofType(ow.any(
+        )),
+        regexps: ow.optional.array.ofType(ow.any(
             ow.regExp,
             ow.object.hasKeys('regexp'),
-        ))),
+        )),
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
             EnqueueStrategy.All,
