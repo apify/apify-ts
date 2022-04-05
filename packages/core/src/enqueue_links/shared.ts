@@ -141,7 +141,7 @@ export function createRequests(requestOptions: (string | RequestOptions)[], urlP
                 const request = typeof opts === 'string'
                     ? { url: opts, ...requestRegExpOptions }
                     : { ...opts, ...requestRegExpOptions };
-                requests.push(request as Request);
+                requests.push(new Request(request));
             }
         }
     }
@@ -162,7 +162,10 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
                 return false;
             }
         })
-        .map((requestOptions) => new Request(requestOptions) as RequestOptions);
+        .map((requestOptions) => {
+            if (!requestOptions.userData) requestOptions.userData = {};
+            return requestOptions;
+        });
 }
 
 /**
