@@ -4,6 +4,7 @@ import log from '@apify/log';
 import { sleep } from '@crawlers/utils';
 import { Actor, ApifyEnv } from 'apify';
 import { ApifyClient, WebhookUpdateData } from 'apify-client';
+import { ACTOR_EVENT_NAMES_EX, events } from 'crawlers';
 
 /**
  * Helper function that enables testing of main()
@@ -418,6 +419,36 @@ describe('Actor.reboot()', () => {
 
         expect(metamorphSpy).toBeCalledTimes(1);
         expect(metamorphSpy).toBeCalledWith(actId);
+    });
+
+    test('reboot waits for persistState/migrating listeners before morphing', async () => {
+        const metamorphSpy = jest.spyOn(Actor.prototype, 'metamorph');
+        metamorphSpy.mockResolvedValueOnce();
+
+        const persistenceStore = [];
+
+        const persistResource = (delay: number) => async () : Promise<void> => {
+            await new Promise((res) => setTimeout(res, delay));
+            persistenceStore.push('PERSISTED ITEM');
+        };
+
+        const migratingSpy = jest.fn(persistResource(50));
+        const persistStateSpy = jest.fn(persistResource(50));
+
+        events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, persistStateSpy);
+        events.on(ACTOR_EVENT_NAMES_EX.MIGRATING, migratingSpy);
+
+        await Actor.reboot();
+
+        events.off(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, persistStateSpy);
+        events.off(ACTOR_EVENT_NAMES_EX.MIGRATING, migratingSpy);
+
+        // Do the listeners get called?
+        expect(migratingSpy).toBeCalledTimes(1);
+        expect(persistStateSpy).toBeCalledTimes(1);
+
+        // Do the listeners finish?
+        expect(persistenceStore.length).toBe(2);
     });
 });
 
