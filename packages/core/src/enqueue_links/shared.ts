@@ -134,8 +134,10 @@ export function createRequests(requestOptions: (string | RequestOptions)[], urlP
         const { regexp, glob, ...requestRegExpOptions } = urlPatternObject;
         for (const opts of requestOptions) {
             const urlToMatch = typeof opts === 'string' ? opts : opts.url;
-            if ((regexp && (urlToMatch).match(regexp))
-                || (glob && minimatch(urlToMatch, glob, { nocase: true }))) {
+            if (
+                (regexp && urlToMatch.match(regexp)) ||
+                (glob && minimatch(urlToMatch, glob, { nocase: true }))
+            ) {
                 const request = typeof opts === 'string'
                     ? { url: opts, ...requestRegExpOptions }
                     : { ...opts, ...requestRegExpOptions };
