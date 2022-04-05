@@ -33,7 +33,7 @@ describe('enqueueLinksByClickingElements()', () => {
     test('should work', async () => {
         const addedRequests: (Request | RequestOptions)[] = [];
         const requestQueue = Object.create(RequestQueue.prototype);
-        requestQueue.addRequest = async (request: Request) => addedRequests.push(request);
+        requestQueue.addRequests = async (request: Request[]) => addedRequests.push(...request);
         const html = `
 <html>
     <body>

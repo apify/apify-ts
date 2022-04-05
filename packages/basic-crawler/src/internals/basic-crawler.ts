@@ -22,7 +22,6 @@ import {
     type CrawlingContext,
     RequestOptions,
     RequestQueueOperationOptions,
-    addRequestsToQueueInBatches,
     createRequests,
 } from '@crawlers/core';
 import { Awaitable } from '@crawlers/utils';
@@ -572,7 +571,7 @@ export class BasicCrawler<
 
         const builtRequests = createRequests(requests);
 
-        return addRequestsToQueueInBatches(builtRequests, requestQueue);
+        return requestQueue.addRequests(builtRequests);
     }
 
     protected async _init(): Promise<void> {

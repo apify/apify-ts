@@ -8,7 +8,6 @@ import {
     handleRequestTimeout,
     ProxyConfiguration,
     ProxyInfo,
-    QueueOperationInfo,
     RequestQueue,
     Session,
     throwOnBlockedRequest,
@@ -20,6 +19,7 @@ import {
     BasicCrawlerOptions,
 } from '@crawlers/basic';
 import { Awaitable, Dictionary } from '@crawlers/utils';
+import type { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,
@@ -43,7 +43,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
-    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<RequestQueueClientBatchAddRequestsResult>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
