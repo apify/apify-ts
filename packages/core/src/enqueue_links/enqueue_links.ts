@@ -75,7 +75,7 @@ export interface EnqueueLinksOptions {
      * If `pseudoUrls` is an empty array or `undefined`, then the function
      * enqueues all links found on the page.
      *
-     * @deprecated
+     * @deprecated prefer using `globs` or `regexps` instead
      */
     pseudoUrls?: PseudoUrlInput[];
 
