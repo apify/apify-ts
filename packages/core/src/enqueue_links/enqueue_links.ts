@@ -194,19 +194,19 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         transformRequestFunction,
     } = options;
 
-    let urlPatternObjects: UrlPatternObject[] = [];
+    const urlPatternObjects: UrlPatternObject[] = [];
 
     if (pseudoUrls?.length) {
         log.deprecated('`pseudoUrls` option is deprecated, use `globs` or `regexps` instead');
-        urlPatternObjects = urlPatternObjects.concat(constructRegExpObjectsFromPseudoUrls(pseudoUrls));
+        urlPatternObjects.push(...constructRegExpObjectsFromPseudoUrls(pseudoUrls));
     }
 
     if (globs?.length) {
-        urlPatternObjects = urlPatternObjects.concat(constructGlobObjectsFromGlobs(globs));
+        urlPatternObjects.push(...constructGlobObjectsFromGlobs(globs));
     }
 
     if (regexps?.length) {
-        urlPatternObjects = urlPatternObjects.concat(constructRegExpObjectsFromRegExps(regexps));
+        urlPatternObjects.push(...constructRegExpObjectsFromRegExps(regexps));
     }
 
     if (options.baseUrl) {
