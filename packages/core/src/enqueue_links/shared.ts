@@ -135,7 +135,7 @@ export function createRequests(requestOptions: (string | RequestOptions)[], urlP
         for (const opts of requestOptions) {
             const urlToMatch = typeof opts === 'string' ? opts : opts.url;
             if (
-                (regexp && urlToMatch.match(regexp)) ||
+                (regexp && urlToMatch.match(regexp)) || // eslint-disable-line
                 (glob && minimatch(urlToMatch, glob, { nocase: true }))
             ) {
                 const request = typeof opts === 'string'

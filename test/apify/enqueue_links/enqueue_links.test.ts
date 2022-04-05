@@ -12,7 +12,6 @@ import {
     RequestOptions,
     RequestQueue,
 } from 'crawlers';
-import { AllowedHttpMethods } from 'apify-client';
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 
@@ -116,7 +115,7 @@ describe('enqueueLinks()', () => {
             };
 
             const pseudoUrls = [
-                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as AllowedHttpMethods },
+                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
             ];
 
@@ -154,7 +153,7 @@ describe('enqueueLinks()', () => {
             };
             const globs = [
                 'https://example.com/**/*',
-                { glob: '?(http|https)://cool.com/', method: 'POST' as AllowedHttpMethods, userData: { label: 'COOL' } },
+                { glob: '?(http|https)://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await browserCrawlerEnqueueLinks({
@@ -197,7 +196,7 @@ describe('enqueueLinks()', () => {
             };
             const regexps = [
                 /^https:\/\/example\.com\/(\w|\/)+/,
-                { regexp: /^(http|https):\/\/cool\.com\//, method: 'POST' as AllowedHttpMethods, userData: { label: 'COOL' } },
+                { regexp: /^(http|https):\/\/cool\.com\//, method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await browserCrawlerEnqueueLinks({
@@ -240,7 +239,7 @@ describe('enqueueLinks()', () => {
             };
             const pseudoUrls = [
                 'https://example.com/[(\\w|-|/)*]',
-                { purl: '[http|https]://cool.com/', method: 'POST' as AllowedHttpMethods, userData: { label: 'COOL' } },
+                { purl: '[http|https]://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await browserCrawlerEnqueueLinks({
@@ -287,7 +286,7 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await expect(async () => browserCrawlerEnqueueLinks({
+            await expect(browserCrawlerEnqueueLinks({
                 // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
                 options: { selector: '.click', pseudoUrls },
                 page,
@@ -338,7 +337,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await expect(async () => browserCrawlerEnqueueLinks({
+            await expect(browserCrawlerEnqueueLinks({
                 options: { selector: '.click', pseudoUrls: null },
                 page,
                 requestQueue,
@@ -394,7 +393,7 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            await expect(async () => browserCrawlerEnqueueLinks({
+            await expect(browserCrawlerEnqueueLinks({
                 options: { selector: '.click', pseudoUrls },
                 page,
                 requestQueue,
@@ -574,7 +573,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
             const pseudoUrls = [
-                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as AllowedHttpMethods },
+                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
                 { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
             ];
 
@@ -612,7 +611,7 @@ describe('enqueueLinks()', () => {
             };
             const globs = [
                 'https://example.com/**/*',
-                { glob: '?(http|https)://cool.com/', method: 'POST' as AllowedHttpMethods, userData: { label: 'COOL' } },
+                { glob: '?(http|https)://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await cheerioCrawlerEnqueueLinks({
@@ -655,7 +654,7 @@ describe('enqueueLinks()', () => {
             };
             const regexps = [
                 /^https:\/\/example\.com\/(\w|\/)+/,
-                { regexp: /^(http|https):\/\/cool\.com\//, method: 'POST' as AllowedHttpMethods, userData: { label: 'COOL' } },
+                { regexp: /^(http|https):\/\/cool\.com\//, method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await cheerioCrawlerEnqueueLinks({
@@ -697,7 +696,7 @@ describe('enqueueLinks()', () => {
             };
             const pseudoUrls = [
                 'https://example.com/[(\\w|-|/)*]',
-                { purl: '[http|https]://cool.com/', method: 'POST' as AllowedHttpMethods, userData: { label: 'COOL' } },
+                { purl: '[http|https]://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await cheerioCrawlerEnqueueLinks({
@@ -742,7 +741,7 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await expect(async () => cheerioCrawlerEnqueueLinks({
+            await expect(cheerioCrawlerEnqueueLinks({
                 // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
                 options: { selector: '.click', pseudoUrls },
                 $,
@@ -791,7 +790,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await expect(async () => cheerioCrawlerEnqueueLinks({
+            await expect(cheerioCrawlerEnqueueLinks({
                 options: { selector: '.click', pseudoUrls: null },
                 $,
                 requestQueue,
@@ -844,7 +843,7 @@ describe('enqueueLinks()', () => {
                 '[http|https]://cool.com/',
             ];
 
-            await expect(() => cheerioCrawlerEnqueueLinks({
+            await expect(cheerioCrawlerEnqueueLinks({
                 options: { selector: '.click', pseudoUrls },
                 $,
                 requestQueue,
@@ -964,7 +963,7 @@ describe('enqueueLinks()', () => {
                 enqueued.push(request);
             };
 
-            await expect(() => cheerioCrawlerEnqueueLinks({
+            await expect(cheerioCrawlerEnqueueLinks({
                 options: {},
                 $,
                 requestQueue,
