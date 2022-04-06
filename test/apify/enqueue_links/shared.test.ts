@@ -1,5 +1,4 @@
 import {
-    addRequestsToQueueInBatches,
     constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
     constructRegExpObjectsFromRegExps,
@@ -106,31 +105,6 @@ describe('Enqueue links shared functions', () => {
             expect(() => validateGlobPattern(globPattern)).not.toThrow();
             const emptyGlobPattern = '';
             expect(() => validateGlobPattern(emptyGlobPattern)).toThrow(/Cannot parse Glob pattern '': it must be an non-empty string/);
-        });
-    });
-
-    describe('addRequestsToQueueInBatches()', () => {
-        test('should work', async () => {
-            const fakeRequestQueue = {
-                requests: [] as number[],
-                async addRequest(request: number) {
-                    this.requests.push(request);
-                },
-            };
-
-            const requests = Array(5).fill(null).map((_, i) => i as never);
-
-            const finished = addRequestsToQueueInBatches(requests, fakeRequestQueue as never, 2);
-
-            // With batch size 2, two requests will be dispatched synchronously before the async function
-            // returns and thus the following push should place 1000 on the third place in the array.
-            fakeRequestQueue.requests.push(1000);
-
-            await finished;
-            const results = fakeRequestQueue.requests;
-            expect(results).toHaveLength(6);
-            expect(results[2]).toBe(1000);
-            expect(results.reduce((sum, num) => sum + num)).toBe(1010);
         });
     });
 });

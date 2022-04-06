@@ -1,12 +1,12 @@
 import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
+import { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import {
     constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
     constructRegExpObjectsFromRegExps,
     createRequests,
-    addRequestsToQueueInBatches,
     createRequestOptions,
     GlobInput,
     PseudoUrlInput,
@@ -14,7 +14,7 @@ import {
     RequestTransform,
     UrlPatternObject,
 } from './shared';
-import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
+import { RequestQueue } from '../storages/request_queue';
 
 export interface EnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
@@ -155,9 +155,9 @@ export enum EnqueueStrategy {
  * ```
  *
  * @param options All `enqueueLinks()` parameters are passed via an options object.
- * @returns Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ * @returns Promise that resolves to {@link RequestQueueClientBatchAddRequestsResult} object.
  */
-export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinks(options: EnqueueLinksOptions): Promise<RequestQueueClientBatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         urls: ow.array.ofType(ow.string),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -213,7 +213,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
         switch (options.strategy ?? EnqueueStrategy.SameSubdomain) {
             case EnqueueStrategy.SameSubdomain:
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
-                // to a url like https://example.com/deep/default/path and one of the found urls is an
+                // to an url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
                 urlPatternObjects.push({ glob: `${new URL(options.baseUrl).origin}/**` });
                 break;
@@ -253,5 +253,5 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     let requests = createRequests(requestOptions, urlPatternObjects);
     if (limit) requests = requests.slice(0, limit);
 
-    return addRequestsToQueueInBatches(requests, requestQueue);
+    return requestQueue.addRequests(requests);
 }

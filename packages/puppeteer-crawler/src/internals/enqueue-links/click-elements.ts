@@ -1,13 +1,12 @@
 import {
-    addRequestsToQueueInBatches,
     constructRegExpObjectsFromPseudoUrls,
     createRequestOptions,
     createRequests,
     PseudoUrlInput,
-    QueueOperationInfo,
     RequestQueue,
     RequestTransform,
 } from '@crawlers/browser';
+import { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlers/utils';
 import ow from 'ow';
@@ -150,10 +149,9 @@ export interface EnqueueLinksByClickingElementsOptions {
  * });
  * ```
  *
- * @returns
- *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ * @returns Promise that resolves to {@link RequestQueueClientBatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<RequestQueueClientBatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -192,7 +190,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
     const requests = createRequests(requestOptions, regexps);
-    return addRequestsToQueueInBatches(requests, requestQueue);
+    return requestQueue.addRequests(requests);
 }
 
 interface WaitForPageIdleOptions {

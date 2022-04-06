@@ -188,6 +188,90 @@ describe('RequestQueue remote', () => {
         expect(mockDelete).toHaveBeenLastCalledWith();
     });
 
+    test('addRequests', async () => {
+        const queue = new RequestQueue({ id: 'batch-requests', client: apifyClient });
+        const mockAddRequests = jest.spyOn(queue.client, 'batchAddRequests');
+
+        const requestOptions = { url: 'http://example.com/a' };
+        const requestA = new Request(requestOptions);
+
+        // Test adding 1 request
+        const firstRequestAdded = {
+            requestId: 'a',
+            wasAlreadyHandled: false,
+            wasAlreadyPresent: false,
+            uniqueKey: requestA.uniqueKey,
+        };
+        mockAddRequests.mockResolvedValueOnce({
+            processedRequests: [firstRequestAdded],
+            unprocessedRequests: [],
+        });
+
+        const addRequestsResult1 = await queue.addRequests([requestOptions]);
+
+        expect(addRequestsResult1.processedRequests).toHaveLength(1);
+        expect(addRequestsResult1.processedRequests[0]).toEqual({
+            ...firstRequestAdded,
+        });
+
+        // Ensure the client method was actually called, and added
+        // @ts-expect-error Accessing private property
+        expect(queue.queueHeadDict.length()).toBe(1);
+        expect(mockAddRequests).toBeCalledTimes(1);
+        expect(mockAddRequests).toBeCalledWith([requestA], { forefront: false });
+
+        // Try to add a request with the same URL again, expecting cached
+        const addRequestsResult2 = await queue.addRequests([requestOptions]);
+        expect(addRequestsResult2.processedRequests).toHaveLength(1);
+        expect(addRequestsResult2.processedRequests[0]).toEqual({
+            ...firstRequestAdded,
+            wasAlreadyPresent: true,
+        });
+        // @ts-expect-error Accessing private property
+        expect(queue.queueHeadDict.length()).toBe(1);
+
+        // Adding more requests, forefront
+        const requestB = new Request({ url: 'http://example.com/b' });
+        const requestC = new Request({ url: 'http://example.com/c' });
+
+        mockAddRequests.mockResolvedValueOnce({
+            processedRequests: [
+                {
+                    requestId: 'b',
+                    uniqueKey: requestB.uniqueKey,
+                    wasAlreadyHandled: false,
+                    wasAlreadyPresent: false,
+                },
+                {
+                    requestId: 'c',
+                    uniqueKey: requestC.uniqueKey,
+                    wasAlreadyHandled: false,
+                    wasAlreadyPresent: false,
+                },
+            ],
+            unprocessedRequests: [],
+        });
+
+        const addRequestsResult3 = await queue.addRequests([requestB, requestC], { forefront: true });
+        expect(addRequestsResult3.processedRequests).toHaveLength(2);
+        expect(addRequestsResult3.processedRequests[0]).toEqual({
+            requestId: 'b',
+            uniqueKey: requestB.uniqueKey,
+            wasAlreadyHandled: false,
+            wasAlreadyPresent: false,
+        });
+        expect(addRequestsResult3.processedRequests[1]).toEqual({
+            requestId: 'c',
+            uniqueKey: requestC.uniqueKey,
+            wasAlreadyHandled: false,
+            wasAlreadyPresent: false,
+        });
+        // @ts-expect-error Accessing private property
+        expect(queue.queueHeadDict.length()).toBe(3);
+        expect(mockAddRequests).toHaveBeenCalled();
+        expect(mockAddRequests).toBeCalledWith([requestB, requestC], { forefront: true });
+    });
+
     test('should cache new requests locally', async () => {
         const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
 
@@ -212,6 +296,7 @@ describe('RequestQueue remote', () => {
         expect(addRequestMock).toBeCalledTimes(1);
         expect(queueOperationInfo).toEqual({
             requestId: 'a',
+            uniqueKey: requestA.uniqueKey,
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
         });
@@ -241,6 +326,7 @@ describe('RequestQueue remote', () => {
         expect(addRequestMock).toBeCalledTimes(1);
         expect(queueOperationInfo).toEqual({
             requestId: 'x',
+            uniqueKey: requestX.uniqueKey,
             wasAlreadyPresent: true,
             wasAlreadyHandled: true,
         });
@@ -269,6 +355,7 @@ describe('RequestQueue remote', () => {
         expect(addRequestMock).toBeCalledTimes(0);
         expect(queueOperationInfo).toEqual({
             requestId: 'a',
+            uniqueKey: 'aaa',
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
         });

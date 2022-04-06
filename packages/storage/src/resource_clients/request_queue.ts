@@ -2,7 +2,7 @@ import { join, dirname } from 'path';
 import ow from 'ow';
 import { move, remove } from 'fs-extra';
 import type { DatabaseConnectionCache } from '../database_connection_cache';
-import { RawQueueTableData, RequestQueueEmulator } from '../emulators/request_queue_emulator';
+import { BatchAddRequestsResult, RawQueueTableData, RequestQueueEmulator } from '../emulators/request_queue_emulator';
 import { purgeNullsFromObject, uniqueKeyToRequestId } from '../utils';
 import type { QueueOperationInfo } from '../emulators/queue_operation_info';
 
@@ -182,6 +182,20 @@ export class RequestQueueClient {
 
         const requestModel = this._createRequestModel(request, options.forefront);
         return this._getEmulator().addRequest(requestModel);
+    }
+
+    async batchAddRequests(requests: RequestModel[], options: RequestOptions = {}): Promise<BatchAddRequestsResult> {
+        ow(requests, ow.array.ofType(ow.object.partialShape({
+            id: ow.undefined,
+            ...requestShape,
+        })));
+
+        ow(options, ow.object.exactShape({
+            forefront: ow.optional.boolean,
+        }));
+
+        const requestModels = requests.map((request) => this._createRequestModel(request, options.forefront));
+        return this._getEmulator().batchAddRequests(requestModels);
     }
 
     async getRequest(id: string): Promise<Record<string, unknown> | undefined> {

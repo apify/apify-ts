@@ -2,7 +2,7 @@ import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { ListDictionary, LruCache } from '@apify/datastructures';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { ApifyStorageLocal } from '@crawlers/storage';
-import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient } from 'apify-client';
+import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient, RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import crypto from 'crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
@@ -82,6 +82,8 @@ export interface QueueOperationInfo {
 
     /** The ID of the added request */
     requestId: string;
+
+    uniqueKey: string;
 
 }
 
@@ -184,7 +186,9 @@ export class RequestQueue {
     // Key is computed using getRequestId() and value is { id, isHandled }.
     // TODO: We could extend the caching to improve performance
     //       of other operations such as fetchNextRequest().
-    requestsCache = new LruCache({ maxLength: MAX_CACHED_REQUESTS });
+    requestsCache = new LruCache<
+        Pick<QueueOperationInfo, 'uniqueKey' | 'wasAlreadyHandled'> & { isHandled: boolean; id: string }
+    >({ maxLength: MAX_CACHED_REQUESTS });
 
     /**
      * @internal
@@ -248,10 +252,13 @@ export class RequestQueue {
                 // request was already handled is there because just one client should be using one queue.
                 wasAlreadyHandled: cachedInfo.isHandled,
                 requestId: cachedInfo.id,
+                uniqueKey: cachedInfo.uniqueKey,
             };
         }
 
         const queueOperationInfo = await this.client.addRequest(request, { forefront }) as QueueOperationInfo;
+        queueOperationInfo.uniqueKey = request.uniqueKey;
+
         const { requestId, wasAlreadyPresent } = queueOperationInfo;
         this._cacheRequest(cacheKey, queueOperationInfo);
 
@@ -263,6 +270,109 @@ export class RequestQueue {
         }
 
         return queueOperationInfo;
+    }
+
+    /**
+     * Adds requests to the queue in batches of 25.
+     *
+     * If a request that is passed in is already present due to its `uniqueKey` property being the same,
+     * it will not be updated. You can find out whether this happened by finding the request in the resulting
+     * {@link RequestQueueClientBatchAddRequestsResult} object.
+     *
+     * @experimental
+     * @param requestsLike {@link Request} objects or vanilla objects with request data.
+     * Note that the function sets the `uniqueKey` and `id` fields to the passed requests if missing.
+     * @param [options] Request queue operation options.
+     */
+    async addRequests(
+        requestsLike: (Request | RequestOptions)[],
+        options: RequestQueueOperationOptions = {},
+    ): Promise<RequestQueueClientBatchAddRequestsResult> {
+        ow(requestsLike, ow.array.ofType(ow.object.partialShape({
+            url: ow.string,
+            id: ow.undefined,
+        })));
+        ow(options, ow.object.exactShape({
+            forefront: ow.optional.boolean,
+        }));
+
+        const { forefront = false } = options;
+
+        const uniqueKeyToCacheKey = new Map<string, string>();
+        const getCachedRequestId = (uniqueKey: string) => {
+            const cached = uniqueKeyToCacheKey.get(uniqueKey);
+
+            if (cached) return cached;
+
+            const newCacheKey = getRequestId(uniqueKey);
+            uniqueKeyToCacheKey.set(uniqueKey, newCacheKey);
+
+            return newCacheKey;
+        };
+
+        const results: RequestQueueClientBatchAddRequestsResult = {
+            processedRequests: [],
+            unprocessedRequests: [],
+        };
+
+        const requests = requestsLike.map((requestLike) => {
+            return requestLike instanceof Request
+                ? requestLike
+                : new Request(requestLike);
+        });
+
+        const requestsToAdd: Request[] = [];
+
+        for (const request of requests) {
+            // TODO we dont need to hash the cache key probably
+            const cacheKey = getCachedRequestId(request.uniqueKey);
+            // const cacheKey = request.uniqueKey;
+            const cachedInfo = this.requestsCache.get(cacheKey);
+
+            if (cachedInfo) {
+                request.id = cachedInfo.id;
+                results.processedRequests.push({
+                    wasAlreadyPresent: true,
+                    // We may assume that if request is in local cache then also the information if the
+                    // request was already handled is there because just one client should be using one queue.
+                    wasAlreadyHandled: cachedInfo.isHandled,
+                    requestId: cachedInfo.id,
+                    uniqueKey: cachedInfo.uniqueKey,
+                });
+            } else {
+                requestsToAdd.push(request);
+            }
+        }
+
+        // Early exit if all provided requests were already added
+        if (!requestsToAdd.length) {
+            return results;
+        }
+
+        const apiResults = await this.client.batchAddRequests(requestsToAdd, { forefront });
+
+        // Report unprocessed requests
+        results.unprocessedRequests = apiResults.unprocessedRequests;
+
+        // Add all new requests to the queue head
+        for (const newRequest of apiResults.processedRequests) {
+            // Add the new request to the processed list
+            results.processedRequests.push(newRequest);
+
+            const cacheKey = getCachedRequestId(newRequest.uniqueKey);
+
+            const { requestId, wasAlreadyPresent } = newRequest;
+            this._cacheRequest(cacheKey, newRequest);
+
+            if (!wasAlreadyPresent && !this.inProgress.has(requestId) && !this.recentlyHandled.get(requestId)) {
+                this.assumedTotalCount++;
+
+                // Performance optimization: add request straight to head if possible
+                this._maybeAddRequestToQueueHead(requestId, forefront);
+            }
+        }
+
+        return results;
     }
 
     /**
@@ -383,8 +493,9 @@ export class RequestQueue {
         }
 
         const handledAt = request.handledAt ?? new Date().toISOString();
-        const queueOperationInfo = await this.client.updateRequest({ ...request, handledAt });
+        const queueOperationInfo = await this.client.updateRequest({ ...request, handledAt }) as QueueOperationInfo;
         request.handledAt = handledAt;
+        queueOperationInfo.uniqueKey = request.uniqueKey;
 
         this.inProgress.delete(request.id);
         this.recentlyHandled.add(request.id, true);
@@ -422,7 +533,8 @@ export class RequestQueue {
 
         // TODO: If request hasn't been changed since the last getRequest(),
         //   we don't need to call updateRequest() and thus improve performance.
-        const queueOperationInfo = await this.client.updateRequest(request, { forefront });
+        const queueOperationInfo = await this.client.updateRequest(request, { forefront }) as QueueOperationInfo;
+        queueOperationInfo.uniqueKey = request.uniqueKey;
         this._cacheRequest(getRequestId(request.uniqueKey), queueOperationInfo);
 
         // Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
@@ -469,10 +581,12 @@ export class RequestQueue {
     /**
      * Caches information about request to beware of unneeded addRequest() calls.
      */
-    protected _cacheRequest(cacheKey: string, queueOperationInfo: QueueOperationInfoOptions): void {
+    protected _cacheRequest(cacheKey: string, queueOperationInfo: QueueOperationInfo): void {
         this.requestsCache.add(cacheKey, {
             id: queueOperationInfo.requestId,
             isHandled: queueOperationInfo.wasAlreadyHandled,
+            uniqueKey: queueOperationInfo.uniqueKey,
+            wasAlreadyHandled: queueOperationInfo.wasAlreadyHandled,
         });
     }
 
@@ -506,7 +620,12 @@ export class RequestQueue {
                         if (this.inProgress.has(requestId) || this.recentlyHandled.get(requestId)) return;
 
                         this.queueHeadDict.add(requestId, requestId, false);
-                        this._cacheRequest(getRequestId(uniqueKey), { requestId, wasAlreadyHandled: false });
+                        this._cacheRequest(getRequestId(uniqueKey), {
+                            requestId,
+                            wasAlreadyHandled: false,
+                            wasAlreadyPresent: true,
+                            uniqueKey,
+                        });
                     });
 
                     // This is needed so that the next call to _ensureHeadIsNonEmpty() will fetch the queue head again.
