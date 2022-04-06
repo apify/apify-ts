@@ -1,9 +1,9 @@
 import { ENV_VARS, MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
-import { Dataset, StorageManager, checkAndSerialize, chunkBySize, Configuration, pushData } from '@crawlers/core';
+import { Dataset, checkAndSerialize, chunkBySize, Configuration, pushData } from '@crawlers/core';
 import { Dictionary } from '@crawlers/utils';
 
 describe('dataset', () => {
-    const apifyClient = Configuration.getDefaultClient();
+    const storageClient = Configuration.getStorageClient();
 
     beforeEach(async () => {
         jest.clearAllMocks();
@@ -12,20 +12,10 @@ describe('dataset', () => {
     describe('remote', () => {
         const mockData = (bytes: number) => 'x'.repeat(bytes);
 
-        test('openDataset should open storage', async () => {
-            const datasetName = 'abc';
-            const options = { forceCloud: true };
-            const mockOpenStorage = jest.spyOn(StorageManager.prototype, 'openStorage');
-            mockOpenStorage.mockResolvedValueOnce(jest.fn());
-            await Dataset.open(datasetName, options);
-            expect(mockOpenStorage).toBeCalledTimes(1);
-            expect(mockOpenStorage).toBeCalledWith(datasetName, options);
-        });
-
         test('should work', async () => {
             const dataset = new Dataset({
                 id: 'some-id',
-                client: apifyClient,
+                client: storageClient,
             });
 
             const mockPushItems = jest
@@ -68,7 +58,7 @@ describe('dataset', () => {
 
             const dataset = new Dataset({
                 id: 'some-id',
-                client: apifyClient,
+                client: storageClient,
             });
 
             const mockPushItems = jest.spyOn(dataset.client, 'pushItems');
@@ -95,7 +85,7 @@ describe('dataset', () => {
 
             const dataset = new Dataset({
                 id: 'some-id',
-                client: apifyClient,
+                client: storageClient,
             });
 
             const mockPushItems = jest.spyOn(dataset.client, 'pushItems');
@@ -111,7 +101,7 @@ describe('dataset', () => {
 
         test('should throw on too large file', async () => {
             const full = mockData(MAX_PAYLOAD_SIZE_BYTES);
-            const dataset = new Dataset({ id: 'some-id', client: apifyClient });
+            const dataset = new Dataset({ id: 'some-id', client: storageClient });
             try {
                 await dataset.pushData({ foo: full });
                 throw new Error('Should fail!');
@@ -122,7 +112,7 @@ describe('dataset', () => {
         });
         test('should throw on too large file in an array', async () => {
             const full = mockData(MAX_PAYLOAD_SIZE_BYTES);
-            const dataset = new Dataset({ id: 'some-id', client: apifyClient });
+            const dataset = new Dataset({ id: 'some-id', client: storageClient });
             try {
                 await dataset.pushData([
                     { foo: 0 },
@@ -141,7 +131,7 @@ describe('dataset', () => {
         test('getData() should work', async () => {
             const dataset = new Dataset({
                 id: 'some-id',
-                client: apifyClient,
+                client: storageClient,
             });
 
             const expected = {
@@ -180,7 +170,7 @@ describe('dataset', () => {
         });
 
         test('getInfo() should work', async () => {
-            const dataset = new Dataset({ id: 'some-id', client: apifyClient });
+            const dataset = new Dataset({ id: 'some-id', client: storageClient });
 
             const expected: Awaited<ReturnType<Dataset['getInfo']>> = {
                 id: 'WkzbQMuFYuamGv3YF',
@@ -206,7 +196,7 @@ describe('dataset', () => {
         const getRemoteDataset = () => {
             const dataset = new Dataset({
                 id: 'some-id',
-                client: apifyClient,
+                client: storageClient,
             });
 
             const firstResolve = {
@@ -362,7 +352,7 @@ describe('dataset', () => {
             const dataset = new Dataset({
                 id: 'some-id',
                 name: 'some-name',
-                client: apifyClient,
+                client: storageClient,
             });
             const mockListItems = jest.spyOn(dataset.client, 'listItems');
             mockListItems.mockResolvedValueOnce({
@@ -415,23 +405,23 @@ describe('dataset', () => {
     describe('pushData', () => {
         test('throws if DEFAULT_DATASET_ID env var is not defined and we use cloud storage', async () => {
             delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-            process.env[ENV_VARS.TOKEN] = 'xxx';
 
             process.env[ENV_VARS.DEFAULT_DATASET_ID] = '';
             await expect(pushData({ something: 123 })).rejects.toThrow(Error);
 
             Configuration.resetGlobalState();
 
-            delete process.env[ENV_VARS.DEFAULT_DATASET_ID];
-            await expect(pushData({ something: 123 })).rejects.toThrow(Error);
-
-            delete process.env[ENV_VARS.TOKEN];
+            // FIXME? this seems to be no longer valid, as default dataset id will be used in case the env var is `undefined`
+            //  previously it was probably passing due to the `isLocal` flag on storages, but that is no longer valid as we
+            //  always use the storage client available on (global) config
+            // delete process.env[ENV_VARS.DEFAULT_DATASET_ID];
+            // await expect(pushData({ something: 123 })).rejects.toThrow(Error);
         });
 
         test('throws on invalid args', async () => {
             const dataset = new Dataset({
                 id: 'some-id',
-                client: apifyClient,
+                client: storageClient,
             });
             // @ts-expect-error JS-side validation
             await expect(dataset.pushData()).rejects.toThrow('Expected `data` to be of type `object` but received type `undefined`');

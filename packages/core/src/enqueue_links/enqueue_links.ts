@@ -1,7 +1,6 @@
 import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
-import { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import {
     constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
@@ -15,6 +14,7 @@ import {
     UrlPatternObject,
 } from './shared';
 import { RequestQueue } from '../storages/request_queue';
+import { BatchAddRequestsResult } from '../storages/storage';
 
 export interface EnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
@@ -155,9 +155,9 @@ export enum EnqueueStrategy {
  * ```
  *
  * @param options All `enqueueLinks()` parameters are passed via an options object.
- * @returns Promise that resolves to {@link RequestQueueClientBatchAddRequestsResult} object.
+ * @returns Promise that resolves to {@link BatchAddRequestsResult} object.
  */
-export async function enqueueLinks(options: EnqueueLinksOptions): Promise<RequestQueueClientBatchAddRequestsResult> {
+export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         urls: ow.array.ofType(ow.string),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),

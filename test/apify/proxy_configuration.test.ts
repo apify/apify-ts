@@ -1,7 +1,7 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { createProxyConfiguration, ProxyConfiguration } from '@crawlers/core';
 import { requestAsBrowser } from '@crawlers/utils';
 import { UserClient } from 'apify-client';
+import { Actor, ProxyConfiguration } from 'apify';
 
 const groups = ['GROUP1', 'GROUP2'];
 const hostname = LOCAL_ENV_VARS[ENV_VARS.PROXY_HOSTNAME];
@@ -316,7 +316,7 @@ describe('ProxyConfiguration', () => {
     });
 });
 
-describe('Apify.createProxyConfiguration()', () => {
+describe('Actor.createProxyConfiguration()', () => {
     const userData = { proxy: { password } };
 
     test('should work with all options', async () => {
@@ -325,7 +325,7 @@ describe('Apify.createProxyConfiguration()', () => {
         const url = 'http://proxy.apify.com/?format=json';
         requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
 
-        const proxyConfiguration = await createProxyConfiguration(basicOpts);
+        const proxyConfiguration = await Actor.createProxyConfiguration(basicOpts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
         // @ts-expect-error private property
@@ -353,7 +353,8 @@ describe('Apify.createProxyConfiguration()', () => {
         requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
         getUserSpy.mockResolvedValueOnce(userData as any);
 
-        const proxyConfiguration = await createProxyConfiguration(opts);
+        // FIXME this fails + 2 more tests here, probably another isAtHome?
+        const proxyConfiguration = await Actor.createProxyConfiguration(opts);
 
         expect(proxyConfiguration).toBeInstanceOf(ProxyConfiguration);
         // @ts-expect-error private property
@@ -402,7 +403,7 @@ describe('Apify.createProxyConfiguration()', () => {
 
         requestAsBrowserSpy.mockImplementationOnce(fakeCall as any);
 
-        await expect(createProxyConfiguration()).rejects.toThrow('Apify Proxy password must be provided');
+        await expect(Actor.createProxyConfiguration()).rejects.toThrow('Apify Proxy password must be provided');
 
         requestAsBrowserSpy.mockRestore();
     });
@@ -416,7 +417,7 @@ describe('Apify.createProxyConfiguration()', () => {
         getUserSpy.mockResolvedValue(userData as any);
         requestAsBrowserSpy.mockResolvedValueOnce({ body: status } as any);
 
-        await expect(createProxyConfiguration({ groups })).rejects.toThrow(connectionError);
+        await expect(Actor.createProxyConfiguration({ groups })).rejects.toThrow(connectionError);
 
         requestAsBrowserSpy.mockRestore();
         getUserSpy.mockRestore();
@@ -445,7 +446,7 @@ describe('Apify.createProxyConfiguration()', () => {
 
         requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as any);
 
-        await createProxyConfiguration();
+        await Actor.createProxyConfiguration();
         expect(requestAsBrowserSpy).toBeCalledWith({
             url: `${process.env.APIFY_PROXY_STATUS_URL}/?format=json`,
             proxyUrl: `http://auto:${password}@${process.env.APIFY_PROXY_HOSTNAME}:8000`,

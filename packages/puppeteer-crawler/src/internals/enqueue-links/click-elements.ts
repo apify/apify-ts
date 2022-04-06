@@ -5,8 +5,8 @@ import {
     PseudoUrlInput,
     RequestQueue,
     RequestTransform,
+    storage,
 } from '@crawlers/browser';
-import { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlers/utils';
 import ow from 'ow';
@@ -149,9 +149,9 @@ export interface EnqueueLinksByClickingElementsOptions {
  * });
  * ```
  *
- * @returns Promise that resolves to {@link RequestQueueClientBatchAddRequestsResult} object.
+ * @returns Promise that resolves to {@link BatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<RequestQueueClientBatchAddRequestsResult> {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<storage.BatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -260,9 +260,9 @@ function createInterceptRequestHandler(page: Page, requests: Set<string>): (req:
         }));
 
         if (req.redirectChain().length) {
-            req.respond({ body: '' }); // Prevents 301/302 redirect
+            await req.respond({ body: '' }); // Prevents 301/302 redirect
         } else {
-            req.abort('aborted'); // Prevents navigation by js
+            await req.abort('aborted'); // Prevents navigation by js
         }
     };
 }

@@ -15,7 +15,7 @@ import {
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 
-const apifyClient = Configuration.getDefaultClient();
+const apifyClient = Configuration.getStorageClient();
 
 const HTML = `
 <html>

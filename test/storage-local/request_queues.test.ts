@@ -2,14 +2,13 @@ import { ensureDirSync, readdirSync } from 'fs-extra';
 import { ArgumentError } from 'ow';
 import { join } from 'path';
 import type { Database, Statement } from 'better-sqlite3-with-prebuilds';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@crawlers/storage/src/consts';
-import { RequestQueueEmulator } from '@crawlers/storage/src/emulators/request_queue_emulator';
-import { uniqueKeyToRequestId } from '@crawlers/storage/src/utils';
-import type { DatabaseConnectionCache } from '@crawlers/storage/src/database_connection_cache';
-import type { RequestModel } from '@crawlers/storage/src/resource_clients/request_queue';
-import { UnprocessedRequest } from 'packages/storage/src/emulators/batch_add_requests/unprocessed_request';
-import { ProcessedRequest } from 'packages/storage/src/emulators/batch_add_requests/processed_request';
+import { storage } from '@crawlers/core';
+import { ApifyStorageLocal } from '@apify/storage-local';
+import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@apify/storage-local/dist/consts';
+import { RequestQueueEmulator } from '@apify/storage-local/dist/emulators/request_queue_emulator';
+import { uniqueKeyToRequestId } from '@apify/storage-local/dist/utils';
+import type { DatabaseConnectionCache } from '@apify/storage-local/dist/database_connection_cache';
+import type { RequestModel } from '@apify/storage-local/dist/resource_clients/request_queue';
 import { prepareTestDir, removeTestDir } from './_tools';
 
 const REQUESTS_TABLE_NAME = `${STORAGE_NAMES.REQUEST_QUEUES}_requests`;
@@ -411,7 +410,7 @@ describe('addRequest', () => {
             ...request,
             handledAt: new Date(),
             method: 'POST',
-        };
+        } as const;
 
         await storageLocal.requestQueue(queueName).addRequest(newRequest);
         const requestModel = db.prepare(`
@@ -542,7 +541,7 @@ test('addRequests', async () => {
     // Try to add a request with the same URL again, expecting cached
     const addRequestsResult2 = await queue.batchAddRequests([requestA]);
     expect(addRequestsResult2.unprocessedRequests).toHaveLength(1);
-    expect(addRequestsResult2.unprocessedRequests[0]).toEqual<UnprocessedRequest>({
+    expect(addRequestsResult2.unprocessedRequests[0]).toEqual<storage.UnprocessedRequest>({
         uniqueKey: requestAId,
         url: requestA.url,
         method: requestA.method,
@@ -559,13 +558,13 @@ test('addRequests', async () => {
 
     const addRequestsResult3 = await queue.batchAddRequests([requestB, requestC], { forefront: true });
     expect(addRequestsResult3.processedRequests).toHaveLength(2);
-    expect(addRequestsResult3.processedRequests[0]).toEqual<ProcessedRequest>({
+    expect(addRequestsResult3.processedRequests[0]).toEqual<storage.ProcessedRequest>({
         requestId: requestBId,
         uniqueKey: requestB.uniqueKey,
         wasAlreadyHandled: false,
         wasAlreadyPresent: false,
     });
-    expect(addRequestsResult3.processedRequests[1]).toEqual<ProcessedRequest>({
+    expect(addRequestsResult3.processedRequests[1]).toEqual<storage.ProcessedRequest>({
         requestId: requestCId,
         uniqueKey: requestC.uniqueKey,
         wasAlreadyHandled: false,

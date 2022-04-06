@@ -1,12 +1,10 @@
 import { KEY_VALUE_STORE_KEY_REGEX } from '@apify/consts';
 import { jsonStringifyExtended } from '@apify/utilities';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { ApifyClient, KeyValueStoreClient } from 'apify-client';
 import ow, { ArgumentError } from 'ow';
 import { Configuration } from '../configuration';
-import { APIFY_API_BASE_URL } from '../constants';
 import { Awaitable, Dictionary } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
+import { StorageClient, KeyValueStoreClient } from './storage';
 
 /**
  * Helper function to possibly stringify value if options.contentType is not set.
@@ -58,8 +56,8 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  * To access the input, you can also use the {@link Actor.getInput} convenience function.
  *
  * `KeyValueStore` stores its data either on local disk or in the Apify cloud,
- * depending on whether the [`APIFY_LOCAL_STORAGE_DIR`](/docs/guides/environment-variables#apify_local_storage_dir)
- * or [`APIFY_TOKEN`](/docs/guides/environment-variables#apify_token) environment variables are set.
+ * depending on whether the [`APIFY_IS_AT_HOME`](/docs/guides/environment-variables#apify_is_at_home)
+ * environment variable is set.
  *
  * If the `APIFY_LOCAL_STORAGE_DIR` environment variable is set, the data is stored in
  * the local directory in the following files:
@@ -107,7 +105,6 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
 export class KeyValueStore {
     readonly id: string;
     readonly name?: string;
-    readonly isLocal: boolean;
     private client: KeyValueStoreClient;
 
     /**
@@ -116,8 +113,7 @@ export class KeyValueStore {
     constructor(options: KeyValueStoreOptions, readonly config = Configuration.getGlobalConfig()) {
         this.id = options.id;
         this.name = options.name;
-        this.isLocal = options.isLocal ?? false;
-        this.client = options.client.keyValueStore(this.id) as KeyValueStoreClient;
+        this.client = options.client.keyValueStore(this.id);
     }
 
     /**
@@ -243,7 +239,8 @@ export class KeyValueStore {
      * access the value in the remote key-value store.
      */
     getPublicUrl(key: string): string {
-        return `${APIFY_API_BASE_URL}/key-value-stores/${this.id}/records/${key}`;
+        // FIXME how should this work? should we remove this method or provide a way to configure the base url?
+        return `https://api.apify.com/v2/key-value-stores/${this.id}/records/${key}`;
     }
 
     /**
@@ -305,12 +302,11 @@ export class KeyValueStore {
     static async open(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
-            forceCloud: ow.optional.boolean,
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
         const manager = new StorageManager(KeyValueStore, options.config);
-        return manager.openStorage(storeIdOrName, options);
+        return manager.openStorage(storeIdOrName);
     }
 }
 
@@ -330,8 +326,7 @@ export interface KeyConsumer {
 export interface KeyValueStoreOptions {
     id: string;
     name?: string;
-    client: ApifyClient | ApifyStorageLocal;
-    isLocal?: boolean;
+    client: StorageClient;
 }
 
 export interface RecordOptions {

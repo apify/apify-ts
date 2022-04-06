@@ -1,9 +1,10 @@
 import { emptyDirSync, ensureDirSync, readdirSync, readFile, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import * as stream from 'stream';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { STORAGE_NAMES } from '@crawlers/storage/src/consts';
-import type { KeyValueStoreClient } from '@crawlers/storage/src/resource_clients/key_value_store';
+import { ApifyStorageLocal } from '@apify/storage-local';
+// TODO do we want to export those symbols?
+import { STORAGE_NAMES } from '@apify/storage-local/dist/consts';
+import type { KeyValueStoreClient } from '@apify/storage-local/dist/resource_clients/key_value_store';
 import { prepareTestDir, removeTestDir } from './_tools';
 
 const TEST_STORES = {

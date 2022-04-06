@@ -1,7 +1,7 @@
 import { downloadListOfUrls } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { events } from '../events';
+import { EventManager, EventType } from '../events';
+import { Configuration } from '../configuration';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
@@ -154,6 +154,9 @@ export interface RequestListOptions {
      * @default false
      */
     keepDuplicateUrls?: boolean;
+
+    /** @internal */
+    config?: Configuration;
 }
 
 /**
@@ -273,6 +276,7 @@ export class RequestList {
     private keepDuplicateUrls: boolean;
     private sources: Source[];
     private sourcesFunction?: RequestListSourcesFunction;
+    private events: EventManager;
 
     /**
      * @param options All `RequestList` configuration options
@@ -285,6 +289,7 @@ export class RequestList {
             persistRequestsKey,
             state,
             keepDuplicateUrls = false,
+            config = Configuration.getGlobalConfig(),
         } = options;
 
         if (!(sources || sourcesFunction)) {
@@ -306,6 +311,7 @@ export class RequestList {
         this.persistStateKey = persistStateKey ? `SDK_${persistStateKey}` : persistStateKey;
         this.persistRequestsKey = persistRequestsKey ? `SDK_${persistRequestsKey}` : persistRequestsKey;
         this.initialState = state;
+        this.events = config.getEventManager();
 
         // If this option is set then all requests will get a pre-generated unique ID and duplicate URLs will be kept in the list.
         this.keepDuplicateUrls = keepDuplicateUrls;
@@ -339,7 +345,7 @@ export class RequestList {
         this.isInitialized = true;
         if (this.persistRequestsKey && !this.areRequestsPersisted) await this._persistRequests();
         if (this.persistStateKey) {
-            events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this.persistState.bind(this));
+            this.events.on(EventType.PERSIST_STATE, this.persistState.bind(this));
         }
     }
 

@@ -4,7 +4,7 @@ import mime from 'mime-types';
 import fs from 'node:fs/promises';
 import type { IncomingMessage } from 'node:http';
 import path from 'node:path';
-import { setTimeout as promisifiedSleep } from 'node:timers/promises';
+import { setTimeout } from 'node:timers/promises';
 import { URL } from 'node:url';
 import ow from 'ow';
 
@@ -78,7 +78,7 @@ export function weightedAvg(arrValues: number[], arrWeights: number[]): number {
  * @param millis Period of time to sleep, in milliseconds. If not a positive number, the returned promise resolves immediately.
  */
 export function sleep(millis?: number): Promise<void> {
-    return promisifiedSleep(millis);
+    return setTimeout(millis);
 }
 
 /**

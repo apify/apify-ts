@@ -12,6 +12,7 @@ import {
     Session,
     throwOnBlockedRequest,
     validators,
+    storage,
 } from '@crawlers/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -19,7 +20,6 @@ import {
     BasicCrawlerOptions,
 } from '@crawlers/basic';
 import { Awaitable, Dictionary } from '@crawlers/utils';
-import type { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,
@@ -43,7 +43,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
-    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<RequestQueueClientBatchAddRequestsResult>;
+    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
