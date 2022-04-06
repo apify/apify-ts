@@ -1,11 +1,12 @@
 import {
-    constructPseudoUrlInstances,
+    constructRegExpObjectsFromPseudoUrls,
     createRequestOptions,
     createRequests,
     PseudoUrlInput,
     RequestQueue,
     RequestTransform,
 } from '@crawlers/browser';
+import { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlers/utils';
 import ow from 'ow';
@@ -148,10 +149,9 @@ export interface EnqueueLinksByClickingElementsOptions {
  * });
  * ```
  *
- * @returns
- *   Promise that resolves to an {@link RequestQueueClientBatchAddRequestsResult} object.
+ * @returns Promise that resolves to {@link RequestQueueClientBatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions) {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<RequestQueueClientBatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -177,7 +177,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls || []);
+    const regexps = constructRegExpObjectsFromPseudoUrls(pseudoUrls || []);
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
         selector,
@@ -189,7 +189,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     if (transformRequestFunction) {
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
-    const requests = createRequests(requestOptions, pseudoUrlInstances);
+    const requests = createRequests(requestOptions, regexps);
     return requestQueue.addRequests(requests);
 }
 
