@@ -15,10 +15,10 @@ import {
     mergeCookies,
     ProxyConfiguration,
     ProxyInfo,
-    QueueOperationInfo,
     Request,
     RequestQueue,
     Session,
+    storage,
     validators,
 } from '@crawlers/core';
 import {
@@ -462,7 +462,7 @@ export interface CheerioRequestHandlerInputs<JSONData = unknown> extends Crawlin
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
-    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability

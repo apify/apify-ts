@@ -2,7 +2,6 @@ import {
     QUERY_HEAD_MIN_LENGTH,
     API_PROCESSED_REQUESTS_DELAY_MILLIS,
     STORAGE_CONSISTENCY_DELAY_MILLIS,
-    StorageManager,
     RequestQueue,
     Request,
     Configuration,
@@ -10,26 +9,14 @@ import {
 import { sleep } from '@crawlers/utils';
 
 describe('RequestQueue remote', () => {
-    const apifyClient = Configuration.getDefaultClient();
+    const storageClient = Configuration.getStorageClient();
 
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    test('openRequestQueue should open storage', async () => {
-        const openStorageSpy = jest.spyOn(StorageManager.prototype, 'openStorage');
-        openStorageSpy.mockResolvedValueOnce(jest.fn());
-        const queueId = 'abc';
-        const options = { forceCloud: true };
-        await RequestQueue.open(queueId, options);
-        expect(openStorageSpy).toBeCalledTimes(1);
-        expect(openStorageSpy).toBeCalledWith(queueId, options);
-    });
-
     test('should work', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
-        // @ts-expect-error Accessing private property
-        expect(typeof queue.client.clientKey).toBe('string');
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
         const firstResolveValue = {
             requestId: 'a',
             wasAlreadyHandled: false,
@@ -188,8 +175,92 @@ describe('RequestQueue remote', () => {
         expect(mockDelete).toHaveBeenLastCalledWith();
     });
 
+    test('addRequests', async () => {
+        const queue = new RequestQueue({ id: 'batch-requests', client: storageClient });
+        const mockAddRequests = jest.spyOn(queue.client, 'batchAddRequests');
+
+        const requestOptions = { url: 'http://example.com/a' };
+        const requestA = new Request(requestOptions);
+
+        // Test adding 1 request
+        const firstRequestAdded = {
+            requestId: 'a',
+            wasAlreadyHandled: false,
+            wasAlreadyPresent: false,
+            uniqueKey: requestA.uniqueKey,
+        };
+        mockAddRequests.mockResolvedValueOnce({
+            processedRequests: [firstRequestAdded],
+            unprocessedRequests: [],
+        });
+
+        const addRequestsResult1 = await queue.addRequests([requestOptions]);
+
+        expect(addRequestsResult1.processedRequests).toHaveLength(1);
+        expect(addRequestsResult1.processedRequests[0]).toEqual({
+            ...firstRequestAdded,
+        });
+
+        // Ensure the client method was actually called, and added
+        // @ts-expect-error Accessing private property
+        expect(queue.queueHeadDict.length()).toBe(1);
+        expect(mockAddRequests).toBeCalledTimes(1);
+        expect(mockAddRequests).toBeCalledWith([requestA], { forefront: false });
+
+        // Try to add a request with the same URL again, expecting cached
+        const addRequestsResult2 = await queue.addRequests([requestOptions]);
+        expect(addRequestsResult2.processedRequests).toHaveLength(1);
+        expect(addRequestsResult2.processedRequests[0]).toEqual({
+            ...firstRequestAdded,
+            wasAlreadyPresent: true,
+        });
+        // @ts-expect-error Accessing private property
+        expect(queue.queueHeadDict.length()).toBe(1);
+
+        // Adding more requests, forefront
+        const requestB = new Request({ url: 'http://example.com/b' });
+        const requestC = new Request({ url: 'http://example.com/c' });
+
+        mockAddRequests.mockResolvedValueOnce({
+            processedRequests: [
+                {
+                    requestId: 'b',
+                    uniqueKey: requestB.uniqueKey,
+                    wasAlreadyHandled: false,
+                    wasAlreadyPresent: false,
+                },
+                {
+                    requestId: 'c',
+                    uniqueKey: requestC.uniqueKey,
+                    wasAlreadyHandled: false,
+                    wasAlreadyPresent: false,
+                },
+            ],
+            unprocessedRequests: [],
+        });
+
+        const addRequestsResult3 = await queue.addRequests([requestB, requestC], { forefront: true });
+        expect(addRequestsResult3.processedRequests).toHaveLength(2);
+        expect(addRequestsResult3.processedRequests[0]).toEqual({
+            requestId: 'b',
+            uniqueKey: requestB.uniqueKey,
+            wasAlreadyHandled: false,
+            wasAlreadyPresent: false,
+        });
+        expect(addRequestsResult3.processedRequests[1]).toEqual({
+            requestId: 'c',
+            uniqueKey: requestC.uniqueKey,
+            wasAlreadyHandled: false,
+            wasAlreadyPresent: false,
+        });
+        // @ts-expect-error Accessing private property
+        expect(queue.queueHeadDict.length()).toBe(3);
+        expect(mockAddRequests).toHaveBeenCalled();
+        expect(mockAddRequests).toBeCalledWith([requestB, requestC], { forefront: true });
+    });
+
     test('should cache new requests locally', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         const requestA = new Request({ url: 'http://example.com/a' });
         const requestB = new Request({ url: 'http://example.com/a' }); // Has same uniqueKey as A
@@ -212,13 +283,14 @@ describe('RequestQueue remote', () => {
         expect(addRequestMock).toBeCalledTimes(1);
         expect(queueOperationInfo).toEqual({
             requestId: 'a',
+            uniqueKey: requestA.uniqueKey,
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
         });
     });
 
     test('should cache requests locally with info if request was already handled', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         const requestX = new Request({ url: 'http://example.com/x' });
         const requestY = new Request({ url: 'http://example.com/x' }); // Has same uniqueKey as X
@@ -241,13 +313,14 @@ describe('RequestQueue remote', () => {
         expect(addRequestMock).toBeCalledTimes(1);
         expect(queueOperationInfo).toEqual({
             requestId: 'x',
+            uniqueKey: requestX.uniqueKey,
             wasAlreadyPresent: true,
             wasAlreadyHandled: true,
         });
     });
 
     test('should cache requests from queue head', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         // Query queue head with request A
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
@@ -269,13 +342,14 @@ describe('RequestQueue remote', () => {
         expect(addRequestMock).toBeCalledTimes(0);
         expect(queueOperationInfo).toEqual({
             requestId: 'a',
+            uniqueKey: 'aaa',
             wasAlreadyPresent: true,
             wasAlreadyHandled: false,
         });
     });
 
     test('should handle situation when newly created request is not available yet', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-queue', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-queue', client: storageClient });
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
 
         const requestA = new Request({ url: 'http://example.com/a' });
@@ -328,7 +402,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should not add handled request to queue head dict', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
 
         const requestA = new Request({ url: 'http://example.com/a' });
 
@@ -358,7 +432,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should accept plain object in addRequest()', async () => {
-        const queue = new RequestQueue({ id: 'some-id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', client: storageClient });
         const addRequestMock = jest.spyOn(queue.client, 'addRequest');
         addRequestMock.mockResolvedValueOnce({
             requestId: 'xxx',
@@ -373,7 +447,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should return correct handledCount', async () => {
-        const queue = new RequestQueue({ id: 'id', client: apifyClient });
+        const queue = new RequestQueue({ id: 'id', client: storageClient });
         const getMock = jest.spyOn(queue.client, 'get');
         getMock.mockResolvedValueOnce({
             handledRequestCount: 33,
@@ -385,7 +459,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('should always wait for a queue head to become consistent before marking queue as finished (hadMultipleClients = true)', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
 
         // Return head with modifiedAt = now so it will retry the call.
         const listHeadMock = jest.spyOn(queue.client, 'listHead');
@@ -411,7 +485,7 @@ describe('RequestQueue remote', () => {
 
     test('should always wait for a queue head to become consistent before marking queue as finished (hadMultipleClients = false)', async () => {
         const queueId = 'some-id';
-        const queue = new RequestQueue({ id: queueId, name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: queueId, name: 'some-name', client: storageClient });
 
         expect(queue.assumedTotalCount).toBe(0);
         expect(queue.assumedHandledCount).toBe(0);
@@ -545,7 +619,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('getInfo() should work', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
 
         const expected = {
             id: 'WkzbQMuFYuamGv3YF',
@@ -572,7 +646,7 @@ describe('RequestQueue remote', () => {
     });
 
     test('drop() works', async () => {
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
         const deleteMock = jest
             .spyOn(queue.client, 'delete')
             .mockResolvedValueOnce(undefined);
@@ -585,13 +659,11 @@ describe('RequestQueue remote', () => {
     test('getRequest should remove nulls from stored requests', async () => {
         const url = 'http://example.com';
         const method = 'POST';
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: apifyClient });
+        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
         const getRequestMock = jest
             .spyOn(queue.client, 'getRequest')
             .mockResolvedValueOnce({
                 url,
-                // TODO: loadedUrl does not exist on the return type
-                // @ts-expect-error
                 loadedUrl: null,
                 errorMessages: null,
                 handledAt: null,

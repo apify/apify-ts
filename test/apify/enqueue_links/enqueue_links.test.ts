@@ -8,7 +8,6 @@ import {
     EnqueueStrategy,
     launchPlaywright,
     launchPuppeteer,
-    PseudoUrl,
     Request,
     RequestOptions,
     RequestQueue,
@@ -16,7 +15,7 @@ import {
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 
-const apifyClient = Configuration.getDefaultClient();
+const apifyClient = Configuration.getStorageClient();
 
 const HTML = `
 <html>
@@ -79,8 +78,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -106,48 +105,13 @@ describe('enqueueLinks()', () => {
             expect(enqueued[3]).toBe(undefined);
         });
 
-        test('works with PseudoUrl instances', async () => {
-            const enqueued: (Request | RequestOptions)[] = [];
-            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
-
-            // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
-            };
-
-            const pseudoUrls = [
-                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
-                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
-            ];
-
-            await browserCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
-                page,
-                requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('POST');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('POST');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData.foo).toBe('bar');
-        });
-
         test('works with Actor UI output object', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             const pseudoUrls = [
@@ -156,7 +120,10 @@ describe('enqueueLinks()', () => {
             ];
 
             await browserCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
+                options: {
+                    selector: '.click',
+                    pseudoUrls,
+                },
                 page,
                 requestQueue,
             });
@@ -176,21 +143,30 @@ describe('enqueueLinks()', () => {
             expect(enqueued[2].userData.foo).toBe('bar');
         });
 
-        test('works with string pseudoUrls', async () => {
+        test('works with globs', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
-            const pseudoUrls = [
-                'https://example.com/[(\\w|-|/)*]',
-                '[http|https]://cool.com/',
+            const globs = [
+                'https://example.com/**/*',
+                { glob: '?(http|https)://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await browserCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
+                options: {
+                    selector: '.click',
+                    globs,
+                    transformRequestFunction: (request) => {
+                        if (request.url.match(/example\.com\/a\/b\/third/)) {
+                            request.method = 'OPTIONS';
+                        }
+                        return request;
+                    },
+                },
                 page,
                 requestQueue,
             });
@@ -202,21 +178,107 @@ describe('enqueueLinks()', () => {
             expect(enqueued[0].userData).toEqual({});
 
             expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].method).toBe('OPTIONS');
             expect(enqueued[1].userData).toEqual({});
 
             expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData).toEqual({});
+            expect(enqueued[2].method).toBe('POST');
+            expect(enqueued[2].userData).toEqual({ label: 'COOL' });
         });
 
-        test('works with RegExp pseudoUrls', async () => {
+        test('works with regexps', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
+            };
+            const regexps = [
+                /^https:\/\/example\.com\/(\w|\/)+/,
+                { regexp: /^(http|https):\/\/cool\.com\//, method: 'POST' as const, userData: { label: 'COOL' } },
+            ];
+
+            await browserCrawlerEnqueueLinks({
+                options: {
+                    selector: '.click',
+                    regexps,
+                    transformRequestFunction: (request) => {
+                        if (request.url.match(/example\.com\/a\/b\/third/)) {
+                            request.method = 'OPTIONS';
+                        }
+                        return request;
+                    },
+                },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[1].method).toBe('OPTIONS');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://cool.com/');
+            expect(enqueued[2].method).toBe('POST');
+            expect(enqueued[2].userData).toEqual({ label: 'COOL' });
+        });
+
+        test('works with pseudoUrls', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
+            };
+            const pseudoUrls = [
+                'https://example.com/[(\\w|-|/)*]',
+                { purl: '[http|https]://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
+            ];
+
+            await browserCrawlerEnqueueLinks({
+                options: {
+                    selector: '.click',
+                    pseudoUrls,
+                    transformRequestFunction: (request) => {
+                        if (request.url.match(/example\.com\/a\/b\/third/)) {
+                            request.method = 'OPTIONS';
+                        }
+                        return request;
+                    },
+                },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[1].method).toBe('OPTIONS');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://cool.com/');
+            expect(enqueued[2].method).toBe('POST');
+            expect(enqueued[2].userData).toEqual({ label: 'COOL' });
+        });
+
+        test('throws with RegExp pseudoUrls', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequests = async (requests) => {
+                enqueued.push(...requests);
             };
 
             const pseudoUrls = [
@@ -224,25 +286,12 @@ describe('enqueueLinks()', () => {
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await browserCrawlerEnqueueLinks({
+            await expect(browserCrawlerEnqueueLinks({
+                // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
                 options: { selector: '.click', pseudoUrls },
                 page,
                 requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('GET');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('GET');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData).toEqual({});
+            })).rejects.toThrow(/to be of type `string` but received type `RegExp`/);
         });
 
         test('works with undefined pseudoUrls[]', async () => {
@@ -250,8 +299,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -279,38 +328,20 @@ describe('enqueueLinks()', () => {
             expect(enqueued[3].userData).toEqual({});
         });
 
-        test('works with null pseudoUrls[]', async () => {
+        test('throws with null pseudoUrls[]', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
-            await browserCrawlerEnqueueLinks({
+            await expect(browserCrawlerEnqueueLinks({
                 options: { selector: '.click', pseudoUrls: null },
                 page,
                 requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(4);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('GET');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('GET');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('https://another.com/a/fifth');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData).toEqual({});
-
-            expect(enqueued[3].url).toBe('http://cool.com/');
-            expect(enqueued[3].method).toBe('GET');
-            expect(enqueued[3].userData).toEqual({});
+            })).rejects.toThrow(/Expected property `pseudoUrls` to be of type `array` but received type `null`/);
         });
 
         test('works with empty pseudoUrls[]', async () => {
@@ -318,8 +349,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -352,27 +383,22 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             const pseudoUrls = [
-                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                'https://example.com/[(\\w|-|/)*]',
                 null,
-                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                '[http|https]://cool.com/',
             ];
 
-            try {
-                await browserCrawlerEnqueueLinks({
-                    options: { selector: '.click', pseudoUrls },
-                    page,
-                    requestQueue,
-                });
-                throw new Error('Wrong error.');
-            } catch (err) {
-                expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
-                expect(enqueued).toHaveLength(0);
-            }
+            await expect(browserCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                page,
+                requestQueue,
+            })).rejects.toThrow(/\(array `pseudoUrls`\) Any predicate failed with the following errors/);
+            expect(enqueued).toHaveLength(0);
         });
 
         test('correctly resolves relative URLs with default strategy of same-subdomain', async () => {
@@ -380,8 +406,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -406,8 +432,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -435,8 +461,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -479,6 +505,52 @@ describe('enqueueLinks()', () => {
             expect(enqueued[7].method).toBe('GET');
             expect(enqueued[7].userData).toEqual({});
         });
+
+        test('correctly works with transformRequestFunction', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequests = async (requests) => {
+                enqueued.push(...requests);
+            };
+
+            const pseudoUrls = [
+                'https://example.com/[(\\w|-|/)*]',
+                '[http|https]://cool.com/',
+            ];
+
+            await browserCrawlerEnqueueLinks({
+                options: {
+                    selector: '.click',
+                    pseudoUrls,
+                    transformRequestFunction: (request) => {
+                        if (/example\.com/.test(request.url)) {
+                            request.method = 'POST';
+                        } else if (/cool\.com/.test(request.url)) {
+                            request.userData.foo = 'bar';
+                        }
+                        return request;
+                    },
+                },
+                page,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('POST');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[1].method).toBe('POST');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://cool.com/');
+            expect(enqueued[2].method).toBe('GET');
+            expect(enqueued[2].userData.foo).toBe('bar');
+        });
     });
 
     describe('using Cheerio', () => {
@@ -492,81 +564,13 @@ describe('enqueueLinks()', () => {
             $ = null;
         });
 
-        test('works from utils namespace', async () => {
-            const enqueued: (Request | RequestOptions)[] = [];
-            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
-
-            // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
-            };
-            const pseudoUrls = [
-                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
-                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
-            ];
-
-            await cheerioCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
-                $,
-                requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('POST');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('POST');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData.foo).toBe('bar');
-        });
-
-        test('works with PseudoUrl instances', async () => {
-            const enqueued: (Request | RequestOptions)[] = [];
-            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
-
-            // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
-            };
-            const pseudoUrls = [
-                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
-                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
-            ];
-
-            await cheerioCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
-                $,
-                requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('POST');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('POST');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData.foo).toBe('bar');
-        });
-
         test('works with Actor UI output object', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
@@ -574,7 +578,10 @@ describe('enqueueLinks()', () => {
             ];
 
             await cheerioCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
+                options: {
+                    selector: '.click',
+                    pseudoUrls,
+                },
                 $,
                 requestQueue,
             });
@@ -594,20 +601,30 @@ describe('enqueueLinks()', () => {
             expect(enqueued[2].userData.foo).toBe('bar');
         });
 
-        test('works with string pseudoUrls', async () => {
+        test('works with globs', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
-            const pseudoUrls = [
-                'https://example.com/[(\\w|-|/)*]',
-                '[http|https]://cool.com/',
+            const globs = [
+                'https://example.com/**/*',
+                { glob: '?(http|https)://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
             ];
 
             await cheerioCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls },
+                options: {
+                    selector: '.click',
+                    globs,
+                    transformRequestFunction: (request) => {
+                        if (request.url.match(/example\.com\/a\/b\/third/)) {
+                            request.method = 'OPTIONS';
+                        }
+                        return request;
+                    },
+                },
                 $,
                 requestQueue,
             });
@@ -619,53 +636,125 @@ describe('enqueueLinks()', () => {
             expect(enqueued[0].userData).toEqual({});
 
             expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('GET');
+            expect(enqueued[1].method).toBe('OPTIONS');
             expect(enqueued[1].userData).toEqual({});
 
             expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData).toEqual({});
+            expect(enqueued[2].method).toBe('POST');
+            expect(enqueued[2].userData).toEqual({ label: 'COOL' });
         });
 
-        test('works with RegExp pseudoUrls', async () => {
+        test('works with RegExps', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
+            };
+            const regexps = [
+                /^https:\/\/example\.com\/(\w|\/)+/,
+                { regexp: /^(http|https):\/\/cool\.com\//, method: 'POST' as const, userData: { label: 'COOL' } },
+            ];
+
+            await cheerioCrawlerEnqueueLinks({
+                options: {
+                    selector: '.click',
+                    regexps,
+                    transformRequestFunction: (request) => {
+                        if (request.url.match(/example\.com\/a\/b\/third/)) {
+                            request.method = 'OPTIONS';
+                        }
+                        return request;
+                    },
+                },
+                $,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[1].method).toBe('OPTIONS');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://cool.com/');
+            expect(enqueued[2].method).toBe('POST');
+            expect(enqueued[2].userData).toEqual({ label: 'COOL' });
+        });
+
+        test('works with string pseudoUrls', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
+            };
+            const pseudoUrls = [
+                'https://example.com/[(\\w|-|/)*]',
+                { purl: '[http|https]://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
+            ];
+
+            await cheerioCrawlerEnqueueLinks({
+                options: {
+                    selector: '.click',
+                    pseudoUrls,
+                    transformRequestFunction: (request) => {
+                        if (request.url.match(/example\.com\/a\/b\/third/)) {
+                            request.method = 'OPTIONS';
+                        }
+                        return request;
+                    },
+                },
+                $,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('GET');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[1].method).toBe('OPTIONS');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://cool.com/');
+            expect(enqueued[2].method).toBe('POST');
+            expect(enqueued[2].userData).toEqual({ label: 'COOL' });
+        });
+
+        test('throws with RegExp pseudoUrls', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 /https:\/\/example\.com\/(\w|-|\/)*/,
                 /(http|https):\/\/cool\.com\//,
             ];
 
-            await cheerioCrawlerEnqueueLinks({
+            await expect(cheerioCrawlerEnqueueLinks({
+                // @ts-expect-error Type 'RegExp[]' is not assignable to type 'PseudoUrlInput[]'
                 options: { selector: '.click', pseudoUrls },
                 $,
                 requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('GET');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('GET');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData).toEqual({});
+            })).rejects.toThrow(/to be of type `string` but received type `RegExp`/);
         });
 
         test('works with undefined pseudoUrls[]', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -693,45 +782,27 @@ describe('enqueueLinks()', () => {
             expect(enqueued[3].userData).toEqual({});
         });
 
-        test('works with null pseudoUrls[]', async () => {
+        test('throws with null pseudoUrls[]', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
-            await cheerioCrawlerEnqueueLinks({
+            await expect(cheerioCrawlerEnqueueLinks({
                 options: { selector: '.click', pseudoUrls: null },
                 $,
                 requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(4);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('GET');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('GET');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('https://another.com/a/fifth');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData).toEqual({});
-
-            expect(enqueued[3].url).toBe('http://cool.com/');
-            expect(enqueued[3].method).toBe('GET');
-            expect(enqueued[3].userData).toEqual({});
+            })).rejects.toThrow(/Expected property `pseudoUrls` to be of type `array` but received type `null`/);
         });
 
         test('works with empty pseudoUrls[]', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -763,34 +834,29 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
-                new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
+                'https://example.com/[(\\w|-|/)*]',
                 null,
-                new PseudoUrl('[http|https]://cool.com/', { userData: { foo: 'bar' } }),
+                '[http|https]://cool.com/',
             ];
 
-            try {
-                await cheerioCrawlerEnqueueLinks({
-                    options: { selector: '.click', pseudoUrls },
-                    $,
-                    requestQueue,
-                });
-                throw new Error('Wrong error.');
-            } catch (err) {
-                expect((err as Error).message).toMatch('(array `pseudoUrls`) Any predicate failed with the following errors');
-                expect(enqueued).toHaveLength(0);
-            }
+            await expect(cheerioCrawlerEnqueueLinks({
+                options: { selector: '.click', pseudoUrls },
+                $,
+                requestQueue,
+            })).rejects.toThrow(/\(array `pseudoUrls`\) Any predicate failed with the following errors/);
+            expect(enqueued).toHaveLength(0);
         });
 
         test('correctly resolves relative URLs with the strategy of all', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -838,8 +904,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -864,8 +930,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -893,20 +959,61 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
-            try {
-                await cheerioCrawlerEnqueueLinks({
-                    options: {},
-                    $,
-                    requestQueue,
-                });
-                throw new Error('wrong error');
-            } catch (err) {
-                expect((err as Error).message).toMatch('/x/absolutepath');
-            }
+
+            await expect(cheerioCrawlerEnqueueLinks({
+                options: {},
+                $,
+                requestQueue,
+            })).rejects.toThrow(/\/x\/absolutepath/);
             expect(enqueued).toHaveLength(0);
+        });
+
+        test('correctly works with transformRequestFunction', async () => {
+            const enqueued: (Request | RequestOptions)[] = [];
+            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
+
+            // @ts-expect-error Override method for testing
+            requestQueue.addRequests = async (requests) => {
+                enqueued.push(...requests);
+            };
+            const pseudoUrls = [
+                'https://example.com/[(\\w|-|/)*]',
+                '[http|https]://cool.com/',
+            ];
+
+            await cheerioCrawlerEnqueueLinks({
+                options: {
+                    selector: '.click',
+                    pseudoUrls,
+                    transformRequestFunction: (request) => {
+                        if (/example\.com/.test(request.url)) {
+                            request.method = 'POST';
+                        } else if (/cool\.com/.test(request.url)) {
+                            request.userData.foo = 'bar';
+                        }
+                        return request;
+                    },
+                },
+                $,
+                requestQueue,
+            });
+
+            expect(enqueued).toHaveLength(3);
+
+            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
+            expect(enqueued[0].method).toBe('POST');
+            expect(enqueued[0].userData).toEqual({});
+
+            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
+            expect(enqueued[1].method).toBe('POST');
+            expect(enqueued[1].userData).toEqual({});
+
+            expect(enqueued[2].url).toBe('http://cool.com/');
+            expect(enqueued[2].method).toBe('GET');
+            expect(enqueued[2].userData.foo).toBe('bar');
         });
     });
 });

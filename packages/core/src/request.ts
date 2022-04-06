@@ -1,10 +1,9 @@
 import { normalizeUrl } from '@apify/utilities';
-import { AllowedHttpMethods } from 'apify-client';
 import crypto, { BinaryLike } from 'crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'util';
 import { log as defaultLog } from './log';
-import { keys } from './typedefs';
+import { AllowedHttpMethods, keys } from './typedefs';
 
 // new properties on the Request object breaks serialization
 const log = defaultLog.child({ prefix: 'Request' });
@@ -161,7 +160,7 @@ export class Request {
         this.errorMessages = [...errorMessages];
         this.headers = { ...headers };
         this.userData = { ...userData };
-        this.handledAt = handledAt instanceof Date ? handledAt.toISOString() : handledAt!;
+        this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
     }
 
     /**
@@ -310,6 +309,9 @@ export interface RequestOptions {
 
     /** @internal */
     id?: string;
+
+    /** @internal */
+    handledAt?: string;
 
 }
 

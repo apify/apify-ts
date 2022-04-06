@@ -21,7 +21,7 @@ import os from 'os';
 import { Server as ProxyChainServer } from 'proxy-chain';
 import { promisify } from 'util';
 import { createProxyServer } from '../create-proxy-server';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('PuppeteerCrawler', () => {
     let prevEnvHeadless: string;
@@ -69,7 +69,7 @@ describe('PuppeteerCrawler', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         const sources = [serverUrl];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });

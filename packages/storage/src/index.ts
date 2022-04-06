@@ -200,4 +200,4 @@ export class ApifyStorageLocal {
                 + `please clear the respective director${dirsNo === 1 ? 'y' : 'ies'} and re-start the actor.`);
         }
     }
-};
+}

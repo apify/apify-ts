@@ -6,7 +6,7 @@ import { Dictionary } from '@crawlers/utils';
 import { Browser, Page, ResponseForRequest } from 'puppeteer';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import LocalStorageDirEmulator from './local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const HOSTNAME = '127.0.0.1';
@@ -48,7 +48,7 @@ describe('Apify.puppeteerUtils', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
     });
 
     afterAll(async () => {

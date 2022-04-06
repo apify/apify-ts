@@ -1,7 +1,7 @@
 import log from '@apify/log';
-import { ACTOR_EVENT_NAMES_EX, deserializeArray, events, KeyValueStore, Request, RequestList } from '@crawlers/core';
+import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlers/core';
 import { requestAsBrowser, sleep } from '@crawlers/utils';
-import LocalStorageDirEmulator from './local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
  * Stand-in for underscore.js shuffle (weird, but how else?)
@@ -38,6 +38,8 @@ afterAll(() => {
 describe('RequestList', () => {
     let ll: number;
     let localStorageEmulator: LocalStorageDirEmulator;
+    const events = Configuration.getGlobalConfig().getEventManager();
+
     beforeAll(() => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
@@ -45,7 +47,8 @@ describe('RequestList', () => {
     });
 
     beforeEach(async () => {
-        await localStorageEmulator.init();
+        const storageDir = await localStorageEmulator.init();
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         jest.restoreAllMocks();
     });
 
@@ -478,7 +481,7 @@ describe('RequestList', () => {
 
         // Persist state.
         setValueSpy.mockResolvedValueOnce();
-        events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        events.emit(EventType.PERSIST_STATE);
         await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 
@@ -488,7 +491,7 @@ describe('RequestList', () => {
         await requestList.markRequestHandled(request2);
         expect(requestList.isStatePersisted).toBe(false);
         setValueSpy.mockResolvedValueOnce();
-        events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        events.emit(EventType.PERSIST_STATE);
         await sleep(20);
         expect(requestList.isStatePersisted).toBe(true);
 
@@ -575,7 +578,6 @@ describe('RequestList', () => {
         const urlsFromTxt = ['http://example.com/3', 'http://example.com/4'];
         spy.mockResolvedValueOnce(urlsFromTxt);
 
-        console.log(PERSIST_REQUESTS_KEY);
         const requestList = new RequestList(opts);
         expect(requestList.areRequestsPersisted).toBe(false);
 

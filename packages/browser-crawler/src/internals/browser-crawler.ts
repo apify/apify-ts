@@ -8,11 +8,11 @@ import {
     handleRequestTimeout,
     ProxyConfiguration,
     ProxyInfo,
-    QueueOperationInfo,
     RequestQueue,
     Session,
     throwOnBlockedRequest,
     validators,
+    storage,
 } from '@crawlers/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -43,7 +43,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
-    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {

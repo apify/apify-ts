@@ -3,7 +3,6 @@ import { Actor, ApifyEnv } from 'apify';
 import {
     AutoscaledPool,
     BrowserCrawlerHandleFailedRequestInput,
-    createProxyConfiguration,
     Dataset,
     KeyValueStore,
     PuppeteerCrawlContext,
@@ -205,7 +204,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             maxConcurrency: this.isDevRun ? MAX_CONCURRENCY_IN_DEVELOPMENT : this.input.maxConcurrency,
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
-            proxyConfiguration: await createProxyConfiguration(this.input.proxyConfiguration),
+            proxyConfiguration: await Actor.createProxyConfiguration(this.input.proxyConfiguration),
             browserPoolOptions: {
                 preLaunchHooks: [
                     async () => {

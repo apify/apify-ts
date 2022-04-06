@@ -4,6 +4,8 @@ import { QueueOperationInfo } from './queue_operation_info';
 import { STORAGE_NAMES, TIMESTAMP_SQL, DATABASE_FILE_NAME } from '../consts';
 import type { DatabaseConnectionCache } from '../database_connection_cache';
 import type { RequestModel } from '../resource_clients/request_queue';
+import { ProcessedRequest } from './batch_add_requests/processed_request';
+import { UnprocessedRequest } from './batch_add_requests/unprocessed_request';
 
 const ERROR_REQUEST_NOT_UNIQUE = 'SQLITE_CONSTRAINT_PRIMARYKEY';
 const ERROR_QUEUE_DOES_NOT_EXIST = 'SQLITE_CONSTRAINT_FOREIGNKEY';
@@ -83,6 +85,8 @@ export class RequestQueueEmulator {
     private _selectOrInsertTransaction!: Transaction;
 
     private _addRequestTransaction!: Transaction;
+
+    private _addRequestsTransaction!: Transaction;
 
     private _updateRequestTransaction!: Transaction;
 
@@ -328,6 +332,41 @@ export class RequestQueueEmulator {
         return this._addRequestTransaction(requestModel);
     }
 
+    batchAddRequests(requestModels: RequestModel[]): BatchAddRequestsResult {
+        if (!this._addRequestsTransaction) {
+            this._addRequestsTransaction = this.db.transaction((models: RequestModel[]) => {
+                const result: BatchAddRequestsResult = {
+                    processedRequests: [],
+                    unprocessedRequests: [],
+                };
+
+                for (const model of models) {
+                    try {
+                        this.insertRequestByModel(model);
+                        const handledCountAdjustment = model.orderNo === null ? 1 : 0;
+                        this.adjustTotalAndHandledRequestCounts(model.queueId, 1, handledCountAdjustment);
+                        // We return wasAlreadyHandled: false even though the request may
+                        // have been added as handled, because that's how API behaves.
+                        result.processedRequests.push(new ProcessedRequest(model.id!, model.uniqueKey));
+                    } catch (err: any) {
+                        if (err.code === ERROR_REQUEST_NOT_UNIQUE) {
+                            // If we got here it means that the request was already present.
+                            result.unprocessedRequests.push(new UnprocessedRequest(model.id!, model.url, model.method));
+                        } else if (err.code === ERROR_QUEUE_DOES_NOT_EXIST) {
+                            throw new Error(`Request queue with id: ${model.queueId} does not exist.`);
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
+
+                return result;
+            });
+        }
+
+        return this._addRequestsTransaction(requestModels);
+    }
+
     updateRequest(requestModel: RequestModel): QueueOperationInfo {
         if (!this._updateRequestTransaction) {
             this._updateRequestTransaction = this.db.transaction((model) => {
@@ -422,4 +461,9 @@ export class RequestQueueEmulator {
             WHERE orderNo IS NOT NULL
         `).run();
     }
+}
+
+export interface BatchAddRequestsResult {
+    processedRequests: ProcessedRequest[];
+    unprocessedRequests: UnprocessedRequest[];
 }

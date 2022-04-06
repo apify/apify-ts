@@ -12,6 +12,10 @@
 - (internal) `Request.handledAt` is now string date in ISO format
 - (perf/internal) `Request.inProgress` and `Request.reclaimed` are now `Set`s instead of dictionaries
 - `injectUnderscore` from puppeteer utils has been removed
+- `APIFY_MEMORY_MBYTES` is no longer taken into account, use `AVAILABLE_MEMORY_RATIO` instead
+- some `AutoscaledPool` options are no longer available:
+  - `cpuSnapshotIntervalSecs` and `memorySnapshotIntervalSecs` has been replaced with top level `systemInfoIntervalMillis` configuration
+  - `maxUsedCpuRatio` has been moved to the top level configuration
 
 2.2.2 / 2022/02/xx
 ====================

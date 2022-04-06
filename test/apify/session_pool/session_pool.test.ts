@@ -1,11 +1,12 @@
-import { SessionPool, events, Session, KeyValueStore, Configuration, ACTOR_EVENT_NAMES_EX } from '@crawlers/core';
+import { SessionPool, Session, KeyValueStore, Configuration, EventType } from '@crawlers/core';
 import { entries } from '@crawlers/utils';
 import { Log } from '@apify/log';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('SessionPool - testing session pool', () => {
     let sessionPool: SessionPool;
     let localStorageEmulator: LocalStorageDirEmulator;
+    const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
         localStorageEmulator = new LocalStorageDirEmulator();
@@ -13,12 +14,12 @@ describe('SessionPool - testing session pool', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         sessionPool = await SessionPool.open();
     });
 
     afterEach(async () => {
-        events.removeAllListeners(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+        events.off(EventType.PERSIST_STATE);
     });
 
     afterAll(async () => {
@@ -218,7 +219,7 @@ describe('SessionPool - testing session pool', () => {
 
             expect(sessionPool.sessions.length).toBe(1);
 
-            events.emit(ACTOR_EVENT_NAMES_EX.PERSIST_STATE);
+            events.emit(EventType.PERSIST_STATE);
 
             await new Promise<void>((resolve) => {
                 const interval = setInterval(async () => {
@@ -323,9 +324,9 @@ describe('SessionPool - testing session pool', () => {
     });
 
     it('should remove persist state event listener', async () => {
-        expect(events.listenerCount(ACTOR_EVENT_NAMES_EX.PERSIST_STATE)).toEqual(1);
+        expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(1);
         await sessionPool.teardown();
-        expect(events.listenerCount(ACTOR_EVENT_NAMES_EX.PERSIST_STATE)).toEqual(0);
+        expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(0);
     });
 
     test('should be able to create session with provided id', async () => {
@@ -388,23 +389,5 @@ describe('SessionPool - testing session pool', () => {
         expect(sessionPool.sessions.length).toEqual(1);
         expect(sessionPool.sessionMap.size).toEqual(1);
         expect(sessionPool.sessions.length).toEqual(sessionPool.sessionMap.size);
-    });
-
-    // FIXME how to deal with this? session pool opens KV store that uses the config instance, where we have the WAL mode option
-    test.skip('respects `localStorageEnableWalMode` option (gh issue #956)', async () => {
-        // delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-        // delete process.env[ENV_VARS.TOKEN];
-        //
-        // const sessionPool1 = await SessionPool.open();
-        // expect(sessionPool1).toBeInstanceOf(SessionPool);
-        // const storage1 = sdk1.config.getStorageLocal();
-        // expect(storage1.enableWalMode).toBe(true);
-        //
-        // const sessionPool2 = await SessionPool.open({ localStorageEnableWalMode: false });
-        // expect(sessionPool2).toBeInstanceOf(SessionPool);
-        // const storage2 = sdk2.config.getStorageLocal();
-        // expect(storage2.enableWalMode).toBe(false);
-        //
-        // delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
     });
 });

@@ -1,12 +1,11 @@
 import {
-    addRequestsToQueueInBatches,
-    constructPseudoUrlInstances,
+    constructRegExpObjectsFromPseudoUrls,
     createRequestOptions,
     createRequests,
     PseudoUrlInput,
-    QueueOperationInfo,
     RequestQueue,
     RequestTransform,
+    storage,
 } from '@crawlers/browser';
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlers/utils';
@@ -150,10 +149,9 @@ export interface EnqueueLinksByClickingElementsOptions {
  * });
  * ```
  *
- * @returns
- *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ * @returns Promise that resolves to {@link BatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<storage.BatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -179,7 +177,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls || []);
+    const regexps = constructRegExpObjectsFromPseudoUrls(pseudoUrls || []);
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
         selector,
@@ -191,8 +189,8 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     if (transformRequestFunction) {
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
-    const requests = createRequests(requestOptions, pseudoUrlInstances);
-    return addRequestsToQueueInBatches(requests, requestQueue);
+    const requests = createRequests(requestOptions, regexps);
+    return requestQueue.addRequests(requests);
 }
 
 interface WaitForPageIdleOptions {
@@ -262,9 +260,9 @@ function createInterceptRequestHandler(page: Page, requests: Set<string>): (req:
         }));
 
         if (req.redirectChain().length) {
-            req.respond({ body: '' }); // Prevents 301/302 redirect
+            await req.respond({ body: '' }); // Prevents 301/302 redirect
         } else {
-            req.abort('aborted'); // Prevents navigation by js
+            await req.abort('aborted'); // Prevents navigation by js
         }
     };
 }

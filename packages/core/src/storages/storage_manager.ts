@@ -1,11 +1,8 @@
 import { ENV_VARS } from '@apify/consts';
 import { LruCache } from '@apify/datastructures';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { ApifyClient } from 'apify-client';
 import { Configuration } from '../configuration';
 import { Constructor } from '../typedefs';
-
-const MAX_OPENED_STORAGES = 1000;
+import { StorageClient } from './storage';
 
 const DEFAULT_ID_ENV_VAR_NAMES = {
     Dataset: ENV_VARS.DEFAULT_DATASET_ID,
@@ -22,7 +19,6 @@ const DEFAULT_ID_CONFIG_KEYS = {
 export interface IStorage {
     id: string;
     name?: string;
-    isLocal?: boolean;
 }
 
 /**
@@ -30,6 +26,7 @@ export interface IStorage {
  * @ignore
  */
 export class StorageManager<T extends IStorage = IStorage> {
+    private static readonly MAX_OPENED_STORAGES = 1000;
     private readonly name: 'Dataset' | 'KeyValueStore' | 'RequestQueue';
     private readonly StorageConstructor: Constructor<T> & { name: string };
     private readonly cache: LruCache<T>;
@@ -40,12 +37,10 @@ export class StorageManager<T extends IStorage = IStorage> {
     ) {
         this.StorageConstructor = StorageConstructor;
         this.name = this.StorageConstructor.name as 'Dataset' | 'KeyValueStore' | 'RequestQueue';
-        this.cache = new LruCache({ maxLength: MAX_OPENED_STORAGES });
+        this.cache = new LruCache({ maxLength: StorageManager.MAX_OPENED_STORAGES });
     }
 
-    async openStorage(idOrName?: string, options: { forceCloud?: boolean } = {}): Promise<T> {
-        const isLocal = !!(this.config.get('localStorageDir') && !options.forceCloud);
-
+    async openStorage(idOrName?: string, client?: StorageClient): Promise<T> {
         if (!idOrName) {
             const defaultIdEnvVarName = DEFAULT_ID_ENV_VAR_NAMES[this.name];
             const defaultIdConfigKey = DEFAULT_ID_CONFIG_KEYS[this.name];
@@ -53,17 +48,16 @@ export class StorageManager<T extends IStorage = IStorage> {
             if (!idOrName) throw new Error(`The '${defaultIdEnvVarName}' environment variable is not defined.`);
         }
 
-        const cacheKey = this._createCacheKey(idOrName, isLocal);
+        const cacheKey = idOrName;
         let storage = this.cache.get(cacheKey);
 
         if (!storage) {
-            const client = isLocal ? this.config.getStorageLocal() : this.config.getClient();
+            client ??= this.config.getStorageClient();
             const storageObject = await this._getOrCreateStorage(idOrName, this.name, client);
             storage = new this.StorageConstructor({
                 id: storageObject.id,
                 name: storageObject.name,
                 client,
-                isLocal,
             });
             this._addStorageToCache(storage);
         }
@@ -71,26 +65,20 @@ export class StorageManager<T extends IStorage = IStorage> {
         return storage;
     }
 
-    closeStorage(storage: { id: string; name?: string; isLocal?: boolean }): void {
-        const idKey = this._createCacheKey(storage.id, storage.isLocal);
+    closeStorage(storage: { id: string; name?: string }): void {
+        const idKey = storage.id;
         this.cache.remove(idKey);
 
         if (storage.name) {
-            const nameKey = this._createCacheKey(storage.name, storage.isLocal);
+            const nameKey = storage.name;
             this.cache.remove(nameKey);
         }
-    }
-
-    protected _createCacheKey(idOrName: string, isLocal?: boolean): string {
-        return isLocal
-            ? `LOCAL:${idOrName}`
-            : `REMOTE:${idOrName}`;
     }
 
     /**
      * Helper function that first requests storage by ID and if storage doesn't exist then gets it by name.
      */
-    protected async _getOrCreateStorage(storageIdOrName: string, storageConstructorName: string, apiClient: ApifyClient | ApifyStorageLocal) {
+    protected async _getOrCreateStorage(storageIdOrName: string, storageConstructorName: string, apiClient: StorageClient) {
         const {
             createStorageClient,
             createStorageCollectionClient,
@@ -104,7 +92,7 @@ export class StorageManager<T extends IStorage = IStorage> {
         return storageCollectionClient.getOrCreate(storageIdOrName);
     }
 
-    protected _getStorageClientFactories(client: ApifyClient | ApifyStorageLocal, storageConstructorName: string) {
+    protected _getStorageClientFactories(client: StorageClient, storageConstructorName: string) {
         // Dataset => dataset
         const clientName = storageConstructorName[0].toLowerCase() + storageConstructorName.slice(1) as ClientNames;
         // dataset => datasets
@@ -117,11 +105,11 @@ export class StorageManager<T extends IStorage = IStorage> {
     }
 
     protected _addStorageToCache(storage: T): void {
-        const idKey = this._createCacheKey(storage.id, storage.isLocal);
+        const idKey = storage.id;
         this.cache.add(idKey, storage);
 
         if (storage.name) {
-            const nameKey = this._createCacheKey(storage.name, storage.isLocal);
+            const nameKey = storage.name;
             this.cache.add(nameKey, storage);
         }
     }
@@ -131,13 +119,6 @@ type ClientNames = 'dataset' | 'keyValueStore' | 'requestQueue';
 type ClientCollectionNames = 'datasets' | 'keyValueStores' | 'requestQueues';
 
 export interface StorageManagerOptions {
-    /**
-     * If set to `true` then the cloud storage is used even if the `APIFY_LOCAL_STORAGE_DIR`
-     * environment variable is set. This way it is possible to combine local and cloud storage.
-     * @default false
-     */
-    forceCloud?: boolean;
-
     /**
      * SDK configuration instance, defaults to the static register.
      */

@@ -1,4 +1,4 @@
-import { log } from '@crawlers/core';
+import log from '@apify/log';
 import { ENV_VARS } from '@apify/consts';
 import { type } from 'node:os';
 import semver from 'semver';
@@ -19,13 +19,6 @@ export function logSystemInfo() {
         osType: type(),
         nodeVersion: process.version,
     });
-};
-
-/**
- * Returns `true` when code is running on Apify platform and `false` otherwise (for example locally).
- */
-export function isAtHome(): boolean {
-    return !!process.env[ENV_VARS.IS_AT_HOME];
 }
 
 /**

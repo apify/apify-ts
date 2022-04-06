@@ -1,11 +1,11 @@
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS, WEBHOOK_EVENT_TYPES } from '@apify/consts';
 import log from '@apify/log';
-import { Configuration, Dataset, KeyValueStore, ProxyConfiguration, RequestList, SessionPool, StorageManager } from '@crawlers/core';
+import path from 'node:path';
+import { Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlers/core';
 import { sleep } from '@crawlers/utils';
-import { Actor, ApifyEnv } from 'apify';
+import { Actor, ApifyEnv, ProxyConfiguration } from 'apify';
 import { ApifyClient, RunClient, WebhookUpdateData } from 'apify-client';
-import path from 'path';
-import LocalStorageDirEmulator from './local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
  * Helper function that enables testing of main()
@@ -128,18 +128,24 @@ describe('new Actor({ ... })', () => {
             });
         });
 
-        test('sets default APIFY_LOCAL_STORAGE_DIR', async () => {
-            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-            delete process.env[ENV_VARS.TOKEN];
-
-            await testMain({
-                userFunc: (sdk) => {
-                    expect(sdk.config.get('localStorageDir')).toEqual(path.join(process.cwd(), './apify_storage'));
-                },
-                exitCode: 0,
-            });
-
-            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
+        test.skip('respects `localStorageEnableWalMode` option (gh issue #956)', async () => {
+            // FIXME this should be handled via storage options
+            // delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
+            // delete process.env[ENV_VARS.TOKEN];
+            //
+            // const sdk1 = new Actor();
+            // const sessionPool1 = await sdk1.openSessionPool();
+            // expect(sessionPool1).toBeInstanceOf(SessionPool);
+            // const storage1 = sdk1.config.getStorageLocal();
+            // expect(storage1.enableWalMode).toBe(true);
+            //
+            // const sdk2 = new Actor({ localStorageEnableWalMode: false });
+            // const sessionPool2 = await sdk2.openSessionPool();
+            // expect(sessionPool2).toBeInstanceOf(SessionPool);
+            // const storage2 = sdk2.config.getStorageLocal();
+            // expect(storage2.enableWalMode).toBe(false);
+            //
+            // delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
         });
 
         test('works with promised user function', async () => {
@@ -239,7 +245,7 @@ describe('new Actor({ ... })', () => {
             const timeout = 60;
             const webhooks = [{ a: 'a' }, { b: 'b' }] as any;
 
-            const newClientSpy = jest.spyOn(Configuration.prototype, 'createClient');
+            const newClientSpy = jest.spyOn(Actor.prototype, 'newClient');
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(finishedRun);
             const getRecordMock = jest.fn();
@@ -249,7 +255,7 @@ describe('new Actor({ ... })', () => {
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
             keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
-            const callOutput = await new Actor({ token }).call(actId, input, {
+            const callOutput = await new Actor({ storageClientOptions: { token } }).call(actId, input, {
                 contentType,
                 build,
                 memory,
@@ -353,7 +359,7 @@ describe('new Actor({ ... })', () => {
         });
 
         test('works with token', async () => {
-            const newClientSpy = jest.spyOn(Configuration.prototype, 'createClient');
+            const newClientSpy = jest.spyOn(Actor.prototype, 'newClient');
             const callMock = jest.fn();
             callMock.mockResolvedValueOnce(finishedRun);
             const getRecordMock = jest.fn();
@@ -363,7 +369,7 @@ describe('new Actor({ ... })', () => {
             const keyValueStoreSpy = jest.spyOn(ApifyClient.prototype, 'keyValueStore');
             keyValueStoreSpy.mockReturnValueOnce({ getRecord: getRecordMock } as any);
 
-            const callOutput = await new Actor({ token }).callTask(taskId, input, {
+            const callOutput = await new Actor({ storageClientOptions: { token } }).callTask(taskId, input, {
                 build,
                 memory,
                 timeout,
@@ -567,7 +573,7 @@ describe('new Actor({ ... })', () => {
         let sdk: Actor;
 
         beforeAll(() => { localStorageEmulator = new LocalStorageDirEmulator(); });
-        beforeEach(async () => { sdk = new Actor({ localStorageDir: await localStorageEmulator.init() }); });
+        beforeEach(async () => { sdk = new Actor({ storageClientOptions: { storageDir: await localStorageEmulator.init() } }); });
         afterAll(() => localStorageEmulator.destroy());
 
         test('getInput()', async () => {
@@ -637,15 +643,18 @@ describe('new Actor({ ... })', () => {
             const openStorageSpy = jest.spyOn(StorageManager.prototype, 'openStorage');
             openStorageSpy.mockImplementationOnce(async (i) => i);
             await sdk.openRequestQueue(queueId, options);
-            expect(openStorageSpy).toBeCalledWith(queueId, options);
+            expect(openStorageSpy).toBeCalledWith(queueId, sdk.apifyClient);
             expect(openStorageSpy).toBeCalledTimes(1);
         });
 
-        test('openRequestQueue works with APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE=false', async () => {
-            process.env.APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE = 'false';
-            const config = new Configuration();
-            const enableWalMode = config.get('localStorageEnableWalMode');
-            expect(enableWalMode).toBe(false);
+        test('openDataset should open storage', async () => {
+            const datasetName = 'abc';
+            const options = { forceCloud: true };
+            const mockOpenStorage = jest.spyOn(StorageManager.prototype, 'openStorage');
+            mockOpenStorage.mockResolvedValueOnce(jest.fn());
+            await sdk.openDataset(datasetName, options);
+            expect(mockOpenStorage).toBeCalledTimes(1);
+            expect(mockOpenStorage).toBeCalledWith(datasetName, sdk.apifyClient);
         });
     });
 });

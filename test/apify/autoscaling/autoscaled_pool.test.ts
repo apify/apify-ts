@@ -456,7 +456,7 @@ describe('AutoscaledPool', () => {
             runTaskFunction: async () => {
                 results.push(count++);
                 if (count === 20) {
-                    pool.pause().then(pauseResolve);
+                    void pool.pause().then(pauseResolve);
                 }
             },
             isFinishedFunction: async () => !(count < 50),
@@ -465,7 +465,7 @@ describe('AutoscaledPool', () => {
 
         let finished = false;
         const runPromise = pool.run();
-        runPromise.then(() => { finished = true; });
+        void runPromise.then(() => { finished = true; });
         await pausePromise;
         expect(count).toBe(20);
         expect(finished).toBe(false);

@@ -15,7 +15,7 @@ import {
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { startExpressAppPromise } from '../../shared/_helper';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 if (os.platform() === 'win32') jest.setTimeout(2 * 60 * 1e3);
 
@@ -48,7 +48,7 @@ describe('PlaywrightCrawler', () => {
     });
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
         const sources = [`http://${HOSTNAME}:${[port]}/`];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });

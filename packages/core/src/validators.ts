@@ -20,8 +20,4 @@ export const validators = {
         validator: ow.isValid(value, ow.object.hasKeys('fetchNextRequest', 'addRequest')),
         message: (label: string) => `Expected argument '${label}' to be a RequestQueue, got something else.`,
     }),
-    pseudoUrl: (value: Dictionary<any>) => ({
-        validator: ow.isValid(value, ow.object.hasKeys('regex', 'requestTemplate')),
-        message: (label: string) => `Expected argument '${label}' to be a PseudoUrl, got something else.`,
-    }),
 };

@@ -3,29 +3,25 @@ import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import {
-    ActorRunWithOutput,
     Configuration,
     ConfigurationOptions,
     Dataset,
-    initializeEvents,
+    EventManager,
+    EventType,
+    EventTypeName,
     IStorage,
     KeyValueStore,
-    ProxyConfiguration,
-    ProxyConfigurationOptions,
     RecordOptions,
     RequestList,
     RequestListOptions,
     RequestQueue,
     Source,
-    stopEvents,
     StorageManager,
-    StorageManagerOptions,
 } from '@crawlers/core';
 import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
-import {
-    logSystemInfo,
-    printOutdatedSdkWarning,
-} from './utils';
+import { logSystemInfo, printOutdatedSdkWarning } from './utils';
+import { PlatformEventManager } from './platform_event_manager';
+import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -48,12 +44,19 @@ export class Actor {
      */
     readonly apifyClient: ApifyClient;
 
+    /**
+     * Default {@link EventManager} instance.
+     * @internal
+     */
+    readonly eventManager: EventManager;
+
     private readonly storageManagers = new Map<Constructor, StorageManager>();
 
     constructor(options: ConfigurationOptions = {}) {
         // use default configuration object if nothing overridden (it fallbacks to env vars)
         this.config = Object.keys(options).length === 0 ? Configuration.getGlobalConfig() : new Configuration(options);
-        this.apifyClient = this.config.getClient();
+        this.apifyClient = this.newClient();
+        this.eventManager = new PlatformEventManager(this.config);
     }
 
     /**
@@ -126,36 +129,62 @@ export class Actor {
         }
 
         const run = async () => {
-            this.start();
+            await this.init();
 
             try {
                 await Configuration.storage.run(this.config, userFunc);
-                this.exit({ exitCode: EXIT_CODES.SUCCESS });
+                await this.exit();
             } catch (err: any) {
                 log.exception(err, err.message);
-                this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
+                await this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
             }
         };
 
         run().catch((err) => {
             log.exception(err, err.message);
-            this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
+            return this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
         });
     }
 
     /**
      * @ignore
      */
-    start(): void {
-        // TODO use client as store if at home
+    async init(): Promise<void> {
         logSystemInfo();
         printOutdatedSdkWarning();
-        initializeEvents();
+
+        await this.eventManager.init();
+
+        if (this.isAtHome()) {
+            this.config.set('availableMemoryRatio', 1);
+            this.config.useStorageClient(this.apifyClient);
+            this.config.useEventManager(this.eventManager);
+        }
     }
 
-    exit(options: ExitOptions = {}): void {
-        stopEvents();
-        process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
+    /**
+     * @ignore
+     */
+    async exit(options: ExitOptions = {}): Promise<void> {
+        await this.eventManager.close();
+
+        if (options.exit ?? true) {
+            process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    on(event: EventTypeName, listener: (...args: any[]) => any): void {
+        this.eventManager.on(event, listener);
+    }
+
+    /**
+     * @ignore
+     */
+    off(event: EventTypeName, listener?: (...args: any[]) => any): void {
+        this.eventManager.off(event, listener);
     }
 
     /**
@@ -194,7 +223,7 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
         const { token, ...rest } = options;
         const client = token ? this.newClient({ token }) : this.apifyClient;
 
@@ -237,7 +266,7 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+    async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ClientActorRun> {
         const { token, ...rest } = options;
         const client = token ? this.newClient({ token }) : this.apifyClient;
 
@@ -273,6 +302,30 @@ export class Actor {
 
         // Wait some time for container to be stopped.
         await sleep(customAfterSleepMillis);
+    }
+
+    /**
+     * Internally reboots this actor. The system stops the current container and starts
+     * a new container with the same run ID.
+     *
+     * @ignore
+     */
+    async reboot(): Promise<void> {
+        if (!this.isAtHome()) {
+            log.warning('Actor.reboot() is only supported when running on the Apify platform.');
+            return;
+        }
+
+        // Waiting for all the listeners to finish, as `.metamorph()` kills the container.
+        await Promise.all([
+            // `persistState` for individual RequestLists, RequestQueue... instances to be persisted
+            ...this.config.getEventManager().listeners(EventType.PERSIST_STATE).map((x) => x()),
+            // `migrating` to pause Apify crawlers
+            ...this.config.getEventManager().listeners(EventType.MIGRATING).map((x) => x()),
+        ]);
+
+        const actorId = this.config.get('actorId')!;
+        await this.metamorph(actorId);
     }
 
     /**
@@ -364,14 +417,14 @@ export class Actor {
      * @ignore
      */
     async openDataset<Data extends Dictionary = Dictionary>(
-        datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
+        datasetIdOrName?: string | null, options: OpenStorageOptions = {},
     ): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager<Dataset<Data>>(Dataset).openStorage(datasetIdOrName, options);
+        return this._openStorage<Dataset<Data>>(Dataset, datasetIdOrName, options);
     }
 
     /**
@@ -491,13 +544,13 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
+    async openKeyValueStore(storeIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(KeyValueStore).openStorage(storeIdOrName, options);
+        return this._openStorage(KeyValueStore, storeIdOrName, options);
     }
 
     /**
@@ -575,13 +628,13 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
+    async openRequestQueue(queueIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(RequestQueue).openStorage(queueIdOrName, options);
+        return this._openStorage(RequestQueue, queueIdOrName, options);
     }
 
     /**
@@ -678,7 +731,13 @@ export class Actor {
      * @ignore
      */
     newClient(options: ApifyClientOptions = {}): ApifyClient {
-        return this.config.createClient(options);
+        const { storageDir, ...storageClientOptions } = this.config.get('storageClientOptions') as Dictionary;
+        return new ApifyClient({
+            baseUrl: process.env[ENV_VARS.API_BASE_URL] ?? 'https://api.apify.com',
+            token: process.env[ENV_VARS.TOKEN],
+            ...storageClientOptions,
+            ...options, // allow overriding the instance configuration
+        });
     }
 
     /**
@@ -686,7 +745,7 @@ export class Actor {
      * @ignore
      */
     isAtHome(): boolean {
-        return !!this.config.get('isAtHome');
+        return !!process.env[ENV_VARS.IS_AT_HOME];
     }
 
     /**
@@ -756,6 +815,22 @@ export class Actor {
         return Actor.getDefaultInstance().main(userFunc);
     }
 
+    static async init(): Promise<void> {
+        return Actor.getDefaultInstance().init();
+    }
+
+    static async exit(options: ExitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().exit(options);
+    }
+
+    static on(event: EventTypeName, listener: (...args: any[]) => any): void {
+        Actor.getDefaultInstance().on(event, listener);
+    }
+
+    static off(event: EventTypeName, listener?: (...args: any[]) => any): void {
+        Actor.getDefaultInstance().off(event, listener);
+    }
+
     /**
      * Runs an actor on the Apify platform using the current user account (determined by the `APIFY_TOKEN` environment variable),
      * waits for the actor to finish and fetches its output.
@@ -791,7 +866,7 @@ export class Actor {
      *  Otherwise the `options.contentType` parameter must be provided.
      * @param [options]
      */
-    static async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+    static async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
         return Actor.getDefaultInstance().call(actId, input, options);
     }
 
@@ -830,7 +905,7 @@ export class Actor {
      *  Provided input will be merged with actor task input.
      * @param [options]
      */
-    static async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+    static async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ClientActorRun> {
         return Actor.getDefaultInstance().callTask(taskId, input, options);
     }
 
@@ -849,6 +924,14 @@ export class Actor {
      */
     static async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
         return Actor.getDefaultInstance().metamorph(targetActorId, input, options);
+    }
+
+    /**
+     * Internally reboots this actor run. The system stops the current container and starts
+     * a new container with the same run id.
+     */
+    static async reboot(): Promise<void> {
+        return Actor.getDefaultInstance().reboot();
     }
 
     /**
@@ -908,7 +991,7 @@ export class Actor {
      * @param [options]
      */
     static async openDataset<Data extends Dictionary = Dictionary>(
-        datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
+        datasetIdOrName?: string | null, options: OpenStorageOptions = {},
     ): Promise<Dataset<Data>> {
         return Actor.getDefaultInstance().openDataset(datasetIdOrName, options);
     }
@@ -1023,7 +1106,7 @@ export class Actor {
      *   the function returns the default key-value store associated with the actor run.
      * @param [options]
      */
-    static async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
+    static async openKeyValueStore(storeIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<KeyValueStore> {
         return Actor.getDefaultInstance().openKeyValueStore(storeIdOrName, options);
     }
 
@@ -1100,7 +1183,7 @@ export class Actor {
      *   the function returns the default request queue associated with the actor run.
      * @param [options]
      */
-    static async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
+    static async openRequestQueue(queueIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<RequestQueue> {
         return Actor.getDefaultInstance().openRequestQueue(queueIdOrName, options);
     }
 
@@ -1188,6 +1271,11 @@ export class Actor {
     static getDefaultInstance(): Actor {
         this._instance ??= new Actor();
         return this._instance;
+    }
+
+    private _openStorage<T extends IStorage>(storageClass: Constructor<T>, id?: string, options: OpenStorageOptions = {}) {
+        const client = options.forceCloud ? this.apifyClient : undefined;
+        return this._getStorageManager<T>(storageClass).openStorage(id, client);
     }
 
     private _getStorageManager<T extends IStorage>(storageClass: Constructor<T>): StorageManager<T> {
@@ -1330,6 +1418,17 @@ export interface MetamorphOptions {
 export interface ExitOptions {
     /** Exit code, defaults to 0 */
     exitCode?: number;
+    /** Call `process.exit()`? Defaults to true */
+    exit?: boolean;
+}
+
+export interface OpenStorageOptions {
+    /**
+     * If set to `true` then the cloud storage is used even if the `APIFY_LOCAL_STORAGE_DIR`
+     * environment variable is set. This way it is possible to combine local and cloud storage.
+     * @default false
+     */
+    forceCloud?: boolean;
 }
 
 export { ClientActorRun as ActorRun };

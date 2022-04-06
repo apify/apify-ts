@@ -2,12 +2,11 @@ import { Log } from '@apify/log';
 import { EventEmitter } from 'events';
 import ow from 'ow';
 import { Configuration } from '../configuration';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { events } from '../events';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
 import { Dictionary } from '../typedefs';
 import { Session, SessionOptions } from './session';
+import { EventManager, EventType } from '../events/event_manager';
 
 /**
  * Factory user-function which creates customized {@link Session} instances.
@@ -46,15 +45,7 @@ export interface SessionPoolOptions {
      */
     createSessionFunction?: CreateSession;
 
-    /**
-     * If set to `true` then the function uses cloud storage usage even if the `APIFY_LOCAL_STORAGE_DIR`
-     * environment variable is set. This way it is possible to combine local and cloud storage.
-     *
-     * **Note:** If you use `forceCloud`, it is recommended to also set the `persistStateKeyValueStoreId` option, as otherwise the
-     * `KeyValueStore` will be unnamed!
-     * @default false
-     */
-    forceCloud?: boolean;
+    /** @internal */
     log?: Log;
 }
 
@@ -123,11 +114,11 @@ export class SessionPool extends EventEmitter {
     keyValueStore!: KeyValueStore;
     sessions: Session[] = [];
     sessionMap = new Map<string, Session>();
-    forceCloud: boolean;
     sessionOptions: SessionOptions;
     persistStateKeyValueStoreId?: string;
     persistStateKey: string;
     private _listener!: () => Promise<void>;
+    private events: EventManager;
 
     /**
      * @internal
@@ -142,7 +133,6 @@ export class SessionPool extends EventEmitter {
             createSessionFunction: ow.optional.function,
             sessionOptions: ow.optional.object,
             log: ow.optional.object,
-            forceCloud: ow.optional.boolean,
         }));
 
         const {
@@ -155,11 +145,10 @@ export class SessionPool extends EventEmitter {
             sessionOptions = {},
 
             log = defaultLog,
-
-            forceCloud = false,
         } = options;
 
         this.config = config;
+        this.events = config.getEventManager();
         this.log = log.child({ prefix: 'SessionPool' });
 
         // Pool Configuration
@@ -177,9 +166,6 @@ export class SessionPool extends EventEmitter {
         // Session keyValueStore
         this.persistStateKeyValueStoreId = persistStateKeyValueStoreId;
         this.persistStateKey = persistStateKey;
-
-        // Operative states
-        this.forceCloud = forceCloud;
     }
 
     /**
@@ -201,19 +187,20 @@ export class SessionPool extends EventEmitter {
      * It is called automatically by the {@link SessionPool.open} function.
      */
     async initialize(): Promise<void> {
-        this.keyValueStore = await KeyValueStore.open(this.persistStateKeyValueStoreId, { config: this.config, forceCloud: this.forceCloud });
+        this.keyValueStore = await KeyValueStore.open(this.persistStateKeyValueStoreId, { config: this.config });
 
-        if (this.forceCloud && !this.persistStateKeyValueStoreId) {
-            this.log.warning(`You enabled 'forceCloud' in the session pool options but you haven't specified a 'persistStateKeyValueStoreId'!`);
-            this.log.warning(`This session pool's data has been saved in the KeyValueStore with the id: ${this.keyValueStore.id}`);
-        }
+        // FIXME should we still validate this somehow somewhere?
+        // if (this.forceCloud && !this.persistStateKeyValueStoreId) {
+        //     this.log.warning(`You enabled 'forceCloud' in the session pool options but you haven't specified a 'persistStateKeyValueStoreId'!`);
+        //     this.log.warning(`This session pool's data has been saved in the KeyValueStore with the id: ${this.keyValueStore.id}`);
+        // }
 
         // in case of migration happened and SessionPool state should be restored from the keyValueStore.
         await this._maybeLoadSessionPool();
 
         this._listener = this.persistState.bind(this);
 
-        events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this._listener);
+        this.events.on(EventType.PERSIST_STATE, this._listener);
     }
 
     /**
@@ -314,7 +301,7 @@ export class SessionPool extends EventEmitter {
      * This function should be called after you are done with using the `SessionPool` instance.
      */
     async teardown(): Promise<void> {
-        events.removeListener(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this._listener);
+        this.events.off(EventType.PERSIST_STATE, this._listener);
         await this.persistState();
     }
 

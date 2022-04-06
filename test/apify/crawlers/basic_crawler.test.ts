@@ -1,4 +1,3 @@
-import { ACTOR_EVENT_NAMES } from '@apify/consts';
 import log from '@apify/log';
 import {
     CrawlingContext,
@@ -6,20 +5,19 @@ import {
     FailedRequestHandler,
     RequestHandler,
     Request,
-    QueueOperationInfo,
     RequestQueue,
     RequestList,
-    events,
     Configuration,
     BasicCrawler,
-    KeyValueStore,
+    KeyValueStore, EventType,
 } from 'crawlers';
 import { sleep } from '@crawlers/utils';
-import LocalStorageDirEmulator from '../local_storage_dir_emulator';
+import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('BasicCrawler', () => {
     let logLevel: number;
     let localStorageEmulator: LocalStorageDirEmulator;
+    const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
         logLevel = log.getLevel();
@@ -29,7 +27,7 @@ describe('BasicCrawler', () => {
 
     beforeEach(async () => {
         const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('localStorageDir', storageDir);
+        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
     });
 
     afterAll(async () => {
@@ -64,9 +62,7 @@ describe('BasicCrawler', () => {
         expect(await requestList.isEmpty()).toBe(true);
     });
 
-    const { MIGRATING, ABORTING } = ACTOR_EVENT_NAMES;
-
-    test.each([MIGRATING, ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
+    test.each([EventType.MIGRATING, EventType.ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
         const sources = [...Array(500).keys()].map((index) => ({ url: `https://example.com/${index + 1}` }));
 
         let persistResolve: (value?: unknown) => void;
@@ -96,7 +92,7 @@ describe('BasicCrawler', () => {
         setValueSpy.mockImplementationOnce(persistResolve as any);
         // The crawler will pause after 200 requests
         const runPromise = basicCrawler.run();
-        runPromise.then(() => { finished = true; });
+        void runPromise.then(() => { finished = true; });
 
         // need to monkeypatch the stats class, otherwise it will never finish
         basicCrawler.stats.persistState = () => Promise.resolve();
@@ -261,7 +257,7 @@ describe('BasicCrawler', () => {
 
     test('should require at least one of RequestQueue and RequestList', () => {
         const requestList = new RequestList({ sources: [] });
-        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
+        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getStorageClient() });
         const requestHandler = async () => {};
 
         expect(() => new BasicCrawler({ requestHandler })).toThrowError();
@@ -278,7 +274,7 @@ describe('BasicCrawler', () => {
         ];
         const processed: Dictionary<Request> = {};
         const requestList = new RequestList({ sources });
-        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
+        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getStorageClient() });
 
         const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
@@ -357,7 +353,7 @@ describe('BasicCrawler', () => {
     });
 
     test('should say that task is not ready requestList is not set and requestQueue is empty', async () => {
-        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
+        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getStorageClient() });
         requestQueue.isEmpty = () => Promise.resolve(true);
 
         const crawler = new BasicCrawler({
@@ -370,7 +366,7 @@ describe('BasicCrawler', () => {
     });
 
     test('should be possible to override isFinishedFunction of underlying AutoscaledPool', async () => {
-        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getDefaultClient() });
+        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getStorageClient() });
         const processed: Request[] = [];
         const queue: Request[] = [];
         let isFinished = false;
@@ -475,7 +471,7 @@ describe('BasicCrawler', () => {
     });
 
     test('should load handledRequestCount from storages', async () => {
-        const requestQueue = new RequestQueue({ id: 'id', client: Configuration.getDefaultClient() });
+        const requestQueue = new RequestQueue({ id: 'id', client: Configuration.getStorageClient() });
         requestQueue.isEmpty = async () => false;
         requestQueue.isFinished = async () => false;
 
@@ -650,7 +646,7 @@ describe('BasicCrawler', () => {
             const url = 'https://example.com';
             const requestList = new RequestList({ sources: [{ url }] });
             await requestList.initialize();
-            events.removeAllListeners(ACTOR_EVENT_NAMES.PERSIST_STATE);
+            events.off(EventType.PERSIST_STATE);
 
             const crawler = new BasicCrawler({
                 requestList,
@@ -667,11 +663,11 @@ describe('BasicCrawler', () => {
             // @ts-expect-error Accessing private prop
             crawler._loadHandledRequestCount = () => { // eslint-disable-line
                 expect(crawler.sessionPool).toBeDefined();
-                expect(events.listenerCount(ACTOR_EVENT_NAMES.PERSIST_STATE)).toEqual(1);
+                expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(1);
             };
 
             await crawler.run();
-            expect(events.listenerCount(ACTOR_EVENT_NAMES.PERSIST_STATE)).toEqual(0);
+            expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(0);
             expect(crawler.sessionPool.maxPoolSize).toEqual(10);
         });
     });

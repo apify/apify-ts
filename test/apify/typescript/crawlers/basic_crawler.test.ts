@@ -2,7 +2,7 @@ import { BasicCrawlerOptions } from '@crawlers/basic';
 
 describe('BasicCrawler TS', () => {
     describe('generics', () => {
-        test('options', () => {
+        test('options', async () => {
             const requestQueue: any = {
                 addRequest: () => {},
             };
@@ -20,14 +20,14 @@ describe('BasicCrawler TS', () => {
                 },
             };
 
-            options.requestQueue!.addRequest({
+            await options.requestQueue!.addRequest({
                 url: '',
                 userData: {
                     myValue: 'asdf',
                 },
             });
 
-            options.requestQueue!.addRequest({
+            await options.requestQueue!.addRequest({
                 url: '',
                 userData: {
                     myValue: 'asdf',
