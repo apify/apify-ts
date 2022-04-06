@@ -105,44 +105,6 @@ describe('enqueueLinks()', () => {
             expect(enqueued[3]).toBe(undefined);
         });
 
-        test('works with Actor UI output object', async () => {
-            const enqueued: (Request | RequestOptions)[] = [];
-            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
-
-            // @ts-expect-error Override method for testing
-            requestQueue.addRequests = async (request) => {
-                enqueued.push(...request);
-            };
-
-            const pseudoUrls = [
-                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
-                { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
-            ];
-
-            await browserCrawlerEnqueueLinks({
-                options: {
-                    selector: '.click',
-                    pseudoUrls,
-                },
-                page,
-                requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('POST');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('POST');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData.foo).toBe('bar');
-        });
-
         test('works with globs', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
@@ -562,43 +524,6 @@ describe('enqueueLinks()', () => {
 
         afterEach(async () => {
             $ = null;
-        });
-
-        test('works with Actor UI output object', async () => {
-            const enqueued: (Request | RequestOptions)[] = [];
-            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
-
-            // @ts-expect-error Override method for testing
-            requestQueue.addRequests = async (request) => {
-                enqueued.push(...request);
-            };
-            const pseudoUrls = [
-                { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
-                { purl: '[http|https]://cool.com/', userData: { foo: 'bar' } },
-            ];
-
-            await cheerioCrawlerEnqueueLinks({
-                options: {
-                    selector: '.click',
-                    pseudoUrls,
-                },
-                $,
-                requestQueue,
-            });
-
-            expect(enqueued).toHaveLength(3);
-
-            expect(enqueued[0].url).toBe('https://example.com/a/b/first');
-            expect(enqueued[0].method).toBe('POST');
-            expect(enqueued[0].userData).toEqual({});
-
-            expect(enqueued[1].url).toBe('https://example.com/a/b/third');
-            expect(enqueued[1].method).toBe('POST');
-            expect(enqueued[1].userData).toEqual({});
-
-            expect(enqueued[2].url).toBe('http://cool.com/');
-            expect(enqueued[2].method).toBe('GET');
-            expect(enqueued[2].userData.foo).toBe('bar');
         });
 
         test('works with globs', async () => {

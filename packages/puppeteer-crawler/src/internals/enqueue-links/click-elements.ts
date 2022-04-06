@@ -1,10 +1,15 @@
 import {
+    constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
-    createRequestOptions,
+    constructRegExpObjectsFromRegExps,
     createRequests,
+    createRequestOptions,
+    GlobInput,
     PseudoUrlInput,
-    RequestQueue,
+    RegExpInput,
     RequestTransform,
+    UrlPatternObject,
+    RequestQueue,
     storage,
 } from '@crawlers/browser';
 import log_ from '@apify/log';
@@ -49,15 +54,52 @@ export interface EnqueueLinksByClickingElementsOptions {
     clickOptions?: ClickOptions;
 
     /**
-     * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
-     * or an array of strings or RegExps or plain Objects from which the {@link PseudoUrl}s can be constructed.
+     * An array of glob pattern strings or plain objects
+     * containing glob pattern strings matching the URLs to be enqueued.
      *
-     * The plain objects must include at least the `purl` property, which holds the pseudo-URL string or RegExp.
-     * All remaining keys will be used as the `requestTemplate` argument of the {@link PseudoUrl} constructor,
-     * which lets you specify special properties for the enqueued {@link Request} objects.
+     * The plain objects must include at least the `glob` property, which holds the glob pattern string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
-     * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
-     * enqueues all links found on the page.
+     * The matching is always case-insensitive.
+     * If you need case-sensitive matching, use `regexps` property directly.
+     *
+     * If `globs` is an empty array or `undefined`, then the function
+     * enqueues all the intercepted navigation requests produced by the page
+     * after clicking on elements matching the provided CSS selector.
+     */
+    globs?: GlobInput[];
+
+    /**
+     * An array of regular expressions or plain objects
+     * containing regular expressions matching the URLs to be enqueued.
+     *
+     * The plain objects must include at least the `regexp` property, which holds the glob pattern string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
+     *
+     * If `regexps` is an empty array or `undefined`, then the function
+     * enqueues all the intercepted navigation requests produced by the page
+     * after clicking on elements matching the provided CSS selector.
+     */
+    regexps?: RegExpInput[];
+
+    /**
+     * *NOTE:* In future versions of SDK the options will be removed.
+     * Please use `globs` or `regexps` instead.
+     *
+     * An array of {@link PseudoUrl} strings or plain objects
+     * containing {@link PseudoUrl} strings matching the URLs to be enqueued.
+     *
+     * The plain objects must include at least the `purl` property, which holds the glob pattern string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
+     *
+     * With a pseudo-URL string, the matching is always case-insensitive.
+     * If you need case-sensitive matching, use `regexps` property directly.
+     *
+     * If `pseudoUrls` is an empty array or `undefined`, then the function
+     * enqueues all the intercepted navigation requests produced by the page
+     * after clicking on elements matching the provided CSS selector.
+     *
+     * @deprecated prefer using `globs` or `regexps` instead
      */
     pseudoUrls?: PseudoUrlInput[];
 
@@ -157,7 +199,18 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
         selector: ow.string,
         clickOptions: ow.optional.object.hasKeys('clickCount', 'delay'),
-        pseudoUrls: ow.optional.array.ofType(ow.any(ow.string, ow.regExp, ow.object.hasKeys('purl'))),
+        pseudoUrls: ow.optional.array.ofType(ow.any(
+            ow.string,
+            ow.object.hasKeys('purl'),
+        )),
+        globs: ow.optional.array.ofType(ow.any(
+            ow.string,
+            ow.object.hasKeys('glob'),
+        )),
+        regexps: ow.optional.array.ofType(ow.any(
+            ow.regExp,
+            ow.object.hasKeys('regexp'),
+        )),
         transformRequestFunction: ow.optional.function,
         waitForPageIdleSecs: ow.optional.number,
         maxWaitForPageIdleSecs: ow.optional.number,
@@ -169,6 +222,8 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         selector,
         clickOptions,
         pseudoUrls,
+        globs,
+        regexps,
         transformRequestFunction,
         waitForPageIdleSecs = 1,
         maxWaitForPageIdleSecs = 5,
@@ -177,7 +232,21 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    const regexps = constructRegExpObjectsFromPseudoUrls(pseudoUrls || []);
+    const urlPatternObjects: UrlPatternObject[] = [];
+
+    if (pseudoUrls?.length) {
+        log.deprecated('`pseudoUrls` option is deprecated, use `globs` or `regexps` instead');
+        urlPatternObjects.push(...constructRegExpObjectsFromPseudoUrls(pseudoUrls));
+    }
+
+    if (globs?.length) {
+        urlPatternObjects.push(...constructGlobObjectsFromGlobs(globs));
+    }
+
+    if (regexps?.length) {
+        urlPatternObjects.push(...constructRegExpObjectsFromRegExps(regexps));
+    }
+
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
         selector,
@@ -189,7 +258,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     if (transformRequestFunction) {
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
-    const requests = createRequests(requestOptions, regexps);
+    const requests = createRequests(requestOptions, urlPatternObjects);
     return requestQueue.addRequests(requests);
 }
 
