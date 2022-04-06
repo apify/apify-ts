@@ -1,29 +1,73 @@
-import { constructPseudoUrlInstances, createRequestOptions, createRequests, Request, PseudoUrl } from '@crawlers/core';
+import {
+    constructGlobObjectsFromGlobs,
+    constructRegExpObjectsFromPseudoUrls,
+    constructRegExpObjectsFromRegExps,
+    createRequests,
+    createRequestOptions,
+    validateGlobPattern,
+    Request,
+} from '@crawlers/core';
 
 describe('Enqueue links shared functions', () => {
-    describe('constructPseudoUrlInstances()', () => {
+    describe('constructGlobObjectsFromGlobs()', () => {
         test('should work', () => {
-            const pseudoUrlSources = [
-                new PseudoUrl(/^https?:\/\/example\.com/, { userData: { foo: 'bar' } }),
-                /^https?:\/\/example\.com/,
-                'http[s?]://example.com/[.*]',
+            const globs = [
+                'https://example.com/**/*',
+                { glob: '?(http|https)://cool.com/', userData: { foo: 'bar' } },
+            ];
+            const globObjects = constructGlobObjectsFromGlobs(globs);
+            expect(globObjects).toHaveLength(2);
+            expect(globObjects[0].glob).toEqual('https://example.com/**/*');
+            expect(globObjects[0].userData).toBe(undefined);
+            expect(globObjects[1].glob).toEqual('?(http|https)://cool.com/');
+            expect(globObjects[1].userData).toStrictEqual({ foo: 'bar' });
+        });
+    });
+
+    describe('constructRegExpObjectsFromRegExps()', () => {
+        test('should work', () => {
+            const regexps = [
+                /^https:\/\/example\.com\/(\w|\/)+/,
+                { regexp: /^(http|https):\/\/cool\.com\//, userData: { foo: 'bar' } },
+            ];
+            const regexpObjects = constructRegExpObjectsFromRegExps(regexps);
+            expect(regexpObjects).toHaveLength(2);
+            expect(regexpObjects[0].regexp.test('https://example.com/')).toBe(false);
+            expect(regexpObjects[0].userData).toBe(undefined);
+            expect(regexpObjects[1].regexp.test('https://cool.com/')).toBe(true);
+            expect(regexpObjects[1].userData).toStrictEqual({ foo: 'bar' });
+        });
+    });
+
+    describe('constructRegExpObjectsFromPseudoUrls()', () => {
+        test('should work', () => {
+            const pseudoUrls = [
+                'http[s?]://example.com/',
                 { purl: 'http[s?]://example.com[.*]', userData: { foo: 'bar' } },
             ];
-            const pseudoUrls = constructPseudoUrlInstances(pseudoUrlSources);
-            expect(pseudoUrls).toHaveLength(4);
-            pseudoUrls.forEach((purl) => {
-                expect(purl.matches('https://example.com/foo')).toBe(true);
+            const urlPatternObjects = constructRegExpObjectsFromPseudoUrls(pseudoUrls);
+            expect(urlPatternObjects).toHaveLength(2);
+            urlPatternObjects.forEach((urlPatternObject) => {
+                expect(urlPatternObject.regexp.test('https://example.com/')).toBe(true);
             });
-            let request = pseudoUrls[0].createRequest('https://example.com/foo');
-            expect(request.userData).toEqual({ foo: 'bar' });
-            request = pseudoUrls[3].createRequest('https://example.com/bar');
-            expect(request.userData).toEqual({ foo: 'bar' });
+            expect(urlPatternObjects[0].regexp.test('https://example.com/foo')).toBe(false);
+            expect(urlPatternObjects[0].userData).toBe(undefined);
+            expect(urlPatternObjects[1].regexp.test('https://example.com/foo')).toBe(true);
+            expect(urlPatternObjects[1].userData).toStrictEqual({ foo: 'bar' });
         });
 
         test('should cache items', () => {
-            const pseudoUrls = constructPseudoUrlInstances(['http[s?]://example.com/[.*]']);
-            const pseudoUrls2 = constructPseudoUrlInstances(['http[s?]://example.com/[.*]']);
-            expect(pseudoUrls[0] === pseudoUrls2[0]).toBe(true);
+            const pseudoUrls0 = constructRegExpObjectsFromPseudoUrls(['http[s?]://example.com/[.*]']);
+            const pseudoUrls1 = constructRegExpObjectsFromPseudoUrls(['http[s?]://example.com/[.*]']);
+            expect(pseudoUrls0[0]).toEqual(pseudoUrls1[0]);
+
+            const globs0 = constructGlobObjectsFromGlobs(['https://example.com/**/*']);
+            const globs1 = constructGlobObjectsFromGlobs(['https://example.com/**/*']);
+            expect(globs0[0]).toEqual(globs1[0]);
+
+            const regexps0 = constructRegExpObjectsFromRegExps([/^https:\/\/example\.com\/(\w|\/)+/]);
+            const regexps1 = constructRegExpObjectsFromRegExps([/^https:\/\/example\.com\/(\w|\/)+/]);
+            expect(regexps0[0]).toEqual(regexps1[0]);
         });
     });
 
@@ -34,9 +78,8 @@ describe('Enqueue links shared functions', () => {
                 { url: 'https://example.com/bar', method: 'POST' },
                 'https://apify.com',
             ];
-            const pseudoUrls = [
-                new PseudoUrl('http[s?]://example.com/[.*]', { userData: { one: 1 } }),
-            ];
+            const pseudoUrls = [{ purl: 'http[s?]://example.com/[.*]', userData: { one: 1 } }];
+            const urlPatternObjects = constructRegExpObjectsFromPseudoUrls(pseudoUrls);
 
             const transformRequestFunction = (request: Request) => {
                 request.userData.foo = 'bar';
@@ -44,14 +87,24 @@ describe('Enqueue links shared functions', () => {
             };
 
             const requestOptions = createRequestOptions(sources);
-            const requests = createRequests(requestOptions, pseudoUrls).map(transformRequestFunction).filter((r) => !!r);
+            const requests = createRequests(requestOptions, urlPatternObjects).map(transformRequestFunction).filter((r) => !!r);
 
             expect(requests).toHaveLength(2);
             requests.forEach((r) => {
                 expect(r.url).toMatch(/^https?:\/\/example\.com\//);
                 expect(r.userData).toMatchObject({ foo: 'bar', one: 1 });
             });
+            expect(requests[0].method).toBe('GET');
             expect(requests[1].method).toBe('POST');
+        });
+    });
+
+    describe('validateGlobPattern()', () => {
+        test('should throw for empty glob patterns', () => {
+            const globPattern = 'https://example.com/**/*';
+            expect(() => validateGlobPattern(globPattern)).not.toThrow();
+            const emptyGlobPattern = '';
+            expect(() => validateGlobPattern(emptyGlobPattern)).toThrow(/Cannot parse Glob pattern '': it must be an non-empty string/);
         });
     });
 });

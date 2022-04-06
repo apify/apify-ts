@@ -6,7 +6,6 @@ export * from './enqueue_links';
 export * from './events';
 export * from './log';
 export * from './proxy_configuration';
-export * from './pseudo_url';
 export * from './request';
 export * from './serialization';
 export * from './session_pool';
