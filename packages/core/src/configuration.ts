@@ -26,7 +26,6 @@ export interface ConfigurationOptions {
     actorTaskId?: string;
     containerPort?: number;
     containerUrl?: string;
-    userId?: string;
     proxyHostname?: string;
     proxyPassword?: string;
     proxyPort?: number;
@@ -71,7 +70,6 @@ export interface ConfigurationOptions {
  * `proxyHostname` | `APIFY_PROXY_HOSTNAME` | `'proxy.apify.com'`
  * `proxyPassword` | `APIFY_PROXY_PASSWORD` | -
  * `proxyPort` | `APIFY_PROXY_PORT` | `8000`
- * `userId` | `APIFY_USER_ID` | -
  *
  * ## Not Supported environment variables
  *
@@ -100,7 +98,6 @@ export class Configuration {
         APIFY_ACTOR_TASK_ID: 'actorTaskId',
         APIFY_CONTAINER_PORT: 'containerPort',
         APIFY_CONTAINER_URL: 'containerUrl',
-        APIFY_USER_ID: 'userId',
         APIFY_PROXY_HOSTNAME: 'proxyHostname',
         APIFY_PROXY_PASSWORD: 'proxyPassword',
         APIFY_PROXY_PORT: 'proxyPort',

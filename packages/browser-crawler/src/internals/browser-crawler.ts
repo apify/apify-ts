@@ -472,7 +472,6 @@ export abstract class BrowserCrawler<
 
             newPageOptions.proxyUrl = proxyInfo.url;
 
-            // FIXME how to handle this?
             if (this.proxyConfiguration.isManInTheMiddle) {
                 /**
                  * @see https://playwright.dev/docs/api/class-browser/#browser-new-context
@@ -625,7 +624,6 @@ export abstract class BrowserCrawler<
             launchContext.proxyUrl = proxyInfo.url;
             launchContextExtends.proxyInfo = proxyInfo;
 
-            // FIXME how to handle this?
             // Disable SSL verification for MITM proxies
             if (this.proxyConfiguration.isManInTheMiddle) {
                 /**

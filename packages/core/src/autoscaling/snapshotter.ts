@@ -34,31 +34,6 @@ export interface SnapshotterOptions {
     maxBlockedMillis?: number;
 
     /**
-     * Defines the interval of measuring CPU usage.
-     * This is only used when running locally. On the Apify platform,
-     * the statistics are provided externally at a fixed interval.
-     * @default 1
-     */
-    // cpuSnapshotIntervalSecs?: number; // FIXME no longer valid here
-
-    /**
-     * Defines the maximum usage of CPU.
-     * Exceeding this limit overloads the CPU.
-     * @default 0.95
-     */
-    // maxUsedCpuRatio?: number; // FIXME no longer valid here
-
-    /**
-     * Defines the interval of measuring memory consumption.
-     * This is only used when running locally. On the Apify platform,
-     * the statistics are provided externally at a fixed interval.
-     * The measurement itself is resource intensive (25 - 50ms async).
-     * Therefore, setting this interval below 1 second is not recommended.
-     * @default 1
-     */
-    // memorySnapshotIntervalSecs?: number; // FIXME no longer valid here
-
-    /**
      * Defines the maximum ratio of total memory that can be used.
      * Exceeding this limit overloads the memory.
      * @default 0.7
