@@ -18,6 +18,7 @@ import {
     Request,
     RequestQueue,
     Session,
+    storage,
     validators,
 } from '@crawlers/core';
 import {
@@ -29,7 +30,6 @@ import {
     RequestAsBrowserOptions,
     RequestAsBrowserResult,
 } from '@crawlers/utils';
-import type { RequestQueueClientBatchAddRequestsResult } from 'apify-client';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { Method, TimeoutError } from 'got-scraping';
@@ -462,7 +462,7 @@ export interface CheerioRequestHandlerInputs<JSONData = unknown> extends Crawlin
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
-    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<RequestQueueClientBatchAddRequestsResult>;
+    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
 }
 
 export type CheerioCrawlingContext<JSONData = unknown> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability
