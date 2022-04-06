@@ -162,7 +162,7 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
             }
         })
         .map((requestOptions) => {
-            if (!requestOptions.userData) requestOptions.userData = {};
+            requestOptions.userData ??= {};
             return requestOptions;
         });
 }
