@@ -72,4 +72,11 @@ export abstract class EventManager {
     listenerCount(event: EventTypeName): number {
         return this.events.listenerCount(event);
     }
+
+    /**
+     * @internal
+     */
+    listeners(event: EventTypeName): (() => Promise<unknown>)[] {
+        return this.events.listeners(event) as (() => Promise<unknown>)[];
+    }
 }

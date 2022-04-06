@@ -20,7 +20,6 @@ import {
     type CrawlingContext,
     RequestOptions,
     RequestQueueOperationOptions,
-    addRequestsToQueueInBatches,
     createRequests,
     Configuration,
     EventManager,
@@ -575,7 +574,7 @@ export class BasicCrawler<
 
         const builtRequests = createRequests(requests);
 
-        return addRequestsToQueueInBatches(builtRequests, requestQueue);
+        return requestQueue.addRequests(builtRequests);
     }
 
     protected async _init(): Promise<void> {

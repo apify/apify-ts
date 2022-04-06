@@ -2,6 +2,7 @@ import { ensureDirSync, readdirSync } from 'fs-extra';
 import { ArgumentError } from 'ow';
 import { join } from 'path';
 import type { Database, Statement } from 'better-sqlite3-with-prebuilds';
+import { storage } from '@crawlers/core';
 import { ApifyStorageLocal } from '@apify/storage-local';
 import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@apify/storage-local/dist/consts';
 import { RequestQueueEmulator } from '@apify/storage-local/dist/emulators/request_queue_emulator';
@@ -26,6 +27,10 @@ const TEST_QUEUES = {
     2: {
         name: 'second',
         requestCount: 35,
+    },
+    3: {
+        name: 'batch-requests',
+        requestCount: 0,
     },
 };
 
@@ -82,7 +87,7 @@ describe('sanity checks for seeded data', () => {
     });
 
     test('seeded queues exist', () => {
-        expect(counter.queues()).toBe(2);
+        expect(counter.queues()).toBe(3);
     });
 
     Object.values(TEST_QUEUES).forEach((queue) => {
@@ -325,7 +330,7 @@ describe('getOrCreate', () => {
         const queue = await storageLocal.requestQueues().getOrCreate('first');
         expect(queue.id).toBe('first');
         const count = counter.queues();
-        expect(count).toBe(2);
+        expect(count).toBe(3);
     });
 
     test('creates a new queue with name', async () => {
@@ -334,7 +339,7 @@ describe('getOrCreate', () => {
         expect(queue.id).toBe(queueName);
         expect(queue.name).toBe(queueName);
         const count = counter.queues();
-        expect(count).toBe(3);
+        expect(count).toBe(4);
     });
 });
 
@@ -342,7 +347,7 @@ describe('deleteQueue', () => {
     test('deletes correct queue', async () => {
         await storageLocal.requestQueue('first').delete();
         const count = counter.queues();
-        expect(count).toBe(1);
+        expect(count).toBe(2);
     });
 });
 
@@ -405,7 +410,7 @@ describe('addRequest', () => {
             ...request,
             handledAt: new Date(),
             method: 'POST',
-        };
+        } as const;
 
         await storageLocal.requestQueue(queueName).addRequest(newRequest);
         const requestModel = db.prepare(`
@@ -506,6 +511,72 @@ describe('addRequest', () => {
             }
         });
     });
+});
+
+test('addRequests', async () => {
+    const queueName = 'batch-requests';
+    const db = queueNameToDb(queueName);
+    const startCount = 0;
+    const queue = storageLocal.requestQueue(queueName);
+
+    const requestA = numToRequest(startCount + 1);
+    const requestAId = requestA.id!;
+    requestA.id = undefined;
+
+    // Test adding 1 request
+    const firstRequestAdded = {
+        requestId: requestAId,
+        wasAlreadyHandled: false,
+        wasAlreadyPresent: false,
+        uniqueKey: requestA.uniqueKey,
+    };
+
+    const addRequestsResult1 = await queue.batchAddRequests([requestA]);
+
+    expect(addRequestsResult1.processedRequests).toHaveLength(1);
+    expect(addRequestsResult1.processedRequests[0]).toEqual({
+        ...firstRequestAdded,
+    });
+
+    // Try to add a request with the same URL again, expecting cached
+    const addRequestsResult2 = await queue.batchAddRequests([requestA]);
+    expect(addRequestsResult2.unprocessedRequests).toHaveLength(1);
+    expect(addRequestsResult2.unprocessedRequests[0]).toEqual<storage.UnprocessedRequest>({
+        uniqueKey: requestAId,
+        url: requestA.url,
+        method: requestA.method,
+    });
+
+    // Adding more requests, forefront
+    const requestB = numToRequest(startCount + 2);
+    const requestBId = requestB.id!;
+    requestB.id = undefined;
+
+    const requestC = numToRequest(startCount + 3);
+    const requestCId = requestC.id!;
+    requestC.id = undefined;
+
+    const addRequestsResult3 = await queue.batchAddRequests([requestB, requestC], { forefront: true });
+    expect(addRequestsResult3.processedRequests).toHaveLength(2);
+    expect(addRequestsResult3.processedRequests[0]).toEqual<storage.ProcessedRequest>({
+        requestId: requestBId,
+        uniqueKey: requestB.uniqueKey,
+        wasAlreadyHandled: false,
+        wasAlreadyPresent: false,
+    });
+    expect(addRequestsResult3.processedRequests[1]).toEqual<storage.ProcessedRequest>({
+        requestId: requestCId,
+        uniqueKey: requestC.uniqueKey,
+        wasAlreadyHandled: false,
+        wasAlreadyPresent: false,
+    });
+
+    const requestModels = db.prepare(`
+        SELECT * FROM ${REQUESTS_TABLE_NAME}
+        WHERE queueId = ${QUEUE_ID};
+    `).all();
+
+    expect(requestModels).toHaveLength(3);
 });
 
 describe('getRequest', () => {

@@ -79,8 +79,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -111,8 +111,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             const pseudoUrls = [
@@ -146,8 +146,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             const pseudoUrls = [
@@ -181,8 +181,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 'https://example.com/[(\\w|-|/)*]',
@@ -215,8 +215,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             const pseudoUrls = [
@@ -250,8 +250,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -284,8 +284,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -318,8 +318,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -352,8 +352,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             const pseudoUrls = [
@@ -380,8 +380,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -406,8 +406,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -435,8 +435,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await browserCrawlerEnqueueLinks({
@@ -497,8 +497,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
@@ -531,8 +531,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
@@ -565,8 +565,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 { purl: 'https://example.com/[(\\w|-|/)*]', method: 'POST' as const },
@@ -598,8 +598,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 'https://example.com/[(\\w|-|/)*]',
@@ -631,8 +631,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 /https:\/\/example\.com\/(\w|-|\/)*/,
@@ -664,8 +664,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -697,8 +697,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -730,8 +730,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -763,8 +763,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             const pseudoUrls = [
                 new PseudoUrl('https://example.com/[(\\w|-|/)*]', { method: 'POST' }),
@@ -789,8 +789,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -838,8 +838,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -864,8 +864,8 @@ describe('enqueueLinks()', () => {
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
 
             await cheerioCrawlerEnqueueLinks({
@@ -893,8 +893,8 @@ describe('enqueueLinks()', () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
-            requestQueue.addRequest = async (request) => {
-                enqueued.push(request);
+            requestQueue.addRequests = async (request) => {
+                enqueued.push(...request);
             };
             try {
                 await cheerioCrawlerEnqueueLinks({

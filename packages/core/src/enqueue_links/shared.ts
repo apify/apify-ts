@@ -1,7 +1,6 @@
 import { URL } from 'url';
 import { PseudoUrl, PseudoUrlObject } from '../pseudo_url';
 import { Request, RequestOptions } from '../request';
-import { QueueOperationInfo, RequestQueue } from '../storages/request_queue';
 
 const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
 
@@ -80,18 +79,6 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
                 return false;
             }
         });
-}
-
-/**
- * @ignore
- */
-export async function addRequestsToQueueInBatches(requests: Request[], requestQueue: RequestQueue, batchSize = 5): Promise<QueueOperationInfo[]> {
-    const queueOperationInfos: Promise<QueueOperationInfo>[] = [];
-    for (const request of requests) {
-        queueOperationInfos.push(requestQueue.addRequest(request));
-        if (queueOperationInfos.length % batchSize === 0) await Promise.all(queueOperationInfos);
-    }
-    return Promise.all(queueOperationInfos);
 }
 
 /**

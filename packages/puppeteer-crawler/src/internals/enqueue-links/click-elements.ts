@@ -1,10 +1,8 @@
 import {
-    addRequestsToQueueInBatches,
     constructPseudoUrlInstances,
     createRequestOptions,
     createRequests,
     PseudoUrlInput,
-    QueueOperationInfo,
     RequestQueue,
     RequestTransform,
 } from '@crawlers/browser';
@@ -151,9 +149,9 @@ export interface EnqueueLinksByClickingElementsOptions {
  * ```
  *
  * @returns
- *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ *   Promise that resolves to an {@link RequestQueueClientBatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions) {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
@@ -192,7 +190,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
     }
     const requests = createRequests(requestOptions, pseudoUrlInstances);
-    return addRequestsToQueueInBatches(requests, requestQueue);
+    return requestQueue.addRequests(requests);
 }
 
 interface WaitForPageIdleOptions {

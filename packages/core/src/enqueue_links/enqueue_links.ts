@@ -3,12 +3,11 @@ import ow from 'ow';
 import {
     constructPseudoUrlInstances,
     createRequests,
-    addRequestsToQueueInBatches,
     createRequestOptions,
     RequestTransform,
     PseudoUrlInput,
 } from './shared';
-import { RequestQueue, QueueOperationInfo } from '../storages/request_queue';
+import { RequestQueue } from '../storages/request_queue';
 import { validators } from '../validators';
 
 export interface EnqueueLinksOptions {
@@ -117,9 +116,9 @@ export enum EnqueueStrategy {
  * @param options
  *   All `enqueueLinks()` parameters are passed via an options object.
  * @returns
- *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ *   Promise that resolves to an {@link RequestQueueClientBatchAddRequestsResult} objects.
  */
-export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinks(options: EnqueueLinksOptions) {
     const {
         requestQueue,
         limit,
@@ -197,5 +196,5 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<QueueO
     let requests = createRequests(requestOptions, pseudoUrlInstances);
     if (limit) requests = requests.slice(0, limit);
 
-    return addRequestsToQueueInBatches(requests, requestQueue);
+    return requestQueue.addRequests(requests);
 }

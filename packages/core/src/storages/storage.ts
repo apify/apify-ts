@@ -1,5 +1,5 @@
 import { RequestOptions as RequestModel } from '../request';
-import { Dictionary } from '../typedefs';
+import { AllowedHttpMethods, Dictionary } from '../typedefs';
 
 /**
  * A helper class that is used to report results from various
@@ -229,12 +229,45 @@ export interface RequestOptions {
     [k: string]: unknown;
 }
 
+export interface RequestSchema {
+    uniqueKey: string;
+    url: string;
+    method?: AllowedHttpMethods;
+    payload?: string;
+    retryCount?: number;
+    errorMessages?: string[];
+    headers?: Dictionary<string>;
+    userData?: Dictionary;
+    handledAt?: string;
+    noRetry?: boolean;
+    loadedUrl?: string;
+}
+
+export interface ProcessedRequest {
+    uniqueKey: string;
+    requestId: string;
+    wasAlreadyPresent: boolean;
+    wasAlreadyHandled: boolean;
+}
+
+export interface UnprocessedRequest {
+    uniqueKey: string;
+    url: string;
+    method?: AllowedHttpMethods;
+}
+
+export interface BatchAddRequestsResult {
+    processedRequests: ProcessedRequest[];
+    unprocessedRequests: UnprocessedRequest[];
+}
+
 export interface RequestQueueClient {
     get(): Promise<RequestQueueInfo | undefined>;
     update(newFields: { name?: string }): Promise<RequestQueueInfo | undefined>;
     delete(): Promise<void>;
     listHead(options?: ListOptions): Promise<QueueHead>;
     addRequest(request: RequestModel, options?: RequestOptions): Promise<QueueOperationInfo>;
+    batchAddRequests(requests: RequestSchema[], options?: RequestOptions): Promise<BatchAddRequestsResult>;
     getRequest(id: string): Promise<RequestOptions | undefined>;
     updateRequest(request: RequestModel, options?: RequestOptions): Promise<QueueOperationInfo>;
     deleteRequest(_id: string): Promise<unknown>;

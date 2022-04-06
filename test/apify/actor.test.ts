@@ -3,6 +3,7 @@ import log from '@apify/log';
 import { sleep } from '@crawlers/utils';
 import { Actor, ApifyEnv } from 'apify';
 import { ApifyClient, ActorClient, TaskClient, WebhookUpdateData } from 'apify-client';
+import { Configuration, EventType } from '@crawlers/core';
 
 /**
  * Helper function that enables testing of main()
@@ -355,6 +356,64 @@ describe('Actor.metamorph()', () => {
         await Actor.metamorph(targetActorId, undefined, { customAfterSleepMillis: 1 });
 
         expect(metamorphMock).toBeCalledWith(targetActorId, undefined, {});
+    });
+});
+
+describe('Actor.reboot()', () => {
+    const { actId, runId } = globalOptions;
+
+    beforeEach(() => {
+        process.env[ENV_VARS.IS_AT_HOME] = '1';
+        process.env[ENV_VARS.ACTOR_ID] = actId;
+        process.env[ENV_VARS.ACTOR_RUN_ID] = runId;
+    });
+
+    afterEach(() => {
+        delete process.env[ENV_VARS.IS_AT_HOME];
+        delete process.env[ENV_VARS.ACTOR_ID];
+        delete process.env[ENV_VARS.ACTOR_RUN_ID];
+        jest.restoreAllMocks();
+    });
+
+    test('metamorphs to the same actor', async () => {
+        const metamorphSpy = jest.spyOn(Actor.prototype, 'metamorph');
+        metamorphSpy.mockResolvedValueOnce();
+
+        await Actor.reboot();
+
+        expect(metamorphSpy).toBeCalledTimes(1);
+        expect(metamorphSpy).toBeCalledWith(actId);
+    });
+
+    test('reboot waits for persistState/migrating listeners before morphing', async () => {
+        const metamorphSpy = jest.spyOn(Actor.prototype, 'metamorph');
+        metamorphSpy.mockResolvedValueOnce();
+
+        const persistenceStore = [];
+
+        const persistResource = (delay: number) => async () : Promise<void> => {
+            await new Promise((res) => setTimeout(res, delay));
+            persistenceStore.push('PERSISTED ITEM');
+        };
+
+        const migratingSpy = jest.fn(persistResource(50));
+        const persistStateSpy = jest.fn(persistResource(50));
+        const events = Configuration.getEventManager();
+
+        events.on(EventType.PERSIST_STATE, persistStateSpy);
+        events.on(EventType.MIGRATING, migratingSpy);
+
+        await Actor.reboot();
+
+        events.off(EventType.PERSIST_STATE, persistStateSpy);
+        events.off(EventType.MIGRATING, migratingSpy);
+
+        // Do the listeners get called?
+        expect(migratingSpy).toBeCalledTimes(1);
+        expect(persistStateSpy).toBeCalledTimes(1);
+
+        // Do the listeners finish?
+        expect(persistenceStore.length).toBe(2);
     });
 });
 

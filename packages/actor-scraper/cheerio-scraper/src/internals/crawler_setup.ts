@@ -5,7 +5,6 @@ import {
     RequestMetadata,
     tools,
 } from '@apify/scraper-tools';
-import log from '@apify/log';
 import {
     AutoscaledPool,
     CheerioCrawler,
@@ -19,6 +18,7 @@ import {
     Request,
     RequestList,
     RequestQueue,
+    log,
 } from '@crawlers/cheerio';
 import { Awaitable, Dictionary } from '@crawlers/utils';
 import { Actor, ApifyEnv } from 'apify';
