@@ -1,8 +1,8 @@
 # Browser Pool - the headless browser manager
 Browser Pool is a small, but powerful and extensible library, that allows you to seamlessly
 control multiple headless browsers at the same time with only a little configuration, and a
-single function call. Currently it supports [Puppeteer](https://github.com/puppeteer/puppeteer),
-[Playwright](https://github.com/microsoft/playwright) and it can be easily extended with plugins.
+single function call. Currently, it supports [Puppeteer](https://github.com/puppeteer/puppeteer),
+[Playwright](https://github.com/microsoft/playwright), and it can be easily extended with plugins.
 
 We created Browser Pool because we regularly needed to execute tasks concurrently in many
 headless browsers and their pages, but we did not want to worry about launching browsers, closing
@@ -10,8 +10,7 @@ browsers, restarting them after crashes and so on. We also wanted to easily and 
 the whole browser / page lifecycle.
 
 You can use Browser Pool for scraping the internet at scale, testing your website
-in multiple browsers at the same time or launching web automation robots. We're interested
-to hear about your use cases in the [Discussions](https://github.com/apify/browser-pool/discussions).
+in multiple browsers at the same time or launching web automation robots.
 
 <!-- toc -->
 
@@ -32,13 +31,13 @@ to hear about your use cases in the [Discussions](https://github.com/apify/brows
 <!-- tocstop -->
 
 ## Installation
-Use NPM or Yarn to install `browser-pool`. Note that `browser-pool` does not come preinstalled
+Use NPM or Yarn to install `@crawlers/browser-pool`. Note that `@crawlers/browser-pool` does not come preinstalled
 with browser automation libraries. This allows you to choose your own libraries and their
-versions and it also makes `browser-pool` much smaller.
+versions, and it also makes `@crawlers/browser-pool` much smaller.
 
-Run this command to install `browser-pool` and the `playwright` browser automation library.
+Run this command to install `@crawlers/browser-pool` and the `playwright` browser automation library.
 ```bash
-npm install browser-pool playwright
+npm install @crawlers/browser-pool playwright
 ```
 
 ## Usage
@@ -48,7 +47,7 @@ your own. By calling `browserPool.newPage()` you launch a new Firefox browser
 and open a new page in that browser.
 
 ```js
-const { BrowserPool, PlaywrightPlugin } = require('browser-pool');
+const { BrowserPool, PlaywrightPlugin } = require('@crawlers/browser-pool');
 const playwright = require('playwright');
 
 const browserPool = new BrowserPool({
@@ -82,7 +81,7 @@ in the background. You only need to provide the relevant plugins and call
 `browserPool.newPage()`.
 
 ```js
-const { BrowserPool, PlaywrightPlugin } = require('browser-pool');
+const { BrowserPool, PlaywrightPlugin } = require('@crawlers/browser-pool');
 const playwright = require('playwright');
 
 const browserPool = new BrowserPool({
@@ -110,7 +109,7 @@ if you need to consistently run tasks in multiple environments.
 For that, there's the `newPageWithEachPlugin` function.
 
 ```js
-const { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } = require('browser-pool');
+const { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } = require('@crawlers/browser-pool');
 const playwright = require('playwright');
 const puppeteer = require('puppeteer');
 
@@ -351,18 +350,18 @@ You can control parameters as browser, operating system, and browser versions.
 
 ### (UNSTABLE) Extensibility with plugins
 A new super cool browser automation library appears? No problem, we add
-a simple plugin to Browser Pool and it automagically works.
+a simple plugin to Browser Pool, and it automagically works.
 
 > The BrowserPlugin and BrowserController interfaces are unstable and may
-> change if we find some implementation to be sub-optimal.
+> change if we find some implementation to be suboptimal.
 
 ## API Reference
 All public classes, methods and their parameters can be inspected in this API reference.
 
 <a name="module_browser-pool"></a>
 
-### browser-pool
-The `browser-pool` module exports three constructors. One for `BrowserPool`
+### @crawlers/browser-pool
+The `@crawlers/browser-pool` module exports three constructors. One for `BrowserPool`
 itself and two for the included Puppeteer and Playwright plugins.
 
 **Example:**
@@ -371,7 +370,7 @@ const {
  BrowserPool,
  PuppeteerPlugin,
  PlaywrightPlugin
-} = require('browser-pool');
+} = require('@crawlers/browser-pool');
 const puppeteer = require('puppeteer');
 const playwright = require('playwright');
 
@@ -387,9 +386,9 @@ const browserPool = new BrowserPool({
 
 | Name | Type |
 | --- | --- |
-| BrowserPool | [<code>BrowserPool</code>](#BrowserPool) | 
-| PuppeteerPlugin | <code>PuppeteerPlugin</code> | 
-| PlaywrightPlugin | <code>PlaywrightPlugin</code> | 
+| BrowserPool | [<code>BrowserPool</code>](#BrowserPool) |
+| PuppeteerPlugin | <code>PuppeteerPlugin</code> |
+| PlaywrightPlugin | <code>PlaywrightPlugin</code> |
 
 
 * * *
@@ -397,7 +396,7 @@ const browserPool = new BrowserPool({
 <a name="BrowserPool"></a>
 
 ### BrowserPool
-The `BrowserPool` class is the most important class of the `browser-pool` module.
+The `BrowserPool` class is the most important class of the `@crawlers/browser-pool` module.
 It manages opening and closing of browsers and their pages and its constructor
 options allow easy configuration of the browsers' and pages' lifecycle.
 
@@ -407,7 +406,7 @@ stage of the browser / page lifecycle.
 
 **Example:**
 ```js
-const { BrowserPool, PlaywrightPlugin } = require('browser-pool');
+const { BrowserPool, PlaywrightPlugin } = require('@crawlers/browser-pool');
 const playwright = require('playwright');
 
 const browserPool = new BrowserPool({
@@ -468,7 +467,7 @@ const browserPool = new BrowserPool({
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | options | <code>object</code> |  |  |
-| options.browserPlugins | [<code>Array.&lt;BrowserPlugin&gt;</code>](#BrowserPlugin) |  | Browser plugins are wrappers of browser automation libraries that  allow `BrowserPool` to control browsers with those libraries.  `browser-pool` comes with a `PuppeteerPlugin` and a `PlaywrightPlugin`. |
+| options.browserPlugins | [<code>Array.&lt;BrowserPlugin&gt;</code>](#BrowserPlugin) |  | Browser plugins are wrappers of browser automation libraries that  allow `BrowserPool` to control browsers with those libraries.  `@crawlers/browser-pool` comes with a `PuppeteerPlugin` and a `PlaywrightPlugin`. |
 | [options.maxOpenPagesPerBrowser] | <code>number</code> | <code>20</code> | Sets the maximum number of pages that can be open in a browser at the  same time. Once reached, a new browser will be launched to handle the excess. |
 | [options.retireBrowserAfterPageCount] | <code>number</code> | <code>100</code> | Browsers tend to get bloated after processing a lot of pages. This option  configures the number of processed pages after which the browser will  automatically retire and close. A new browser will launch in its place. |
 | [options.operationTimeoutSecs] | <code>number</code> | <code>15</code> | As we know from experience, async operations of the underlying libraries,  such as launching a browser or opening a new page, can get stuck.  To prevent `BrowserPool` from getting stuck, we add a timeout  to those operations and you can configure it with this option. |
@@ -479,14 +478,11 @@ const browserPool = new BrowserPool({
 | [options.postPageCreateHooks] | <code>Array.&lt;function()&gt;</code> |  | Post-page-create hooks are called right after a new page is created  and all internal actions of Browser Pool are completed. This is the  place to make changes to a page that you would like to apply to all  pages. Such as injecting a JavaScript library into all pages.  The hooks are called with two arguments:  `page`: `Page` and `browserController`: [BrowserController](#BrowserController) |
 | [options.prePageCloseHooks] | <code>Array.&lt;function()&gt;</code> |  | Pre-page-close hooks give you the opportunity to make last second changes  in a page that's about to be closed, such as saving a snapshot or updating  state.  The hooks are called with two arguments:  `page`: `Page` and `browserController`: [BrowserController](#BrowserController) |
 | [options.postPageCloseHooks] | <code>Array.&lt;function()&gt;</code> |  | Post-page-close hooks allow you to do page related clean up.  The hooks are called with two arguments:  `pageId`: `string` and `browserController`: [BrowserController](#BrowserController) |
-|[options.useFingerprints] | <code>boolean</code> | <code>false</code> | If true the Browser pool will automatically generate and inject fingerprints to browsers.|
-| [options.fingerprintsOptions] | <code>FingerprintOptions </code> | | Fingerprints options that allows customizing the fingerprinting behavior. |
-| [options.fingerprintsOptions.fingerprintGeneratorOptions] | | | See the [Fingerprint generator]("https://github.com/apify/fingerprint-generator#headergeneratoroptions") documentation. |
-| [options.fingerprintsOptions.useFingerprintPerProxyCache] | <code>boolean</code> | <code>true</code>| Fingerprints are autimatically assigned to an IP address so 1 IP equals 1 fingerprint. You can disable this behavior by settings this property to false. |
-| [options.fingerprintsOptions.fingerprintPerProxyCacheSize] | <code>number</code> | <code>10000</code> | Maximum number of IP to fingerprint pairs.
-
-
-
+| [options.useFingerprints] | <code>boolean</code> | <code>false</code> | If true the Browser pool will automatically generate and inject fingerprints to browsers. |
+| [options.fingerprintsOptions] | <code>FingerprintOptions </code> |  | Fingerprints options that allows customizing the fingerprinting behavior. |
+| [options.fingerprintsOptions.fingerprintGeneratorOptions] |  |  | See the [Fingerprint generator]("https://github.com/apify/fingerprint-generator#headergeneratoroptions") documentation. |
+| [options.fingerprintsOptions.useFingerprintPerProxyCache] | <code>boolean</code> | <code>true</code> | Fingerprints are autimatically assigned to an IP address so 1 IP equals 1 fingerprint. You can disable this behavior by settings this property to false. |
+| [options.fingerprintsOptions.fingerprintPerProxyCacheSize] | <code>number</code> | <code>10000</code> | Maximum number of IP to fingerprint pairs. |
 * * *
 
 <a name="BrowserPool+newPage"></a>
@@ -552,7 +548,7 @@ const [chromiumPage, firefoxPage, webkitPage, puppeteerPage] = pages;
 
 | Param | Type |
 | --- | --- |
-| optionsList | <code>Array.&lt;object&gt;</code> | 
+| optionsList | <code>Array.&lt;object&gt;</code> |
 
 
 * * *
@@ -589,7 +585,7 @@ return `undefined`.
 
 | Param | Type |
 | --- | --- |
-| id | <code>string</code> | 
+| id | <code>string</code> |
 
 
 * * *
@@ -605,7 +601,7 @@ until it's closed.
 
 | Param | Type |
 | --- | --- |
-| page | <code>Page</code> | 
+| page | <code>Page</code> |
 
 
 * * *
@@ -619,7 +615,7 @@ browser will be closed after all its pages are closed.
 
 | Param | Type |
 | --- | --- |
-| browserController | [<code>BrowserController</code>](#BrowserController) | 
+| browserController | [<code>BrowserController</code>](#BrowserController) |
 
 
 * * *
@@ -633,7 +629,7 @@ closed after all its pages are closed.
 
 | Param | Type |
 | --- | --- |
-| page | <code>Page</code> | 
+| page | <code>Page</code> |
 
 
 * * *
@@ -718,8 +714,8 @@ Emits 'browserClosed' event.
 
 | Param | Type |
 | --- | --- |
-| page | <code>Object</code> | 
-| cookies | <code>Array.&lt;object&gt;</code> | 
+| page | <code>Object</code> |
+| cookies | <code>Array.&lt;object&gt;</code> |
 
 
 * * *
@@ -730,7 +726,7 @@ Emits 'browserClosed' event.
 
 | Param | Type |
 | --- | --- |
-| page | <code>Object</code> | 
+| page | <code>Object</code> |
 
 
 * * *
@@ -759,7 +755,7 @@ feed them to [BrowserPool](#BrowserPool) for use.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| library | <code>object</code> | Each plugin expects an instance of the object with the `.launch()` property.  For Puppeteer, it is the `puppeteer` module itself, whereas for Playwright  it is one of the browser types, such as `puppeteer.chromium`.  `BrowserPlugin` does not include the library. You can choose any version  or fork of the library. It also keeps `browser-pool` installation small. |
+| library | <code>object</code> | Each plugin expects an instance of the object with the `.launch()` property.  For Puppeteer, it is the `puppeteer` module itself, whereas for Playwright  it is one of the browser types, such as `puppeteer.chromium`.  `BrowserPlugin` does not include the library. You can choose any version  or fork of the library. It also keeps `@crawlers/browser-pool` installation small. |
 | [options] | <code>object</code> |  |
 | [options.launchOptions] | <code>object</code> | Options that will be passed down to the automation library. E.g.  `puppeteer.launch(launchOptions);`. This is a good place to set  options that you want to apply as defaults. To dynamically override  those options per-browser, see the `preLaunchHooks` of [BrowserPool](#BrowserPool). |
 | [options.proxyUrl] | <code>string</code> | Automation libraries configure proxies differently. This helper allows you  to set a proxy URL without worrying about specific implementations.  It also allows you use an authenticated proxy without extra code. |
@@ -804,7 +800,7 @@ Use `undefined` to unset existing proxy URL.
 
 | Param | Type |
 | --- | --- |
-| url | <code>string</code> | 
+| url | <code>string</code> |
 
 
 * * *
@@ -829,7 +825,7 @@ used instead of property assignment.
 
 | Param | Type |
 | --- | --- |
-| fields | <code>object</code> | 
+| fields | <code>object</code> |
 
 
 * * *
