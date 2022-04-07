@@ -694,7 +694,7 @@ export class BrowserPool<
     private async _closeInactiveRetiredBrowsers() {
         const closedBrowserIds: string[] = [];
 
-        this.retiredBrowserControllers.forEach((controller) => {
+        for (const controller of this.retiredBrowserControllers) {
             const millisSinceLastPageOpened = Date.now() - controller.lastPageOpenedAt;
             const isBrowserIdle = millisSinceLastPageOpened >= this.closeInactiveBrowserAfterMillis;
             const isBrowserEmpty = controller.activePages === 0;
@@ -702,11 +702,11 @@ export class BrowserPool<
             if (isBrowserIdle || isBrowserEmpty) {
                 const { id } = controller;
                 log.debug('Closing retired browser.', { id });
-                controller.close();
+                await controller.close();
                 this.retiredBrowserControllers.delete(controller);
                 closedBrowserIds.push(id);
             }
-        });
+        }
 
         if (closedBrowserIds.length) {
             log.debug('Closed retired browsers.', {
@@ -749,9 +749,9 @@ export class BrowserPool<
         if (browserController.activePages === 0 && this.retiredBrowserControllers.has(browserController)) {
             // Run this with a delay, otherwise page.close()
             // might fail with "Protocol error (Target.closeTarget): Target closed."
-            setTimeout(() => {
+            setTimeout(async () => {
                 log.debug('Closing retired browser because it has no active pages', { id: browserController.id });
-                browserController.close();
+                await browserController.close();
                 this.retiredBrowserControllers.delete(browserController);
             }, PAGE_CLOSE_KILL_TIMEOUT_MILLIS);
         }

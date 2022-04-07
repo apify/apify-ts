@@ -557,7 +557,7 @@ describe('Plugins', () => {
                     const launchContext = plugin.createLaunchContext();
                     browser = await plugin.launch(launchContext);
 
-                    expect(browser.newContext())
+                    await expect(browser.newContext())
                         .rejects
                         .toThrow('Function `newContext()` is not available in incognito mode');
                 });
