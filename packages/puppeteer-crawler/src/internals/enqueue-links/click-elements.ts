@@ -73,7 +73,7 @@ export interface EnqueueLinksByClickingElementsOptions {
      * An array of regular expressions or plain objects
      * containing regular expressions matching the URLs to be enqueued.
      *
-     * The plain objects must include at least the `regexp` property, which holds the glob pattern string.
+     * The plain objects must include at least the `regexp` property, which holds the regular expression.
      * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
      * If `regexps` is an empty array or `undefined`, then the function
@@ -89,7 +89,7 @@ export interface EnqueueLinksByClickingElementsOptions {
      * An array of {@link PseudoUrl} strings or plain objects
      * containing {@link PseudoUrl} strings matching the URLs to be enqueued.
      *
-     * The plain objects must include at least the `purl` property, which holds the glob pattern string.
+     * The plain objects must include at least the `purl` property, which holds the pseudo-URL pattern string.
      * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
      * With a pseudo-URL string, the matching is always case-insensitive.
