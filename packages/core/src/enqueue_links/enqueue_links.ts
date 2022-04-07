@@ -38,8 +38,9 @@ export interface EnqueueLinksOptions {
     /**
      * An array of glob pattern strings or plain objects
      * containing glob pattern strings matching the URLs to be enqueued.
-     * All remaining keys will be used as request options
-     * for the corresponding enqueued {@link Request} objects.
+     *
+     * The plain objects must include at least the `glob` property, which holds the glob pattern string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
      * The matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
@@ -52,8 +53,9 @@ export interface EnqueueLinksOptions {
     /**
      * An array of regular expressions or plain objects
      * containing regular expressions matching the URLs to be enqueued.
-     * All remaining keys will be used as request options
-     * for the corresponding enqueued {@link Request} objects.
+     *
+     * The plain objects must include at least the `regexp` property, which holds the regular expression.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
      * If `regexps` is an empty array or `undefined`, then the function
      * enqueues the links with the same subdomain.
@@ -66,8 +68,9 @@ export interface EnqueueLinksOptions {
      *
      * An array of {@link PseudoUrl} strings or plain objects
      * containing {@link PseudoUrl} strings matching the URLs to be enqueued.
-     * All remaining keys will be used as request options
-     * for the corresponding enqueued {@link Request} objects.
+     *
+     * The plain objects must include at least the `purl` property, which holds the pseudo-URL string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
      * With a pseudo-URL string, the matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
