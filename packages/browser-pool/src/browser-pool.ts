@@ -749,9 +749,10 @@ export class BrowserPool<
         if (browserController.activePages === 0 && this.retiredBrowserControllers.has(browserController)) {
             // Run this with a delay, otherwise page.close()
             // might fail with "Protocol error (Target.closeTarget): Target closed."
-            setTimeout(async () => {
+            setTimeout(() => {
                 log.debug('Closing retired browser because it has no active pages', { id: browserController.id });
-                await browserController.close();
+                // TODO: @typescript-eslint/no-floating-promises
+                browserController.close(); // eslint-disable-line
                 this.retiredBrowserControllers.delete(browserController);
             }, PAGE_CLOSE_KILL_TIMEOUT_MILLIS);
         }
