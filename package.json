@@ -60,6 +60,7 @@
         "@types/fs-extra": "^9.0.13",
         "@types/htmlparser2": "^3.10.3",
         "@types/jest": "^27.4.1",
+        "@types/lodash.merge": "^4.6.6",
         "@types/mime-types": "^2.1.1",
         "@types/node": "^16.11.10",
         "@types/ps-tree": "^1.1.1",

@@ -82,7 +82,7 @@ describe('Snapshotter', () => {
         const snapshotter = new Snapshotter({ config, eventLoopSnapshotIntervalSecs: 0.05 });
         await config.getEventManager().init();
         await snapshotter.start();
-        await sleep(1000);
+        await sleep(3 * 1e3);
         await snapshotter.stop();
         await config.getEventManager().close();
         const memorySnapshots = snapshotter.getMemorySample();
@@ -309,7 +309,7 @@ describe('Snapshotter', () => {
         });
         await snapshotter.start();
         await config.getEventManager().init();
-        await sleep(500);
+        await sleep(1e3);
         await snapshotter.stop();
         await config.getEventManager().close();
         const memorySnapshots = snapshotter.getMemorySample();
