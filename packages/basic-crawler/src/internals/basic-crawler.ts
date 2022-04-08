@@ -452,7 +452,14 @@ export class BasicCrawler<
             oldProperty: handleRequestTimeoutSecs ? handleRequestTimeoutSecs * 1000 : undefined,
         });
 
-        this.internalTimeoutMillis = Math.max(this.requestHandlerTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
+        const tryEnv = (val?: string) => (val == null ? null : +val);
+        // allow at least 5min for internal timeouts
+        this.internalTimeoutMillis = tryEnv(process.env.APIFY_INTERNAL_TIMEOUT) ?? Math.max(this.requestHandlerTimeoutMillis, 300e3);
+        // override the default internal timeout of request queue to respect `requestHandlerTimeoutMillis`
+        if (this.requestQueue) {
+            this.requestQueue.internalTimeoutMillis = this.internalTimeoutMillis;
+        }
+
         this.maxRequestRetries = maxRequestRetries;
         this.handledRequestsCount = 0;
         this.stats = new Statistics({ logMessage: `${log.getOptions().prefix} request statistics:`, config });
@@ -465,7 +472,7 @@ export class BasicCrawler<
 
         const maxSignedInteger = 2 ** 31 - 1;
         if (this.requestHandlerTimeoutMillis > maxSignedInteger) {
-            log.warning(`handleRequestTimeoutMillis ${this.requestHandlerTimeoutMillis}`
+            log.warning(`requestHandlerTimeoutMillis ${this.requestHandlerTimeoutMillis}`
                 + `does not fit a signed 32-bit integer. Limiting the value to ${maxSignedInteger}`);
 
             this.requestHandlerTimeoutMillis = maxSignedInteger;
