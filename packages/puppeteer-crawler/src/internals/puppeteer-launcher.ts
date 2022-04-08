@@ -6,7 +6,6 @@ import { applyStealthToBrowser, StealthOptions } from './stealth';
 
 /**
  * The default user agent used by `Actor.launchPuppeteer`.
- * Last updated on 2020-05-22.
  */
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36';
 
@@ -38,7 +37,7 @@ const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
  */
 export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPlugin['launchOptions'], unknown> {
     /**
-     *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-puppeteerlaunchoptions)
+     *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v13.5.1&show=api-puppeteerlaunchoptions)
      */
     launchOptions?: PuppeteerPlugin['launchOptions'];
 
@@ -76,6 +75,13 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
      * Apify SDK is not tested with any other library besides `puppeteer` itself.
      */
     launcher?: unknown;
+
+    /**
+    * With this option selected, all pages will be opened in a new incognito browser context.
+    * This means they will not share cookies nor cache and their resources will not be throttled by one another.
+    * @default false
+    */
+    useIncognitoPages?: boolean;
 
     /**
      * This setting hides most of the known properties that identify headless Chrome and makes it nearly undetectable.

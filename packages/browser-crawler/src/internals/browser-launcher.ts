@@ -13,6 +13,14 @@ import {
 
 export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
     /**
+     * URL to a HTTP proxy server. It must define the port number,
+     * and it may also contain proxy username and password.
+     *
+     * Example: `http://bob:pass123@proxy.example.com:1234`.
+     */
+    proxyUrl?: string;
+
+    /**
      * If `true` and `executablePath` is not set,
      * the launcher will launch full Google Chrome browser available on the machine
      * rather than the bundled Chromium. The path to Chrome executable
@@ -22,6 +30,21 @@ export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginO
      * @default false
      */
     useChrome?: boolean;
+
+    /**
+    * With this option selected, all pages will be opened in a new incognito browser context.
+    * This means they will not share cookies nor cache and their resources will not be throttled by one another.
+    * @default false
+    */
+    useIncognitoPages?: boolean;
+
+    /**
+    * Sets the [User Data Directory](https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md) path.
+    * The user data directory contains profile data such as history, bookmarks, and cookies, as well as other per-installation local state.
+    * If not specified, a temporary directory is used instead.
+    */
+    userDataDir?: string;
+
     launcher?: Launcher;
 }
 
