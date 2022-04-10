@@ -25,8 +25,8 @@ import {
     EventManager,
     EventType,
     FinalStatistics,
-} from '@crawlers/core';
-import { Awaitable } from '@crawlers/utils';
+} from '@crawlee/core';
+import { Awaitable } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {

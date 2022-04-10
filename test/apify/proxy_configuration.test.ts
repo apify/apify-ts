@@ -1,5 +1,5 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { requestAsBrowser } from '@crawlers/utils';
+import { requestAsBrowser } from '@crawlee/utils';
 import { UserClient } from 'apify-client';
 import { Actor, ProxyConfiguration } from 'apify';
 
@@ -17,8 +17,8 @@ const basicOpts = {
 const basicOptsProxyUrl = 'http://groups-GROUP1+GROUP2,session-538909250932,country-CZ:test12345@proxy.apify.com:8000';
 const proxyUrlNoSession = 'http://groups-GROUP1+GROUP2,country-CZ:test12345@proxy.apify.com:8000';
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
-    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+jest.mock('@crawlee/utils/src/internals/request', () => {
+    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
     return {
         ...original,
         requestAsBrowser: jest.fn(),
@@ -28,7 +28,7 @@ jest.mock('@crawlers/utils/src/internals/request', () => {
 const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
 
 afterAll(() => {
-    jest.unmock('@crawlers/utils/src/internals/request');
+    jest.unmock('@crawlee/utils/src/internals/request');
 });
 
 afterEach(() => {

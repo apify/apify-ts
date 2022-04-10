@@ -12,8 +12,8 @@ import {
     RequestList,
     RequestQueue,
     Session,
-} from '@crawlers/puppeteer';
-import { sleep } from '@crawlers/utils';
+} from '@crawlee/puppeteer';
+import { sleep } from '@crawlee/utils';
 import { once } from 'events';
 import { createServer, Server } from 'http';
 import { AddressInfo } from 'net';

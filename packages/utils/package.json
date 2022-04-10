@@ -1,5 +1,5 @@
 {
-    "name": "@crawlers/utils",
+    "name": "@crawlee/utils",
     "version": "3.0.0",
     "description": "A set of shared utilities that can be used by crawlers",
     "engines": {

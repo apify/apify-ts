@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
 import log, { Log } from '@apify/log';
-import { requestAsBrowser, RequestAsBrowserOptions, sleep } from '@crawlers/utils';
+import { requestAsBrowser, RequestAsBrowserOptions, sleep, Dictionary, entries } from '@crawlee/utils';
 import bodyParser from 'body-parser';
 import { Actor } from 'apify';
 import {
@@ -12,8 +12,6 @@ import {
     Configuration,
     CrawlerExtension,
     ProxyConfiguration,
-    Dictionary,
-    entries,
     mergeCookies,
     PrepareRequestInputs,
     ProxyInfo,
@@ -22,7 +20,7 @@ import {
     Session,
     Source,
     STATUS_CODES_BLOCKED,
-} from 'crawlers';
+} from '@crawlee/cheerio';
 import express from 'express';
 import fs from 'fs';
 import { IncomingHttpHeaders, Server } from 'http';
@@ -148,8 +146,8 @@ app.get('/timeout', async (_req, res) => {
     res.type('html').send('<div>TEST</div>');
 });
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
-    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+jest.mock('@crawlee/utils/src/internals/request', () => {
+    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
     return {
         ...original,
         requestAsBrowser: jest.fn(original.requestAsBrowser),
@@ -160,7 +158,7 @@ const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof reque
 const originalRequestAsBrowserImplementation = requestAsBrowserSpy.getMockImplementation()!;
 
 afterAll(() => {
-    jest.unmock('@crawlers/utils/src/internals/request');
+    jest.unmock('@crawlee/utils/src/internals/request');
 });
 
 afterEach(() => {

@@ -1,6 +1,6 @@
 import { Log } from '@apify/log';
 import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
-import { getMemoryInfo } from '@crawlers/utils';
+import { getMemoryInfo } from '@crawlee/utils';
 import ow from 'ow';
 import { Configuration } from '../configuration';
 import { log as defaultLog } from '../log';

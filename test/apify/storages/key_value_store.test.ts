@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
-import { KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlers/core';
-import { Dictionary } from '@crawlers/utils';
+import { KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlee/core';
+import { Dictionary } from '@crawlee/utils';
 
 // TODO this does not make sense here
 describe('KeyValueStore remote', () => {

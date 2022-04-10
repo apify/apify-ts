@@ -1,5 +1,5 @@
-import { PlaywrightCrawler } from '@crawlers/playwright';
-import { downloadListOfUrls } from '@crawlers/utils';
+import { PlaywrightCrawler } from '@crawlee/playwright';
+import { downloadListOfUrls } from '@crawlee/utils';
 
 const crawler = new PlaywrightCrawler({
     // Function called for each URL

@@ -1,4 +1,4 @@
-export * from '@crawlers/browser';
+export * from '@crawlee/browser';
 export * from './internals/puppeteer-crawler';
 export * from './internals/puppeteer-launcher';
 

@@ -1,5 +1,5 @@
-import { BasicCrawler, Dataset } from '@crawlers/basic';
-import { requestAsBrowser } from '@crawlers/utils';
+import { BasicCrawler, Dataset } from '@crawlee/basic';
+import { requestAsBrowser } from '@crawlee/utils';
 
 // Create a dataset where we will store the results.
 const dataset = await Dataset.open();

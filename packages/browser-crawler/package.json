@@ -1,5 +1,5 @@
 {
-    "name": "@crawlers/browser",
+    "name": "@crawlee/browser",
     "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
@@ -52,6 +52,6 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/basic": "^3.0.0"
+        "@crawlee/basic": "^3.0.0"
     }
 }

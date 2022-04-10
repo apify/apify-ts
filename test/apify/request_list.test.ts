@@ -1,6 +1,6 @@
 import log from '@apify/log';
-import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlers/core';
-import { requestAsBrowser, sleep } from '@crawlers/utils';
+import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlee/core';
+import { requestAsBrowser, sleep } from '@crawlee/utils';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
@@ -15,8 +15,8 @@ function shuffle(array: unknown[]) : unknown[] {
     return out;
 }
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
-    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+jest.mock('@crawlee/utils/src/internals/request', () => {
+    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
     return {
         ...original,
         requestAsBrowser: jest.fn(original.requestAsBrowser),
@@ -32,7 +32,7 @@ afterEach(() => {
 });
 
 afterAll(() => {
-    jest.unmock('@crawlers/utils/src/internals/request');
+    jest.unmock('@crawlee/utils/src/internals/request');
 });
 
 describe('RequestList', () => {

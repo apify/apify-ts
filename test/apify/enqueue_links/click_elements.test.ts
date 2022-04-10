@@ -5,7 +5,7 @@ import {
     puppeteerClickElements,
     launchPuppeteer,
     puppeteerUtils,
-} from '@crawlers/puppeteer';
+} from '@crawlee/puppeteer';
 import { Browser, Page, Target } from 'puppeteer';
 
 const { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } = puppeteerClickElements;

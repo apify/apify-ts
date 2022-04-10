@@ -1,4 +1,4 @@
-import { Dataset, PlaywrightCrawler } from '@crawlers/playwright';
+import { Dataset, PlaywrightCrawler } from '@crawlee/playwright';
 
 const dataset = await Dataset.open();
 

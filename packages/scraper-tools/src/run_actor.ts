@@ -1,5 +1,5 @@
 import { Actor } from 'apify';
-import { FinalStatistics } from '@crawlers/core';
+import { FinalStatistics } from '@crawlee/core';
 import log from '@apify/log';
 
 export interface CrawlerSetup {

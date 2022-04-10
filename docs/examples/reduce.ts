@@ -1,4 +1,4 @@
-import { Dataset, KeyValueStore } from '@crawlers/core';
+import { Dataset, KeyValueStore } from '@crawlee/core';
 
 const dataset = await Dataset.open();
 const keyValueStore = await KeyValueStore.open();

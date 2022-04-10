@@ -1,4 +1,4 @@
-import { Dataset, CheerioCrawler, log, LogLevel } from '@crawlers/cheerio';
+import { Dataset, CheerioCrawler, log, LogLevel } from '@crawlee/cheerio';
 
 const dataset = await Dataset.open();
 

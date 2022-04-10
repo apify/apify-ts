@@ -15,8 +15,8 @@ import {
     puppeteerUtils,
     BrowserCrawlerEnqueueLinksOptions,
     log,
-} from '@crawlers/puppeteer';
-import { Awaitable, Dictionary } from '@crawlers/utils';
+} from '@crawlee/puppeteer';
+import { Awaitable, Dictionary } from '@crawlee/utils';
 import { readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';

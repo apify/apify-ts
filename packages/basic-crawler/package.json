@@ -1,5 +1,5 @@
 {
-    "name": "@crawlers/basic",
+    "name": "@crawlee/basic",
     "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
@@ -51,7 +51,7 @@
         "@apify/utilities": "^1.2.5",
         "@apify/timeout": "^0.2.1",
         "@apify/log": "^1.1.6",
-        "@crawlers/core": "^3.0.0",
+        "@crawlee/core": "^3.0.0",
         "ow": "^0.28.0"
     }
 }

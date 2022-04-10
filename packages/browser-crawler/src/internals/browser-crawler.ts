@@ -13,13 +13,13 @@ import {
     throwOnBlockedRequest,
     validators,
     storage,
-} from '@crawlers/core';
+} from '@crawlee/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
     BasicCrawler,
     BasicCrawlerOptions,
-} from '@crawlers/basic';
-import { Awaitable, Dictionary } from '@crawlers/utils';
+} from '@crawlee/basic';
+import { Awaitable, Dictionary } from '@crawlee/utils';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,
@@ -30,7 +30,7 @@ import {
     CommonPage,
     InferBrowserPluginArray,
     LaunchContext,
-} from 'browser-pool';
+} from '@crawlee/browser-pool';
 import ow from 'ow';
 import { BrowserLaunchContext } from './browser-launcher';
 

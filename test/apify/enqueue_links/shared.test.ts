@@ -6,7 +6,7 @@ import {
     createRequestOptions,
     validateGlobPattern,
     Request,
-} from '@crawlers/core';
+} from '@crawlee/core';
 
 describe('Enqueue links shared functions', () => {
     describe('constructGlobObjectsFromGlobs()', () => {

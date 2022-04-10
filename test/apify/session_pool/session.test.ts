@@ -1,5 +1,5 @@
-import { EVENT_SESSION_RETIRED, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlers/core';
-import { Dictionary, entries, sleep } from '@crawlers/utils';
+import { EVENT_SESSION_RETIRED, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlee/core';
+import { Dictionary, entries, sleep } from '@crawlee/utils';
 import { ProxyConfiguration } from 'apify';
 
 describe('Session - testing session behaviour ', () => {

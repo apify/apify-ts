@@ -1,4 +1,4 @@
-import { CheerioCrawler } from '@crawlers/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 
 // Create a CheerioCrawler
 const crawler = new CheerioCrawler({

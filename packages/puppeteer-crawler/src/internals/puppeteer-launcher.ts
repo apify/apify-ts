@@ -1,7 +1,7 @@
 import ow from 'ow';
 import { Browser } from 'puppeteer';
-import { PuppeteerPlugin } from 'browser-pool';
-import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
+import { PuppeteerPlugin } from '@crawlee/browser-pool';
+import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
 import { applyStealthToBrowser, StealthOptions } from './stealth';
 
 /**

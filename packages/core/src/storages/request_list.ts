@@ -1,4 +1,4 @@
-import { downloadListOfUrls } from '@crawlers/utils';
+import { downloadListOfUrls } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 import { EventManager, EventType } from '../events';
 import { Configuration } from '../configuration';

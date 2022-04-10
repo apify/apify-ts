@@ -1,14 +1,14 @@
 import ow from 'ow';
 import { LaunchOptions, Page, Response } from 'playwright';
-import { BrowserPoolOptions, PlaywrightPlugin } from 'browser-pool';
-import { Dictionary } from '@crawlers/utils';
+import { BrowserPoolOptions, PlaywrightPlugin } from '@crawlee/browser-pool';
+import { Dictionary } from '@crawlee/utils';
 import {
     BrowserCrawler,
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserCrawlerHandleRequest,
     BrowserHook,
-} from '@crawlers/browser';
+} from '@crawlee/browser';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from './playwright-launcher';
 import { DirectNavigationOptions, gotoExtended } from './utils/playwright-utils';
 

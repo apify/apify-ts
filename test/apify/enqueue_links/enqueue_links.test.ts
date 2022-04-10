@@ -1,17 +1,17 @@
 import log from '@apify/log';
-import { CheerioRoot } from '@crawlers/utils';
+import { CheerioRoot } from '@crawlee/utils';
 import cheerio from 'cheerio';
 import {
     browserCrawlerEnqueueLinks,
-    cheerioCrawlerEnqueueLinks,
     Configuration,
     EnqueueStrategy,
-    launchPlaywright,
     launchPuppeteer,
     Request,
     RequestOptions,
     RequestQueue,
-} from 'crawlers';
+} from '@crawlee/puppeteer';
+import { cheerioCrawlerEnqueueLinks } from '@crawlee/cheerio';
+import { launchPlaywright } from '@crawlee/playwright';
 import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 

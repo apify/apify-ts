@@ -1,5 +1,5 @@
 import { ENV_VARS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
-import { Configuration, KeyValueStore } from '@crawlers/core';
+import { Configuration, KeyValueStore } from '@crawlee/core';
 import { Actor } from 'apify';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 

@@ -1,4 +1,4 @@
-import { CheerioCrawler } from '@crawlers/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 
 const crawler = new CheerioCrawler({
     // Function called for each URL

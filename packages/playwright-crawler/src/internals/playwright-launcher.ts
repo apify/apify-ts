@@ -1,7 +1,7 @@
 import ow from 'ow';
 import { Browser, BrowserType, LaunchOptions } from 'playwright';
-import { PlaywrightPlugin } from 'browser-pool';
-import { BrowserLaunchContext, BrowserLauncher } from '@crawlers/browser';
+import { PlaywrightPlugin } from '@crawlee/browser-pool';
+import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
 
 /**
  * Apify extends the launch options of Playwright.

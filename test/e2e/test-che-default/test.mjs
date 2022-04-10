@@ -1,5 +1,5 @@
 import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlers/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 import { getDatasetItems, expect, validateDataset } from '../tools.mjs';
 
 const crawler = new CheerioCrawler({

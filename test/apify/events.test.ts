@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
-import { Dictionary, sleep } from '@crawlers/utils';
-import { Configuration, EventType } from '@crawlers/core';
+import { Dictionary, sleep } from '@crawlee/utils';
+import { Configuration, EventType } from '@crawlee/core';
 import { Actor, PlatformEventManager } from 'apify';
 import WebSocket from 'ws';
 

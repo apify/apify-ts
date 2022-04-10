@@ -107,7 +107,7 @@ export class DatasetClient {
     }
 
     async downloadItems(): Promise<never> {
-        throw new Error('This method is not implemented in @crawlers/storage yet.');
+        throw new Error('This method is not implemented in @crawlee/storage yet.');
     }
 
     async listItems(options: DatasetClientListOptions = {}): Promise<PaginationList> {

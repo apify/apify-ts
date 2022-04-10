@@ -5,8 +5,8 @@ import {
     ProxyConfiguration as CoreProxyConfiguration,
     ProxyConfigurationOptions as CoreProxyConfigurationOptions,
     ProxyInfo as CoreProxyInfo,
-} from '@crawlers/core';
-import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlers/utils';
+} from '@crawlee/core';
+import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlee/utils';
 import { Actor } from './actor';
 
 // https://docs.apify.com/proxy/datacenter-proxy#username-parameters

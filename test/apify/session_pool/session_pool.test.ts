@@ -1,5 +1,5 @@
-import { SessionPool, Session, KeyValueStore, Configuration, EventType } from '@crawlers/core';
-import { entries } from '@crawlers/utils';
+import { SessionPool, Session, KeyValueStore, Configuration, EventType } from '@crawlee/core';
+import { entries } from '@crawlee/utils';
 import { Log } from '@apify/log';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 

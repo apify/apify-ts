@@ -2,7 +2,7 @@ import { ensureDirSync, readdirSync } from 'fs-extra';
 import { ArgumentError } from 'ow';
 import { join } from 'path';
 import type { Database, Statement } from 'better-sqlite3-with-prebuilds';
-import { storage } from '@crawlers/core';
+import { storage } from '@crawlee/core';
 import { ApifyStorageLocal } from '@apify/storage-local';
 import { STORAGE_NAMES, DATABASE_FILE_NAME } from '@apify/storage-local/dist/consts';
 import { RequestQueueEmulator } from '@apify/storage-local/dist/emulators/request_queue_emulator';

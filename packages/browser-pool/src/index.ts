@@ -8,7 +8,7 @@
  *  BrowserPool,
  *  PuppeteerPlugin,
  *  PlaywrightPlugin
- * } = require('browser-pool');
+ * } = require('@crawlee/browser-pool');
  * const puppeteer = require('puppeteer');
  * const playwright = require('playwright');
  *

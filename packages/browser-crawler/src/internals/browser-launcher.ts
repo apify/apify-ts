@@ -5,11 +5,11 @@ import { ENV_VARS } from '@apify/consts';
 import {
     Dictionary,
     Constructor,
-} from '@crawlers/utils';
+} from '@crawlee/utils';
 import {
     BrowserPlugin,
     BrowserPluginOptions,
-} from 'browser-pool';
+} from '@crawlee/browser-pool';
 
 export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
     /**

@@ -1,7 +1,7 @@
 import { join, dirname } from 'path';
 import ow from 'ow';
 import { move, remove } from 'fs-extra';
-import { AllowedHttpMethods } from '@crawlers/core/src/typedefs';
+import { AllowedHttpMethods } from '@crawlee/core/src/typedefs';
 import type { DatabaseConnectionCache } from '../database_connection_cache';
 import { BatchAddRequestsResult, RawQueueTableData, RequestQueueEmulator } from '../emulators/request_queue_emulator';
 import { purgeNullsFromObject, uniqueKeyToRequestId } from '../utils';
@@ -223,7 +223,7 @@ export class RequestQueueClient {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async deleteRequest(_id: string): Promise<never> {
         // TODO Deletion is done, but we also need to update request counts in a transaction.
-        throw new Error('This method is not implemented in @crawlers/storage yet.');
+        throw new Error('This method is not implemented in @crawlee/storage yet.');
     }
 
     private _createRequestModel(request: RequestBody, forefront?: boolean): RequestModel {

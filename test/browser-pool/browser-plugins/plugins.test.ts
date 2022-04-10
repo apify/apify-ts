@@ -6,15 +6,15 @@ import { Server as ProxyChainServer } from 'proxy-chain';
 import puppeteer from 'puppeteer';
 import playwright from 'playwright';
 
-import { PuppeteerPlugin, PlaywrightPlugin } from '@crawlers/browser-pool';
-import { PuppeteerController } from '@crawlers/browser-pool/src/puppeteer/puppeteer-controller';
+import { PuppeteerPlugin, PlaywrightPlugin } from '@crawlee/browser-pool';
+import { PuppeteerController } from '@crawlee/browser-pool/src/puppeteer/puppeteer-controller';
 
-import { PlaywrightController } from '@crawlers/browser-pool/src/playwright/playwright-controller';
-import { Browser } from '@crawlers/browser-pool/src/playwright/browser';
+import { PlaywrightController } from '@crawlee/browser-pool/src/playwright/playwright-controller';
+import { Browser } from '@crawlee/browser-pool/src/playwright/browser';
 
-import { LaunchContext } from '@crawlers/browser-pool/src/launch-context';
-import { UnwrapPromise } from '@crawlers/browser-pool/src/utils';
-import { CommonLibrary } from '@crawlers/browser-pool/src/abstract-classes/browser-plugin';
+import { LaunchContext } from '@crawlee/browser-pool/src/launch-context';
+import { UnwrapPromise } from '@crawlee/browser-pool/src/utils';
+import { CommonLibrary } from '@crawlee/browser-pool/src/abstract-classes/browser-plugin';
 
 import { createProxyServer } from './create-proxy-server';
 

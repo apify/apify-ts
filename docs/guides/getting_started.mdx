@@ -1551,7 +1551,7 @@ In our `main.js` file, we place the general structure of the crawler:
 ```js
 // main.js
 import { Actor } from 'apify';
-import { CheerioCrawler, log } from '@crawlers/cheerio';
+import { CheerioCrawler, log } from '@crawlee/cheerio';
 import * as tools from './tools';
 
 Actor.main(async () => {
@@ -1582,7 +1582,7 @@ Then in a separate `tools.js`, we add our helper functions:
 ```js
 // tools.js
 import { Actor } from 'apify';
-import { log } from '@crawlers/core';
+import { log } from '@crawlee/core';
 import * as routes from './routes';
 
 export async function getSources() {
@@ -1611,7 +1611,7 @@ And finally our routes in a separate `routes.js` file:
 ```js
 // routes.js
 import { Actor } from 'apify';
-import { log } from '@crawlers/core';
+import { log } from '@crawlee/core';
 
 export const CATEGORY = async ({ enqueueLinks }) => {
     return enqueueLinks({

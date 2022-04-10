@@ -1,5 +1,5 @@
-import { Statistics, Configuration, EventType } from '@crawlers/core';
-import { Dictionary } from '@crawlers/utils';
+import { Statistics, Configuration, EventType } from '@crawlee/core';
+import { Dictionary } from '@crawlee/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('Statistics', () => {

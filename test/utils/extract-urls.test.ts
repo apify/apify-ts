@@ -4,14 +4,14 @@ import {
     requestAsBrowser,
     RequestAsBrowserResult,
     URL_WITH_COMMAS_REGEX,
-} from '@crawlers/utils';
+} from '@crawlee/utils';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const baseDataPath = path.join(__dirname, '..', 'shared', 'data');
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
-    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+jest.mock('@crawlee/utils/src/internals/request', () => {
+    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
     return {
         ...original,
         requestAsBrowser: jest.fn(),
@@ -21,7 +21,7 @@ jest.mock('@crawlers/utils/src/internals/request', () => {
 const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
 
 afterAll(() => {
-    jest.unmock('@crawlers/utils/src/internals/request');
+    jest.unmock('@crawlee/utils/src/internals/request');
 });
 
 describe('downloadListOfUrls()', () => {

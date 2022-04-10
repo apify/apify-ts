@@ -4,7 +4,7 @@ import {
     BasicCrawler,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
-} from '@crawlers/basic';
+} from '@crawlee/basic';
 import {
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
@@ -20,7 +20,7 @@ import {
     Session,
     storage,
     validators,
-} from '@crawlers/core';
+} from '@crawlee/core';
 import {
     Awaitable,
     CheerioRoot,
@@ -29,7 +29,7 @@ import {
     requestAsBrowser,
     RequestAsBrowserOptions,
     RequestAsBrowserResult,
-} from '@crawlers/utils';
+} from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { Method, TimeoutError } from 'got-scraping';
