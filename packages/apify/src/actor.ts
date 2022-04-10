@@ -17,7 +17,6 @@ import {
     RequestQueue,
     Source,
     StorageManager,
-    FinalStatistics,
 } from '@crawlers/core';
 import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
@@ -125,7 +124,7 @@ export class Actor {
      * @param options
      * @ignore
      */
-    main(userFunc: UserFunc, options?: MainOptions): Promise<void> {
+    main<T>(userFunc: UserFunc, options?: MainOptions): Promise<T> {
         if (!userFunc || typeof userFunc !== 'function') {
             throw new Error(`First parameter for Actor.main() must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
         }
@@ -136,14 +135,17 @@ export class Actor {
             }
 
             await this.init();
+            let ret: T;
 
             try {
-                await Configuration.storage.run(this.config, userFunc);
+                ret = await Configuration.storage.run(this.config, userFunc) as unknown as T;
                 await this.exit(options);
             } catch (err: any) {
                 log.exception(err, err.message);
                 await this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
             }
+
+            return ret!;
         })();
     }
 
@@ -813,22 +815,12 @@ export class Actor {
      * the promise will be awaited. The user function is called with no arguments.
      * @param options
      */
-    static main(userFunc: UserFunc, options?: MainOptions): Promise<void> {
-        return Actor.getDefaultInstance().main(userFunc, options);
+    static main<T>(userFunc: UserFunc<T>, options?: MainOptions): Promise<T> {
+        return Actor.getDefaultInstance().main<T>(userFunc, options);
     }
 
     static async init(): Promise<void> {
         return Actor.getDefaultInstance().init();
-    }
-
-    static async run(crawler: Crawler, options?: MainOptions): Promise<FinalStatistics> {
-        let stats: FinalStatistics;
-
-        await Actor.main(async () => {
-            stats = await crawler.run();
-        }, options);
-
-        return stats!;
     }
 
     static async exit(options: ExitOptions = {}): Promise<void> {
@@ -1365,7 +1357,7 @@ export interface ApifyEnv {
     memoryMbytes: number | null;
 }
 
-export type UserFunc = () => Awaitable<void>;
+export type UserFunc<T = unknown> = () => Awaitable<T>;
 
 export interface CallOptions extends ActorStartOptions {
     /**
@@ -1460,7 +1452,3 @@ export const EXIT_CODES = {
     ERROR_USER_FUNCTION_THREW: 91,
     ERROR_UNKNOWN: 92,
 };
-
-interface Crawler {
-    run(): Promise<FinalStatistics>;
-}
