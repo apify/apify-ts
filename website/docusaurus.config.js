@@ -3,7 +3,7 @@ const { externalLinkProcessor } = require('./tools/utils/externalLink');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
-    title: 'Apify SDK',
+    title: 'Crawlee',
     tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js',
     url: 'https://apify.github.io',
     baseUrl: '/apify-ts/',

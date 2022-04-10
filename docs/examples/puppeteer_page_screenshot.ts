@@ -1,4 +1,4 @@
-import { KeyValueStore, launchPuppeteer } from '@crawlers/puppeteer';
+import { KeyValueStore, launchPuppeteer } from '@crawlee/puppeteer';
 
 const keyValueStore = await KeyValueStore.open();
 

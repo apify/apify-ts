@@ -1,4 +1,4 @@
-import { social } from '@crawlers/utils';
+import { social } from '@crawlee/utils';
 
 const {
     EMAIL_REGEX,

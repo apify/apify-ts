@@ -1,5 +1,5 @@
 import { browserTools } from '@apify/scraper-tools';
-import { launchPuppeteer, KeyValueStore } from '@crawlers/puppeteer';
+import { launchPuppeteer, KeyValueStore } from '@crawlee/puppeteer';
 import log from '@apify/log';
 import fs from 'fs-extra';
 import path from 'path';

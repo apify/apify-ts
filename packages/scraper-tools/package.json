@@ -42,18 +42,18 @@
     },
     "peerDependencies": {
         "apify": ">=3.x || >=3.0.0-beta.0",
-        "@crawlers/core": ">=3.x || >=3.0.0-beta.0",
-        "@crawlers/utils": ">=3.x || >=3.0.0-beta.0",
-        "@crawlers/puppeteer": ">=3.x || >=3.0.0-beta.0"
+        "@crawlee/core": ">=3.x || >=3.0.0-beta.0",
+        "@crawlee/utils": ">=3.x || >=3.0.0-beta.0",
+        "@crawlee/puppeteer": ">=3.x || >=3.0.0-beta.0"
     },
     "devDependencies": {
         "apify": "^3.0.0",
-        "@crawlers/core": "^3.0.0",
-        "@crawlers/utils": "^3.0.0",
-        "@crawlers/puppeteer": "^3.0.0"
+        "@crawlee/core": "^3.0.0",
+        "@crawlee/utils": "^3.0.0",
+        "@crawlee/puppeteer": "^3.0.0"
     },
     "peerDependenciesMeta": {
-        "@crawlers/puppeteer": {
+        "@crawlee/puppeteer": {
             "optional": true
         }
     }

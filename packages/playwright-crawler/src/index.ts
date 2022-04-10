@@ -1,4 +1,4 @@
-export * from '@crawlers/browser';
+export * from '@crawlee/browser';
 export * from './internals/playwright-crawler';
 export * from './internals/playwright-launcher';
 

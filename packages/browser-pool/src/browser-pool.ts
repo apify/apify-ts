@@ -218,7 +218,7 @@ export interface BrowserPoolHooks<
  *
  * **Example:**
  * ```js
- * const { BrowserPool, PlaywrightPlugin } = require('browser-pool');
+ * const { BrowserPool, PlaywrightPlugin } = require('@crawlee/browser-pool');
  * const playwright = require('playwright');
  *
  * const browserPool = new BrowserPool({

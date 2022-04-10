@@ -68,7 +68,7 @@ export function weightedAvg(arrValues: number[], arrWeights: number[]): number {
  * **Example usage:**
  *
  * ```
- * const { sleep } = require('@crawlers/utils');
+ * const { sleep } = require('@crawlee/utils');
  *
  * ...
  *

@@ -1,4 +1,4 @@
-import { launchPuppeteer } from '@crawlers/puppeteer';
+import { launchPuppeteer } from '@crawlee/puppeteer';
 import { Browser, Page } from 'puppeteer';
 import { createBundle } from '../src/internals/bundle.browser';
 

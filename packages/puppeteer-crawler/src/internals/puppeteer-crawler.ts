@@ -4,11 +4,11 @@ import {
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserHook,
-} from '@crawlers/browser';
+} from '@crawlee/browser';
 import {
     Dictionary,
-} from '@crawlers/utils';
-import { BrowserPoolOptions, PuppeteerPlugin } from 'browser-pool';
+} from '@crawlee/utils';
+import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';

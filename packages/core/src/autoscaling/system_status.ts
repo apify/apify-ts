@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { weightedAvg } from '@crawlers/utils';
+import { weightedAvg } from '@crawlee/utils';
 import { Snapshotter } from './snapshotter';
 import { Configuration } from '../configuration';
 

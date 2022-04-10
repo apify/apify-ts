@@ -2,7 +2,7 @@
 
 import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
-import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from 'browser-pool';
+import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from '@crawlee/browser-pool';
 import puppeteer from 'puppeteer';
 import log from '@apify/log';
 import {
@@ -20,14 +20,14 @@ import {
     Configuration,
     RequestList,
     ProxyConfiguration,
-} from 'crawlers';
+} from '@crawlee/puppeteer';
 import { Actor } from 'apify';
-import { requestAsBrowser, sleep } from '@crawlers/utils';
+import { requestAsBrowser, sleep } from '@crawlee/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 
-jest.mock('@crawlers/utils/src/internals/request', () => {
-    const original: typeof import('@crawlers/utils/src/internals/request') = jest.requireActual('@crawlers/utils/src/internals/request');
+jest.mock('@crawlee/utils/src/internals/request', () => {
+    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
     return {
         ...original,
         requestAsBrowser: jest.fn(),
@@ -37,7 +37,7 @@ jest.mock('@crawlers/utils/src/internals/request', () => {
 const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
 
 afterAll(() => {
-    jest.unmock('@crawlers/utils/src/internals/request');
+    jest.unmock('@crawlee/utils/src/internals/request');
 });
 
 describe('BrowserCrawler', () => {

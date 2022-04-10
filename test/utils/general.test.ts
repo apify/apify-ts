@@ -5,7 +5,7 @@ import {
     snakeCaseToCamelCase,
     purgeLocalStorage,
     parseContentTypeFromResponse,
-} from '@crawlers/utils';
+} from '@crawlee/utils';
 import { IncomingMessage } from 'node:http';
 import syncFs from 'node:fs';
 import asyncFs from 'node:fs/promises';

@@ -17,8 +17,8 @@ import {
     RequestQueue,
     Source,
     StorageManager,
-} from '@crawlers/core';
-import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
+} from '@crawlee/core';
+import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';

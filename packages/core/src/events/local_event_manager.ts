@@ -2,7 +2,7 @@
 import os from 'os';
 import log from '@apify/log';
 import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
-import { getMemoryInfo } from '@crawlers/utils';
+import { getMemoryInfo } from '@crawlee/utils';
 import { SystemInfo } from '../autoscaling';
 import { EventManager, EventType } from './event_manager';
 

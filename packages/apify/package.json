@@ -53,8 +53,8 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/core": "^3.0.0",
-        "@crawlers/utils": "^3.0.0",
+        "@crawlee/core": "^3.0.0",
+        "@crawlee/utils": "^3.0.0",
         "semver": "^7.3.5",
         "apify-client": "^2.2.1-beta.5"
     },

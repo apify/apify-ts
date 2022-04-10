@@ -1,4 +1,4 @@
-import { diffCookies } from '@crawlers/core';
+import { diffCookies } from '@crawlee/core';
 
 const cookie1 = 'test_cookie=1';
 const cookie2 = 'new_test_cookie=2';

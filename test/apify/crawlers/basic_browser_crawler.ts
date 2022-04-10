@@ -1,5 +1,5 @@
-import { BrowserCrawler, PuppeteerCrawlContext, PuppeteerCrawlerOptions } from '@crawlers/puppeteer';
-import { PuppeteerPlugin } from 'browser-pool';
+import { BrowserCrawler, PuppeteerCrawlContext, PuppeteerCrawlerOptions } from '@crawlee/puppeteer';
+import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import { LaunchOptions } from 'puppeteer';
 
 export class BrowserCrawlerTest extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlContext> {

@@ -26,8 +26,8 @@ import util from 'util';
 import { LruCache } from '@apify/datastructures';
 import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log_ from '@apify/log';
-import { KeyValueStore, Request, validators } from '@crawlers/core';
-import { Dictionary } from '@crawlers/utils';
+import { KeyValueStore, Request, validators } from '@crawlee/core';
+import { Dictionary } from '@crawlee/utils';
 import { enqueueLinksByClickingElements } from '../enqueue-links/click-elements';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
 

@@ -1,7 +1,7 @@
 import { Page, Browser } from 'puppeteer';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import _log from '@apify/log';
-import { keys } from '@crawlers/utils';
+import { keys } from '@crawlee/utils';
 import * as hidingTricks from './hiding_tricks';
 
 const log = _log.child({ prefix: 'Stealth' });

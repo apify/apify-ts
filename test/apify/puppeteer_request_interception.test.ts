@@ -1,5 +1,5 @@
-import { launchPuppeteer, puppeteerUtils } from '@crawlers/puppeteer';
-import { sleep } from '@crawlers/utils';
+import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
+import { sleep } from '@crawlee/utils';
 import express from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';

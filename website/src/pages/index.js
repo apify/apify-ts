@@ -63,7 +63,7 @@ function Features() {
     );
 }
 
-const example = `import { PuppeteerCrawler } from '@crawlers/puppeteer';
+const example = `import { PuppeteerCrawler } from '@crawlee/puppeteer';
 
 const crawler = new PuppeteerCrawler({
     async requestHandler({ request, page, enqueueLinks }) {
@@ -83,7 +83,7 @@ function ActorExample() {
             <h2>Try it out</h2>
             <p>Install Apify SDK into a Node.js project. You must have Node.js 16 or higher installed.</p>
             <CodeBlock className="language-bash">
-                npm install @crawlers/puppeteer puppeteer
+                npm install @crawlee/puppeteer puppeteer
             </CodeBlock>
             <p>Copy the following code into a file in the project, for example <code>main.mjs</code>:</p>
             <CodeBlock className="language-typescript">

@@ -19,8 +19,8 @@ import {
     RequestList,
     RequestQueue,
     log,
-} from '@crawlers/cheerio';
-import { Awaitable, Dictionary } from '@crawlers/utils';
+} from '@crawlee/cheerio';
+import { Awaitable, Dictionary } from '@crawlee/utils';
 import { Actor, ApifyEnv } from 'apify';
 import cheerio from 'cheerio';
 import { readFile } from 'node:fs/promises';

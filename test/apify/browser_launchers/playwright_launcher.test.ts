@@ -9,7 +9,7 @@ import portastic from 'portastic';
 // @ts-expect-error no types
 import basicAuthParser from 'basic-auth-parser';
 import { ENV_VARS } from '@apify/consts';
-import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlers/playwright';
+import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlee/playwright';
 
 import { AddressInfo } from 'net';
 import { Browser, BrowserType } from 'playwright';

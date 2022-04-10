@@ -1,6 +1,6 @@
 import util from 'util';
 import { normalizeUrl } from '@apify/utilities';
-import { Request } from '@crawlers/core';
+import { Request } from '@crawlee/core';
 
 describe('Apify.Request', () => {
     test('should not accept invalid values', () => {

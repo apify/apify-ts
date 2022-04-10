@@ -1,4 +1,4 @@
-import { CheerioCrawler, EnqueueStrategy } from '@crawlers/cheerio';
+import { CheerioCrawler, EnqueueStrategy } from '@crawlee/cheerio';
 
 const crawler = new CheerioCrawler({
     maxRequestsPerCrawl: 10, // Limitation for only 10 requests (do not use if you want to crawl all links)

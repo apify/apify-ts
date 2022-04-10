@@ -1,9 +1,9 @@
 import { ACT_JOB_STATUSES, ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
-import { sleep } from '@crawlers/utils';
+import { sleep } from '@crawlee/utils';
 import { Actor, ApifyEnv } from 'apify';
 import { ApifyClient, ActorClient, TaskClient, WebhookUpdateData } from 'apify-client';
-import { Configuration, EventType } from '@crawlers/core';
+import { Configuration, EventType } from '@crawlee/core';
 
 /**
  * Helper function that enables testing of main()

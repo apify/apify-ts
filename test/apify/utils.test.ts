@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
 import { addTimeoutToPromise } from '@apify/timeout';
-import { Request, log } from '@crawlers/core';
+import { Request, log } from '@crawlee/core';
 import { tools } from '@apify/scraper-tools';
 import { Actor } from 'apify';
 import { printOutdatedSdkWarning } from 'apify/src/utils';

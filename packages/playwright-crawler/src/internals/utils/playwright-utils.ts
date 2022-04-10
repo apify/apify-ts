@@ -22,8 +22,8 @@
 import ow from 'ow';
 import { Page, Response, Route } from 'playwright';
 import log_ from '@apify/log';
-import { validators, Request } from '@crawlers/core';
-import { Dictionary } from '@crawlers/utils';
+import { validators, Request } from '@crawlee/core';
+import { Dictionary } from '@crawlee/utils';
 
 const log = log_.child({ prefix: 'Playwright Utils' });
 

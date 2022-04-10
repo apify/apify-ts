@@ -1,14 +1,14 @@
 import express from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlers/utils';
+import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlee/utils';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const CONTENT = 'CONTENT';
 const JSON_CONTENT = JSON.stringify({ content: CONTENT });
 const HOSTNAME = '127.0.0.1';
 
-describe('@crawlers/utils.requestAsBrowser', () => {
+describe('@crawlee/utils.requestAsBrowser', () => {
     let port: number;
     let server: Server;
     beforeAll(async () => {

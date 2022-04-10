@@ -1,7 +1,6 @@
 import log from '@apify/log';
 import {
     CrawlingContext,
-    Dictionary,
     FailedRequestHandler,
     RequestHandler,
     Request,
@@ -9,9 +8,10 @@ import {
     RequestList,
     Configuration,
     BasicCrawler,
-    KeyValueStore, EventType,
-} from 'crawlers';
-import { sleep } from '@crawlers/utils';
+    KeyValueStore,
+    EventType,
+} from '@crawlee/basic';
+import { Dictionary, sleep } from '@crawlee/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 describe('BasicCrawler', () => {

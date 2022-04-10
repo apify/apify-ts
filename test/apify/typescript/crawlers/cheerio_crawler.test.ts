@@ -5,7 +5,7 @@ import {
     CheerioRequestHandlerInputs,
     RequestList,
     Request,
-} from '@crawlers/cheerio';
+} from '@crawlee/cheerio';
 
 describe('CheerioCrawler TS', () => {
     describe('CheerioRequestHandler', () => {

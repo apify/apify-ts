@@ -11,7 +11,7 @@ import {
     PlaywrightRequestHandlerParam,
     Request,
     RequestList,
-} from '@crawlers/playwright';
+} from '@crawlee/playwright';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { startExpressAppPromise } from '../../shared/_helper';

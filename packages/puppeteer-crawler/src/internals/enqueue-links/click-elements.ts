@@ -11,9 +11,9 @@ import {
     UrlPatternObject,
     RequestQueue,
     storage,
-} from '@crawlers/browser';
+} from '@crawlee/browser';
 import log_ from '@apify/log';
-import { Dictionary } from '@crawlers/utils';
+import { Dictionary } from '@crawlee/utils';
 import ow from 'ow';
 import {
     BrowserContextEmittedEvents,

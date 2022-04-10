@@ -1,8 +1,8 @@
 import path from 'path';
 import express from 'express';
 import log from '@apify/log';
-import { Configuration, KeyValueStore, launchPuppeteer, puppeteerUtils, Request } from '@crawlers/puppeteer';
-import { Dictionary } from '@crawlers/utils';
+import { Configuration, KeyValueStore, launchPuppeteer, puppeteerUtils, Request } from '@crawlee/puppeteer';
+import { Dictionary } from '@crawlee/utils';
 import { Browser, Page, ResponseForRequest } from 'puppeteer';
 import { Server } from 'http';
 import { AddressInfo } from 'net';

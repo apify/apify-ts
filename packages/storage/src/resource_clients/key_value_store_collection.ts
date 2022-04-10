@@ -25,7 +25,7 @@ export class KeyValueStoreCollectionClient {
     }
 
     async list(): Promise<never> {
-        throw new Error('This method is not implemented in @crawlers/storage yet.');
+        throw new Error('This method is not implemented in @crawlee/storage yet.');
     }
 
     async getOrCreate(name: string): Promise<KeyValueStoreCollectionData> {

@@ -1,4 +1,4 @@
-import { PuppeteerCrawler, puppeteerUtils } from '@crawlers/puppeteer';
+import { PuppeteerCrawler, puppeteerUtils } from '@crawlee/puppeteer';
 
 // Create a PuppeteerCrawler
 const crawler = new PuppeteerCrawler({

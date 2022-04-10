@@ -222,8 +222,8 @@ export interface SocialHandles {
  *
  * **Example usage:**
  * ```typescript
- * import { launchPuppeteer } from '@crawlers/puppeteer';
- * import { social } from '@crawlers/utils';
+ * import { launchPuppeteer } from '@crawlee/puppeteer';
+ * import { social } from '@crawlee/utils';
  *
  * const browser = await launchPuppeteer();
  * const page = await browser.newPage();
@@ -316,7 +316,7 @@ export function parseHandlesFromHtml(html: string, data: Record<string, unknown>
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.LINKEDIN_REGEX.test('https://www.linkedin.com/in/alan-turing')) {
  *     console.log('Match!');
@@ -347,7 +347,7 @@ export const LINKEDIN_REGEX = new RegExp(`^${LINKEDIN_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.LINKEDIN_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} LinkedIn profiles found!`);
@@ -378,7 +378,7 @@ export const LINKEDIN_REGEX_GLOBAL = new RegExp(LINKEDIN_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.INSTAGRAM_REGEX.test('https://www.instagram.com/old_prague')) {
  *     console.log('Match!');
@@ -415,7 +415,7 @@ export const INSTAGRAM_REGEX = new RegExp(`^${INSTAGRAM_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.INSTAGRAM_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Instagram profiles found!`);
@@ -439,7 +439,7 @@ export const INSTAGRAM_REGEX_GLOBAL = new RegExp(INSTAGRAM_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.TWITTER_REGEX.test('https://www.twitter.com/apify')) {
  *     console.log('Match!');
@@ -468,7 +468,7 @@ export const TWITTER_REGEX = new RegExp(`^${TWITTER_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.TWITTER_REGEX_STRING);
  * if (matches) console.log(`${matches.length} Twitter profiles found!`);
@@ -494,7 +494,7 @@ export const TWITTER_REGEX_GLOBAL = new RegExp(TWITTER_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.FACEBOOK_REGEX.test('https://www.facebook.com/apifytech')) {
  *     console.log('Match!');
@@ -524,7 +524,7 @@ export const FACEBOOK_REGEX = new RegExp(`^${FACEBOOK_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.FACEBOOK_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Facebook profiles found!`);
@@ -547,7 +547,7 @@ export const FACEBOOK_REGEX_GLOBAL = new RegExp(FACEBOOK_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.YOUTUBE_REGEX.test('https://www.youtube.com/watch?v=kM7YfhfkiEE')) {
  *     console.log('Match!');
@@ -571,7 +571,7 @@ export const YOUTUBE_REGEX = new RegExp(`^${YOUTUBE_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.YOUTUBE_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Youtube videos found!`);
@@ -592,7 +592,7 @@ export const YOUTUBE_REGEX_GLOBAL = new RegExp(YOUTUBE_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.TIKTOK_REGEX.test('https://www.tiktok.com/trending?shareId=123456789')) {
  *     console.log('Match!');
@@ -615,7 +615,7 @@ export const TIKTOK_REGEX = new RegExp(`^${TIKTOK_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.TIKTOK_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Tiktok profiles/videos found!`);
@@ -638,7 +638,7 @@ export const TIKTOK_REGEX_GLOBAL = new RegExp(TIKTOK_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.PINTEREST_REGEX.test('https://pinterest.com/pin/123456789')) {
  *     console.log('Match!');
@@ -662,7 +662,7 @@ export const PINTEREST_REGEX = new RegExp(`^${PINTEREST_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.PINTEREST_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Pinterest pins found!`);
@@ -683,7 +683,7 @@ export const PINTEREST_REGEX_GLOBAL = new RegExp(PINTEREST_REGEX_STRING, 'ig');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * if (social.DISCORD_REGEX.test('https://discord.gg/discord-developers')) {
  *     console.log('Match!');
@@ -705,7 +705,7 @@ export const DISCORD_REGEX = new RegExp(`^${DISCORD_REGEX_STRING}$`, 'i');
  *
  * Example usage:
  * ```
- * import { social } from '@crawlers/utils';
+ * import { social } from '@crawlee/utils';
  *
  * const matches = text.match(social.DISCORD_REGEX_GLOBAL);
  * if (matches) console.log(`${matches.length} Discord channels found!`);
