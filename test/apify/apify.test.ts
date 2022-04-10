@@ -1,6 +1,5 @@
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS, WEBHOOK_EVENT_TYPES } from '@apify/consts';
 import log from '@apify/log';
-import path from 'node:path';
 import { Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlers/core';
 import { sleep } from '@crawlers/utils';
 import { Actor, ApifyEnv, ProxyConfiguration } from 'apify';
@@ -17,7 +16,7 @@ const testMain = async ({ userFunc, exitCode }: { userFunc?: (sdk: Actor) => voi
     const sdk = new Actor();
 
     try {
-        sdk.main(() => {
+        await sdk.main(() => {
             if (userFunc) {
                 return userFunc(sdk);
             }
