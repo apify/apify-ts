@@ -212,8 +212,10 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
         urlPatternObjects.push(...constructRegExpObjectsFromRegExps(regexps));
     }
 
+    options.strategy ??= urlPatternObjects.length > 0 ? undefined : EnqueueStrategy.SameSubdomain;
+
     if (options.baseUrl) {
-        switch (options.strategy ?? EnqueueStrategy.SameSubdomain) {
+        switch (options.strategy) {
             case EnqueueStrategy.SameSubdomain:
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to an url like https://example.com/deep/default/path and one of the found urls is an
