@@ -81,6 +81,19 @@ export interface ClientInfo {
     actualRatio: number;
 }
 
+export interface FinalStatistics {
+    requestsFinished: number;
+    requestsFailed: number;
+    retryHistogram: number[];
+    requestAvgFailedDurationMillis: number;
+    requestAvgFinishedDurationMillis: number;
+    requestsFinishedPerMinute: number;
+    requestsFailedPerMinute: number;
+    requestTotalDurationMillis: number;
+    requestsTotal: number;
+    crawlerRuntimeMillis: number;
+}
+
 /**
  * Provides a simple interface to reading system status from a {@link Snapshotter} instance.
  * It only exposes two functions {@link SystemStatus.getCurrentStatus}

@@ -19,7 +19,7 @@ const testMain = async ({ userFunc, exitCode }: { userFunc?: (sdk?: Actor) => vo
             .then(() => {
                 return new Promise<void>((resolve, reject) => {
                     // Invoke main() function, the promise resolves after the user function is run
-                    Actor.main(() => {
+                    return Actor.main(() => {
                         try {
                             // Wait for all tasks in Node.js event loop to finish
                             resolve();

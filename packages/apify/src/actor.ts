@@ -18,7 +18,7 @@ import {
     Source,
     StorageManager,
 } from '@crawlers/core';
-import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
+import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
@@ -121,29 +121,32 @@ export class Actor {
      *
      * @param userFunc User function to be executed. If it returns a promise,
      * the promise will be awaited. The user function is called with no arguments.
+     * @param options
      * @ignore
      */
-    main(userFunc: UserFunc): void {
+    main<T>(userFunc: UserFunc, options?: MainOptions): Promise<T> {
         if (!userFunc || typeof userFunc !== 'function') {
-            throw new Error(`Actor.main() accepts a single parameter that must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
+            throw new Error(`First parameter for Actor.main() must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
         }
 
-        const run = async () => {
+        return (async () => {
+            if (options?.purge) {
+                await purgeLocalStorage();
+            }
+
             await this.init();
+            let ret: T;
 
             try {
-                await Configuration.storage.run(this.config, userFunc);
-                await this.exit();
+                ret = await Configuration.storage.run(this.config, userFunc) as unknown as T;
+                await this.exit(options);
             } catch (err: any) {
                 log.exception(err, err.message);
                 await this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
             }
-        };
 
-        run().catch((err) => {
-            log.exception(err, err.message);
-            return this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
-        });
+            return ret!;
+        })();
     }
 
     /**
@@ -810,9 +813,10 @@ export class Actor {
      *
      * @param userFunc User function to be executed. If it returns a promise,
      * the promise will be awaited. The user function is called with no arguments.
+     * @param options
      */
-    static main(userFunc: UserFunc): void {
-        return Actor.getDefaultInstance().main(userFunc);
+    static main<T>(userFunc: UserFunc<T>, options?: MainOptions): Promise<T> {
+        return Actor.getDefaultInstance().main<T>(userFunc, options);
     }
 
     static async init(): Promise<void> {
@@ -1288,6 +1292,10 @@ export class Actor {
     }
 }
 
+export interface MainOptions extends ExitOptions {
+    purge?: boolean;
+}
+
 /**
  * Parsed representation of the `APIFY_XXX` environmental variables.
  * This object is returned by the {@link Actor.getEnv} function.
@@ -1349,7 +1357,7 @@ export interface ApifyEnv {
     memoryMbytes: number | null;
 }
 
-export type UserFunc = () => Awaitable<void>;
+export type UserFunc<T = unknown> = () => Awaitable<T>;
 
 export interface CallOptions extends ActorStartOptions {
     /**

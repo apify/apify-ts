@@ -24,6 +24,7 @@ import {
     Configuration,
     EventManager,
     EventType,
+    FinalStatistics,
 } from '@crawlers/core';
 import { Awaitable } from '@crawlers/utils';
 import ow, { ArgumentError } from 'ow';
@@ -338,7 +339,6 @@ export class BasicCrawler<
     protected sessionPoolOptions: SessionPoolOptions;
     protected useSessionPool: boolean;
     protected crawlingContexts = new Map<string, Context>();
-    protected isRunningPromise?: Promise<void>;
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
     protected events: EventManager;
 
@@ -404,11 +404,6 @@ export class BasicCrawler<
             handleFailedRequestFunction,
             failedRequestHandler,
         } = options;
-
-        if (!requestList && !requestQueue) {
-            const msg = 'At least one of the parameters "options.requestList" and "options.requestQueue" must be provided!';
-            throw new ArgumentError(msg, this.constructor);
-        }
 
         this.requestList = requestList;
         this.requestQueue = requestQueue;
@@ -517,7 +512,6 @@ export class BasicCrawler<
         };
 
         this.autoscaledPoolOptions = { ...autoscaledPoolOptions, ...basicCrawlerAutoscaledPoolConfiguration };
-        this.isRunningPromise = undefined;
 
         // Attach a listener to handle migration and aborting events gracefully.
         this.events.on(EventType.MIGRATING, this._pauseOnMigration.bind(this));
@@ -527,27 +521,27 @@ export class BasicCrawler<
     /**
      * Runs the crawler. Returns a promise that gets resolved once all the requests are processed.
      */
-    async run(): Promise<void> {
-        if (this.isRunningPromise) return this.isRunningPromise;
-
+    async run(): Promise<FinalStatistics> {
         await this._init();
-        this.isRunningPromise = this.autoscaledPool!.run();
         await this.stats.startCapturing();
 
         try {
-            await this.isRunningPromise;
+            await this.autoscaledPool!.run();
         } finally {
             await this.teardown();
             await this.stats.stopCapturing();
-            const finalStats = this.stats.calculate();
-            const { requestsFailed, requestsFinished } = this.stats.state;
-            this.log.info('Final request statistics:', {
-                requestsFinished,
-                requestsFailed,
-                retryHistogram: this.stats.requestRetryHistogram,
-                ...finalStats,
-            });
         }
+
+        const finalStats = this.stats.calculate();
+        const stats = {
+            requestsFinished: this.stats.state.requestsFinished,
+            requestsFailed: this.stats.state.requestsFailed,
+            retryHistogram: this.stats.requestRetryHistogram,
+            ...finalStats,
+        };
+        this.log.info('Final request statistics:', stats);
+
+        return stats;
     }
 
     async getRequestQueue() {
@@ -661,7 +655,7 @@ export class BasicCrawler<
      * then retries them in a case of an error, etc.
      */
     protected async _runTaskFunction() {
-        const source = this.requestQueue || this.requestList!;
+        const source = this.requestQueue || this.requestList || await this.getRequestQueue();
 
         let request: Request | null | undefined;
         let session: Session | undefined;
@@ -701,6 +695,7 @@ export class BasicCrawler<
         const crawlingContext: Context = {
             id: cryptoRandomObjectId(10),
             crawler: this,
+            log: this.log,
             request,
             session,
             enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {

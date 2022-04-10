@@ -255,17 +255,6 @@ describe('BasicCrawler', () => {
         errors.forEach((error) => expect(error).toBeInstanceOf(Error));
     });
 
-    test('should require at least one of RequestQueue and RequestList', () => {
-        const requestList = new RequestList({ sources: [] });
-        const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getStorageClient() });
-        const requestHandler = async () => {};
-
-        expect(() => new BasicCrawler({ requestHandler })).toThrowError();
-        expect(() => new BasicCrawler({ requestHandler, requestList })).not.toThrowError();
-        expect(() => new BasicCrawler({ requestHandler, requestQueue })).not.toThrowError();
-        expect(() => new BasicCrawler({ requestHandler, requestQueue, requestList })).not.toThrowError();
-    });
-
     test('should correctly combine RequestList and RequestQueue', async () => {
         const sources = [
             { url: 'http://example.com/0' },
