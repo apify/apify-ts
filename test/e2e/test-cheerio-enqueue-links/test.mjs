@@ -10,10 +10,9 @@ const crawler = new CheerioCrawler({
 		const pageTitle = $('title').first().text();
         log.info(`URL: ${url}; LOADED_URL: ${loadedUrl}; TITLE: ${pageTitle}`);
 
-		await enqueueLinks();
+		const results = await enqueueLinks();
 
 		if (loadedUrl.startsWith('https://drive')) {
-			const results = await enqueueLinks();
 			const isEqual = deepEqual(results, { processedRequests: [], unprocessedRequests: [] });
 
 			expect(isEqual, 'enqueueing on same subdomain but different loaded url doesn\'t enqueue');
