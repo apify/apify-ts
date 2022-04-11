@@ -6,7 +6,7 @@ import {
     ProxyConfigurationOptions as CoreProxyConfigurationOptions,
     ProxyInfo as CoreProxyInfo,
 } from '@crawlee/core';
-import { requestAsBrowser, RequestAsBrowserOptions } from '@crawlee/utils';
+import { gotScraping } from 'got-scraping';
 import { Actor } from './actor';
 
 // https://docs.apify.com/proxy/datacenter-proxy#username-parameters
@@ -355,16 +355,16 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
      */
     protected async _fetchStatus(): Promise<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean } | undefined> {
         const proxyStatusUrl = process.env[ENV_VARS.PROXY_STATUS_URL] ?? 'http://proxy.apify.com';
-        const requestOpts: RequestAsBrowserOptions = {
+        const requestOpts = {
             url: `${proxyStatusUrl}/?format=json`,
             proxyUrl: this.newUrl(),
             timeout: { request: CHECK_ACCESS_REQUEST_TIMEOUT_MILLIS },
             responseType: 'json',
-        };
+        } as const;
 
         for (let attempt = 1; attempt <= CHECK_ACCESS_MAX_ATTEMPTS; attempt++) {
             try {
-                const response = await requestAsBrowser<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean }>(requestOpts);
+                const response = await gotScraping<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean }>(requestOpts);
                 return response.body;
             } catch {
                 // retry connection errors
