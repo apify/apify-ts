@@ -1083,7 +1083,7 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, ori
         baseUrl = options.baseUrl;
     } else if (options?.strategy === EnqueueStrategy.All) {
         // We can assume users want to go off the domain in this case
-        baseUrl = finalRequestUrlOrigin;
+        baseUrl = finalRequestUrlOrigin ?? originalRequestUrlOrigin;
     } else if (originalRequestUrlOrigin === finalRequestUrlOrigin) {
         // If the domains are the same, we can use the original domain
         baseUrl = originalRequestUrlOrigin;
@@ -1093,10 +1093,6 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, ori
     //     const originalBaseDomain = getDomain(originalRequestUrlOrigin)!;
     //     const finalBaseDomain = getDomain(finalRequestUrlOrigin)!;
     // }
-
-    // TODO(vladfrangu): do we want to enqueue anything if no baseUrl is set? I'd assume no, since then only
-    // absolute links would be enqueued, and any relative ones would throw an error
-    if (!baseUrl) return { processedRequests: [], unprocessedRequests: [] };
 
     const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 

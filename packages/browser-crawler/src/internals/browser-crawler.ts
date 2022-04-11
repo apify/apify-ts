@@ -702,10 +702,6 @@ export async function browserCrawlerEnqueueLinks({
     //     const finalBaseDomain = getDomain(finalRequestUrlOrigin)!;
     // }
 
-    // TODO(vladfrangu): do we want to enqueue anything if no baseUrl is set? I'd assume no, since then only
-    // absolute links would be enqueued, and any relative ones would throw an error
-    if (!baseUrl) return { processedRequests: [], unprocessedRequests: [] };
-
     const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
