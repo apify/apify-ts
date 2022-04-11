@@ -699,7 +699,10 @@ export class BasicCrawler<
             request,
             session,
             enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {
-                return basicCrawlerEnqueueLinks(enqueueOptions, await this.getRequestQueue());
+                return basicCrawlerEnqueueLinks({
+                    ...enqueueOptions,
+                    requestQueue: await this.getRequestQueue(),
+                });
             },
         };
 
@@ -906,12 +909,8 @@ export class BasicCrawler<
 }
 
 /** @internal */
-export async function basicCrawlerEnqueueLinks(options: BasicCrawlerEnqueueLinksOptions, requestQueue?: RequestQueue) {
-    return enqueueLinks({
-        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
-        requestQueue: requestQueue ?? await RequestQueue.open(),
-        ...options,
-    });
+export async function basicCrawlerEnqueueLinks(options: EnqueueLinksOptions) {
+    return enqueueLinks({ ...options });
 }
 
 export interface CreateContextOptions {

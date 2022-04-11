@@ -212,7 +212,9 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
         urlPatternObjects.push(...constructRegExpObjectsFromRegExps(regexps));
     }
 
-    options.strategy ??= urlPatternObjects.length > 0 ? undefined : EnqueueStrategy.SameSubdomain;
+    if (!urlPatternObjects.length) {
+        options.strategy ??= EnqueueStrategy.SameSubdomain;
+    }
 
     if (options.baseUrl) {
         switch (options.strategy) {

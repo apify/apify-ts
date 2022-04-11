@@ -13,6 +13,7 @@ import {
     throwOnBlockedRequest,
     validators,
     storage,
+    EnqueueStrategy,
 } from '@crawlee/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -552,7 +553,8 @@ export abstract class BrowserCrawler<
                 options: enqueueOptions,
                 page,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
+                originalRequestUrlOrigin: new URL(crawlingContext.request.url).origin,
+                finalRequestUrlOrigin: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
     }
@@ -669,19 +671,45 @@ export abstract class BrowserCrawler<
 interface EnqueueLinksInternalOptions {
     options?: BrowserCrawlerEnqueueLinksOptions;
     page: CommonPage;
-    requestQueue?: RequestQueue;
-    defaultBaseUrl?: string;
+    requestQueue: RequestQueue;
+    originalRequestUrlOrigin?: string;
+    finalRequestUrlOrigin?: string;
 }
 
 /** @internal */
-export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
-    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+export async function browserCrawlerEnqueueLinks({
+    options,
+    page,
+    requestQueue,
+    originalRequestUrlOrigin,
+    finalRequestUrlOrigin,
+}: EnqueueLinksInternalOptions) {
+    let baseUrl: string | undefined;
+
+    if (options?.baseUrl) {
+        // User provided base url takes priority
+        baseUrl = options.baseUrl;
+    } else if (options?.strategy === EnqueueStrategy.All) {
+        // We can assume users want to go off the domain in this case
+        baseUrl = finalRequestUrlOrigin;
+    } else if (originalRequestUrlOrigin === finalRequestUrlOrigin) {
+        // If the domains are the same, we can use the original domain
+        baseUrl = originalRequestUrlOrigin;
+    }
+    // else {
+    // TODO: Do we want to use finalRequestUrlOrigin if domains match or leave it as undefined?
+    //     const originalBaseDomain = getDomain(originalRequestUrlOrigin)!;
+    //     const finalBaseDomain = getDomain(finalRequestUrlOrigin)!;
+    // }
+
+    // TODO(vladfrangu): do we want to enqueue anything if no baseUrl is set? I'd assume no, since then only
+    // absolute links would be enqueued, and any relative ones would throw an error
+    if (!baseUrl) return { processedRequests: [], unprocessedRequests: [] };
 
     const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
-        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
-        requestQueue: requestQueue ?? await RequestQueue.open(),
+        requestQueue,
         urls,
         baseUrl,
         ...options,
