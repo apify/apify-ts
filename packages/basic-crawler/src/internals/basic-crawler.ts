@@ -263,6 +263,8 @@ export interface BasicCrawlerOptions<
  * **Example usage:**
  *
  * ```javascript
+ * const { gotScraping } = require('got-scraping');
+ *
  * // Prepare a list of URLs to crawl
  * const requestList = new RequestList({
  *   sources: [
@@ -278,7 +280,13 @@ export interface BasicCrawlerOptions<
  *     handleRequestFunction: async ({ request }) => {
  *         // 'request' contains an instance of the Request class
  *         // Here we simply fetch the HTML of the page and store it to a dataset
- *         const { body } = await Actor.utils.requestAsBrowser(request);
+ *         const { body } = await gotScraping({
+ *             url: request.url,
+ *             method: request.method,
+ *             body: request.payload,
+ *             headers: request.headers,
+ *         });
+ *
  *         await Actor.pushData({
  *             url: request.url,
  *             html: body,

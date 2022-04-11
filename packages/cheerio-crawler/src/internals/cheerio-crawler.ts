@@ -26,13 +26,10 @@ import {
     CheerioRoot,
     entries,
     parseContentTypeFromResponse,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
-    RequestAsBrowserResult,
 } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { Method, TimeoutError } from 'got-scraping';
+import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
@@ -323,12 +320,12 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
-     * or browser properties before navigation. The function accepts two parameters, `crawlingContext` and `requestAsBrowserOptions`,
+     * or browser properties before navigation. The function accepts two parameters, `crawlingContext` and `gotOptions`,
      * which are passed to the `requestAsBrowser()` function the crawler calls to navigate.
      * Example:
      * ```
      * preNavigationHooks: [
-     *     async (crawlingContext, requestAsBrowserOptions) => {
+     *     async (crawlingContext, gotOptions) => {
      *         // ...
      *     },
      * ]
@@ -411,7 +408,7 @@ export interface PrepareRequestInputs<JSONData = unknown> {
 export type PrepareRequest<JSONData = unknown> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
 export type CheerioHook<JSONData = unknown> = (
     crawlingContext: CheerioCrawlingContext<JSONData>,
-    requestAsBrowserOptions: RequestAsBrowserOptions,
+    gotOptions: OptionsInit,
 ) => Awaitable<void>;
 
 export interface PostResponseInputs<JSONData = unknown> {
@@ -495,11 +492,11 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *
  * The crawler finishes when there are no more {@link Request} objects to crawl.
  *
- * We can use the `preNavigationHooks` to adjust `requestAsBrowserOptions`:
+ * We can use the `preNavigationHooks` to adjust `gotOptions`:
  *
  * ```
  * preNavigationHooks: [
- *     (crawlingContext, requestAsBrowserOptions) => {
+ *     (crawlingContext, gotOptions) => {
  *         // ...
  *     },
  * ]
@@ -793,27 +790,27 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             tryCancel();
         }
 
-        const requestAsBrowserOptions = {} as RequestAsBrowserOptions;
+        const gotOptions = {} as OptionsInit;
 
         if (this.useSessionPool) {
-            this._applySessionCookie(crawlingContext, requestAsBrowserOptions);
+            this._applySessionCookie(crawlingContext, gotOptions);
         }
 
         const { request, session } = crawlingContext;
         const cookieSnapshot = request.headers?.Cookie ?? request.headers?.cookie;
-        await this._executeHooks(this.preNavigationHooks, crawlingContext, requestAsBrowserOptions);
+        await this._executeHooks(this.preNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
         const proxyUrl = crawlingContext.proxyInfo?.url;
-        this._mergeRequestCookieDiff(request, cookieSnapshot!, requestAsBrowserOptions);
+        this._mergeRequestCookieDiff(request, cookieSnapshot!, gotOptions);
 
         crawlingContext.response = await addTimeoutToPromise(
-            () => this._requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }),
+            () => this._requestFunction({ request, session, proxyUrl, gotOptions }),
             this.requestTimeoutMillis,
             `request timed out after ${this.requestTimeoutMillis / 1000} seconds.`,
         );
         tryCancel();
 
-        await this._executeHooks(this.postNavigationHooks, crawlingContext, requestAsBrowserOptions);
+        await this._executeHooks(this.postNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
 
         if (this.postResponseFunction) {
@@ -825,19 +822,19 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
     /**
      * When users change `request.headers.cookie` inside preNavigationHook, the change would be ignored,
-     * as `request.headers` are already merged into the `requestAsBrowserOptions`. This method is using
+     * as `request.headers` are already merged into the `gotOptions`. This method is using
      * old `request.headers` snapshot (before hooks are executed), makes a diff with the cookie value
-     * after hooks are executed, and merges any new cookies back to `requestAsBrowserOptions`.
+     * after hooks are executed, and merges any new cookies back to `gotOptions`.
      *
-     * This way we can still use both `requestAsBrowserOptions` and `context.request` in the hooks (not both).
+     * This way we can still use both `gotOptions` and `context.request` in the hooks (not both).
      */
-    private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, requestAsBrowserOptions: RequestAsBrowserOptions) {
+    private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, gotOptions: OptionsInit) {
         const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers?.Cookie ?? request.headers?.cookie);
 
         if (cookieDiff.length > 0) {
-            requestAsBrowserOptions.headers ??= {};
-            requestAsBrowserOptions.headers!.Cookie = mergeCookies(request.url, [
-                requestAsBrowserOptions.headers!.Cookie,
+            gotOptions.headers ??= {};
+            gotOptions.headers!.Cookie = mergeCookies(request.url, [
+                gotOptions.headers!.Cookie as string,
                 cookieDiff,
             ]);
         }
@@ -848,36 +845,34 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      * on the request such as only downloading the request body if the
      * received content type matches text/html, application/xml, application/xhtml+xml.
      */
-    protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
-        const opts = this._getRequestOptions(request, session, proxyUrl, requestAsBrowserOptions);
-        let responseWithStream: IncomingMessage;
+    protected async _requestFunction({ request, session, proxyUrl, gotOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
+        const opts = this._getRequestOptions(request, session, proxyUrl, gotOptions);
 
         try {
-            responseWithStream = await this._requestAsBrowser(opts);
+            return await this._requestAsBrowser(opts);
         } catch (e) {
             if (e instanceof TimeoutError) {
                 this._handleRequestTimeout(session);
-            } else {
-                throw e;
+                return undefined as unknown as IncomingMessage;
             }
-        }
 
-        return responseWithStream!;
+            throw e;
+        }
     }
 
     /**
-     * Sets the cookie header to `requestAsBrowserOptions` based on provided session and request. If some cookies were already set,
+     * Sets the cookie header to `gotOptions` based on provided session and request. If some cookies were already set,
      * the session cookie will be merged with them. User provided cookies on `request` object have precedence.
      */
-    private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: RequestAsBrowserOptions): void {
+    private _applySessionCookie({ request, session }: CrawlingContext, gotOptions: OptionsInit): void {
         const userCookie = request.headers?.Cookie ?? request.headers?.cookie;
         const sessionCookie = session!.getCookieString(request.url);
         const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie!]);
 
         // merge cookies from all possible sources
         if (mergedCookies) {
-            requestAsBrowserOptions.headers ??= {};
-            requestAsBrowserOptions.headers.Cookie = mergedCookies;
+            gotOptions.headers ??= {};
+            gotOptions.headers.Cookie = mergedCookies;
         }
     }
 
@@ -916,17 +911,17 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * Combines the provided `requestOptions` with mandatory (non-overridable) values.
      */
-    protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: RequestAsBrowserOptions) {
-        const requestOptions: RequestAsBrowserOptions = {
+    protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, gotOptions?: OptionsInit) {
+        const requestOptions: OptionsInit & { isStream: true } = {
             url: request.url,
             method: request.method as Method,
             proxyUrl,
             timeout: { request: this.requestTimeoutMillis },
             sessionToken: session,
-            ...requestAsBrowserOptions,
-            headers: { ...request.headers, ...requestAsBrowserOptions?.headers },
+            ...gotOptions,
+            headers: { ...request.headers, ...gotOptions?.headers },
             https: {
-                ...requestAsBrowserOptions?.https,
+                ...gotOptions?.https,
                 rejectUnauthorized: !this.ignoreSslErrors,
             },
             isStream: true,
@@ -1054,9 +1049,16 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * @internal wraps public utility for mocking purposes
      */
-    private _requestAsBrowser(options: RequestAsBrowserOptions): Promise<RequestAsBrowserResult> {
-        return requestAsBrowser(options);
-    }
+    private _requestAsBrowser = (options: OptionsInit & { isStream: true }) => {
+        return new Promise<IncomingMessage>((resolve, reject) => {
+            const stream = gotScraping(options);
+
+            stream.on('error', reject);
+            stream.on('response', () => {
+                resolve(addResponsePropertiesToStream(stream));
+            });
+        });
+    };
 }
 
 interface EnqueueLinksInternalOptions {
@@ -1089,7 +1091,7 @@ interface RequestFunctionOptions {
     request: Request;
     session?: Session;
     proxyUrl?: string;
-    requestAsBrowserOptions: RequestAsBrowserOptions;
+    gotOptions: OptionsInit;
 }
 
 /**
@@ -1112,4 +1114,42 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
                 ? (new URL(href, baseUrl)).href
                 : href;
         });
+}
+
+/**
+ * The stream object returned from got does not have the below properties.
+ * At the same time, you can't read data directly from the response stream,
+ * because they won't get emitted unless you also read from the primary
+ * got stream. To be able to work with only one stream, we move the expected props
+ * from the response stream to the got stream.
+ * @internal
+ */
+function addResponsePropertiesToStream(stream: GotRequest) {
+    const properties = [
+        'statusCode', 'statusMessage', 'headers',
+        'complete', 'httpVersion', 'rawHeaders',
+        'rawTrailers', 'trailers', 'url',
+        'request',
+    ];
+
+    const response = stream.response!;
+
+    response.on('end', () => {
+        // @ts-expect-error
+        Object.assign(stream.rawTrailers, response.rawTrailers);
+        // @ts-expect-error
+        Object.assign(stream.trailers, response.trailers);
+
+        // @ts-expect-error
+        stream.complete = response.complete;
+    });
+
+    for (const prop of properties) {
+        if (!(prop in stream)) {
+            // @ts-expect-error
+            stream[prop] = response[prop as keyof IncomingMessage];
+        }
+    }
+
+    return stream as unknown as IncomingMessage;
 }

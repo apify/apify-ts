@@ -22,22 +22,23 @@ import {
     ProxyConfiguration,
 } from '@crawlee/puppeteer';
 import { Actor } from 'apify';
-import { requestAsBrowser, sleep } from '@crawlee/utils';
+import { gotScraping } from 'got-scraping';
+import { sleep } from '@crawlee/utils';
 import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
 
-jest.mock('@crawlee/utils/src/internals/request', () => {
-    const original: typeof import('@crawlee/utils/src/internals/request') = jest.requireActual('@crawlee/utils/src/internals/request');
+jest.mock('got-scraping', () => {
+    const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
     return {
         ...original,
-        requestAsBrowser: jest.fn(),
+        gotScraping: jest.fn(),
     };
 });
 
-const requestAsBrowserSpy = requestAsBrowser as jest.MockedFunction<typeof requestAsBrowser>;
+const gotScrapingSpy = gotScraping as jest.MockedFunction<typeof gotScraping>;
 
 afterAll(() => {
-    jest.unmock('@crawlee/utils/src/internals/request');
+    jest.unmock('got-scraping');
 });
 
 describe('BrowserCrawler', () => {
@@ -671,7 +672,8 @@ describe('BrowserCrawler', () => {
                 return { body: status } as never;
             };
 
-            const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
+            // @ts-expect-error FIXME
+            const stub = gotScrapingSpy.mockImplementation(fakeCall);
             const proxyConfiguration = await Actor.createProxyConfiguration();
             const generatedProxyUrl = new URL(proxyConfiguration.newUrl()).href;
             let browserProxy;
@@ -709,7 +711,8 @@ describe('BrowserCrawler', () => {
                 return { body: status } as never;
             };
 
-            const stub = requestAsBrowserSpy.mockImplementation(fakeCall);
+            // @ts-expect-error FIXME
+            const stub = gotScrapingSpy.mockImplementation(fakeCall);
 
             const proxyConfiguration = await Actor.createProxyConfiguration();
             const proxies: ProxyInfo[] = [];
@@ -857,7 +860,7 @@ describe('BrowserCrawler', () => {
 
         test('failedRequestHandler contains proxyInfo', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-            const stub = requestAsBrowserSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
+            const stub = gotScrapingSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
 
             const proxyConfiguration = await Actor.createProxyConfiguration();
 

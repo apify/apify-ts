@@ -97,11 +97,11 @@ export class Actor {
      *
      * If the user function returns a promise, it is considered asynchronous:
      * ```javascript
-     * const { requestAsBrowser } = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(() => {
      *   // My asynchronous function that returns a promise
-     *   return request('http://www.example.com').then((html) => {
+     *   return gotScraping('http://www.example.com').then((html) => {
      *     console.log(html);
      *   });
      * });
@@ -110,7 +110,7 @@ export class Actor {
      * To simplify your code, you can take advantage of the `async`/`await` keywords:
      *
      * ```javascript
-     * const request = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(async () => {
      *   // My asynchronous function
@@ -789,11 +789,11 @@ export class Actor {
      *
      * If the user function returns a promise, it is considered asynchronous:
      * ```javascript
-     * const { requestAsBrowser } = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(() => {
      *   // My asynchronous function that returns a promise
-     *   return request('http://www.example.com').then((html) => {
+     *   return gotScraping('http://www.example.com').then((html) => {
      *     console.log(html);
      *   });
      * });
@@ -802,11 +802,11 @@ export class Actor {
      * To simplify your code, you can take advantage of the `async`/`await` keywords:
      *
      * ```javascript
-     * const request = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(async () => {
      *   // My asynchronous function
-     *   const html = await request('http://www.example.com');
+     *   const html = await gotScraping('http://www.example.com');
      *   console.log(html);
      * });
      * ```
