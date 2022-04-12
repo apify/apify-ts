@@ -1,6 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
 import { KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
+import { PassThrough } from 'stream';
 
 // TODO this does not make sense here
 describe('KeyValueStore remote', () => {
@@ -118,7 +119,7 @@ describe('KeyValueStore remote', () => {
             await expect(store.setValue(123, 'some value'))
                 .rejects.toThrow('Expected `key` to be of type `string` but received type `number`');
 
-            const valueErrMsg = 'The "value" parameter must be a String or Buffer when "options.contentType" is specified';
+            const valueErrMsg = 'The "value" parameter must be a String, Buffer or Stream when "options.contentType" is specified';
             await expect(store.setValue('key', {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
             await expect(store.setValue('key', 12345, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
             await expect(store.setValue('key', () => {}, { contentType: 'image/png' })).rejects.toThrow(valueErrMsg);
@@ -145,11 +146,11 @@ describe('KeyValueStore remote', () => {
 
             const contTypeRedundantErrMsg = 'Expected property string `contentType` to not be empty in object';
             await expect(store.setValue('key', null, { contentType: 'image/png' }))
-                .rejects.toThrow('The "value" parameter must be a String or Buffer when "options.contentType" is specified.');
+                .rejects.toThrow('The "value" parameter must be a String, Buffer or Stream when "options.contentType" is specified.');
             await expect(store.setValue('key', null, { contentType: '' })).rejects.toThrow(contTypeRedundantErrMsg);
             // @ts-expect-error Type '{}' is not assignable to type 'string'.
             await expect(store.setValue('key', null, { contentType: {} }))
-                .rejects.toThrow('The "value" parameter must be a String or Buffer when "options.contentType" is specified.');
+                .rejects.toThrow('The "value" parameter must be a String, Buffer or Stream when "options.contentType" is specified.');
 
             // @ts-expect-error Type 'number' is not assignable to type 'string'.
             await expect(store.setValue('key', 'value', { contentType: 123 }))
@@ -278,6 +279,31 @@ describe('KeyValueStore remote', () => {
                 key: 'key-1',
                 value,
                 contentType: 'image/jpeg; charset=something',
+            });
+        });
+
+        test('correctly passes a stream', async () => {
+            const store = new KeyValueStore({
+                id: 'my-store-id-1',
+                client: apifyClient,
+            });
+
+            const mockSetRecord = jest
+            // @ts-expect-error Accessing private property
+                .spyOn(store.client, 'setRecord')
+                .mockResolvedValueOnce(null);
+
+            const value = new PassThrough();
+            await store.setValue('key-1', value, { contentType: 'plain/text' });
+            value.emit('data', 'hello world');
+            value.end();
+            value.destroy();
+
+            expect(mockSetRecord).toHaveBeenCalledTimes(1);
+            expect(mockSetRecord).toHaveBeenCalledWith({
+                key: 'key-1',
+                value,
+                contentType: 'plain/text',
             });
         });
     });

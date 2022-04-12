@@ -7,6 +7,7 @@ import { Request, RequestOptions } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
 import { KeyValueStore } from '../storages/key_value_store';
 import { Dictionary } from '../typedefs';
+import { ProxyConfiguration } from '../proxy_configuration';
 
 /** @internal */
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';
@@ -93,6 +94,13 @@ export interface RequestListOptions {
      * ```
      */
     sourcesFunction?: RequestListSourcesFunction;
+
+    /**
+    *   Used to pass the the proxy configuration for the `requestsFromUrls` objects.
+    *   Takes advantage of the internal address rotation and authentication process.
+    *   If undefined, the `requestsFromUrls` requests will be made without proxy.
+    */
+    proxyConfiguration?: ProxyConfiguration;
 
     /**
      * Identifies the key in the default key-value store under which `RequestList` periodically stores its
@@ -276,6 +284,7 @@ export class RequestList {
     private keepDuplicateUrls: boolean;
     private sources: Source[];
     private sourcesFunction?: RequestListSourcesFunction;
+    private proxyConfiguration?: ProxyConfiguration;
     private events: EventManager;
 
     /**
@@ -288,6 +297,7 @@ export class RequestList {
             persistStateKey,
             persistRequestsKey,
             state,
+            proxyConfiguration,
             keepDuplicateUrls = false,
             config = Configuration.getGlobalConfig(),
         } = options;
@@ -306,6 +316,7 @@ export class RequestList {
                 inProgress: ow.object,
             }),
             keepDuplicateUrls: ow.optional.boolean,
+            proxyConfiguration: ow.optional.object,
         }));
 
         this.persistStateKey = persistStateKey ? `SDK_${persistStateKey}` : persistStateKey;
@@ -319,6 +330,9 @@ export class RequestList {
         // Will be empty after initialization to save memory.
         this.sources = sources || [];
         this.sourcesFunction = sourcesFunction;
+
+        // The proxy configuration used for `requestsFromUrls` requests.
+        this.proxyConfiguration = proxyConfiguration;
     }
 
     /**
@@ -659,7 +673,7 @@ export class RequestList {
         // Download remote resource and parse URLs.
         let urlsArr;
         try {
-            urlsArr = await this._downloadListOfUrls({ url: requestsFromUrl, urlRegExp: regex });
+            urlsArr = await this._downloadListOfUrls({ url: requestsFromUrl, urlRegExp: regex, proxyUrl: this.proxyConfiguration?.newUrl() });
         } catch (err) {
             throw new Error(`Cannot fetch a request list from ${requestsFromUrl}: ${err}`);
         }
@@ -831,7 +845,7 @@ export class RequestList {
     /**
      * @internal wraps public utility for mocking purposes
      */
-    private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp }): Promise<string[]> {
+    private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp; proxyUrl?: string }): Promise<string[]> {
         return downloadListOfUrls(options);
     }
 }

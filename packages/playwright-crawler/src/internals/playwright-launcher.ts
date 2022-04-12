@@ -25,7 +25,7 @@ import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
  * ```
  */
 export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOptions, BrowserType> {
-    /** `browserType.launch` [options](https://playwright.dev/docs/api/class-browsertype?_highlight=launch#browsertypelaunchoptions) */
+    /** `browserType.launch` [options](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) */
     launchOptions?: LaunchOptions;
 
     /**
@@ -46,6 +46,19 @@ export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOpti
      * @default false
      */
     useChrome?: boolean;
+
+    /**
+    * With this option selected, all pages will be opened in a new incognito browser context.
+    * This means they will not share cookies nor cache and their resources will not be throttled by one another.
+    * @default false
+    */
+     useIncognitoPages?: boolean;
+     /**
+     * Sets the [User Data Directory](https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md) path.
+     * The user data directory contains profile data such as history, bookmarks, and cookies, as well as other per-installation local state.
+     * If not specified, a temporary directory is used instead.
+     */
+     userDataDir?: string;
 
     /**
      * By default this function uses `require("playwright").chromium`.
