@@ -263,6 +263,9 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
     return requestQueue.addRequests(requests);
 }
 
+/**
+ * @internal
+ */
 export function resolveBaseUrl({
     enqueueStrategy,
     finalRequestUrl,
@@ -298,6 +301,9 @@ export function resolveBaseUrl({
     return originalUrlOrigin;
 }
 
+/**
+ * @internal
+ */
 export interface ResolveBaseUrl {
     userProvidedBaseUrl?: string;
     enqueueStrategy?: EnqueueLinksOptions['strategy'];
