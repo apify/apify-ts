@@ -1082,7 +1082,7 @@ export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, ori
         userProvidedBaseUrl: options?.baseUrl,
     });
 
-    const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', finalRequestUrl ?? originalRequestUrl);
+    const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
         requestQueue,

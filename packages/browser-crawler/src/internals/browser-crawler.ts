@@ -691,7 +691,7 @@ export async function browserCrawlerEnqueueLinks({
         userProvidedBaseUrl: options?.baseUrl,
     });
 
-    const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', finalRequestUrl ?? originalRequestUrl);
+    const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
         requestQueue,

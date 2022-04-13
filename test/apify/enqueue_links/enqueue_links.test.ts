@@ -83,7 +83,7 @@ describe('enqueueLinks()', () => {
             };
 
             await browserCrawlerEnqueueLinks({
-                options: { limit: 3, selector: '.click' },
+                options: { limit: 3, selector: '.click', strategy: EnqueueStrategy.All },
                 page,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',
@@ -257,6 +257,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/to be of type `string` but received type `RegExp`/);
         });
 
@@ -270,7 +271,7 @@ describe('enqueueLinks()', () => {
             };
 
             await browserCrawlerEnqueueLinks({
-                options: { selector: '.click' },
+                options: { selector: '.click', strategy: EnqueueStrategy.All },
                 page,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',
@@ -322,7 +323,7 @@ describe('enqueueLinks()', () => {
             };
 
             await browserCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls: [] },
+                options: { selector: '.click', pseudoUrls: [], strategy: EnqueueStrategy.All },
                 page,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',
@@ -686,6 +687,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/to be of type `string` but received type `RegExp`/);
         });
 
@@ -698,7 +700,7 @@ describe('enqueueLinks()', () => {
             };
 
             await cheerioCrawlerEnqueueLinks({
-                options: { selector: '.click' },
+                options: { selector: '.click', strategy: EnqueueStrategy.All },
                 $,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',
@@ -748,7 +750,7 @@ describe('enqueueLinks()', () => {
             };
 
             await cheerioCrawlerEnqueueLinks({
-                options: { selector: '.click', pseudoUrls: [] },
+                options: { selector: '.click', pseudoUrls: [], strategy: EnqueueStrategy.All },
                 $,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',
@@ -900,23 +902,6 @@ describe('enqueueLinks()', () => {
             expect(enqueued[2].url).toBe('http://example.absolute.com/hello');
             expect(enqueued[2].method).toBe('GET');
             expect(enqueued[2].userData).toEqual({});
-        });
-
-        test('throws on finding a relative link with no baseUrl set', async () => {
-            const enqueued: (Request | RequestOptions)[] = [];
-            const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
-            // @ts-expect-error Override method for testing
-            requestQueue.addRequests = async (request) => {
-                enqueued.push(...request);
-            };
-
-            await expect(cheerioCrawlerEnqueueLinks({
-                options: {},
-                $,
-                requestQueue,
-                originalRequestUrl: 'https://example.com',
-            })).rejects.toThrow(/\/x\/absolutepath/);
-            expect(enqueued).toHaveLength(0);
         });
 
         test('correctly works with transformRequestFunction', async () => {
