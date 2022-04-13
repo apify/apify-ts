@@ -10,16 +10,17 @@ await run(import.meta.url, 'cheerio-scraper', {
     pseudoUrls: [{
         purl: 'https://apify.com/[.+]/[.+]',
         method: 'GET',
-        userData: { label: 'DETAIL' }
+        userData: { label: 'DETAIL' },
     }],
     linkSelector: 'a',
     pageFunction: async function pageFunction(context) {
         switch (context.request.userData.label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
-        async function handleStart({ log, waitFor, $ }) {
+        async function handleStart({ log, $ }) {
             log.info('Store opened!');
 
             const dataJson = $('#__NEXT_DATA__').html();
@@ -62,7 +63,7 @@ await run(import.meta.url, 'cheerio-scraper', {
     forceResponseEncoding: false,
     ignoreSslErrors: false,
     debugLog: false,
-    maxPagesPerCrawl: 750
+    maxPagesPerCrawl: 750,
 });
 
 const stats = await getStats(import.meta.url);

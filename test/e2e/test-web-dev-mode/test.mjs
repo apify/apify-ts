@@ -20,6 +20,7 @@ await run(import.meta.url, 'web-scraper', {
         switch (label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
         async function handleStart({ log }) {
@@ -48,7 +49,7 @@ await run(import.meta.url, 'web-scraper', {
     waitUntil: ['networkidle2'],
     breakpointLocation: 'NONE',
     debugLog: false,
-    browserLog: false
+    browserLog: false,
 });
 
 const stats = await getStats(import.meta.url);

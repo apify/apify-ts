@@ -19,6 +19,7 @@ await run(import.meta.url, 'puppeteer-scraper', {
         switch (label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
         async function handleStart({ log }) {
@@ -42,7 +43,7 @@ await run(import.meta.url, 'puppeteer-scraper', {
     downloadCss: true,
     waitUntil: ['networkidle2'],
     debugLog: true,
-    browserLog: false
+    browserLog: false,
 });
 
 const stats = await getStats(import.meta.url);

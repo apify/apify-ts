@@ -13,8 +13,8 @@ process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127
 process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 
 async function run() {
-    const paths = await readdir(basePath, { withFileTypes: true })
-    const dirs = paths.filter(dirent => dirent.isDirectory());
+    const paths = await readdir(basePath, { withFileTypes: true });
+    const dirs = paths.filter((dirent) => dirent.isDirectory());
 
     for (const dir of dirs) {
         if (process.argv.length === 3 && dir.name !== process.argv[2]) {
@@ -36,6 +36,7 @@ async function run() {
         });
         worker.on('exit', (code) => {
             const took = (Date.now() - now) / 1000;
+            // eslint-disable-next-line max-len
             console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
         });
     }

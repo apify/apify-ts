@@ -15,14 +15,14 @@ await run(import.meta.url, 'web-scraper', {
         const pageContent = JSON.parse($('pre').first().text());
         const { clientIp } = pageContent;
 
-        if (userData.enqueueRequests){
+        if (userData.enqueueRequests) {
             for (let i = 0; i < 4; i++) {
                 await enqueueRequest({ url: 'https://api.apify.com/v2/browser-info', method: 'GET', uniqueKey: `${i}` });
             }
             userData.isReady = false;
         }
 
-        if (await getValue(clientIp)) throw new Error(`The ip address ${clientIp} was already used. Proxy rotation does not work properly.`)
+        if (await getValue(clientIp)) throw new Error(`The ip address ${clientIp} was already used. Proxy rotation does not work properly.`);
         await setValue(clientIp, url);
 
         return { url, clientIp };
@@ -41,7 +41,7 @@ await run(import.meta.url, 'web-scraper', {
     waitUntil: ['networkidle2'],
     breakpointLocation: 'NONE',
     debugLog: false,
-    browserLog: false
+    browserLog: false,
 });
 
 const stats = await getStats(import.meta.url);

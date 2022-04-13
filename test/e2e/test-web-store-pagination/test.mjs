@@ -5,19 +5,20 @@ await run(import.meta.url, 'web-scraper', {
     startUrls: [{
         url: 'https://apify.com/store',
         method: 'GET',
-        userData: { label: 'START' }
+        userData: { label: 'START' },
     }],
     keepUrlFragments: false,
     linkSelector: 'div.item > a',
     pseudoUrls: [{
         purl: 'https://apify.com/[.+]/[.+]',
         method: 'GET',
-        userData: { label: 'DETAIL' }
+        userData: { label: 'DETAIL' },
     }],
     pageFunction: async function pageFunction(context) {
         switch (context.request.userData.label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
         async function handleStart({ log, waitFor, jQuery: $ }) {
@@ -31,7 +32,7 @@ await run(import.meta.url, 'web-scraper', {
                     await waitFor(buttonSelector, { timeoutMillis });
                     timeoutMillis = 2000;
                 } catch (err) {
-                    log.info(`Could not find the Show more button, we\'ve reached the end.`, err.message);
+                    log.info(`Could not find the Show more button, we've reached the end.`, err.message);
                     break;
                 }
                 log.info('Clicking the Show more button.');
@@ -47,7 +48,7 @@ await run(import.meta.url, 'web-scraper', {
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
             const title = $('header h1').text();
             const description = $('header span.actor-description').text();
-            const modifiedDate = $('ul.ActorHeader-stats time').attr('datetime')
+            const modifiedDate = $('ul.ActorHeader-stats time').attr('datetime');
             const runCount = $('ul.ActorHeader-stats li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '');
 
             return {

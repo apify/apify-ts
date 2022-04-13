@@ -46,7 +46,7 @@ await run(import.meta.url, 'cheerio-scraper', {
     proxyRotation: 'RECOMMENDED',
     forceResponseEncoding: false,
     ignoreSslErrors: false,
-    debugLog: false
+    debugLog: false,
 });
 
 const stats = await getStats(import.meta.url);
