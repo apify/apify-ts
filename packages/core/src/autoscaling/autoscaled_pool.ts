@@ -674,7 +674,7 @@ export class AutoscaledPool {
         if (this.snapshotter) await this.snapshotter.stop();
     }
 
-    protected async _incrementTasksDonePerSecond(intervalCallback: () => void) {
+    protected _incrementTasksDonePerSecond(intervalCallback: () => void) {
         this._tasksPerMinute.unshift(0);
 
         this._tasksPerMinute.pop();
