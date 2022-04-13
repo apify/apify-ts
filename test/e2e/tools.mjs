@@ -1,6 +1,4 @@
-import { Configuration } from '../../packages/core/dist/index.mjs';
-import { Actor } from '../../packages/apify/dist/index.mjs';
-import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
+/* eslint-disable import/no-relative-packages */
 import { join } from 'path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +7,9 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'os';
 import fs from 'fs-extra';
+import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
+import { Actor } from '../../packages/apify/dist/index.mjs';
+import { Configuration } from '../../packages/core/dist/index.mjs';
 
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
@@ -36,7 +37,7 @@ export async function getApifyToken() {
     const authPath = join(homedir(), '.apify', 'auth.json');
 
     if (!existsSync(authPath)) {
-        throw new Error('You need to be logged in with your Apify account to run E2E tests. Call "apify login" to fix that.')
+        throw new Error('You need to be logged in with your Apify account to run E2E tests. Call "apify login" to fix that.');
     }
 
     const { token } = await fs.readJSON(authPath);
@@ -48,7 +49,7 @@ export async function getDatasetItems(url) {
     const datasetPath = join(dir, 'datasets/default/');
 
     const dirents = await readdir(datasetPath, { withFileTypes: true });
-    const fileNames = dirents.filter(dirent => dirent.isFile());
+    const fileNames = dirents.filter((dirent) => dirent.isFile());
     const datasetItems = [];
 
     for (const fileName of fileNames) {
@@ -70,7 +71,7 @@ export async function run(url, scraper, input) {
     const inputKey = Configuration.getGlobalConfig().get('inputKey');
     await Actor.setValue(inputKey, input);
 
-    const exit = process.exit;
+    const { exit } = process;
     process.exit = () => {};
 
     await import(`../../packages/actor-scraper/${scraper}/dist/main.js`);

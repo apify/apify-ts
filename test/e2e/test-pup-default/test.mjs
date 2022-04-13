@@ -24,7 +24,7 @@ await run(import.meta.url, 'puppeteer-scraper', {
     downloadCss: true,
     waitUntil: ['networkidle2'],
     debugLog: false,
-    browserLog: false
+    browserLog: false,
 });
 
 const stats = await getStats(import.meta.url);

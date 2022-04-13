@@ -3,7 +3,7 @@ import { getStats, run, expect } from '../tools.mjs';
 await run(import.meta.url, 'cheerio-scraper', {
     startUrls: [{
         url: 'https://apify.com/sitemap.xml',
-        method: 'GET'
+        method: 'GET',
     }],
     keepUrlFragments: false,
     linkSelector: 'a[href]',
@@ -22,7 +22,7 @@ await run(import.meta.url, 'cheerio-scraper', {
     additionalMimeTypes: ['text/xml'],
     forceResponseEncoding: false,
     ignoreSslErrors: false,
-    debugLog: false
+    debugLog: false,
 });
 
 const stats = await getStats(import.meta.url);

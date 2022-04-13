@@ -19,9 +19,10 @@ await run(import.meta.url, 'cheerio-scraper', {
         switch (label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
-        async function handleStart({ log, waitFor, $ }) {
+        async function handleStart({ log }) {
             log.info('Bad ssl page opened!');
         }
 
@@ -35,7 +36,7 @@ await run(import.meta.url, 'cheerio-scraper', {
     proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
     debugLog: false,
-    ignoreSslErrors: true
+    ignoreSslErrors: true,
 });
 
 const stats = await getStats(import.meta.url);

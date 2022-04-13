@@ -4,7 +4,7 @@ await run(import.meta.url, 'web-scraper', {
     startUrls: [{
         url: 'https://badssl.com/',
         method: 'GET',
-        userData: { label: 'START' }
+        userData: { label: 'START' },
     }],
     keepUrlFragments: false,
     linkSelector: '.group a.bad',
@@ -19,6 +19,7 @@ await run(import.meta.url, 'web-scraper', {
         switch (label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
         async function handleStart({ log }) {
@@ -44,7 +45,7 @@ await run(import.meta.url, 'web-scraper', {
     waitUntil: ['networkidle2'],
     debugLog: false,
     browserLog: false,
-    proxyRotation: 'RECOMMENDED'
+    proxyRotation: 'RECOMMENDED',
 });
 
 const stats = await getStats(import.meta.url);

@@ -4,12 +4,12 @@ await run(import.meta.url, 'puppeteer-scraper', {
     startUrls: [{
         url: 'https://apify.com/store',
         method: 'GET',
-        userData: { label: 'START'}
+        userData: { label: 'START' },
     }],
     pseudoUrls: [{
         purl: 'https://apify.com/[.+]/[.+]',
         method: 'GET',
-        userData: { label: 'DETAIL' }
+        userData: { label: 'DETAIL' },
     }],
     linkSelector: 'a',
     keepUrlFragments: false,
@@ -19,6 +19,7 @@ await run(import.meta.url, 'puppeteer-scraper', {
         switch (label) {
             case 'START': return handleStart(context);
             case 'DETAIL': return handleDetail(context);
+            default:
         }
 
         async function handleStart({ log, page }) {
@@ -36,7 +37,7 @@ await run(import.meta.url, 'puppeteer-scraper', {
                 }
 
                 log.info('Clicking the Show more button.');
-                await page.evaluate(buttonSelector => document.querySelector(buttonSelector).click(), buttonSelector);
+                await page.evaluate((providedButtonSelector) => document.querySelector(providedButtonSelector).click(), buttonSelector);
             }
         }
 
@@ -50,9 +51,13 @@ await run(import.meta.url, 'puppeteer-scraper', {
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
 
             const results = await page.evaluate(() => ({
+                // eslint-disable-next-line no-undef
                 title: $('header h1').text(),
+                // eslint-disable-next-line no-undef
                 description: $('header span.actor-description').text(),
+                // eslint-disable-next-line no-undef
                 modifiedDate: new Date(Number($('ul.ActorHeader-stats time').attr('datetime'))).toISOString(),
+                // eslint-disable-next-line no-undef
                 runCount: Number($('ul.ActorHeader-stats > li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '')),
             }));
 
@@ -70,7 +75,7 @@ await run(import.meta.url, 'puppeteer-scraper', {
     waitUntil: ['networkidle2'],
     debugLog: false,
     browserLog: false,
-    maxPagesPerCrawl: 750
+    maxPagesPerCrawl: 750,
 });
 
 const stats = await getStats(import.meta.url);
