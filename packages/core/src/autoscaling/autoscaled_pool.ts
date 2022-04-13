@@ -681,7 +681,7 @@ export class AutoscaledPool {
         const totalHandled = this._currentTasksDoneThisMinute;
         this._currentTasksDoneThisMinute = 0;
 
-        this.log.perf(`Handled ${totalHandled} tasks last minute`);
+        this.log.info(`Last minute, ${totalHandled} out of ${this.maxTasksPerMinute} tasks were handled.`);
         return intervalCallback();
     }
 }
