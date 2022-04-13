@@ -677,9 +677,7 @@ export class AutoscaledPool {
     protected async _incrementTasksDonePerSecond(intervalCallback: () => void) {
         this._tasksPerMinute.unshift(0);
 
-        if (this._tasksPerMinute.length > 60) {
-            this._tasksPerMinute.pop();
-        }
+        this._tasksPerMinute.pop();
 
         return intervalCallback();
     }
