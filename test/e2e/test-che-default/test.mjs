@@ -14,7 +14,7 @@ const crawler = new CheerioCrawler({
         log.info(`URL: ${url} TITLE: ${pageTitle}`);
 
         await Actor.pushData({ url, pageTitle });
-    }
+    },
 });
 
 await crawler.addRequests(['https://apify.com']);
