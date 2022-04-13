@@ -86,6 +86,7 @@ describe('enqueueLinks()', () => {
                 options: { limit: 3, selector: '.click' },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -131,6 +132,7 @@ describe('enqueueLinks()', () => {
                 },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -174,6 +176,7 @@ describe('enqueueLinks()', () => {
                 },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -217,6 +220,7 @@ describe('enqueueLinks()', () => {
                 },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -269,6 +273,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click' },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(4);
@@ -303,6 +308,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls: null },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/Expected property `pseudoUrls` to be of type `array` but received type `null`/);
         });
 
@@ -319,6 +325,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls: [] },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(4);
@@ -359,6 +366,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/\(array `pseudoUrls`\) Any predicate failed with the following errors/);
             expect(enqueued).toHaveLength(0);
         });
@@ -376,6 +384,7 @@ describe('enqueueLinks()', () => {
                 options: { baseUrl: 'http://www.absolute.com/removethis/' },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(2);
@@ -402,6 +411,7 @@ describe('enqueueLinks()', () => {
                 options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameHostname },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -431,6 +441,7 @@ describe('enqueueLinks()', () => {
                 options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.All },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(8);
@@ -497,6 +508,7 @@ describe('enqueueLinks()', () => {
                 },
                 page,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -552,6 +564,7 @@ describe('enqueueLinks()', () => {
                 },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -595,6 +608,7 @@ describe('enqueueLinks()', () => {
                 },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -637,6 +651,7 @@ describe('enqueueLinks()', () => {
                 },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -686,6 +701,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click' },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(4);
@@ -719,6 +735,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls: null },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/Expected property `pseudoUrls` to be of type `array` but received type `null`/);
         });
 
@@ -734,6 +751,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls: [] },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(4);
@@ -772,6 +790,7 @@ describe('enqueueLinks()', () => {
                 options: { selector: '.click', pseudoUrls },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/\(array `pseudoUrls`\) Any predicate failed with the following errors/);
             expect(enqueued).toHaveLength(0);
         });
@@ -788,6 +807,7 @@ describe('enqueueLinks()', () => {
                 options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.All },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(8);
@@ -837,6 +857,7 @@ describe('enqueueLinks()', () => {
                 options: { baseUrl: 'http://www.absolute.com/removethis/' },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(2);
@@ -863,6 +884,7 @@ describe('enqueueLinks()', () => {
                 options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameHostname },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);
@@ -892,6 +914,7 @@ describe('enqueueLinks()', () => {
                 options: {},
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             })).rejects.toThrow(/\/x\/absolutepath/);
             expect(enqueued).toHaveLength(0);
         });
@@ -924,6 +947,7 @@ describe('enqueueLinks()', () => {
                 },
                 $,
                 requestQueue,
+                originalRequestUrl: 'https://example.com',
             });
 
             expect(enqueued).toHaveLength(3);

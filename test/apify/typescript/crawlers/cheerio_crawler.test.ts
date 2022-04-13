@@ -25,6 +25,7 @@ describe('CheerioCrawler TS', () => {
                 response: null as any,
                 crawler: null as any,
                 enqueueLinks: null as any,
+                log: null as any,
             };
         });
 
