@@ -20,7 +20,7 @@ const crawler = new BasicCrawler({
     },
 });
 
-await crawler.addRequests(['https://example.com/1', 'https://example.com/2', 'https://example.com/3']);
+await crawler.addRequests(['https://example.com/1', 'https://example.com/2']);
 
 const start = Date.now();
 await Actor.main(() => crawler.run(), { exit: false, purge: true });
@@ -29,8 +29,8 @@ const finish = Date.now();
 const difference = finish - start;
 
 expect(
-    difference >= 120_000 && difference <= 130_000,
-    `Ran one task per minute, took ~2 minutes to complete but no more than that (actual: ${difference}ms)`,
+    difference >= 60_000 && difference <= 61_000,
+    `Ran one task per minute, took ~1 minutes to complete but no more than that (actual: ${difference}ms)`,
 );
 
 process.exit(0);
