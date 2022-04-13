@@ -13,7 +13,7 @@ import {
     throwOnBlockedRequest,
     validators,
     storage,
-    EnqueueStrategy,
+    resolveBaseUrl,
 } from '@crawlee/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -553,8 +553,8 @@ export abstract class BrowserCrawler<
                 options: enqueueOptions,
                 page,
                 requestQueue: await this.getRequestQueue(),
-                originalRequestUrlOrigin: new URL(crawlingContext.request.url).origin,
-                finalRequestUrlOrigin: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
+                originalRequestUrl: new URL(crawlingContext.request.url).origin,
+                finalRequestUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
     }
@@ -672,8 +672,8 @@ interface EnqueueLinksInternalOptions {
     options?: BrowserCrawlerEnqueueLinksOptions;
     page: CommonPage;
     requestQueue: RequestQueue;
-    originalRequestUrlOrigin?: string;
-    finalRequestUrlOrigin?: string;
+    originalRequestUrl: string;
+    finalRequestUrl?: string;
 }
 
 /** @internal */
@@ -681,28 +681,17 @@ export async function browserCrawlerEnqueueLinks({
     options,
     page,
     requestQueue,
-    originalRequestUrlOrigin,
-    finalRequestUrlOrigin,
+    originalRequestUrl,
+    finalRequestUrl,
 }: EnqueueLinksInternalOptions) {
-    let baseUrl: string | undefined;
+    const baseUrl = resolveBaseUrl({
+        enqueueStrategy: options?.strategy,
+        finalRequestUrl,
+        originalRequestUrl,
+        userProvidedBaseUrl: options?.baseUrl,
+    });
 
-    if (options?.baseUrl) {
-        // User provided base url takes priority
-        baseUrl = options.baseUrl;
-    } else if (options?.strategy === EnqueueStrategy.All) {
-        // We can assume users want to go off the domain in this case
-        baseUrl = finalRequestUrlOrigin;
-    } else if (originalRequestUrlOrigin === finalRequestUrlOrigin) {
-        // If the domains are the same, we can use the original domain
-        baseUrl = originalRequestUrlOrigin;
-    }
-    // else {
-    // TODO: Do we want to use finalRequestUrlOrigin if domains match or leave it as undefined?
-    //     const originalBaseDomain = getDomain(originalRequestUrlOrigin)!;
-    //     const finalBaseDomain = getDomain(finalRequestUrlOrigin)!;
-    // }
-
-    const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
+    const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', finalRequestUrl ?? originalRequestUrl);
 
     return enqueueLinks({
         requestQueue,

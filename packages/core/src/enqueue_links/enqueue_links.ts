@@ -262,3 +262,45 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
 
     return requestQueue.addRequests(requests);
 }
+
+export function resolveBaseUrl({
+    enqueueStrategy,
+    finalRequestUrl,
+    originalRequestUrl,
+    userProvidedBaseUrl,
+}: ResolveBaseUrl) {
+    // User provided base url takes priority
+    if (userProvidedBaseUrl) {
+        return userProvidedBaseUrl;
+    }
+
+    const originalUrlOrigin = new URL(originalRequestUrl).origin;
+    const finalUrlOrigin = new URL(finalRequestUrl ?? originalRequestUrl).origin;
+
+    // We can assume users want to go off the domain in this case
+    if (enqueueStrategy === EnqueueStrategy.All) {
+        return finalUrlOrigin ?? originalUrlOrigin;
+    }
+
+    // Ensure links use the same hostname
+    if (enqueueStrategy === EnqueueStrategy.SameHostname) {
+        const originalHostname = getDomain(originalUrlOrigin, { mixedInputs: false })!;
+        const finalHostname = getDomain(finalUrlOrigin, { mixedInputs: false })!;
+
+        if (originalHostname === finalHostname) {
+            return finalUrlOrigin;
+        }
+
+        return undefined;
+    }
+
+    // Always enqueue urls that are from the same origin
+    return originalUrlOrigin;
+}
+
+export interface ResolveBaseUrl {
+    userProvidedBaseUrl?: string;
+    enqueueStrategy?: EnqueueLinksOptions['strategy'];
+    originalRequestUrl: string;
+    finalRequestUrl?: string;
+}

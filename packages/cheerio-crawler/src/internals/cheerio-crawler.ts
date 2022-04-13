@@ -12,12 +12,12 @@ import {
     diffCookies,
     enqueueLinks,
     EnqueueLinksOptions,
-    EnqueueStrategy,
     mergeCookies,
     ProxyConfiguration,
     ProxyInfo,
     Request,
     RequestQueue,
+    resolveBaseUrl,
     Session,
     storage,
     validators,
@@ -39,7 +39,6 @@ import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
 import iconv from 'iconv-lite';
 import ow from 'ow';
-// import { getDomain } from 'tldts';
 import util from 'util';
 
 /**
@@ -757,8 +756,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
                 options: enqueueOptions,
                 $,
                 requestQueue: await this.getRequestQueue(),
-                originalRequestUrlOrigin: new URL(crawlingContext.request.url).origin,
-                finalRequestUrlOrigin: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
+                originalRequestUrl: crawlingContext.request.url,
+                finalRequestUrl: crawlingContext.request.loadedUrl,
             });
         };
 
@@ -1066,35 +1065,24 @@ interface EnqueueLinksInternalOptions {
     options?: CheerioCrawlerEnqueueLinksOptions;
     $: CheerioRoot | null;
     requestQueue: RequestQueue;
-    originalRequestUrlOrigin?: string;
-    finalRequestUrlOrigin?: string;
+    originalRequestUrl: string;
+    finalRequestUrl?: string;
 }
 
 /** @internal */
-export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, originalRequestUrlOrigin, finalRequestUrlOrigin }: EnqueueLinksInternalOptions) {
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, originalRequestUrl, finalRequestUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
 
-    let baseUrl: string | undefined;
+    const baseUrl = resolveBaseUrl({
+        enqueueStrategy: options?.strategy,
+        finalRequestUrl,
+        originalRequestUrl,
+        userProvidedBaseUrl: options?.baseUrl,
+    });
 
-    if (options?.baseUrl) {
-        // User provided base url takes priority
-        baseUrl = options.baseUrl;
-    } else if (options?.strategy === EnqueueStrategy.All) {
-        // We can assume users want to go off the domain in this case
-        baseUrl = finalRequestUrlOrigin ?? originalRequestUrlOrigin;
-    } else if (originalRequestUrlOrigin === finalRequestUrlOrigin) {
-        // If the domains are the same, we can use the original domain
-        baseUrl = originalRequestUrlOrigin;
-    }
-    // else {
-    // TODO: Do we want to use finalRequestUrlOrigin if domains match or leave it as undefined?
-    //     const originalBaseDomain = getDomain(originalRequestUrlOrigin)!;
-    //     const finalBaseDomain = getDomain(finalRequestUrlOrigin)!;
-    // }
-
-    const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
+    const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', finalRequestUrl ?? originalRequestUrl);
 
     return enqueueLinks({
         requestQueue,

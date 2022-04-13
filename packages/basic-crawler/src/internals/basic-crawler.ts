@@ -699,7 +699,7 @@ export class BasicCrawler<
             request,
             session,
             enqueueLinks: async (enqueueOptions: BasicCrawlerEnqueueLinksOptions) => {
-                return basicCrawlerEnqueueLinks({
+                return enqueueLinks({
                     ...enqueueOptions,
                     requestQueue: await this.getRequestQueue(),
                 });
@@ -906,11 +906,6 @@ export class BasicCrawler<
             throw new ArgumentError(`"${newName}" must be provided in the crawler options`, this.constructor);
         }
     }
-}
-
-/** @internal */
-export async function basicCrawlerEnqueueLinks(options: EnqueueLinksOptions) {
-    return enqueueLinks({ ...options });
 }
 
 export interface CreateContextOptions {
