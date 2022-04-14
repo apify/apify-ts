@@ -17,6 +17,7 @@ import {
     ProxyInfo,
     Request,
     RequestQueue,
+    resolveBaseUrl,
     Session,
     storage,
     validators,
@@ -752,7 +753,8 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
                 options: enqueueOptions,
                 $,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
+                originalRequestUrl: crawlingContext.request.url,
+                finalRequestUrl: crawlingContext.request.loadedUrl,
             });
         };
 
@@ -1064,23 +1066,28 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 interface EnqueueLinksInternalOptions {
     options?: CheerioCrawlerEnqueueLinksOptions;
     $: CheerioRoot | null;
-    requestQueue?: RequestQueue;
-    defaultBaseUrl?: string;
+    requestQueue: RequestQueue;
+    originalRequestUrl: string;
+    finalRequestUrl?: string;
 }
 
 /** @internal */
-export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, originalRequestUrl, finalRequestUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
 
-    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+    const baseUrl = resolveBaseUrl({
+        enqueueStrategy: options?.strategy,
+        finalRequestUrl,
+        originalRequestUrl,
+        userProvidedBaseUrl: options?.baseUrl,
+    });
 
     const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
-        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
-        requestQueue: requestQueue ?? await RequestQueue.open(),
+        requestQueue,
         urls,
         baseUrl,
         ...options,

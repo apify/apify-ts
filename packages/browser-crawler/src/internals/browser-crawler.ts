@@ -13,6 +13,7 @@ import {
     throwOnBlockedRequest,
     validators,
     storage,
+    resolveBaseUrl,
 } from '@crawlee/core';
 import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
@@ -552,7 +553,8 @@ export abstract class BrowserCrawler<
                 options: enqueueOptions,
                 page,
                 requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
+                originalRequestUrl: new URL(crawlingContext.request.url).origin,
+                finalRequestUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
             });
         };
     }
@@ -669,19 +671,30 @@ export abstract class BrowserCrawler<
 interface EnqueueLinksInternalOptions {
     options?: BrowserCrawlerEnqueueLinksOptions;
     page: CommonPage;
-    requestQueue?: RequestQueue;
-    defaultBaseUrl?: string;
+    requestQueue: RequestQueue;
+    originalRequestUrl: string;
+    finalRequestUrl?: string;
 }
 
 /** @internal */
-export async function browserCrawlerEnqueueLinks({ options, page, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
-    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+export async function browserCrawlerEnqueueLinks({
+    options,
+    page,
+    requestQueue,
+    originalRequestUrl,
+    finalRequestUrl,
+}: EnqueueLinksInternalOptions) {
+    const baseUrl = resolveBaseUrl({
+        enqueueStrategy: options?.strategy,
+        finalRequestUrl,
+        originalRequestUrl,
+        userProvidedBaseUrl: options?.baseUrl,
+    });
 
     const urls = await extractUrlsFromPage(page as any, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
-        // FIXME this does not make much sense, as the instance would be ignored by any crawler - the argument needs to be required
-        requestQueue: requestQueue ?? await RequestQueue.open(),
+        requestQueue,
         urls,
         baseUrl,
         ...options,
