@@ -46,7 +46,7 @@ We now track last activity done on a `RequestQueue` instance:
 
 If we don't detect one of those actions in last 5 minutes, and we have some
 requests in the `inProgress` cache, we try to reset the state. We can override
-this limit via `APIFY_INTERNAL_TIMEOUT` env var.
+this limit via `CRAWLEE_INTERNAL_TIMEOUT` env var.
 
 This should finally resolve the 0 concurrency bug, as it was always about
 stuck requests in the `inProgress` cache.

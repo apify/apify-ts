@@ -52,13 +52,14 @@ export interface PlaywrightLaunchContext extends BrowserLaunchContext<LaunchOpti
     * This means they will not share cookies nor cache and their resources will not be throttled by one another.
     * @default false
     */
-     useIncognitoPages?: boolean;
-     /**
+    useIncognitoPages?: boolean;
+
+    /**
      * Sets the [User Data Directory](https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md) path.
      * The user data directory contains profile data such as history, bookmarks, and cookies, as well as other per-installation local state.
      * If not specified, a temporary directory is used instead.
      */
-     userDataDir?: string;
+    userDataDir?: string;
 
     /**
      * By default this function uses `require("playwright").chromium`.

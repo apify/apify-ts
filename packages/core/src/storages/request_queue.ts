@@ -592,10 +592,7 @@ export class RequestQueue {
         return isHeadConsistent && this.queueHeadDict.length() === 0 && this.inProgressCount() === 0;
     }
 
-    /**
-     * @internal
-     */
-    _reset() {
+    private _reset() {
         this.queueHeadDict.clear();
         this.queryQueueHeadPromise = null;
         this.inProgress.clear();
