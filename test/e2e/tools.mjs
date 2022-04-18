@@ -19,7 +19,13 @@ export const colors = {
 };
 
 export function getStorage(url) {
-    return join(dirname(fileURLToPath(url)), './apify_storage');
+    return join(url, 'apify_storage');
+}
+
+export function getActorTestDir(url) {
+    const __filename = fileURLToPath(url);
+    const __dirname = dirname(__filename);
+    return join(__dirname, 'actor');
 }
 
 export async function getStats(url) {

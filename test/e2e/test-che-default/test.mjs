@@ -1,27 +1,16 @@
-import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
-import { getDatasetItems, expect, validateDataset } from '../tools.mjs';
+import child_process from 'child_process';
+import { promisify } from 'util';
+import { getActorTestDir, getStats, getDatasetItems, expect, validateDataset } from '../tools.mjs';
 
-const crawler = new CheerioCrawler({
-    async requestHandler({ $, enqueueLinks, request, log }) {
-        const { url } = request;
+const exec = promisify(child_process.exec);
 
-        await enqueueLinks({
-            pseudoUrls: ['https://apify.com[(/[\\w-]+)?]'],
-        });
+const testActorDirname = getActorTestDir(import.meta.url);
+await exec('apify run -p', { cwd: testActorDirname });
 
-        const pageTitle = $('title').first().text();
-        log.info(`URL: ${url} TITLE: ${pageTitle}`);
-
-        await Actor.pushData({ url, pageTitle });
-    },
-});
-
-await crawler.addRequests(['https://apify.com']);
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await getStats(testActorDirname);
 expect(stats.requestsFinished > 50, 'All requests finished');
 
-const datasetItems = await getDatasetItems(import.meta.url);
+const datasetItems = await getDatasetItems(testActorDirname);
 expect(datasetItems.length > 50, 'Minimum number of dataset items');
 await new Promise((resolve) => setTimeout(resolve, 100));
 expect(datasetItems.length < 150, 'Maximum number of dataset items');
