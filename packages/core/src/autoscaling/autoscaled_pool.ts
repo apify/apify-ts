@@ -683,6 +683,10 @@ export class AutoscaledPool {
     }
 
     protected get _isOverMaxRequestLimit() {
+        if (this.maxTasksPerMinute === Infinity) {
+            return false;
+        }
+
         return this._tasksPerMinute.reduce((acc, curr) => acc + curr, 0) >= this.maxTasksPerMinute;
     }
 }
