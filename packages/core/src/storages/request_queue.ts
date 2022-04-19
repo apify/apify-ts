@@ -170,6 +170,12 @@ export class RequestQueue {
     // i.e. which were returned by fetchNextRequest() but not markRequestHandled()
     inProgress = new Set();
 
+    // To track whether the queue gets stuck, and we need to reset it
+    // `lastActivity` tracks the time when we either added, processed or reclaimed a request,
+    // or when we add new request to in-progress cache
+    lastActivity = new Date();
+    internalTimeoutMillis = 5 * 60e3; // defaults to 5 minutes, will be overridden by BasicCrawler
+
     // Contains a list of recently handled requests. It is used to avoid inconsistencies
     // caused by delays in the underlying DynamoDB storage.
     // Keys are request IDs, values are true.
@@ -230,6 +236,7 @@ export class RequestQueue {
             forefront: ow.optional.boolean,
         }));
 
+        this.lastActivity = new Date();
         const { forefront = false } = options;
 
         const request = requestLike instanceof Request
@@ -434,6 +441,7 @@ export class RequestQueue {
         }
 
         this.inProgress.add(nextRequestId);
+        this.lastActivity = new Date();
 
         let request;
         try {
@@ -479,6 +487,7 @@ export class RequestQueue {
      * Handled requests will never again be returned by the `fetchNextRequest` function.
      */
     async markRequestHandled(request: Request): Promise<QueueOperationInfo | null> {
+        this.lastActivity = new Date();
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -514,6 +523,7 @@ export class RequestQueue {
      * For example, this lets you store the number of retries or error messages for the request.
      */
     async reclaimRequest(request: Request, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo | null> {
+        this.lastActivity = new Date();
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -570,10 +580,27 @@ export class RequestQueue {
      * but it will never return a false positive.
      */
     async isFinished(): Promise<boolean> {
+        if (this.inProgressCount() > 0 && (Date.now() - +this.lastActivity) > this.internalTimeoutMillis) {
+            const message = `The request queue seems to be stuck for ${this.internalTimeoutMillis / 1e3}s, resetting internal state.`;
+            this.log.warning(message, { inProgress: [...this.inProgress] });
+            this._reset();
+        }
+
         if (this.queueHeadDict.length() > 0 || this.inProgressCount() > 0) return false;
 
         const isHeadConsistent = await this._ensureHeadIsNonEmpty(true);
         return isHeadConsistent && this.queueHeadDict.length() === 0 && this.inProgressCount() === 0;
+    }
+
+    private _reset() {
+        this.queueHeadDict.clear();
+        this.queryQueueHeadPromise = null;
+        this.inProgress.clear();
+        this.recentlyHandled.clear();
+        this.assumedTotalCount = 0;
+        this.assumedHandledCount = 0;
+        this.requestsCache.clear();
+        this.lastActivity = new Date();
     }
 
     /**

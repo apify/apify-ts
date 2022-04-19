@@ -2,6 +2,7 @@ import log from '@apify/log';
 import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
 import { gotScraping } from 'got-scraping';
+import { Actor } from 'apify';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
@@ -259,6 +260,35 @@ describe('RequestList', () => {
 
         expect(spy).toBeCalledTimes(1);
         expect(spy).toBeCalledWith({ url: 'http://example.com/list-1', urlRegExp: undefined });
+        spy.mockRestore();
+    });
+
+    test('should use the defined proxy server when using `requestsFromUrl`', async () => {
+        const proxyUrls = [
+            'http://proxyurl.usedforthe.download',
+            'http://another.proxy.url',
+        ];
+
+        const spy = jest.spyOn(RequestList.prototype as any, '_downloadListOfUrls');
+        spy.mockResolvedValue([]);
+
+        const proxyConfiguration = await Actor.createProxyConfiguration({
+            proxyUrls,
+        });
+
+        const requestList = new RequestList({
+            sources: [
+                { requestsFromUrl: 'http://example.com/list-1' },
+                { requestsFromUrl: 'http://example.com/list-2' },
+                { requestsFromUrl: 'http://example.com/list-3' },
+            ],
+            proxyConfiguration,
+        });
+
+        await requestList.initialize();
+
+        expect(spy).not.toBeCalledWith(expect.not.objectContaining({ proxyUrl: expect.any(String) }));
+
         spy.mockRestore();
     });
 

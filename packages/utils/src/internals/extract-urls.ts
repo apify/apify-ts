@@ -31,8 +31,9 @@ export async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Pr
         url: ow.string.url,
         encoding: ow.optional.string,
         urlRegExp: ow.optional.regExp,
+        proxyUrl: ow.optional.string,
     }));
-    const { url, encoding = 'utf8', urlRegExp = URL_NO_COMMAS_REGEX } = options;
+    const { url, encoding = 'utf8', urlRegExp = URL_NO_COMMAS_REGEX, proxyUrl } = options;
 
     // Try to detect wrong urls and fix them. Currently, detects only sharing url instead of csv download one.
     const match = url.match(/^(https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:\w|-)+)\/?/);
@@ -42,7 +43,9 @@ export async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Pr
         fixedUrl = `${match[1]}/gviz/tq?tqx=out:csv`;
     }
 
-    const { body: string } = await gotScraping({ url: fixedUrl, encoding });
+    // @ts-expect-error https://github.com/apify/got-scraping/issues/66
+    const { body: string } = await gotScraping({ url: fixedUrl, encoding, proxyUrl });
+
     return extractUrls({ string, urlRegExp });
 }
 

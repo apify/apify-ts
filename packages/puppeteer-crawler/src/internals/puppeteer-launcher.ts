@@ -2,6 +2,7 @@ import ow from 'ow';
 import { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
+import log from '@apify/log';
 import { applyStealthToBrowser, StealthOptions } from './stealth';
 
 /**
@@ -38,7 +39,7 @@ const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
  */
 export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPlugin['launchOptions'], unknown> {
     /**
-     *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-puppeteerlaunchoptions)
+     *  `puppeteer.launch` [options](https://pptr.dev/#?product=Puppeteer&version=v13.5.1&show=api-puppeteerlaunchoptions)
      */
     launchOptions?: PuppeteerPlugin['launchOptions'];
 
@@ -78,14 +79,23 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
     launcher?: unknown;
 
     /**
+     * With this option selected, all pages will be opened in a new incognito browser context.
+     * This means they will not share cookies nor cache and their resources will not be throttled by one another.
+     * @default false
+     */
+    useIncognitoPages?: boolean;
+
+    /**
      * This setting hides most of the known properties that identify headless Chrome and makes it nearly undetectable.
      * It is recommended to use it together with the `useChrome` set to `true`.
+     * @deprecated
      */
     stealth?: boolean;
 
     /**
      * Using this configuration, you can disable some of the hiding tricks.
      * For these settings to take effect `stealth` must be set to true
+     * @deprecated
      */
     stealthOptions?: StealthOptions;
 }
@@ -139,6 +149,11 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
         const browser = await super.launch();
 
         if (this.stealth) {
+            log.deprecated(
+                'Puppeteer "stealth" and "stealthOptions" are deprecated.'
+                + ' You should use fingerprints instead.'
+                + ' Checkout the fingerprints guide: https://sdk.apify.com/docs/guides/avoid-blocking',
+            );
             const { hideWebDriver, ...newStealthOptions } = this.stealthOptions!;
 
             applyStealthToBrowser(browser, newStealthOptions);
