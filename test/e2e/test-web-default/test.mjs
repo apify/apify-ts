@@ -1,6 +1,6 @@
 import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
 
-await run(import.meta.url, 'cheerio-scraper', {
+await run(import.meta.url, 'web-scraper', {
     runMode: 'PRODUCTION',
     startUrls: [{ url: 'https://apify.com' }],
     keepUrlFragments: false,
