@@ -3,7 +3,7 @@ import log from '@apify/log';
 import { Configuration } from './configuration';
 
 export interface ProxyConfigurationFunction {
-    (sessionId: string | number): string;
+    (sessionId: string | number): string | Promise<string>;
 }
 
 export interface ProxyConfigurationOptions {
@@ -16,7 +16,7 @@ export interface ProxyConfigurationOptions {
 
     /**
      * Custom function that allows you to generate the new proxy URL dynamically. It gets the `sessionId` as a parameter
-     * and should always return stringified proxy URL.
+     * and should always return stringified proxy URL. Can be asynchronous.
      * This function is used to generate the URL when {@link ProxyConfiguration.newUrl} or {@link ProxyConfiguration.newProxyInfo} is called.
      */
     newUrlFunction?: ProxyConfigurationFunction;
@@ -177,9 +177,9 @@ export class ProxyConfiguration {
      *  The identifier must not be longer than 50 characters and include only the following: `0-9`, `a-z`, `A-Z`, `"."`, `"_"` and `"~"`.
      * @return Represents information about used proxy and its configuration.
      */
-    newProxyInfo(sessionId?: string | number): ProxyInfo {
+    async newProxyInfo(sessionId?: string | number): Promise<ProxyInfo> {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
-        const url = this.newUrl(sessionId);
+        const url = await this.newUrl(sessionId);
 
         const { username, password, port, hostname } = new URL(url);
 
@@ -206,7 +206,7 @@ export class ProxyConfiguration {
      * @return A string with a proxy URL, including authentication credentials and port number.
      *  For example, `http://bob:password123@proxy.example.com:8000`
      */
-    newUrl(sessionId?: string | number): string {
+    async newUrl(sessionId?: string | number): Promise<string> {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
 
         if (this.newUrlFunction) {
@@ -239,28 +239,27 @@ export class ProxyConfiguration {
     /**
      * Calls the custom newUrlFunction and checks format of its return value
      */
-    protected _callNewUrlFunction(sessionId?: string) {
-        let proxyUrl: string | undefined;
+    protected async _callNewUrlFunction(sessionId?: string) {
+        let proxyUrl: string;
 
         try {
-            proxyUrl = this.newUrlFunction!(sessionId!);
+            proxyUrl = await this.newUrlFunction!(sessionId!);
             new URL(proxyUrl); // eslint-disable-line no-new
+            return proxyUrl;
         } catch (err) {
             this._throwNewUrlFunctionInvalid(err as Error);
         }
-
-        return proxyUrl;
     }
 
-    protected _throwNewUrlFunctionInvalid(err: Error) {
+    protected _throwNewUrlFunctionInvalid(err: Error) : never {
         throw new Error(`The provided newUrlFunction did not return a valid URL.\nCause: ${err.message}`);
     }
 
-    protected _throwCannotCombineCustomMethods() {
+    protected _throwCannotCombineCustomMethods() : never {
         throw new Error('Cannot combine custom proxies "options.proxyUrls" with custom generating function "options.newUrlFunction".');
     }
 
-    protected _throwNoOptionsProvided() {
+    protected _throwNoOptionsProvided() : never {
         throw new Error('One of "options.proxyUrls" or "options.newUrlFunction" needs to be provided.');
     }
 }

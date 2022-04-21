@@ -161,7 +161,7 @@ describe('ProxyConfiguration', () => {
             newUrlFunction,
         });
         try {
-            proxyConfiguration.newUrl();
+            await proxyConfiguration.newUrl();
             throw new Error('wrong error');
         } catch (err) {
             expect((err as Error).message).toMatch('The provided newUrlFunction did not return');
@@ -184,9 +184,9 @@ describe('ProxyConfiguration', () => {
         expect(proxyConfiguration.newUrl()).toEqual('http://proxy.com:4444');
 
         // through newProxyInfo()
-        expect(proxyConfiguration.newProxyInfo().url).toEqual('http://proxy.com:3333');
-        expect(proxyConfiguration.newProxyInfo().url).toEqual('http://proxy.com:2222');
-        expect(proxyConfiguration.newProxyInfo().url).toEqual('http://proxy.com:1111');
+        expect((await proxyConfiguration.newProxyInfo()).url).toEqual('http://proxy.com:3333');
+        expect((await proxyConfiguration.newProxyInfo()).url).toEqual('http://proxy.com:2222');
+        expect((await proxyConfiguration.newProxyInfo()).url).toEqual('http://proxy.com:1111');
     });
 
     describe('With proxyUrls options', () => {
@@ -212,12 +212,12 @@ describe('ProxyConfiguration', () => {
 
             // @ts-expect-error TODO private property?
             const { proxyUrls } = proxyConfiguration;
-            expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[0]);
-            expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[1]);
-            expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[2]);
-            expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[0]);
-            expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[1]);
-            expect(proxyConfiguration.newProxyInfo().url).toEqual(proxyUrls[2]);
+            expect((await proxyConfiguration.newProxyInfo()).url).toEqual(proxyUrls[0]);
+            expect((await proxyConfiguration.newProxyInfo()).url).toEqual(proxyUrls[1]);
+            expect((await proxyConfiguration.newProxyInfo()).url).toEqual(proxyUrls[2]);
+            expect((await proxyConfiguration.newProxyInfo()).url).toEqual(proxyUrls[0]);
+            expect((await proxyConfiguration.newProxyInfo()).url).toEqual(proxyUrls[1]);
+            expect((await proxyConfiguration.newProxyInfo()).url).toEqual(proxyUrls[2]);
         });
 
         test('should rotate custom URLs with sessions correctly', async () => {

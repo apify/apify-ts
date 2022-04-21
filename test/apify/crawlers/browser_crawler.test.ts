@@ -675,7 +675,7 @@ describe('BrowserCrawler', () => {
             // @ts-expect-error FIXME
             const stub = gotScrapingSpy.mockImplementation(fakeCall);
             const proxyConfiguration = await Actor.createProxyConfiguration();
-            const generatedProxyUrl = new URL(proxyConfiguration.newUrl()).href;
+            const generatedProxyUrl = new URL(await proxyConfiguration.newUrl()).href;
             let browserProxy;
 
             const browserCrawler = new BrowserCrawlerTest({

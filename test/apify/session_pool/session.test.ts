@@ -159,12 +159,12 @@ describe('Session - testing session behaviour ', () => {
         });
     });
 
-    test('should be valid proxy session', () => {
+    test('should be valid proxy session', async () => {
         const proxyConfiguration = new ProxyConfiguration({ password: '12312' });
         session = new Session({ sessionPool });
         let error;
         try {
-            proxyConfiguration.newUrl(session.id);
+            await proxyConfiguration.newUrl(session.id);
         } catch (e) {
             error = e;
         }
