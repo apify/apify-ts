@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'os';
 import fs from 'fs-extra';
-import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
+import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
 
 export const SKIPPED_TEST_CLOSE_CODE = 404;
 
@@ -65,6 +65,7 @@ export async function getDatasetItems(url) {
 
 export async function initialize(url) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(url);
+    await purgeLocalStorage();
     console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 
