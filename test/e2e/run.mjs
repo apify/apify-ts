@@ -26,7 +26,19 @@ async function run() {
             workerData: dir.name,
             stdout: true,
         });
+        let seenFirst = false;
         worker.stdout.on('data', (data) => {
+            if (data.startsWith('[init]')) {
+                seenFirst = true;
+                return;
+            }
+
+            if (!seenFirst) {
+                console.log(`${colors.red('[fatal]')} test ${colors.yellow(`[${dir.name}]`)} did not call "initialize(import.meta.url)"!`);
+                worker.terminate();
+                return;
+            }
+
             const match = data.toString().match(/\[assertion] (passed|failed): (.*)/);
 
             if (match) {

@@ -1,8 +1,10 @@
 import { Actor } from 'apify';
 import { CheerioCrawler, pushData } from '@crawlee/cheerio';
-import { getDatasetItems, expect, validateDataset, skipTest } from '../tools.mjs';
+import { getDatasetItems, expect, validateDataset, skipTest, initialize } from '../tools.mjs';
 
 skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
+
+initialize(import.meta.url);
 
 const crawler = new CheerioCrawler({
     ignoreSslErrors: false,

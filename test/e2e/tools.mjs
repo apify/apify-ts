@@ -2,14 +2,11 @@
 import { join } from 'path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'os';
 import fs from 'fs-extra';
-import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
-import { Actor } from '../../packages/apify/dist/index.mjs';
-import { Configuration } from '../../packages/core/dist/index.mjs';
+import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
 
 export const SKIPPED_TEST_CLOSE_CODE = 404;
 
@@ -66,30 +63,9 @@ export async function getDatasetItems(url) {
     return datasetItems;
 }
 
-export async function run(url, scraper, input) {
+export async function initialize(url) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(url);
-
-    await purgeLocalStorage();
-    const inputKey = Configuration.getGlobalConfig().get('inputKey');
-    await Actor.setValue(inputKey, input);
-
-    const { exit } = process;
-    process.exit = () => {};
-
-    await import(`../../packages/actor-scraper/${scraper}/dist/main.js`);
-    await waitForFinish(url);
-    process.exit = exit;
-}
-
-async function isFinished(dir) {
-    const stats = await getStats(dir);
-    return !!stats.crawlerFinishedAt;
-}
-
-export async function waitForFinish(dir) {
-    while (!await isFinished(dir)) {
-        await setTimeout(1000);
-    }
+    console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 
 export function expect(bool, message) {
