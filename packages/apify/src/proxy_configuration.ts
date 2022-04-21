@@ -357,7 +357,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
         const proxyStatusUrl = process.env[ENV_VARS.PROXY_STATUS_URL] ?? 'http://proxy.apify.com';
         const requestOpts = {
             url: `${proxyStatusUrl}/?format=json`,
-            proxyUrl: this.newUrl(),
+            proxyUrl: await this.newUrl(),
             timeout: { request: CHECK_ACCESS_REQUEST_TIMEOUT_MILLIS },
             responseType: 'json',
         } as const;

@@ -622,7 +622,7 @@ export abstract class BrowserCrawler<
         }
 
         if (this.proxyConfiguration) {
-            const proxyInfo = await this.proxyConfiguration.newProxyInfo(launchContextExtends.session && launchContextExtends.session.id);
+            const proxyInfo = await this.proxyConfiguration.newProxyInfo(launchContextExtends.session?.id);
             launchContext.proxyUrl = proxyInfo.url;
             launchContextExtends.proxyInfo = proxyInfo;
 
