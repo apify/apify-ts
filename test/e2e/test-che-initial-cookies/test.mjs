@@ -55,7 +55,7 @@ const crawler = new CheerioCrawler({
 
 await crawler.addRequests(['https://api.apify.com/v2/browser-info']);
 
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: false });
+const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
 
 expect(stats.requestsFinished === 1, 'All requests finished');
 
