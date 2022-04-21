@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'worker_threads';
-import { colors, getApifyToken } from './tools.mjs';
+import { colors, getApifyToken, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
@@ -35,6 +35,11 @@ async function run() {
             }
         });
         worker.on('exit', (code) => {
+            if (code === SKIPPED_TEST_CLOSE_CODE) {
+                console.log(`Test ${colors.yellow(`[${dir.name}]`)} was skipped`);
+                return;
+            }
+
             const took = (Date.now() - now) / 1000;
             // eslint-disable-next-line max-len
             console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);

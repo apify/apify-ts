@@ -11,6 +11,8 @@ import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dis
 import { Actor } from '../../packages/apify/dist/index.mjs';
 import { Configuration } from '../../packages/core/dist/index.mjs';
 
+export const SKIPPED_TEST_CLOSE_CODE = 404;
+
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
     green: (text) => `\x1B[32m${text}\x1B[39m`,
@@ -97,6 +99,11 @@ export function expect(bool, message) {
         console.log(`[assertion] failed: ${message}`);
         process.exit(1);
     }
+}
+
+export function skipTest(reason) {
+    console.error(`[test skipped] ${reason}`);
+    process.exit(SKIPPED_TEST_CLOSE_CODE);
 }
 
 export function validateDataset(items, schema = []) {
