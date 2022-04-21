@@ -25,7 +25,7 @@ describe('Snapshotter', () => {
         apifyClient.stats = {} as never;
         apifyClient.stats.rateLimitErrors = [0, 0, 0];
 
-        const config = new Configuration({ systemInfoIntervalMillis: 500 });
+        const config = new Configuration({ systemInfoIntervalMillis: 100 });
         const snapshotter = new Snapshotter({ config });
         const events = config.getEventManager();
         await events.init();
@@ -302,7 +302,7 @@ describe('Snapshotter', () => {
 
     test('.get[.*]Sample limits amount of samples', async () => {
         const SAMPLE_SIZE_MILLIS = 120;
-        const config = new Configuration({ systemInfoIntervalMillis: 0.01 });
+        const config = new Configuration({ systemInfoIntervalMillis: 10 });
         const snapshotter = new Snapshotter({
             eventLoopSnapshotIntervalSecs: 0.01,
             config,
