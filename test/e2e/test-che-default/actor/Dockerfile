@@ -1,5 +1,6 @@
 FROM apify/actor-node:16
 
+COPY packages ./packages
 COPY package*.json ./
 
 RUN npm --quiet set progress=false \

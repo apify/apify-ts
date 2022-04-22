@@ -1,8 +1,12 @@
-const { Actor } = require('apify');
-const { CheerioCrawler } = require('@crawlee/cheerio');
+import { Actor } from 'apify';
+import { CheerioCrawler, RequestList } from '@crawlee/cheerio'; // TODO: Remove RequestList
 
 Actor.main(async () => {
+    const requestList = new RequestList({ sources: ['https://apify.com'] }); // TODO: Remove
+    await requestList.initialize(); // TODO: Remove
+
     const crawler = new CheerioCrawler({
+        requestList, // TODO: Remove
         async requestHandler({ $, enqueueLinks, request, log }) {
             const { url } = request;
 
@@ -17,7 +21,7 @@ Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests(['https://apify.com']);
+    // await crawler.addRequests(['https://apify.com']); TODO: Uncomment
 
     await crawler.run();
 });

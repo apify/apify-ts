@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'worker_threads';
-import { colors, getApifyToken } from './tools.mjs';
+import { colors, getApifyToken, clearPackages } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
@@ -34,10 +34,11 @@ async function run() {
                 console.log(`${colors.yellow(`[${dir.name}]`)} ${match[2]}: ${c(match[1])}`);
             }
         });
-        worker.on('exit', (code) => {
+        worker.on('exit', async (code) => {
             const took = (Date.now() - now) / 1000;
             // eslint-disable-next-line max-len
             console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
+            if (process.env.npm_config_platform) await clearPackages(`${basePath}/${dir.name}`);
         });
     }
 }

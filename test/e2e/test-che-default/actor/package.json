@@ -3,9 +3,14 @@
 	"version": "0.0.1",
 	"description": "Test - Cheerio Crawler Default",
 	"dependencies": {
-        "apify": "../../../../packages/apify",
-        "@crawlee/cheerio": "../../../../packages/cheerio-crawler"
-	},
+        "apify": "file:./packages/apify",
+        "@crawlee/core": "file:./packages/core",
+        "@crawlee/basic": "file:./packages/basic-crawler",
+        "@crawlee/cheerio": "file:./packages/cheerio-crawler",
+        "@crawlee/utils": "file:./packages/utils",
+        "@crawlee/browser-pool": "file:./packages/browser-pool",
+        "@crawlee/storage": "file:./packages/storage"
+    },
 	"devDependencies": {
 		"@apify/eslint-config": "^0.3.1",
 		"eslint": "^8.13.0"
@@ -16,6 +21,7 @@
 		"lint:fix": "./node_modules/.bin/eslint ./src --ext .js,.jsx --fix",
 		"test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
 	},
+	"type": "module",
 	"author": "It's not you it's me",
 	"license": "ISC"
 }

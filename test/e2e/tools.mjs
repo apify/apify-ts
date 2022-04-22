@@ -1,6 +1,6 @@
 /* eslint-disable import/no-relative-packages */
 import { join } from 'path';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
@@ -17,6 +17,28 @@ export const colors = {
     grey: (text) => `\x1B[90m${text}\x1B[39m`,
     yellow: (text) => `\x1B[33m${text}\x1B[39m`,
 };
+
+export async function copyPackages(dirName) {
+    const srcPackagesDir = resolve('../apify-ts', 'packages');
+    const destPackagesDir = join(dirName, 'packages');
+    await fs.remove(destPackagesDir);
+
+    const { dependencies } = await fs.readJSON(join(dirName, 'package.json'));
+    for (const dependency of Object.values(dependencies)) {
+        const packageDirName = dependency.split('/').pop();
+        const srcDir = join(srcPackagesDir, packageDirName, 'dist');
+        const destDir = join(destPackagesDir, packageDirName, 'dist');
+        await fs.copy(srcDir, destDir);
+        const srcPackageFile = join(srcPackagesDir, packageDirName, 'package.json');
+        const destPackageFile = join(destPackagesDir, packageDirName, 'package.json')
+        await fs.copy(srcPackageFile, destPackageFile);
+    }
+}
+
+export async function clearPackages(dirName) {
+    const destPackagesDir = join(dirName, 'actor', 'packages');
+    await fs.remove(destPackagesDir);
+}
 
 export function getStorage(url) {
     return join(url, 'apify_storage');
@@ -48,6 +70,11 @@ export async function getApifyToken() {
 
     const { token } = await fs.readJSON(authPath);
     return token;
+}
+
+export async function getActorName(dirname) {
+    const actorPackageFile = await fs.readJSON(join(dirname, 'package.json'));
+    return actorPackageFile.name;
 }
 
 export async function getDatasetItems(url) {
