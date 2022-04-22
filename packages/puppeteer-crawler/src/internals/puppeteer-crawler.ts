@@ -135,7 +135,6 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
-        launchContext: ow.optional.object,
     };
 
     /**
@@ -162,12 +161,11 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
-
-        this.launchContext = launchContext;
+        super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions });
     }
 
     protected override async _navigationHandler(crawlingContext: PuppeteerCrawlContext, gotoOptions: DirectNavigationOptions) {
+        // TODO remove deprecated options in v3
         if (this.gotoFunction) {
             this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
 

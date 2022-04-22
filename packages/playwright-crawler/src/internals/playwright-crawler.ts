@@ -214,7 +214,6 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
         launcher: ow.optional.object,
-        launchContext: ow.optional.object,
     };
 
     /**

@@ -756,9 +756,7 @@ export class BrowserPool<
             ...this.preLaunchHooks,
             // This is flipped because of the fingerprint cache.
             // It is usual to generate proxy per browser and we want to know the proxyUrl for the caching.
-
             createFingerprintPreLaunchHook(this),
-
         ];
         this.prePageCreateHooks = [
             createPrePageCreateHook(),

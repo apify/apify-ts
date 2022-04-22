@@ -83,6 +83,7 @@ export interface BrowserCrawlerOptions<
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
 > {
+    launchContext?: BrowserLaunchContext<any, any>;
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -357,6 +358,7 @@ export abstract class BrowserCrawler<
         preNavigationHooks: ow.optional.array,
         postNavigationHooks: ow.optional.array,
 
+        launchContext: ow.optional.object,
         browserPoolOptions: ow.object,
         sessionPoolOptions: ow.optional.object,
         persistCookiesPerSession: ow.optional.boolean,
@@ -376,6 +378,7 @@ export abstract class BrowserCrawler<
             gotoTimeoutSecs, // deprecated
             persistCookiesPerSession,
             proxyConfiguration,
+            launchContext,
             browserPoolOptions,
             preNavigationHooks = [],
             postNavigationHooks = [],
@@ -422,6 +425,7 @@ export abstract class BrowserCrawler<
             this.log.deprecated('Option "gotoTimeoutSecs" is deprecated. Use "navigationTimeoutSecs" instead.');
         }
 
+        this.launchContext = launchContext;
         this.navigationTimeoutMillis = (gotoTimeoutSecs || navigationTimeoutSecs) * 1000;
 
         this.gotoFunction = gotoFunction;
@@ -438,6 +442,11 @@ export abstract class BrowserCrawler<
             this.persistCookiesPerSession = persistCookiesPerSession !== undefined ? persistCookiesPerSession : true;
         } else {
             this.persistCookiesPerSession = false;
+        }
+
+        if (launchContext?.userAgent) {
+            browserPoolOptions.useFingerprints = false;
+            this.log.info('Disabling automatic fingerprint injection because custom user agent has been provided.');
         }
 
         const { preLaunchHooks = [], postLaunchHooks = [], ...rest } = browserPoolOptions;

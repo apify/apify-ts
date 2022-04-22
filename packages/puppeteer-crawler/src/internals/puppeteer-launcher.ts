@@ -4,17 +4,6 @@ import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
 
 /**
- * The default user agent used by `Actor.launchPuppeteer`.
- * Last updated on 2020-05-22.
- */
-const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36';
-
-const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
-    width: 1366,
-    height: 768,
-};
-
-/**
  * Apify extends the launch options of Puppeteer.
  * You can use any of the Puppeteer compatible
  * [`LaunchOptions`](https://pptr.dev/#?product=Puppeteer&show=api-puppeteerlaunchoptions)
@@ -48,13 +37,6 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
      * Example: `http://bob:pass123@proxy.example.com:1234`.
      */
     proxyUrl?: string;
-
-    /**
-     * The `User-Agent` HTTP header used by the browser.
-     * If not provided, the function sets `User-Agent` to a reasonable default
-     * to reduce the chance of detection of the crawler.
-     */
-    userAgent?: string;
 
     /**
      * If `true` and `executablePath` is not set,
@@ -92,7 +74,6 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,
         launcher: ow.optional.object,
-        userAgent: ow.optional.string,
     };
 
     /**
@@ -103,7 +84,6 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
 
         const {
             launcher = BrowserLauncher.requireLauncherOrThrow('puppeteer', 'apify/actor-node-puppeteer-chrome'),
-            userAgent,
             ...browserLauncherOptions
         } = launchContext;
 
@@ -112,35 +92,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
             launcher,
         });
 
-        this.userAgent = userAgent;
         this.Plugin = PuppeteerPlugin;
-    }
-
-    override createLaunchOptions() {
-        const launchOptions = super.createLaunchOptions();
-        launchOptions.args = launchOptions.args || [];
-
-        try {
-            // eslint-disable-next-line
-            const { isAtHome } = require('apify');
-            if (isAtHome()) launchOptions.args.push('--no-sandbox');
-        // eslint-disable-next-line no-empty
-        } catch {}
-
-        launchOptions.defaultViewport ??= LAUNCH_PUPPETEER_DEFAULT_VIEWPORT;
-
-        // When User-Agent is not set and we're using Chromium or headless mode,
-        // it is better to use DEFAULT_USER_AGENT to reduce chance of detection
-        let { userAgent } = this;
-        if (!userAgent && (!launchOptions.executablePath || launchOptions.headless)) {
-            userAgent = DEFAULT_USER_AGENT;
-        }
-
-        if (userAgent) {
-            launchOptions.args.push(`--user-agent=${userAgent}`);
-        }
-
-        return launchOptions;
     }
 }
 
