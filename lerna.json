@@ -2,13 +2,12 @@
     "packages": [
         "packages/*"
     ],
-    "version": "independent",
+    "version": "3.0.0",
     "command": {
         "version": {
             "conventionalCommits": true,
-            "granularPathspec": false,
             "createRelease": "github",
-            "message": "chore: release [skip ci]"
+            "message": "chore(release): %s"
         }
     },
     "useWorkspaces": true,
