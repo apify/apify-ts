@@ -716,7 +716,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         if (this.proxyConfiguration) {
             const sessionId = session ? session.id : undefined;
-            crawlingContext.proxyInfo = this.proxyConfiguration.newProxyInfo(sessionId);
+            crawlingContext.proxyInfo = await this.proxyConfiguration.newProxyInfo(sessionId);
         }
 
         await this._handleNavigation(crawlingContext);

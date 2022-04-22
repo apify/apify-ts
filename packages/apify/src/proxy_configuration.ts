@@ -234,10 +234,10 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
      *  The identifier must not be longer than 50 characters and include only the following: `0-9`, `a-z`, `A-Z`, `"."`, `"_"` and `"~"`.
      * @return Represents information about used proxy and its configuration.
      */
-    override newProxyInfo(sessionId?: string | number): ProxyInfo {
+    override async newProxyInfo(sessionId?: string | number): Promise<ProxyInfo> {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
         ow(sessionId, ow.optional.string.maxLength(MAX_SESSION_ID_LENGTH).matches(APIFY_PROXY_VALUE_REGEX));
-        const url = this.newUrl(sessionId);
+        const url = await this.newUrl(sessionId);
 
         const { groups, countryCode, password, port, hostname } = (this.usesApifyProxy ? this : new URL(url)) as ProxyConfiguration;
 
@@ -265,7 +265,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
      * @return A string with a proxy URL, including authentication credentials and port number.
      *  For example, `http://bob:password123@proxy.example.com:8000`
      */
-    override newUrl(sessionId?: string | number): string {
+    override async newUrl(sessionId?: string | number): Promise<string> {
         if (typeof sessionId === 'number') sessionId = `${sessionId}`;
         ow(sessionId, ow.optional.string.maxLength(MAX_SESSION_ID_LENGTH).matches(APIFY_PROXY_VALUE_REGEX));
         if (this.newUrlFunction) {
@@ -357,7 +357,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
         const proxyStatusUrl = process.env[ENV_VARS.PROXY_STATUS_URL] ?? 'http://proxy.apify.com';
         const requestOpts = {
             url: `${proxyStatusUrl}/?format=json`,
-            proxyUrl: this.newUrl(),
+            proxyUrl: await this.newUrl(),
             timeout: { request: CHECK_ACCESS_REQUEST_TIMEOUT_MILLIS },
             responseType: 'json',
         } as const;

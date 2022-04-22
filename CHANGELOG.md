@@ -16,6 +16,7 @@
 - some `AutoscaledPool` options are no longer available:
   - `cpuSnapshotIntervalSecs` and `memorySnapshotIntervalSecs` has been replaced with top level `systemInfoIntervalMillis` configuration
   - `maxUsedCpuRatio` has been moved to the top level configuration
+  - `ProxyConfiguration.newUrlFunction` can be async. `.newUrl()` and `.newProxyInfo()` now return promises.
 
 2.3.0 / 2022/04/07
 ====================

@@ -805,7 +805,7 @@ describe('CheerioCrawler', () => {
                 expect(typeof proxyInfo.url).toBe('string');
                 expect(typeof session.id).toBe('string');
                 expect(proxyInfo.sessionId).toBe(session.id);
-                expect(proxyInfo).toEqual(proxyConfiguration.newProxyInfo(session.id));
+                expect(proxyInfo).toEqual(await proxyConfiguration.newProxyInfo(session.id));
             }
         });
     });
