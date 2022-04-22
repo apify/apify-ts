@@ -27,7 +27,6 @@ export interface Input {
     sessionPoolName?: string;
     initialCookies: Parameters<Session['setPuppeteerCookies']>[0];
     useChrome: boolean;
-    useStealth: boolean;
     ignoreSslErrors: boolean;
     ignoreCorsAndCsp: boolean;
     downloadMedia: boolean;

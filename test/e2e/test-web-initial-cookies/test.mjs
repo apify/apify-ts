@@ -55,7 +55,6 @@ await run(import.meta.url, 'web-scraper', {
         },
     ],
     useChrome: false,
-    useStealth: false,
     ignoreSslErrors: false,
     ignoreCorsAndCsp: false,
     downloadMedia: true,

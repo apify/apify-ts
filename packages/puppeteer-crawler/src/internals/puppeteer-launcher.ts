@@ -2,8 +2,6 @@ import ow from 'ow';
 import { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
-import log from '@apify/log';
-import { applyStealthToBrowser, StealthOptions } from './stealth';
 
 /**
  * The default user agent used by `Actor.launchPuppeteer`.
@@ -84,20 +82,6 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
      * @default false
      */
     useIncognitoPages?: boolean;
-
-    /**
-     * This setting hides most of the known properties that identify headless Chrome and makes it nearly undetectable.
-     * It is recommended to use it together with the `useChrome` set to `true`.
-     * @deprecated
-     */
-    stealth?: boolean;
-
-    /**
-     * Using this configuration, you can disable some of the hiding tricks.
-     * For these settings to take effect `stealth` must be set to true
-     * @deprecated
-     */
-    stealthOptions?: StealthOptions;
 }
 
 /**
@@ -109,12 +93,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
         ...BrowserLauncher.optionsShape,
         launcher: ow.optional.object,
         userAgent: ow.optional.string,
-        stealth: ow.optional.boolean,
-        stealthOptions: ow.optional.object,
     };
-
-    stealth?: boolean;
-    stealthOptions: StealthOptions;
 
     /**
      * All `PuppeteerLauncher` parameters are passed via an launchContext object.
@@ -125,8 +104,6 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
         const {
             launcher = BrowserLauncher.requireLauncherOrThrow('puppeteer', 'apify/actor-node-puppeteer-chrome'),
             userAgent,
-            stealth = false,
-            stealthOptions = {},
             ...browserLauncherOptions
         } = launchContext;
 
@@ -136,30 +113,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
         });
 
         this.userAgent = userAgent;
-        this.stealth = stealth;
-        this.stealthOptions = {
-            hideWebDriver: true,
-            ...stealthOptions,
-        };
-
         this.Plugin = PuppeteerPlugin;
-    }
-
-    override async launch() {
-        const browser = await super.launch();
-
-        if (this.stealth) {
-            log.deprecated(
-                'Puppeteer "stealth" and "stealthOptions" are deprecated.'
-                + ' You should use fingerprints instead.'
-                + ' Checkout the fingerprints guide: https://sdk.apify.com/docs/guides/avoid-blocking',
-            );
-            const { hideWebDriver, ...newStealthOptions } = this.stealthOptions!;
-
-            applyStealthToBrowser(browser, newStealthOptions);
-        }
-
-        return browser;
     }
 
     override createLaunchOptions() {
@@ -184,16 +138,6 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
 
         if (userAgent) {
             launchOptions.args.push(`--user-agent=${userAgent}`);
-        }
-
-        if (this.stealthOptions?.hideWebDriver) {
-            const idx = launchOptions.args.findIndex((arg) => arg.startsWith('--disable-blink-features='));
-            if (idx !== -1) {
-                const arg = launchOptions.args[idx];
-                launchOptions.args[idx] = `${arg},AutomationControlled`;
-            } else {
-                launchOptions.args.push('--disable-blink-features=AutomationControlled');
-            }
         }
 
         return launchOptions;

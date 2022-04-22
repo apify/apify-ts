@@ -67,7 +67,6 @@ await run(import.meta.url, 'puppeteer-scraper', {
     proxyConfiguration: { useApifyProxy: false },
     proxyRotation: 'RECOMMENDED',
     useChrome: false,
-    useStealth: false,
     ignoreSslErrors: false,
     ignoreCorsAndCsp: false,
     downloadMedia: true,
