@@ -2,19 +2,6 @@ import ow from 'ow';
 import { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import { BrowserLaunchContext, BrowserLauncher } from '@crawlee/browser';
-import log from '@apify/log';
-import { applyStealthToBrowser, StealthOptions } from './stealth';
-
-/**
- * The default user agent used by `Actor.launchPuppeteer`.
- * Last updated on 2020-05-22.
- */
-const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36';
-
-const LAUNCH_PUPPETEER_DEFAULT_VIEWPORT = {
-    width: 1366,
-    height: 768,
-};
 
 /**
  * Apify extends the launch options of Puppeteer.
@@ -52,13 +39,6 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
     proxyUrl?: string;
 
     /**
-     * The `User-Agent` HTTP header used by the browser.
-     * If not provided, the function sets `User-Agent` to a reasonable default
-     * to reduce the chance of detection of the crawler.
-     */
-    userAgent?: string;
-
-    /**
      * If `true` and `executablePath` is not set,
      * Puppeteer will launch full Google Chrome browser available on the machine
      * rather than the bundled Chromium. The path to Chrome executable
@@ -84,20 +64,6 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
      * @default false
      */
     useIncognitoPages?: boolean;
-
-    /**
-     * This setting hides most of the known properties that identify headless Chrome and makes it nearly undetectable.
-     * It is recommended to use it together with the `useChrome` set to `true`.
-     * @deprecated
-     */
-    stealth?: boolean;
-
-    /**
-     * Using this configuration, you can disable some of the hiding tricks.
-     * For these settings to take effect `stealth` must be set to true
-     * @deprecated
-     */
-    stealthOptions?: StealthOptions;
 }
 
 /**
@@ -108,13 +74,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
     protected static override optionsShape = {
         ...BrowserLauncher.optionsShape,
         launcher: ow.optional.object,
-        userAgent: ow.optional.string,
-        stealth: ow.optional.boolean,
-        stealthOptions: ow.optional.object,
     };
-
-    stealth?: boolean;
-    stealthOptions: StealthOptions;
 
     /**
      * All `PuppeteerLauncher` parameters are passed via an launchContext object.
@@ -124,9 +84,6 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
 
         const {
             launcher = BrowserLauncher.requireLauncherOrThrow('puppeteer', 'apify/actor-node-puppeteer-chrome'),
-            userAgent,
-            stealth = false,
-            stealthOptions = {},
             ...browserLauncherOptions
         } = launchContext;
 
@@ -135,68 +92,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
             launcher,
         });
 
-        this.userAgent = userAgent;
-        this.stealth = stealth;
-        this.stealthOptions = {
-            hideWebDriver: true,
-            ...stealthOptions,
-        };
-
         this.Plugin = PuppeteerPlugin;
-    }
-
-    override async launch() {
-        const browser = await super.launch();
-
-        if (this.stealth) {
-            log.deprecated(
-                'Puppeteer "stealth" and "stealthOptions" are deprecated.'
-                + ' You should use fingerprints instead.'
-                + ' Checkout the fingerprints guide: https://sdk.apify.com/docs/guides/avoid-blocking',
-            );
-            const { hideWebDriver, ...newStealthOptions } = this.stealthOptions!;
-
-            applyStealthToBrowser(browser, newStealthOptions);
-        }
-
-        return browser;
-    }
-
-    override createLaunchOptions() {
-        const launchOptions = super.createLaunchOptions();
-        launchOptions.args = launchOptions.args || [];
-
-        try {
-            // eslint-disable-next-line
-            const { isAtHome } = require('apify');
-            if (isAtHome()) launchOptions.args.push('--no-sandbox');
-        // eslint-disable-next-line no-empty
-        } catch {}
-
-        launchOptions.defaultViewport ??= LAUNCH_PUPPETEER_DEFAULT_VIEWPORT;
-
-        // When User-Agent is not set and we're using Chromium or headless mode,
-        // it is better to use DEFAULT_USER_AGENT to reduce chance of detection
-        let { userAgent } = this;
-        if (!userAgent && (!launchOptions.executablePath || launchOptions.headless)) {
-            userAgent = DEFAULT_USER_AGENT;
-        }
-
-        if (userAgent) {
-            launchOptions.args.push(`--user-agent=${userAgent}`);
-        }
-
-        if (this.stealthOptions?.hideWebDriver) {
-            const idx = launchOptions.args.findIndex((arg) => arg.startsWith('--disable-blink-features='));
-            if (idx !== -1) {
-                const arg = launchOptions.args[idx];
-                launchOptions.args[idx] = `${arg},AutomationControlled`;
-            } else {
-                launchOptions.args.push('--disable-blink-features=AutomationControlled');
-            }
-        }
-
-        return launchOptions;
     }
 }
 

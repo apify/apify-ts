@@ -409,7 +409,7 @@ describe('BrowserPool', () => {
             describe('preLaunchHooks', () => {
                 test('should evaluate hook before launching browser with correct args', async () => {
                     const myAsyncHook = () => Promise.resolve();
-                    browserPool.preLaunchHooks = [myAsyncHook];
+                    browserPool.preLaunchHooks.push(myAsyncHook);
 
                     // @ts-expect-error Private function
                     jest.spyOn(browserPool!, '_executeHooks');

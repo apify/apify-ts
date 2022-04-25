@@ -11,6 +11,11 @@ import {
     BrowserPluginOptions,
 } from '@crawlee/browser-pool';
 
+const DEFAULT_VIEWPORT = {
+    width: 1366,
+    height: 768,
+};
+
 export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
     /**
      * URL to a HTTP proxy server. It must define the port number,
@@ -45,6 +50,13 @@ export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginO
     */
     userDataDir?: string;
 
+    /**
+     * The `User-Agent` HTTP header used by the browser.
+     * If not provided, the function sets `User-Agent` to a reasonable default
+     * to reduce the chance of detection of the crawler.
+     */
+    userAgent?: string;
+
     launcher?: Launcher;
 }
 
@@ -74,6 +86,7 @@ export abstract class BrowserLauncher<
         useIncognitoPages: ow.optional.boolean,
         userDataDir: ow.optional.string,
         launchOptions: ow.optional.object,
+        userAgent: ow.optional.string,
     };
 
     static requireLauncherOrThrow<T>(launcher: string, apifyImageName: string): T {
@@ -84,15 +97,10 @@ export abstract class BrowserLauncher<
             if (e.code === 'MODULE_NOT_FOUND') {
                 const msg = `Cannot find module '${launcher}'. Did you you install the '${launcher}' package?\n`
                     + `Make sure you have '${launcher}' in your package.json dependencies and in your package-lock.json, if you use it.`;
-                try {
-                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-                    const apify = require('apify');
-                    // TODO: this might be doable better to know if its used on apify or not...
-                    if (apify.isAtHome()) {
-                        e.message = `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`;
-                    }
-                // eslint-disable-next-line no-empty
-                } catch {}
+                // TODO we should not depend on apify env vars here ideally
+                if (process.env.APIFY_IS_AT_HOME) {
+                    e.message = `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`;
+                }
             }
 
             throw err;
@@ -107,6 +115,7 @@ export abstract class BrowserLauncher<
             launcher,
             proxyUrl,
             useChrome,
+            userAgent,
             launchOptions = {},
             ...otherLaunchContextProps
         } = launchContext;
@@ -117,6 +126,7 @@ export abstract class BrowserLauncher<
         this.launcher = launcher!;
         this.proxyUrl = proxyUrl;
         this.useChrome = useChrome;
+        this.userAgent = userAgent;
         this.launchOptions = launchOptions;
         this.otherLaunchContextProps = otherLaunchContextProps as Dictionary;
     }
@@ -143,10 +153,21 @@ export abstract class BrowserLauncher<
         return plugin.launch(context) as LaunchResult;
     }
 
-    createLaunchOptions(): { args?: string[] } & Dictionary {
-        const launchOptions = {
+    createLaunchOptions(): Dictionary {
+        const launchOptions: { args: string[] } & Dictionary = {
+            args: [],
+            defaultViewport: DEFAULT_VIEWPORT,
             ...this.launchOptions,
         };
+
+        // TODO is this needed? should be controlled via public options preferably
+        if (process.env.APIFY_IS_AT_HOME) {
+            launchOptions.args.push('--no-sandbox');
+        }
+
+        if (this.userAgent) {
+            launchOptions.args.push(`--user-agent=${this.userAgent}`);
+        }
 
         if (launchOptions.headless == null) {
             launchOptions.headless = this._getDefaultHeadlessOption();

@@ -342,6 +342,9 @@ allowing your running tasks to finish. If a browser gets stuck in limbo,
 it will be killed after a timeout to prevent hanging browser processes.
 
 ### Changing browser fingerprints a.k.a. browser signatures
+
+> Fingerprints are enabled by default since v3.
+
 Changing browser fingerprints is beneficial for avoiding getting blocked and simulating real user browsers.
 With Browser Pool, you can do this otherwise complicated technique by enabling the `useFingerprints` option.
 The fingerprints are by default tied to the respective proxy urls to not use the same unique fingerprint from various IP addresses.

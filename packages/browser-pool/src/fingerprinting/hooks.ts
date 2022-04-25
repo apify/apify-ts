@@ -4,6 +4,9 @@ import { BrowserController } from '../abstract-classes/browser-controller';
 import { LaunchContext } from '../launch-context';
 import { getGeneratorDefaultOptions, mergeArgsToHideWebdriver } from './utils';
 
+/**
+ * @internal
+ */
 export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any, any, any, any>) {
     const {
         fingerprintGenerator,
@@ -46,8 +49,11 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
             height: screen.height,
         };
     };
-};
+}
 
+/**
+ * @internal
+ */
 export function createPrePageCreateHook() {
     return (_pageId: string, browserController: BrowserController, pageOptions: any): void => {
         const { launchContext, browserPlugin } = browserController;
@@ -61,13 +67,18 @@ export function createPrePageCreateHook() {
             };
         }
     };
-};
+}
 
+/**
+ * @internal
+ */
 export function createPostPageCreateHook(fingerprintInjector: FingerprintInjector) {
     return async (page: any, browserController: BrowserController): Promise<void> => {
         const { browserPlugin, launchContext } = browserController;
         const fingerprint = launchContext.fingerprint!;
 
+        // TODO this will require refactoring, we should use common API instead of branching based on plugin type,
+        //  and there should be no public methods specific to some browser.
         if (browserPlugin instanceof PlaywrightPlugin) {
             const { useIncognitoPages, isFingerprintInjected } = launchContext;
 
@@ -88,4 +99,4 @@ export function createPostPageCreateHook(fingerprintInjector: FingerprintInjecto
             await fingerprintInjector.attachFingerprintToPuppeteer(page, fingerprint);
         }
     };
-};
+}

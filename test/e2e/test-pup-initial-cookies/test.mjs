@@ -49,7 +49,6 @@ await run(import.meta.url, 'puppeteer-scraper', {
         },
     ],
     useChrome: false,
-    useStealth: false,
     ignoreSslErrors: false,
     ignoreCorsAndCsp: false,
     downloadMedia: true,

@@ -12,7 +12,6 @@ import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
-import { applyStealthToBrowser } from './stealth';
 import { DirectNavigationOptions, gotoExtended } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
@@ -136,7 +135,6 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
-        launchContext: ow.optional.object,
     };
 
     /**
@@ -152,8 +150,6 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             ...browserCrawlerOptions
         } = options;
 
-        const { stealth = false } = launchContext;
-
         if (launchContext.proxyUrl) {
             throw new Error('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.'
                 + 'Use PuppeteerCrawlerOptions.proxyConfiguration');
@@ -165,21 +161,11 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
-
-        if (stealth) {
-            this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
-                // TODO: We can do this better now. It is not necessary to override the page.
-                //  we can modify the page in the postPageCreateHook
-                const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
-                applyStealthToBrowser(browserController.browser, newStealthOptions);
-            });
-        }
-
-        this.launchContext = launchContext;
+        super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions });
     }
 
     protected override async _navigationHandler(crawlingContext: PuppeteerCrawlContext, gotoOptions: DirectNavigationOptions) {
+        // TODO remove deprecated options in v3
         if (this.gotoFunction) {
             this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
 

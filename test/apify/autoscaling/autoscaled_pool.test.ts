@@ -501,8 +501,6 @@ describe('AutoscaledPool', () => {
     });
 
     test('should not timeout if taskTimeoutSecs === 0', async () => {
-        jest.setTimeout(10 * 1e3);
-
         let finished = false;
 
         const runTaskFunction = async () => {
@@ -522,11 +520,9 @@ describe('AutoscaledPool', () => {
         const now = Date.now();
         await expect(pool.run()).resolves.toBeUndefined();
         expect(Date.now() - now).toBeGreaterThanOrEqual(1e3);
-    }, 3e3);
+    }, 10e3);
 
     test('should not timeout if taskTimeoutSecs not explicitly set', async () => {
-        jest.setTimeout(10 * 1e3);
-
         let finished = false;
 
         const runTaskFunction = async () => {
@@ -546,7 +542,7 @@ describe('AutoscaledPool', () => {
         const now = Date.now();
         await expect(pool.run()).resolves.toBeUndefined();
         expect(Date.now() - now).toBeGreaterThanOrEqual(1e3);
-    });
+    }, 10e3);
 });
 
 /* eslint-enable no-underscore-dangle */
