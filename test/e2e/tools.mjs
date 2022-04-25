@@ -7,7 +7,7 @@ import { homedir } from 'node:os';
 import { promisify } from 'node:util';
 import child_process from 'node:child_process';
 import fs from 'fs-extra';
-import { ApifyClient } from "apify-client";
+import { ApifyClient } from 'apify-client';
 import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
 import { Actor } from '../../packages/apify/dist/index.mjs';
 import { Configuration } from '../../packages/core/dist/index.mjs';
