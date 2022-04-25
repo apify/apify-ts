@@ -528,7 +528,7 @@ export class Actor {
      *   if the record is missing.
      * @ignore
      */
-    async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
+    async getInput<T = Dictionary | string | Buffer>(): Promise<T | null> {
         return this.getValue<T>(this.config.get('inputKey'));
     }
 
@@ -1092,7 +1092,7 @@ export class Actor {
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    static async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
+    static async getInput<T = Dictionary | string | Buffer>(): Promise<T | null> {
         return Actor.getDefaultInstance().getInput();
     }
 
