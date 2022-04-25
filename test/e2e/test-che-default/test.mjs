@@ -2,7 +2,7 @@ import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { getDatasetItems, expect, validateDataset, initialize } from '../tools.mjs';
 
-initialize(import.meta.url);
+await initialize(import.meta.url);
 
 const crawler = new CheerioCrawler({
     async requestHandler({ $, enqueueLinks, request, log }) {

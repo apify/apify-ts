@@ -1,51 +1,49 @@
-import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
+import { Actor } from 'apify';
+import { PuppeteerCrawler, pushData } from '@crawlee/puppeteer';
+import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
-await run(import.meta.url, 'puppeteer-scraper', {
-    startUrls: [{
-        url: 'https://badssl.com/',
-        method: 'GET',
-        userData: { label: 'START' },
-    }],
-    pseudoUrls: [{
-        purl: 'https://[.+].badssl.com/',
-        method: 'GET',
-        userData: { label: 'DETAIL' },
-    }],
-    linkSelector: '.group a.bad',
-    keepUrlFragments: false,
-    pageFunction: async function pageFunction(context) {
-        const { request: { userData: { label } } } = context;
+await initialize(import.meta.url);
+
+const crawler = new PuppeteerCrawler({
+    async requestHandler({ page, enqueueLinks, request, log }) {
+        const { userData: { label } } = request;
 
         switch (label) {
-            case 'START': return handleStart(context);
-            case 'DETAIL': return handleDetail(context);
-            default:
+            case 'START': return handleStart();
+            case 'DETAIL': return handleDetail();
+            default: log.error(`Unknown label: ${label}`);
         }
 
-        async function handleStart({ log }) {
+        async function handleStart() {
             log.info('Bad ssl page opened!');
+            await enqueueLinks({
+                globs: [{ glob: 'https://*.badssl.com/', userData: { label: 'DETAIL' } }],
+                selector: '.group a.bad',
+            });
         }
 
-        async function handleDetail({ request, log, page }) {
+        async function handleDetail() {
             const { url } = request;
             log.info(`Scraping ${url}`);
             const title = await page.title();
-            return { url, title };
+            await pushData({ url, title });
         }
     },
-    proxyConfiguration: { useApifyProxy: false },
-    proxyRotation: 'RECOMMENDED',
-    useChrome: false,
-    ignoreSslErrors: true,
-    ignoreCorsAndCsp: false,
-    downloadMedia: true,
-    downloadCss: true,
-    waitUntil: ['networkidle2'],
-    debugLog: true,
-    browserLog: false,
+    preNavigationHooks: [
+        (_ctx, goToOptions) => {
+            goToOptions.waitUntil = ['networkidle2'];
+        },
+    ],
+    launchContext: {
+        launchOptions: {
+            ignoreHTTPSErrors: true,
+        },
+    },
 });
 
-const stats = await getStats(import.meta.url);
+await crawler.addRequests([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
+
+const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
 expect(stats.requestsFinished > 20, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);

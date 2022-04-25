@@ -1,32 +1,32 @@
-import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
+import { Actor } from 'apify';
+import { PuppeteerCrawler, pushData } from '@crawlee/puppeteer';
+import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
-await run(import.meta.url, 'puppeteer-scraper', {
-    startUrls: [{ url: 'https://apify.com' }],
-    pseudoUrls: [{ purl: 'https://apify.com[(/[\\w-]+)?]' }],
-    linkSelector: 'a',
-    keepUrlFragments: false,
-    pageFunction: async function pageFunction(context) {
-        const { page, request, log } = context;
+await initialize(import.meta.url);
+
+const crawler = new PuppeteerCrawler({
+    async requestHandler({ page, enqueueLinks, request, log }) {
         const { url } = request;
 
-        const pageTitle = await page.title();
-        log.info(`URL: ${url} pageTitle: ${pageTitle}`);
+        await enqueueLinks({
+            regexps: [/^https:\/\/apify\.com(\/[\w-]+)?$/i],
+        });
 
-        return { url, pageTitle };
+        const pageTitle = await page.title();
+        log.info(`URL: ${url} TITLE: ${pageTitle}`);
+
+        await pushData({ url, pageTitle });
     },
-    proxyConfiguration: { useApifyProxy: false },
-    proxyRotation: 'RECOMMENDED',
-    useChrome: false,
-    ignoreSslErrors: false,
-    ignoreCorsAndCsp: false,
-    downloadMedia: true,
-    downloadCss: true,
-    waitUntil: ['networkidle2'],
-    debugLog: false,
-    browserLog: false,
+    preNavigationHooks: [
+        (_ctx, goToOptions) => {
+            goToOptions.waitUntil = ['networkidle2'];
+        },
+    ],
 });
 
-const stats = await getStats(import.meta.url);
+await crawler.addRequests(['https://apify.com']);
+
+const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
 expect(stats.requestsFinished > 50, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);

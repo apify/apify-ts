@@ -2,7 +2,7 @@ import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { expect, initialize } from '../tools.mjs';
 
-initialize(import.meta.url);
+await initialize(import.meta.url);
 
 const initialCookies = [
     {

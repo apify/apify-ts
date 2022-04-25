@@ -1,46 +1,40 @@
-import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
+import { Actor } from 'apify';
+import { CheerioCrawler, pushData } from '@crawlee/cheerio';
+import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
-await run(import.meta.url, 'cheerio-scraper', {
-    startUrls: [{
-        url: 'https://badssl.com/',
-        method: 'GET',
-        userData: { label: 'START' },
-    }],
-    keepUrlFragments: false,
-    pseudoUrls: [{
-        purl: 'https://[.+].badssl.com/',
-        method: 'GET',
-        userData: { label: 'DETAIL' },
-    }],
-    linkSelector: '.group a.bad',
-    pageFunction: async function pageFunction(context) {
-        const { request: { userData: { label } } } = context;
+await initialize(import.meta.url);
+
+const crawler = new CheerioCrawler({
+    async requestHandler({ $, enqueueLinks, request, log }) {
+        const { userData: { label } } = request;
 
         switch (label) {
-            case 'START': return handleStart(context);
-            case 'DETAIL': return handleDetail(context);
-            default:
+            case 'START': return handleStart();
+            case 'DETAIL': return handleDetail();
+            default: log.error(`Unknown label: ${label}`);
         }
 
-        async function handleStart({ log }) {
+        async function handleStart() {
             log.info('Bad ssl page opened!');
+            await enqueueLinks({
+                globs: [{ glob: 'https://*.badssl.com/', userData: { label: 'DETAIL' } }],
+                selector: '.group a.bad',
+            });
         }
 
-        async function handleDetail({ request, log, $ }) {
+        async function handleDetail() {
             const { url } = request;
             log.info(`Scraping ${url}`);
             const title = $('title').text();
-            return { url, title };
+            await pushData({ url, title });
         }
     },
-    proxyConfiguration: { useApifyProxy: false },
-    proxyRotation: 'RECOMMENDED',
-    forceResponseEncoding: false,
     ignoreSslErrors: false,
-    debugLog: false,
 });
 
-const stats = await getStats(import.meta.url);
+await crawler.addRequests([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
+
+const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
 expect(stats.requestsFinished > 20, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);

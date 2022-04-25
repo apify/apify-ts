@@ -503,14 +503,6 @@ export abstract class BrowserCrawler<
         // So we must not save the session prior to making sure it was used only once, otherwise we would use it twice.
         const { request, session } = crawlingContext;
 
-        if (this.useSessionPool) {
-            const sessionCookies = session!.getPuppeteerCookies(request.url);
-            if (sessionCookies.length) {
-                await crawlingContext.browserController.setCookies(page, sessionCookies);
-                tryCancel();
-            }
-        }
-
         try {
             await this._handleNavigation(crawlingContext);
             tryCancel();
@@ -570,8 +562,15 @@ export abstract class BrowserCrawler<
 
     protected async _handleNavigation(crawlingContext: Context) {
         const gotoOptions = { ...this.defaultGotoOptions };
+
+        const preNavigationHooksCookies = crawlingContext.request.headers?.Cookie ?? crawlingContext.request.headers?.cookie ?? '';
+
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotoOptions);
         tryCancel();
+
+        const postNavigationHooksCookies = crawlingContext.request.headers?.Cookie ?? crawlingContext.request.headers?.cookie ?? '';
+
+        await this._applyCookies(crawlingContext, preNavigationHooksCookies, postNavigationHooksCookies);
 
         try {
             crawlingContext.response = await this._navigationHandler(crawlingContext, gotoOptions);
@@ -584,6 +583,8 @@ export abstract class BrowserCrawler<
         tryCancel();
         await this._executeHooks(this.postNavigationHooks, crawlingContext, gotoOptions);
     }
+
+    protected abstract _applyCookies({ session, request, page }: Context, preHooksCookies: string, postHookCookies: string) : Promise<void>;
 
     /**
      * Marks session bad in case of navigation timeout.

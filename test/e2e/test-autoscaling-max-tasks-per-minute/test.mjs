@@ -2,7 +2,7 @@ import { Actor } from 'apify';
 import { BasicCrawler, log as defaultLog, LogLevel } from '@crawlee/basic';
 import { expect, initialize } from '../tools.mjs';
 
-initialize(import.meta.url);
+await initialize(import.meta.url);
 
 const crawlerLogger = defaultLog.child({
     prefix: 'AutoscalingTest',

@@ -4,7 +4,7 @@ import { getDatasetItems, expect, validateDataset, skipTest, initialize } from '
 
 skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
 
-initialize(import.meta.url);
+await initialize(import.meta.url);
 
 const crawler = new CheerioCrawler({
     ignoreSslErrors: false,

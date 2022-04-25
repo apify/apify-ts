@@ -4,6 +4,7 @@ import {
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserHook,
+    PuppeteerCookie,
 } from '@crawlee/browser';
 import {
     Dictionary,
@@ -11,6 +12,7 @@ import {
 import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
+import { Cookie } from 'tough-cookie';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
 import { DirectNavigationOptions, gotoExtended } from './utils/puppeteer_utils';
 
@@ -172,5 +174,19 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
         }
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
+    }
+
+    protected override async _applyCookies({ session, request, page }: PuppeteerCrawlContext, preHooksCookies: string, postHooksCookies: string) {
+        const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
+        const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+        const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+
+        await page.setCookie(
+            ...[
+                ...sessionCookie,
+                ...parsedPreHooksCookies,
+                ...parsedPostHooksCookies,
+            ].filter((c): c is PuppeteerCookie => typeof c !== 'undefined'),
+        );
     }
 }
