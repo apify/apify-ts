@@ -1,15 +1,18 @@
-/* eslint-disable import/no-relative-packages */
-import { join } from 'path';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { homedir } from 'os';
+import { homedir } from 'node:os';
+import { promisify } from 'node:util';
+import child_process from 'node:child_process';
 import fs from 'fs-extra';
+import { ApifyClient } from "apify-client";
 import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
 import { Actor } from '../../packages/apify/dist/index.mjs';
 import { Configuration } from '../../packages/core/dist/index.mjs';
+
+const exec = promisify(child_process.exec);
 
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
@@ -18,7 +21,46 @@ export const colors = {
     yellow: (text) => `\x1B[33m${text}\x1B[39m`,
 };
 
-export async function copyPackages(dirName) {
+export function getActorTestDir(url) {
+    const __filename = fileURLToPath(url);
+    const __dirname = dirname(__filename);
+    return join(__dirname, 'actor');
+}
+
+export async function runActor(dirName) {
+    let stats;
+    let datasetItems;
+
+    if (process.env.npm_config_platform) {
+        await copyPackages(dirName);
+        // TODO: add some check for token (or check that we are logged in)
+        await exec('apify push', { cwd: dirName });
+
+        const actorName = await getActorName(dirName);
+        const client = new ApifyClient({ token: process.env.APIFY_TOKEN });
+        const { items: actors } = await client.actors().list();
+        const { id } = actors.find((actor) => actor.name === actorName);
+
+        const { defaultKeyValueStoreId, defaultDatasetId } = await client.actor(id).call();
+        const { value } = await client.keyValueStore(defaultKeyValueStoreId).getRecord('SDK_CRAWLER_STATISTICS_0');
+        stats = value;
+        const { items } = await client.dataset(defaultDatasetId).listItems();
+        datasetItems = items;
+    } else {
+        await exec('apify run -p', { cwd: dirName });
+        stats = await getStats(dirName);
+        datasetItems = await getDatasetItems(dirName);
+    }
+
+    return { stats, datasetItems };
+}
+
+async function getActorName(dirname) {
+    const actorPackageFile = await fs.readJSON(join(dirname, 'package.json'));
+    return actorPackageFile.name;
+}
+
+async function copyPackages(dirName) {
     const srcPackagesDir = resolve('../apify-ts', 'packages');
     const destPackagesDir = join(dirName, 'packages');
     await fs.remove(destPackagesDir);
@@ -40,27 +82,6 @@ export async function clearPackages(dirName) {
     await fs.remove(destPackagesDir);
 }
 
-export function getStorage(url) {
-    return join(url, 'apify_storage');
-}
-
-export function getActorTestDir(url) {
-    const __filename = fileURLToPath(url);
-    const __dirname = dirname(__filename);
-    return join(__dirname, 'actor');
-}
-
-export async function getStats(url) {
-    const dir = getStorage(url);
-    const path = join(dir, 'key_value_stores/default/SDK_CRAWLER_STATISTICS_0.json');
-
-    if (!existsSync(path)) {
-        return false;
-    }
-
-    return fs.readJSON(path);
-}
-
 export async function getApifyToken() {
     const authPath = join(homedir(), '.apify', 'auth.json');
 
@@ -72,9 +93,19 @@ export async function getApifyToken() {
     return token;
 }
 
-export async function getActorName(dirname) {
-    const actorPackageFile = await fs.readJSON(join(dirname, 'package.json'));
-    return actorPackageFile.name;
+export function getStorage(url) {
+    return join(url, 'apify_storage');
+}
+
+export async function getStats(url) {
+    const dir = getStorage(url);
+    const path = join(dir, 'key_value_stores/default/SDK_CRAWLER_STATISTICS_0.json');
+
+    if (!existsSync(path)) {
+        return false;
+    }
+
+    return fs.readJSON(path);
 }
 
 export async function getDatasetItems(url) {
