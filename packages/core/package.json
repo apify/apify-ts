@@ -58,7 +58,6 @@
         "@apify/utilities": "^1.2.5",
         "@apify/storage-local": "^2.0.3-beta.3",
         "@crawlee/browser-pool": "^3.0.0",
-        "@crawlee/storage": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
         "@types/mime-types": "^2.1.1",
         "@types/stream-json": "^1.7.1",
