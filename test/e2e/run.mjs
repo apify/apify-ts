@@ -28,7 +28,13 @@ async function run() {
         });
         let seenFirst = false;
         worker.stdout.on('data', (data) => {
-            if (data.startsWith('[init]')) {
+            const str = data.toString();
+
+            if (str.startsWith('[test skipped]')) {
+                return;
+            }
+
+            if (str.startsWith('[init]')) {
                 seenFirst = true;
                 return;
             }
@@ -39,7 +45,7 @@ async function run() {
                 return;
             }
 
-            const match = data.toString().match(/\[assertion] (passed|failed): (.*)/);
+            const match = str.match(/\[assertion] (passed|failed): (.*)/);
 
             if (match) {
                 const c = match[1] === 'passed' ? colors.green : colors.red;
