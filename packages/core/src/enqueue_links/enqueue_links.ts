@@ -15,6 +15,7 @@ import {
 } from './shared';
 import { RequestQueue } from '../storages/request_queue';
 import { BatchAddRequestsResult } from '../storages/storage';
+import { RequestOptions } from '../request';
 
 export interface EnqueueLinksOptions {
     /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
@@ -254,7 +255,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
     let requestOptions = createRequestOptions(urls);
 
     if (transformRequestFunction) {
-        requestOptions = requestOptions.map((request) => transformRequestFunction(request)).filter((r) => !!r);
+        requestOptions = requestOptions.map((request) => transformRequestFunction(request)).filter((r) => !!r) as RequestOptions[];
     }
 
     let requests = createRequests(requestOptions, urlPatternObjects);
