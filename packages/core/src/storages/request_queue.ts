@@ -325,7 +325,7 @@ export class RequestQueue {
                 : new Request(requestLike);
         });
 
-        const requestsToAdd: Request[] = [];
+        const requestsToAdd = new Map<string, Request>();
 
         for (const request of requests) {
             // TODO we dont need to hash the cache key probably
@@ -343,17 +343,17 @@ export class RequestQueue {
                     requestId: cachedInfo.id,
                     uniqueKey: cachedInfo.uniqueKey,
                 });
-            } else {
-                requestsToAdd.push(request);
+            } else if (!requestsToAdd.has(request.uniqueKey)) {
+                requestsToAdd.set(request.uniqueKey, request);
             }
         }
 
         // Early exit if all provided requests were already added
-        if (!requestsToAdd.length) {
+        if (!requestsToAdd.size) {
             return results;
         }
 
-        const apiResults = await this.client.batchAddRequests(requestsToAdd, { forefront });
+        const apiResults = await this.client.batchAddRequests([...requestsToAdd.values()], { forefront });
 
         // Report unprocessed requests
         results.unprocessedRequests = apiResults.unprocessedRequests;
