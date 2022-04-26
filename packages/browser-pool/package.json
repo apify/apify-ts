@@ -27,9 +27,6 @@
 	"bugs": {
 		"url": "https://github.com/apify/apify-ts/issues"
 	},
-	"files": [
-		"dist"
-	],
 	"scripts": {
         "build": "npm run clean && npm run compile && npm run copy && node copy-definitions.js",
         "clean": "rimraf ./dist",
