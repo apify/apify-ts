@@ -45,7 +45,7 @@
         "copy": "ts-node -T ../../scripts/copy.ts"
     },
     "dependencies": {
-        "@apify/log": "^1.1.10",
+        "@apify/log": "^1.2.0",
         "@apify/ps-tree": "^1.1.4",
         "cheerio": "1.0.0-rc.10",
         "got-scraping": "^3.2.8",

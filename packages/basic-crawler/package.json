@@ -47,7 +47,7 @@
         "@apify/consts": "^1.4.2",
         "@apify/utilities": "^1.2.5",
         "@apify/timeout": "^0.2.1",
-        "@apify/log": "^1.1.6",
+        "@apify/log": "^1.2.0",
         "@crawlee/core": "^3.0.0",
         "ow": "^0.28.0"
     }
