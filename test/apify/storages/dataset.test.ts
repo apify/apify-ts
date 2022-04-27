@@ -1,5 +1,5 @@
-import { ENV_VARS, MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
-import { Dataset, checkAndSerialize, chunkBySize, Configuration, pushData } from '@crawlee/core';
+import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
+import { Dataset, checkAndSerialize, chunkBySize, Configuration } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
 
 describe('dataset', () => {
@@ -403,21 +403,6 @@ describe('dataset', () => {
     });
 
     describe('pushData', () => {
-        test('throws if DEFAULT_DATASET_ID env var is not defined and we use cloud storage', async () => {
-            delete process.env[ENV_VARS.LOCAL_STORAGE_DIR];
-
-            process.env[ENV_VARS.DEFAULT_DATASET_ID] = '';
-            await expect(pushData({ something: 123 })).rejects.toThrow(Error);
-
-            Configuration.resetGlobalState();
-
-            // FIXME? this seems to be no longer valid, as default dataset id will be used in case the env var is `undefined`
-            //  previously it was probably passing due to the `isLocal` flag on storages, but that is no longer valid as we
-            //  always use the storage client available on (global) config
-            // delete process.env[ENV_VARS.DEFAULT_DATASET_ID];
-            // await expect(pushData({ something: 123 })).rejects.toThrow(Error);
-        });
-
         test('throws on invalid args', async () => {
             const dataset = new Dataset({
                 id: 'some-id',
