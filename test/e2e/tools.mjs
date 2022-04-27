@@ -10,6 +10,7 @@ import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dis
 
 export const SKIPPED_TEST_CLOSE_CODE = 404;
 
+/** @type {Record<string, (text: string) => string>} */
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
     green: (text) => `\x1B[32m${text}\x1B[39m`,
@@ -17,10 +18,16 @@ export const colors = {
     yellow: (text) => `\x1B[33m${text}\x1B[39m`,
 };
 
+/**
+ * @param {string | URL} url
+ */
 export function getStorage(url) {
     return join(dirname(fileURLToPath(url)), './apify_storage');
 }
 
+/**
+ * @param {string | URL} url
+ */
 export async function getStats(url) {
     const dir = getStorage(url);
     const path = join(dir, 'key_value_stores/default/SDK_CRAWLER_STATISTICS_0.json');
@@ -43,6 +50,9 @@ export async function getApifyToken() {
     return token;
 }
 
+/**
+ * @param {string | URL} url
+ */
 export async function getDatasetItems(url) {
     const dir = getStorage(url);
     const datasetPath = join(dir, 'datasets/default/');
@@ -63,9 +73,12 @@ export async function getDatasetItems(url) {
     return datasetItems;
 }
 
+/**
+ * @param {string | URL} url
+ */
 export async function initialize(url) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(url);
-    process.env.APIFY_HEADLESS = 1; // run browser in headless mode (default on platform)
+    process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
     process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
     process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
     process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
@@ -74,6 +87,10 @@ export async function initialize(url) {
     console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 
+/**
+ * @param {boolean} bool
+ * @param {string} message
+ */
 export function expect(bool, message) {
     if (bool) {
         console.log(`[assertion] passed: ${message}`);
@@ -83,11 +100,18 @@ export function expect(bool, message) {
     }
 }
 
+/**
+ * @param {string} reason
+ */
 export function skipTest(reason) {
     console.error(`[test skipped] ${reason}`);
     process.exit(SKIPPED_TEST_CLOSE_CODE);
 }
 
+/**
+ * @param {any[]} items
+ * @param {string[]} schema
+ */
 export function validateDataset(items, schema = []) {
     for (const item of items) {
         if (!item.hasOwnProperty('url') || !item.url.match(URL_NO_COMMAS_REGEX)) {
@@ -119,6 +143,9 @@ export function validateDataset(items, schema = []) {
     return true;
 }
 
+/**
+ * @param {Record<PropertyKey, unknown>} item
+ */
 function isItemHidden(item) {
     for (const key of Object.keys(item)) {
         if (!key.startsWith('#')) {

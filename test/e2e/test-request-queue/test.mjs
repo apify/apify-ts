@@ -10,7 +10,7 @@ await initialize(import.meta.url);
 Actor.main(async () => {
     process.env.CRAWLEE_INTERNAL_TIMEOUT = '30000'; // 30s
     await purgeLocalStorage();
-    log.default.setLevel(log.default.LEVELS.DEBUG);
+    log.setLevel(log.LEVELS.DEBUG);
     const requestQueue = await Actor.openRequestQueue();
     await requestQueue.addRequest({ url: 'https://example.com/?q=1' });
     await requestQueue.addRequest({ url: 'https://example.com/?q=2' });
@@ -22,7 +22,7 @@ Actor.main(async () => {
     const crawler = new CheerioCrawler({
         requestQueue,
         requestHandler: async (ctx) => {
-            log.default.info(ctx.request.id);
+            log.info(ctx.request.id);
         },
     });
 
