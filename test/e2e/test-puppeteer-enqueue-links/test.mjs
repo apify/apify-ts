@@ -1,7 +1,9 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import deepEqual from 'deep-equal';
-import { expect } from '../tools.mjs';
+import { expect, initialize } from '../tools.mjs';
+
+await initialize(import.meta.url);
 
 const crawler = new PuppeteerCrawler({
     async requestHandler({ page, enqueueLinks, request, log }) {

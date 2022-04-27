@@ -1,6 +1,6 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
-import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
+import { getDatasetItems, initialize, expect, validateDataset, delay } from '../tools.mjs';
 
 await initialize(import.meta.url);
 
@@ -57,9 +57,9 @@ expect(stats.requestsFinished === 2, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length === 1, 'Minimum number of dataset items');
-await new Promise((resolve) => setTimeout(resolve, 100));
+await delay(1);
 expect(datasetItems.length === 1, 'Maximum number of dataset items');
-await new Promise((resolve) => setTimeout(resolve, 100));
+await delay(1);
 expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
     'Dataset items validation');
 
