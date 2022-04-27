@@ -23,7 +23,6 @@ const crawler = new PuppeteerCrawler({
         await pushData({ clientIp });
     },
     proxyConfiguration: await Actor.createProxyConfiguration(),
-    useSessionPool: true,
     maxConcurrency: 1,
     sessionPoolOptions: {
         sessionOptions: {

@@ -82,7 +82,6 @@ const crawler = new PuppeteerCrawler({
             goToOptions.waitUntil = ['networkidle2'];
         },
     ],
-    useSessionPool: true,
     maxRequestsPerCrawl: 750,
 });
 

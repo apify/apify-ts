@@ -1,4 +1,4 @@
-import { BrowserCrawler, PuppeteerCookie, PuppeteerCrawlContext, PuppeteerCrawlerOptions } from '@crawlee/puppeteer';
+import { BrowserCrawler, PuppeteerCrawlContext, PuppeteerCrawlerOptions } from '@crawlee/puppeteer';
 import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import { LaunchOptions } from 'puppeteer';
 

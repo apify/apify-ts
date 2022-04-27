@@ -1,4 +1,4 @@
-import { Actor } from 'apify';
+import { Actor, pushData } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { getDatasetItems, expect, validateDataset, initialize } from '../tools.mjs';
 
@@ -15,7 +15,7 @@ const crawler = new CheerioCrawler({
         const pageTitle = $('title').first().text();
         log.info(`URL: ${url} TITLE: ${pageTitle}`);
 
-        await Actor.pushData({ url, pageTitle });
+        await pushData({ url, pageTitle });
     },
 });
 

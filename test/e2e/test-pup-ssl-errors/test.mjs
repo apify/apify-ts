@@ -1,5 +1,5 @@
-import { Actor } from 'apify';
-import { PuppeteerCrawler, pushData } from '@crawlee/puppeteer';
+import { Actor, pushData } from 'apify';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
 await initialize(import.meta.url);

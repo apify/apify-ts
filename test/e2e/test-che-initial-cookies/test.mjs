@@ -52,7 +52,6 @@ const crawler = new CheerioCrawler({
         log.info('All cookies were successfully checked.');
     },
     additionalMimeTypes: ['application/json'],
-    useSessionPool: true,
 });
 
 await crawler.addRequests(['https://api.apify.com/v2/browser-info']);

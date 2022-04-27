@@ -48,7 +48,6 @@ const crawler = new PuppeteerCrawler({
 
         log.info('All cookies were successfully checked.');
     },
-    useSessionPool: true,
 });
 
 await crawler.addRequests(['https://api.apify.com/v2/browser-info']);
