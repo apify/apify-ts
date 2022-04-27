@@ -49,6 +49,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlee/basic": "^3.0.0"
+        "@crawlee/basic": "^3.0.0",
+        "tough-cookie": "^4.0.0"
     }
 }

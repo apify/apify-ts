@@ -29,10 +29,12 @@ import {
     BrowserPoolHooks,
     BrowserPoolOptions,
     CommonPage,
+    Cookie as BrowserPoolCookie,
     InferBrowserPluginArray,
     LaunchContext,
 } from '@crawlee/browser-pool';
 import ow from 'ow';
+import { Cookie } from 'tough-cookie';
 import { BrowserLaunchContext } from './browser-launcher';
 
 export interface BrowserCrawlingContext<
@@ -584,7 +586,20 @@ export abstract class BrowserCrawler<
         await this._executeHooks(this.postNavigationHooks, crawlingContext, gotoOptions);
     }
 
-    protected abstract _applyCookies({ session, request, page }: Context, preHooksCookies: string, postHookCookies: string) : Promise<void>;
+    protected async _applyCookies({ session, request, page, browserController }: Context, preHooksCookies: string, postHooksCookies: string) {
+        const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
+        const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+        const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+
+        await browserController.setCookies(
+            page,
+            [
+                ...sessionCookie,
+                ...parsedPreHooksCookies,
+                ...parsedPostHooksCookies,
+            ].filter((c): c is BrowserPoolCookie => typeof c !== 'undefined'),
+        );
+    }
 
     /**
      * Marks session bad in case of navigation timeout.
