@@ -1,4 +1,4 @@
-import { Actor, pushData } from 'apify';
+import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
@@ -26,7 +26,7 @@ const crawler = new CheerioCrawler({
             const { url } = request;
             log.info(`Scraping ${url}`);
             const title = $('title').text();
-            await pushData({ url, title });
+            await Actor.pushData({ url, title });
         }
     },
     ignoreSslErrors: false,

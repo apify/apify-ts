@@ -1,5 +1,5 @@
 import { Actor } from 'apify';
-import { PuppeteerCrawler, KeyValueStore, pushData } from '@crawlee/puppeteer';
+import { PuppeteerCrawler, KeyValueStore } from '@crawlee/puppeteer';
 import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
 await initialize(import.meta.url);
@@ -20,7 +20,7 @@ const crawler = new PuppeteerCrawler({
         }
 
         await store.setValue(clientIp, true);
-        await pushData({ clientIp });
+        await Actor.pushData({ clientIp });
     },
     proxyConfiguration: await Actor.createProxyConfiguration(),
     maxConcurrency: 1,

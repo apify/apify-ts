@@ -1,4 +1,4 @@
-import { Actor, pushData } from 'apify';
+import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { getDatasetItems, expect, validateDataset, skipTest, initialize } from '../tools.mjs';
 
@@ -28,7 +28,7 @@ const crawler = new CheerioCrawler({
             const modifiedDate = $('ul.ActorHeader-stats time').attr('datetime');
             const runCount = $('ul.ActorHeader-stats > li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '');
 
-            await pushData({
+            await Actor.pushData({
                 url,
                 uniqueIdentifier,
                 title,

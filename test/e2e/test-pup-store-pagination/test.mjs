@@ -1,5 +1,5 @@
 import { Actor } from 'apify';
-import { PuppeteerCrawler, pushData } from '@crawlee/puppeteer';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
 await initialize(import.meta.url);
@@ -73,7 +73,7 @@ const crawler = new PuppeteerCrawler({
             const modifiedDate = new Date(Number(modifiedTimestamp));
             const runCount = Number(runCountText.match(/[\d,]+/)[0].replace(/,/g, ''));
 
-            await pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
+            await Actor.pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
         }
     },
     preNavigationHooks: [

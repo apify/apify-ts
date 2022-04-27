@@ -1,5 +1,5 @@
 import { Actor } from 'apify';
-import { CheerioCrawler, pushData } from '@crawlee/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 import { getDatasetItems, initialize, expect, validateDataset, skipTest } from '../tools.mjs';
 
 skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
@@ -45,7 +45,7 @@ const crawler = new CheerioCrawler({
             const modifiedDate = $('ul.ActorHeader-stats time').attr('datetime');
             const runCount = $('ul.ActorHeader-stats > li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '');
 
-            await pushData({
+            await Actor.pushData({
                 url,
                 uniqueIdentifier,
                 title,

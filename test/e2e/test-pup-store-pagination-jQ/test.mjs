@@ -1,5 +1,5 @@
 import { Actor } from 'apify';
-import { PuppeteerCrawler, pushData, puppeteerUtils } from '@crawlee/puppeteer';
+import { PuppeteerCrawler, puppeteerUtils } from '@crawlee/puppeteer';
 import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
 await initialize(import.meta.url);
@@ -66,7 +66,7 @@ const crawler = new PuppeteerCrawler({
                 runCount: Number($('ul.ActorHeader-stats > li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '')),
             }));
 
-            await pushData({ url, uniqueIdentifier, ...results });
+            await Actor.pushData({ url, uniqueIdentifier, ...results });
         }
     },
     preNavigationHooks: [

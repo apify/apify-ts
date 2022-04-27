@@ -1,4 +1,4 @@
-import { Actor, pushData } from 'apify';
+import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { initialize, expect } from '../tools.mjs';
 
@@ -12,7 +12,7 @@ const crawler = new CheerioCrawler({
 
         log.info('Page scraped', { url, pageTitle });
 
-        await pushData({ url, pageTitle });
+        await Actor.pushData({ url, pageTitle });
     },
     additionalMimeTypes: ['text/xml'],
 });

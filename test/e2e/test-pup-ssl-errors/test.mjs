@@ -1,4 +1,4 @@
-import { Actor, pushData } from 'apify';
+import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
@@ -26,7 +26,7 @@ const crawler = new PuppeteerCrawler({
             const { url } = request;
             log.info(`Scraping ${url}`);
             const title = await page.title();
-            await pushData({ url, title });
+            await Actor.pushData({ url, title });
         }
     },
     preNavigationHooks: [
