@@ -794,14 +794,14 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         const gotOptions = {} as OptionsInit;
 
         const { request, session } = crawlingContext;
-        const preNavigationHooksCookies = request.headers?.Cookie ?? request.headers?.cookie ?? '';
+        const preNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
 
         // Execute pre navigation hooks before applying session pool cookies,
         // as they may also set cookies in the session
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
 
-        const postNavigationHooksCookies = request.headers?.Cookie ?? request.headers?.cookie ?? '';
+        const postNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
 
         this._applyCookies(crawlingContext, gotOptions, preNavigationHooksCookies, postNavigationHooksCookies);
 

@@ -565,12 +565,12 @@ export abstract class BrowserCrawler<
     protected async _handleNavigation(crawlingContext: Context) {
         const gotoOptions = { ...this.defaultGotoOptions };
 
-        const preNavigationHooksCookies = crawlingContext.request.headers?.Cookie ?? crawlingContext.request.headers?.cookie ?? '';
+        const preNavigationHooksCookies = this._getCookieHeaderFromRequest(crawlingContext.request);
 
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotoOptions);
         tryCancel();
 
-        const postNavigationHooksCookies = crawlingContext.request.headers?.Cookie ?? crawlingContext.request.headers?.cookie ?? '';
+        const postNavigationHooksCookies = this._getCookieHeaderFromRequest(crawlingContext.request);
 
         await this._applyCookies(crawlingContext, preNavigationHooksCookies, postNavigationHooksCookies);
 
