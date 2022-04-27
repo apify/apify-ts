@@ -921,6 +921,10 @@ export class BasicCrawler<
             throw new ArgumentError(`"${newName}" must be provided in the crawler options`, this.constructor);
         }
     }
+
+    protected _getCookieHeaderFromRequest(request: Request) {
+        return request.headers?.Cookie ?? request.headers?.cookie ?? '';
+    }
 }
 
 export interface CreateContextOptions {

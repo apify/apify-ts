@@ -2,6 +2,9 @@ import { Actor } from 'apify';
 import log from '@apify/log';
 import { purgeLocalStorage } from '@crawlee/utils';
 import { CheerioCrawler } from '@crawlee/cheerio';
+import { initialize } from '../tools.mjs';
+
+await initialize(import.meta.url);
 
 // RequestQueue auto-reset when stuck with requests in progress
 Actor.main(async () => {

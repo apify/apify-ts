@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'worker_threads';
-import { colors, getApifyToken } from './tools.mjs';
+import { colors, getApifyToken, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
@@ -26,8 +26,26 @@ async function run() {
             workerData: dir.name,
             stdout: true,
         });
+        let seenFirst = false;
         worker.stdout.on('data', (data) => {
-            const match = data.toString().match(/\[assertion] (passed|failed): (.*)/);
+            const str = data.toString();
+
+            if (str.startsWith('[test skipped]')) {
+                return;
+            }
+
+            if (str.startsWith('[init]')) {
+                seenFirst = true;
+                return;
+            }
+
+            if (!seenFirst) {
+                console.log(`${colors.red('[fatal]')} test ${colors.yellow(`[${dir.name}]`)} did not call "initialize(import.meta.url)"!`);
+                worker.terminate();
+                return;
+            }
+
+            const match = str.match(/\[assertion] (passed|failed): (.*)/);
 
             if (match) {
                 const c = match[1] === 'passed' ? colors.green : colors.red;
@@ -35,6 +53,11 @@ async function run() {
             }
         });
         worker.on('exit', (code) => {
+            if (code === SKIPPED_TEST_CLOSE_CODE) {
+                console.log(`Test ${colors.yellow(`[${dir.name}]`)} was skipped`);
+                return;
+            }
+
             const took = (Date.now() - now) / 1000;
             // eslint-disable-next-line max-len
             console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);

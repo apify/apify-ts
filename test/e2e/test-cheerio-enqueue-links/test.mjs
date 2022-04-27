@@ -7,17 +7,17 @@ const crawler = new CheerioCrawler({
     async requestHandler({ $, enqueueLinks, request, log }) {
         const { url, loadedUrl } = request;
 
-		const pageTitle = $('title').first().text();
+        const pageTitle = $('title').first().text();
         log.info(`URL: ${url}; LOADED_URL: ${loadedUrl}; TITLE: ${pageTitle}`);
 
-		const results = await enqueueLinks();
+        const results = await enqueueLinks();
 
-		if (loadedUrl.startsWith('https://drive')) {
-			const isEqual = deepEqual(results, { processedRequests: [], unprocessedRequests: [] });
+        if (loadedUrl.startsWith('https://drive')) {
+            const isEqual = deepEqual(results, { processedRequests: [], unprocessedRequests: [] });
 
-			expect(isEqual, 'enqueueing on same subdomain but different loaded url doesn\'t enqueue');
-			process.exit(0);
-		}
+            expect(isEqual, 'enqueueing on same subdomain but different loaded url doesn\'t enqueue');
+            process.exit(0);
+        }
     },
 });
 

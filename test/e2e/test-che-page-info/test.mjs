@@ -1,30 +1,26 @@
-import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
+import { Actor } from 'apify';
+import { CheerioCrawler } from '@crawlee/cheerio';
+import { getDatasetItems, expect, validateDataset, skipTest, initialize } from '../tools.mjs';
 
-await run(import.meta.url, 'cheerio-scraper', {
-    startUrls: [{
-        url: 'https://apify.com/store',
-        method: 'GET',
-        userData: { label: 'START' },
-    }],
-    keepUrlFragments: false,
-    pseudoUrls: [{
-        purl: 'https://apify.com/apify/web-scraper',
-        method: 'GET',
-        userData: { label: 'DETAIL' },
-    }],
-    linkSelector: 'a',
-    pageFunction: async function pageFunction(context) {
-        const { request, log, skipLinks, $ } = context;
+skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
+
+await initialize(import.meta.url);
+
+const crawler = new CheerioCrawler({
+    ignoreSslErrors: false,
+    async requestHandler({ request, log, $, enqueueLinks }) {
         const { userData: { label } } = request;
 
         if (label === 'START') {
             log.info('Store opened!');
+            await enqueueLinks({
+                globs: [{ glob: 'https://apify.com/apify/web-scraper', userData: { label: 'DETAIL' } }],
+            });
         }
 
         if (label === 'DETAIL') {
             const { url } = request;
             log.info(`Scraping ${url}`);
-            await skipLinks();
 
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
             const title = $('header h1').text();
@@ -32,24 +28,22 @@ await run(import.meta.url, 'cheerio-scraper', {
             const modifiedDate = $('ul.ActorHeader-stats time').attr('datetime');
             const runCount = $('ul.ActorHeader-stats > li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '');
 
-            return {
+            await Actor.pushData({
                 url,
                 uniqueIdentifier,
                 title,
                 description,
                 modifiedDate: new Date(Number(modifiedDate)),
                 runCount: Number(runCount),
-            };
+            });
         }
     },
-    proxyConfiguration: { useApifyProxy: false },
-    proxyRotation: 'RECOMMENDED',
-    forceResponseEncoding: false,
-    ignoreSslErrors: false,
-    debugLog: false,
 });
 
-const stats = await getStats(import.meta.url);
+await crawler.addRequests([{ url: 'https://apify.com/store', userData: { label: 'START' } }]);
+
+const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+
 expect(stats.requestsFinished === 2, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);

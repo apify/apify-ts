@@ -2,14 +2,13 @@
 import { join } from 'path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { setTimeout } from 'node:timers/promises';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'os';
 import fs from 'fs-extra';
 import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
-import { Actor } from '../../packages/apify/dist/index.mjs';
-import { Configuration } from '../../packages/core/dist/index.mjs';
+
+export const SKIPPED_TEST_CLOSE_CODE = 404;
 
 export const colors = {
     red: (text) => `\x1B[31m${text}\x1B[39m`,
@@ -64,30 +63,15 @@ export async function getDatasetItems(url) {
     return datasetItems;
 }
 
-export async function run(url, scraper, input) {
+export async function initialize(url) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(url);
+    process.env.APIFY_HEADLESS = 1; // run browser in headless mode (default on platform)
+    process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
+    process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
+    process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 
     await purgeLocalStorage();
-    const inputKey = Configuration.getGlobalConfig().get('inputKey');
-    await Actor.setValue(inputKey, input);
-
-    const { exit } = process;
-    process.exit = () => {};
-
-    await import(`../../packages/actor-scraper/${scraper}/dist/main.js`);
-    await waitForFinish(url);
-    process.exit = exit;
-}
-
-async function isFinished(dir) {
-    const stats = await getStats(dir);
-    return !!stats.crawlerFinishedAt;
-}
-
-export async function waitForFinish(dir) {
-    while (!await isFinished(dir)) {
-        await setTimeout(1000);
-    }
+    console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 
 export function expect(bool, message) {
@@ -97,6 +81,11 @@ export function expect(bool, message) {
         console.log(`[assertion] failed: ${message}`);
         process.exit(1);
     }
+}
+
+export function skipTest(reason) {
+    console.error(`[test skipped] ${reason}`);
+    process.exit(SKIPPED_TEST_CLOSE_CODE);
 }
 
 export function validateDataset(items, schema = []) {

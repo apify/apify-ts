@@ -9,7 +9,6 @@ import {
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
-    diffCookies,
     enqueueLinks,
     EnqueueLinksOptions,
     mergeCookies,
@@ -794,16 +793,19 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         const gotOptions = {} as OptionsInit;
 
-        if (this.useSessionPool) {
-            this._applySessionCookie(crawlingContext, gotOptions);
-        }
-
         const { request, session } = crawlingContext;
-        const cookieSnapshot = request.headers?.Cookie ?? request.headers?.cookie;
+        const preNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
+
+        // Execute pre navigation hooks before applying session pool cookies,
+        // as they may also set cookies in the session
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
+
+        const postNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
+
+        this._applyCookies(crawlingContext, gotOptions, preNavigationHooksCookies, postNavigationHooksCookies);
+
         const proxyUrl = crawlingContext.proxyInfo?.url;
-        this._mergeRequestCookieDiff(request, cookieSnapshot!, gotOptions);
 
         crawlingContext.response = await addTimeoutToPromise(
             () => this._requestFunction({ request, session, proxyUrl, gotOptions }),
@@ -823,23 +825,16 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     }
 
     /**
-     * When users change `request.headers.cookie` inside preNavigationHook, the change would be ignored,
-     * as `request.headers` are already merged into the `gotOptions`. This method is using
-     * old `request.headers` snapshot (before hooks are executed), makes a diff with the cookie value
-     * after hooks are executed, and merges any new cookies back to `gotOptions`.
-     *
-     * This way we can still use both `gotOptions` and `context.request` in the hooks (not both).
+     * Sets the cookie header to `gotOptions` based on the provided request and session headers, as well as any changes that occurred due to hooks.
      */
-    private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, gotOptions: OptionsInit) {
-        const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers?.Cookie ?? request.headers?.cookie);
+    private _applyCookies({ session, request }: CrawlingContext, gotOptions: OptionsInit, preHookCookies: string, postHookCookies: string) {
+        const sessionCookie = session?.getCookieString(request.url) ?? '';
+        const alteredGotOptionsCookies = (gotOptions.headers?.Cookie ?? gotOptions.headers?.cookie ?? '') as string;
 
-        if (cookieDiff.length > 0) {
-            gotOptions.headers ??= {};
-            gotOptions.headers!.Cookie = mergeCookies(request.url, [
-                gotOptions.headers!.Cookie as string,
-                cookieDiff,
-            ]);
-        }
+        const mergedCookie = mergeCookies(request.url, [sessionCookie, preHookCookies, alteredGotOptionsCookies, postHookCookies]);
+
+        gotOptions.headers ??= {};
+        gotOptions.headers.Cookie = mergedCookie;
     }
 
     /**
@@ -859,22 +854,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             }
 
             throw e;
-        }
-    }
-
-    /**
-     * Sets the cookie header to `gotOptions` based on provided session and request. If some cookies were already set,
-     * the session cookie will be merged with them. User provided cookies on `request` object have precedence.
-     */
-    private _applySessionCookie({ request, session }: CrawlingContext, gotOptions: OptionsInit): void {
-        const userCookie = request.headers?.Cookie ?? request.headers?.cookie;
-        const sessionCookie = session!.getCookieString(request.url);
-        const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie!]);
-
-        // merge cookies from all possible sources
-        if (mergedCookies) {
-            gotOptions.headers ??= {};
-            gotOptions.headers.Cookie = mergedCookies;
         }
     }
 

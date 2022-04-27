@@ -7,17 +7,17 @@ const crawler = new PuppeteerCrawler({
     async requestHandler({ page, enqueueLinks, request, log }) {
         const { url, loadedUrl } = request;
 
-		const pageTitle = await page.title();
+        const pageTitle = await page.title();
         log.info(`URL: ${url}; LOADED_URL: ${loadedUrl}; TITLE: ${pageTitle}`);
 
-		const results = await enqueueLinks();
+        const results = await enqueueLinks();
 
-		if (loadedUrl.startsWith('https://drive')) {
-			const isEqual = deepEqual(results, { processedRequests: [], unprocessedRequests: [] });
+        if (loadedUrl.startsWith('https://drive')) {
+            const isEqual = deepEqual(results, { processedRequests: [], unprocessedRequests: [] });
 
-			expect(isEqual, 'enqueueing on same subdomain but different loaded url doesn\'t enqueue');
-			process.exit(0);
-		}
+            expect(isEqual, 'enqueueing on same subdomain but different loaded url doesn\'t enqueue');
+            process.exit(0);
+        }
     },
 });
 

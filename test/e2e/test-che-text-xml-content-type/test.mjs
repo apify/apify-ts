@@ -1,30 +1,26 @@
-import { getStats, run, expect } from '../tools.mjs';
+import { Actor } from 'apify';
+import { CheerioCrawler } from '@crawlee/cheerio';
+import { initialize, expect } from '../tools.mjs';
 
-await run(import.meta.url, 'cheerio-scraper', {
-    startUrls: [{
-        url: 'https://apify.com/sitemap.xml',
-        method: 'GET',
-    }],
-    keepUrlFragments: false,
-    linkSelector: 'a[href]',
-    pageFunction: async function pageFunction(context) {
-        const { $, request, log } = context;
+await initialize(import.meta.url);
+
+const crawler = new CheerioCrawler({
+    async requestHandler({ $, request, log }) {
         const { url } = request;
 
         const pageTitle = $('title').first().text();
 
         log.info('Page scraped', { url, pageTitle });
 
-        return { url, pageTitle };
+        await Actor.pushData({ url, pageTitle });
     },
-    proxyConfiguration: { useApifyProxy: false },
-    proxyRotation: 'RECOMMENDED',
     additionalMimeTypes: ['text/xml'],
-    forceResponseEncoding: false,
-    ignoreSslErrors: false,
-    debugLog: false,
 });
 
-const stats = await getStats(import.meta.url);
+await crawler.addRequests(['https://apify.com/sitemap.xml']);
+
+const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+
 expect(stats.requestsFinished === 1, 'All requests finished');
+
 process.exit(0);
