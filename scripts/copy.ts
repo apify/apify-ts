@@ -14,9 +14,13 @@ function copy(filename: string, from: string, to: string): void {
 }
 
 function rewrite(path: string, replacer: (from: string) => string): void {
-    const file = readFileSync(path).toString();
-    const replaced = replacer(file);
-    writeFileSync(path, replaced);
+    try {
+        const file = readFileSync(path).toString();
+        const replaced = replacer(file);
+        writeFileSync(path, replaced);
+    } catch {
+        // not found
+    }
 }
 
 /**
@@ -69,6 +73,7 @@ if (options.canary) {
             pkgJson.dependencies[dep] = prefix + nextVersion;
         }
     }
+
     // eslint-disable-next-line no-console
     console.info(`canary: setting version to ${nextVersion}`);
 
@@ -79,3 +84,4 @@ copy('README.md', root, target);
 copy('LICENSE.md', root, target);
 copy('package.json', process.cwd(), target);
 rewrite(resolve(target, 'package.json'), (pkg) => pkg.replace(/dist\//g, ''));
+rewrite(resolve(target, 'utils.js'), (pkg) => pkg.replace('../package.json', './package.json'));

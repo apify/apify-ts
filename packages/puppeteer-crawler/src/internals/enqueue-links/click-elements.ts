@@ -11,6 +11,7 @@ import {
     UrlPatternObject,
     RequestQueue,
     storage,
+    RequestOptions,
 } from '@crawlee/browser';
 import log_ from '@apify/log';
 import { Dictionary } from '@crawlee/utils';
@@ -256,7 +257,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     });
     let requestOptions = createRequestOptions(interceptedRequests);
     if (transformRequestFunction) {
-        requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
+        requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r) as RequestOptions[];
     }
     const requests = createRequests(requestOptions, urlPatternObjects);
     return requestQueue.addRequests(requests);

@@ -49,7 +49,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/log": "^1.1.10",
+        "@apify/log": "^1.2.0",
         "@crawlee/browser": "^3.0.0"
     },
     "peerDependencies": {

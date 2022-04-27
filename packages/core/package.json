@@ -51,7 +51,7 @@
     "dependencies": {
         "@apify/consts": "^1.4.2",
         "@apify/datastructures": "^1.0.1",
-        "@apify/log": "^1.1.6",
+        "@apify/log": "^1.2.0",
         "@apify/ps-tree": "^1.1.4",
         "@apify/pseudo_url": "^1.1.0",
         "@apify/timeout": "^0.2.1",

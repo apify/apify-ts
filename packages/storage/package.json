@@ -45,7 +45,7 @@
     },
     "dependencies": {
         "@apify/consts": "^1.4.2",
-        "@apify/log": "^1.1.6",
+        "@apify/log": "^1.2.0",
         "better-sqlite3-with-prebuilds": "^7.4.3",
         "content-type": "^1.0.4",
         "fs-extra": "^10.0.0",

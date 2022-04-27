@@ -440,57 +440,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
 }
 
 /**
- * Opens a dataset and returns a promise resolving to an instance of the {@link Dataset} class.
- *
- * Datasets are used to store structured data where each object stored has the same attributes,
- * such as online store products or real estate offers.
- * The actual data is stored either on the local filesystem or in the cloud.
- *
- * For more details and code examples, see the {@link Dataset} class.
- *
- * @param [datasetIdOrName]
- *   ID or name of the dataset to be opened. If `null` or `undefined`,
- *   the function returns the default dataset associated with the actor run.
- * @param [options] Storage manager options.
- * @deprecated use `Dataset.open()` instead
- */
-export function openDataset<Data extends Dictionary = Dictionary>(
-    datasetIdOrName?: string | null,
-    options: StorageManagerOptions = {},
-): Promise<Dataset<Data>> {
-    return Dataset.open(datasetIdOrName, options);
-}
-
-/**
- * Stores an object or an array of objects to the default {@link Dataset} of the current actor run.
- *
- * This is just a convenient shortcut for {@link Dataset.pushData}.
- * For example, calling the following code:
- * ```javascript
- * await Actor.pushData({ myValue: 123 });
- * ```
- *
- * is equivalent to:
- * ```javascript
- * const dataset = await Dataset.open();
- * await dataset.pushData({ myValue: 123 });
- * ```
- *
- * For more information, see {@link Dataset.open} and {@link Dataset.pushData}
- *
- * **IMPORTANT**: Make sure to use the `await` keyword when calling `pushData()`,
- * otherwise the actor process might finish before the data are stored!
- *
- * @param {object} item Object or array of objects containing data to be stored in the default dataset.
- * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
- * @param [options] Storage manager options.
- */
-export async function pushData(item: Dictionary | Dictionary[], options: StorageManagerOptions = {}): Promise<void> {
-    const dataset = await Dataset.open(undefined, options);
-    return dataset.pushData(item);
-}
-
-/**
  * User-function used in the `Dataset.forEach()` API.
  */
 export interface DatasetConsumer<Data> {
