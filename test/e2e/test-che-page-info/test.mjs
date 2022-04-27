@@ -1,8 +1,8 @@
 import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
-import { getDatasetItems, expect, validateDataset, skipTest, initialize } from '../tools.mjs';
+import { getDatasetItems, expect, validateDataset, skipTest, initialize, delay } from '../tools.mjs';
 
-skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
+await skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
 
 await initialize(import.meta.url);
 
@@ -48,9 +48,9 @@ expect(stats.requestsFinished === 2, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length === 1, 'Minimum number of dataset items');
-await new Promise((resolve) => setTimeout(resolve, 100));
+await delay(1);
 expect(datasetItems.length === 1, 'Maximum number of dataset items');
-await new Promise((resolve) => setTimeout(resolve, 100));
+await delay(1);
 expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
     'Dataset items validation');
 

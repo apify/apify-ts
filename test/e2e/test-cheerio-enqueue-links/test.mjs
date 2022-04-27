@@ -1,7 +1,9 @@
 import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import deepEqual from 'deep-equal';
-import { expect } from '../tools.mjs';
+import { expect, initialize } from '../tools.mjs';
+
+await initialize(import.meta.url);
 
 const crawler = new CheerioCrawler({
     async requestHandler({ $, enqueueLinks, request, log }) {

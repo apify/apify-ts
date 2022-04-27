@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'os';
+import { setTimeout as sleep } from 'node:timers/promises';
 import fs from 'fs-extra';
 import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
 
@@ -74,18 +75,24 @@ export async function initialize(url) {
     console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 
-export function expect(bool, message) {
+export async function expect(bool, message) {
     if (bool) {
         console.log(`[assertion] passed: ${message}`);
     } else {
         console.log(`[assertion] failed: ${message}`);
+        await delay(1);
         process.exit(1);
     }
 }
 
-export function skipTest(reason) {
+export async function skipTest(reason) {
     console.error(`[test skipped] ${reason}`);
+    await delay(1);
     process.exit(SKIPPED_TEST_CLOSE_CODE);
+}
+
+export function delay(ms) {
+    return sleep(ms);
 }
 
 export function validateDataset(items, schema = []) {
