@@ -22,6 +22,7 @@ const requestOptionalPredicates = {
     handledAt: ow.optional.any(ow.string.date, ow.date),
     keepUrlFragment: ow.optional.boolean,
     useExtendedUniqueKey: ow.optional.boolean,
+    skipNavigation: ow.optional.boolean,
 };
 
 /**
@@ -96,6 +97,9 @@ export class Request {
     /** Custom user data assigned to the request. */
     userData?: Record<string, unknown>;
 
+    /** Private property for storing internal request metadata. */
+    private internalVariables: Record<string, unknown>;
+
     /**
      * ISO datetime string that indicates the time when the request has been processed.
      * Is `null` if the request has not been crawled yet.
@@ -139,6 +143,7 @@ export class Request {
             handledAt,
             keepUrlFragment = false,
             useExtendedUniqueKey = false,
+            skipNavigation,
         } = options as RequestOptions & { loadedUrl?: string; retryCount?: number; errorMessages?: string[]; handledAt?: string | Date };
 
         let {
@@ -161,6 +166,20 @@ export class Request {
         this.headers = { ...headers };
         this.userData = { ...userData };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
+        // eslint-disable-next-line no-underscore-dangle
+        this.internalVariables = { ...(userData.__crawlee as Record<string, unknown> ?? {}) };
+        // eslint-disable-next-line no-underscore-dangle
+        delete this.userData.__crawlee;
+        if (skipNavigation != null) this.skipNavigation = skipNavigation;
+    }
+
+    /** Tells the crawler processing this request to skip the navigation and process the request directly. */
+    get skipNavigation() : boolean {
+        return !!this.internalVariables.skipNavigation ?? false;
+    }
+
+    set skipNavigation(value: boolean) {
+        this.internalVariables.skipNavigation = value;
     }
 
     /**
@@ -306,6 +325,13 @@ export interface RequestOptions {
      * @default false
      */
     noRetry?: boolean;
+
+    /**
+     * If set to `true` then the crawler processing this request evaluates
+     * the `handleRequestFunction` immediately without prior browser navigation.
+     * @default false
+     */
+    skipNavigation?: boolean;
 
     /** @internal */
     id?: string;
