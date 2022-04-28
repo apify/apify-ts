@@ -167,7 +167,7 @@ export function createDatasetPayload(
         '#debug': createRequestDebugInfo(request, response),
     };
 
-    return result.map<Dictionary & typeof meta>((item) => ({ ...item, ...meta }));
+    return (result as Dictionary[]).map((item) => ({ ...item, ...meta }));
 }
 
 /**
