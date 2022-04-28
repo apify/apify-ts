@@ -28,6 +28,7 @@ const crawler = new CheerioCrawler({
     requestHandler({ log, json }) {
         const initialCookiesLength = initialCookies.length;
 
+        /** @type string */
         const cookieString = json.headers.cookie;
         const pageCookies = cookieString.split(';').map((cookie) => {
             const [name, value] = cookie.split('=').map((str) => str.trim());

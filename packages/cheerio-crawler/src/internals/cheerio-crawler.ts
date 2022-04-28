@@ -21,12 +21,7 @@ import {
     storage,
     validators,
 } from '@crawlee/core';
-import {
-    Awaitable,
-    CheerioRoot,
-    entries,
-    parseContentTypeFromResponse,
-} from '@crawlee/utils';
+import { Awaitable, CheerioRoot, Dictionary, entries, parseContentTypeFromResponse } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';
@@ -52,11 +47,11 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioFailedRequestHandlerInput<JSONData = unknown> extends CrawlerHandleFailedRequestInput, CheerioRequestHandlerInputs<JSONData> {}
+export interface CheerioFailedRequestHandlerInput<JSONData = Dictionary> extends CrawlerHandleFailedRequestInput, CheerioRequestHandlerInputs<JSONData> {}
 
-export type CheerioFailedRequestHandler<JSONData = unknown> = (inputs: CheerioFailedRequestHandlerInput<JSONData>) => Awaitable<void>;
+export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestHandlerInput<JSONData>) => Awaitable<void>;
 
-export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
+export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
     BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
     // Overridden with cheerio context
     | 'requestHandler'
@@ -386,7 +381,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
     persistCookiesPerSession?: boolean;
 }
 
-export interface PrepareRequestInputs<JSONData = unknown> {
+export interface PrepareRequestInputs<JSONData = Dictionary> {
     /**
      *  Original instance of the {@link Request} object. Must be modified in-place.
      */
@@ -405,13 +400,13 @@ export interface PrepareRequestInputs<JSONData = unknown> {
     crawler?: CheerioCrawler<JSONData>;
 }
 
-export type PrepareRequest<JSONData = unknown> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
-export type CheerioHook<JSONData = unknown> = (
+export type PrepareRequest<JSONData = Dictionary> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
+export type CheerioHook<JSONData = Dictionary> = (
     crawlingContext: CheerioCrawlingContext<JSONData>,
     gotOptions: OptionsInit,
 ) => Awaitable<void>;
 
-export interface PostResponseInputs<JSONData = unknown> {
+export interface PostResponseInputs<JSONData = Dictionary> {
     /**
      * stream
      */
@@ -435,9 +430,9 @@ export interface PostResponseInputs<JSONData = unknown> {
     crawler: CheerioCrawler<JSONData>;
 }
 
-export type PostResponse<JSONData = unknown> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
+export type PostResponse<JSONData = Dictionary> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
-export interface CheerioRequestHandlerInputs<JSONData = unknown> extends CrawlingContext {
+export interface CheerioRequestHandlerInputs<JSONData = Dictionary> extends CrawlingContext {
     /**
      * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
@@ -462,8 +457,8 @@ export interface CheerioRequestHandlerInputs<JSONData = unknown> extends Crawlin
     enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
 }
 
-export type CheerioCrawlingContext<JSONData = unknown> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability
-export type CheerioRequestHandler<JSONData = unknown> = (inputs: CheerioRequestHandlerInputs<JSONData>) => Awaitable<void>;
+export type CheerioCrawlingContext<JSONData = Dictionary> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability
+export type CheerioRequestHandler<JSONData = Dictionary> = (inputs: CheerioRequestHandlerInputs<JSONData>) => Awaitable<void>;
 export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls' | 'requestQueue'>;
 
 /**
@@ -551,7 +546,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
+export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
     CheerioCrawlingContext<JSONData>,
     CheerioFailedRequestHandlerInput<JSONData>
 > {

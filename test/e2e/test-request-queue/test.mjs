@@ -1,13 +1,12 @@
 import { Actor } from 'apify';
-import log from '@apify/log';
 import { purgeLocalStorage } from '@crawlee/utils';
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { CheerioCrawler, log } from '@crawlee/cheerio';
 import { initialize } from '../tools.mjs';
 
 await initialize(import.meta.url);
 
 // RequestQueue auto-reset when stuck with requests in progress
-Actor.main(async () => {
+await Actor.main(async () => {
     process.env.CRAWLEE_INTERNAL_TIMEOUT = '30000'; // 30s
     await purgeLocalStorage();
     log.setLevel(log.LEVELS.DEBUG);
