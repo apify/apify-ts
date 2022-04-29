@@ -200,10 +200,64 @@ export class RequestQueue {
     constructor(options: RequestQueueOptions) {
         this.id = options.id;
         this.name = options.name;
-        this.client = options.client.requestQueue(this.id, {
+        const client = options.client.requestQueue(this.id, {
             clientKey: this.clientKey,
             timeoutSecs: this.timeoutSecs,
         }) as RequestQueueClient;
+
+        // dirty quick hack to serialize the Request.internalVariables into Request.userData.
+        // needs to be solved somehow else.
+        // TODO: requestQueue tests need to be fixed. they are getting confused with the internalVariables and userData shenanigans.
+        this.client = new Proxy(client, {
+            get(target, prop: keyof RequestQueueClient) {
+                if (['addRequest', 'updateRequest'].includes(prop)) {
+                    return new Proxy(
+                        target[prop],
+                        {
+                            // @ts-ignore
+                            get: (t, p) => t[p],
+                            apply(t, _, args) {
+                                const [request, ...rest] = args;
+                                request.userData = { ...request.userData, __crawlee: request.internalVariables };
+                                delete request.internalVariables;
+                                return t.bind(target)(request, ...rest);
+                            },
+                        },
+                    );
+                };
+                if (['batchAddRequests'].includes(prop)) {
+                    return new Proxy(
+                        target[prop],
+                        {
+                            // @ts-ignore
+                            get: (t, p) => t[p],
+                            apply(t, _, args) {
+                                const [requests, ...rest] = args;
+                                const parsedRequests = requests.map((request: any) => {
+                                    request.userData = { ...request.userData, __crawlee: request.internalVariables };
+                                    delete request.internalVariables;
+
+                                    return request;
+                                });
+                                return t.bind(target)(parsedRequests, ...rest);
+                            },
+                        },
+                    );
+                }
+                return target[prop];
+            },
+            // for mocking purpose in tests
+            set(target, prop: keyof RequestQueueClient, value) {
+                target[prop] = value;
+                return true;
+            },
+            getPrototypeOf() {
+                return Object.getPrototypeOf(client);
+            },
+            getOwnPropertyDescriptor(target, prop) {
+                return Reflect.getOwnPropertyDescriptor(target, prop);
+            },
+        });
     }
 
     /**
