@@ -5,7 +5,7 @@ title: Upgrading to v1
 
 ## Summary
 After 3.5 years of rapid development and a lot of breaking changes and deprecations,
-here comes the result - **Apify SDK v1**. There were two goals for this release. **Stability**
+here comes the result - **Crawlee v1**. There were two goals for this release. **Stability**
 and **adding support for more browsers** - Firefox and Webkit (Safari).
 
 The SDK has grown quite popular over the years, powering thousands of web scraping

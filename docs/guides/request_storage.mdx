@@ -5,8 +5,8 @@ title: Request Storage
 
 import ApiLink from '@site/src/components/ApiLink';
 
-The Apify SDK has several request storage types that are useful for specific tasks. The requests are stored either on local disk to a directory defined by the
-`APIFY_LOCAL_STORAGE_DIR` environment variable, or on the [Apify platform](/docs/guides/apify-platform) under the user account identified by the API token defined by the `APIFY_TOKEN` environment variable. If neither of these variables is defined, by default Apify SDK sets `APIFY_LOCAL_STORAGE_DIR` to `./apify_storage` in the current working directory and prints a warning.
+Crawlee has several request storage types that are useful for specific tasks. The requests are stored either on local disk to a directory defined by the
+`APIFY_LOCAL_STORAGE_DIR` environment variable, or on the [Apify platform](/docs/guides/apify-platform) under the user account identified by the API token defined by the `APIFY_TOKEN` environment variable. If neither of these variables is defined, by default Crawlee sets `APIFY_LOCAL_STORAGE_DIR` to `./apify_storage` in the current working directory and prints a warning.
 
 Typically, you will be developing the code on your local computer and thus set the `APIFY_LOCAL_STORAGE_DIR` environment variable. Once the code is ready, you will deploy it to the Apify platform, where it will automatically set the `APIFY_TOKEN` environment variable and thus use cloud storage. No code changes are needed.
 
@@ -22,7 +22,7 @@ The request queue is a storage of URLs to crawl. The queue is used for the deep 
 
 Each actor run is associated with a **default request queue**, which is created exclusively for the actor run. Typically, it is used to store URLs to crawl in the specific actor run. Its usage is optional.
 
-In Apify SDK, the request queue is represented by the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> class.
+In Crawlee, the request queue is represented by the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> class.
 
 In local configuration, the request queue is emulated by [@apify/storage-local](https://github.com/apify/apify-storage-local-js) NPM package and its data is stored in SQLite database in the directory specified by the `APIFY_LOCAL_STORAGE_DIR` environment variable as follows:
 
@@ -60,7 +60,7 @@ The request list is not a storage per se - it represents the list of URLs to cra
 
 Request list is created exclusively for the actor run and only if its usage is explicitly specified in the code. Its usage is optional.
 
-In Apify SDK, the request list is represented by the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class.
+In Crawlee, the request list is represented by the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class.
 
 The following code demonstrates basic operations of the request list:
 

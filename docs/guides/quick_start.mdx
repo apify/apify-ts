@@ -5,14 +5,14 @@ title: Quick Start
 
 import ApiLink from '@site/src/components/ApiLink';
 
-This short tutorial will set you up to start using Apify SDK in a minute or two.
+This short tutorial will set you up to start using Crawlee in a minute or two.
 If you want to learn more, proceed to the [Getting Started](../guides/getting-started)
 tutorial that will take you step by step through creating your first scraper.
 
 ## Local stand-alone usage
 
-Apify SDK requires [Node.js](https://nodejs.org/en/) 15.10 or later.
-Add Apify SDK to any Node.js project by running:
+Crawlee requires [Node.js](https://nodejs.org/en/) 15.10 or later.
+Add Crawlee to any Node.js project by running:
 
 ```bash
 npm install apify playwright
@@ -25,7 +25,7 @@ flexibility. That's why we install it with NPM. You can choose one, both, or nei
 
 :::
 
-Run the following example to perform a recursive crawl of a website using Playwright. For more examples showcasing various features of the Apify SDK,
+Run the following example to perform a recursive crawl of a website using Playwright. For more examples showcasing various features of Crawlee,
 [see the Examples section of the documentation](../examples/crawl-multiple-urls).
 
 ```javascript title="src/main.js"
@@ -63,11 +63,11 @@ To read more about what pseudo-URL is, check the [getting-started](getting-start
 
 :::
 
-When you run the example, you should see Apify SDK automating a Chrome browser.
+When you run the example, you should see Crawlee automating a Chrome browser.
 
 ![Chrome Scrape](/img/chrome_scrape.gif)
 
-By default, Apify SDK stores data to `./apify_storage` in the current working directory. You can override this behavior by setting either the
+By default, Crawlee stores data to `./apify_storage` in the current working directory. You can override this behavior by setting either the
 `APIFY_LOCAL_STORAGE_DIR` or `APIFY_TOKEN` environment variable. For details, see [Environment variables](../guides/environment-variables), [Request storage](../guides/request-storage) and [Result storage](../guides/result-storage).
 
 ## Local usage with Apify command-line interface (CLI)

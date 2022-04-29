@@ -18,7 +18,7 @@ const crawler = new PuppeteerCrawler({
 
     // This function will be called for each URL to crawl.
     // Here you can write the Puppeteer scripts you are familiar with,
-    // with the exception that browsers and pages are automatically managed by the Apify SDK.
+    // with the exception that browsers and pages are automatically managed by Crawlee.
     // The function accepts a single parameter, which is an object with the following fields:
     // - request: an instance of the Request class with information such as URL and HTTP method
     // - page: Puppeteer's Page object (see https://pptr.dev/#show=api-class-page)
