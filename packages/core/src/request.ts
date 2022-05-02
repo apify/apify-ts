@@ -95,10 +95,7 @@ export class Request {
     headers?: Record<string, string>;
 
     /** Custom user data assigned to the request. */
-    userData?: Record<string, unknown>;
-
-    /** Private property for storing internal request metadata. */
-    private internalVariables: Record<string, unknown>;
+    userData: Record<string, unknown> & { '__crawlee'?: Record<string, unknown> };
 
     /**
      * ISO datetime string that indicates the time when the request has been processed.
@@ -166,20 +163,39 @@ export class Request {
         this.headers = { ...headers };
         this.userData = { ...userData };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
-        // eslint-disable-next-line no-underscore-dangle
-        this.internalVariables = { ...(userData.__crawlee as Record<string, unknown> ?? {}) };
-        // eslint-disable-next-line no-underscore-dangle
-        delete this.userData.__crawlee;
+
+        Object.defineProperty(this.userData, '__crawlee', {
+            // eslint-disable-next-line no-underscore-dangle
+            value: this.userData.__crawlee,
+            enumerable: false,
+            writable: true,
+            configurable: true,
+        });
+
+        Object.defineProperty(this.userData, 'toJSON', {
+            value: () => {
+                return {
+                    ...this.userData,
+                    toJSON: undefined,
+                    // eslint-disable-next-line no-underscore-dangle
+                    __crawlee: this.userData?.__crawlee,
+                };
+            },
+            enumerable: false,
+        });
+
         if (skipNavigation != null) this.skipNavigation = skipNavigation;
     }
 
     /** Tells the crawler processing this request to skip the navigation and process the request directly. */
     get skipNavigation() : boolean {
-        return !!this.internalVariables.skipNavigation ?? false;
+        // eslint-disable-next-line no-underscore-dangle
+        return !!this.userData?.__crawlee?.skipNavigation ?? false;
     }
 
     set skipNavigation(value: boolean) {
-        this.internalVariables.skipNavigation = value;
+        // eslint-disable-next-line no-underscore-dangle
+        this.userData.__crawlee = { ...this.userData?.__crawlee, skipNavigation: value };
     }
 
     /**
