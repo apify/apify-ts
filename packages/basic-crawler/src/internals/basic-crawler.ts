@@ -725,9 +725,7 @@ export class BasicCrawler<
 
         try {
             await addTimeoutToPromise(
-                crawlingContext.request.skipNavigation
-                    ? (() => this.requestHandler(crawlingContext) as any)
-                    : () => this._runRequestHandler(crawlingContext),
+                () => this._runRequestHandler(crawlingContext),
                 this.requestHandlerTimeoutMillis,
                 `handleRequestFunction timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds (${request.id}).`,
             );

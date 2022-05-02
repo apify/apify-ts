@@ -712,65 +712,66 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
             const sessionId = session ? session.id : undefined;
             crawlingContext.proxyInfo = await this.proxyConfiguration.newProxyInfo(sessionId);
         }
+        if (!request.skipNavigation) {
+            await this._handleNavigation(crawlingContext);
+            tryCancel();
 
-        await this._handleNavigation(crawlingContext);
-        tryCancel();
+            const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response!);
+            tryCancel();
 
-        const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response!);
-        tryCancel();
+            if (this.useSessionPool) {
+                this._throwOnBlockedRequest(session!, response.statusCode!);
+            }
 
-        if (this.useSessionPool) {
-            this._throwOnBlockedRequest(session!, response.statusCode!);
-        }
-
-        if (this.persistCookiesPerSession) {
+            if (this.persistCookiesPerSession) {
             session!.setCookiesFromResponse(response);
-        }
+            }
 
-        request.loadedUrl = response.url;
+            request.loadedUrl = response.url;
 
-        const $ = dom
-            ? cheerio.load(dom as string, {
-                xmlMode: isXml,
-                // Recent versions of cheerio use parse5 as the HTML parser/serializer. It's more strict than htmlparser2
-                // and not good for scraping. It also does not have a great streaming interface.
-                // Here we tell cheerio to use htmlparser2 for serialization, otherwise the conflict produces weird errors.
-                _useHtmlParser2: true,
-            } as CheerioOptions)
-            : null;
+            const $ = dom
+                ? cheerio.load(dom as string, {
+                    xmlMode: isXml,
+                    // Recent versions of cheerio use parse5 as the HTML parser/serializer. It's more strict than htmlparser2
+                    // and not good for scraping. It also does not have a great streaming interface.
+                    // Here we tell cheerio to use htmlparser2 for serialization, otherwise the conflict produces weird errors.
+                    _useHtmlParser2: true,
+                } as CheerioOptions)
+                : null;
 
-        crawlingContext.$ = $!;
-        crawlingContext.contentType = contentType;
-        crawlingContext.response = response;
-        crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            return cheerioCrawlerEnqueueLinks({
-                options: enqueueOptions,
-                $,
-                requestQueue: await this.getRequestQueue(),
-                originalRequestUrl: crawlingContext.request.url,
-                finalRequestUrl: crawlingContext.request.loadedUrl,
+            crawlingContext.$ = $!;
+            crawlingContext.contentType = contentType;
+            crawlingContext.response = response;
+            crawlingContext.enqueueLinks = async (enqueueOptions) => {
+                return cheerioCrawlerEnqueueLinks({
+                    options: enqueueOptions,
+                    $,
+                    requestQueue: await this.getRequestQueue(),
+                    originalRequestUrl: crawlingContext.request.url,
+                    finalRequestUrl: crawlingContext.request.loadedUrl,
+                });
+            };
+
+            Object.defineProperty(crawlingContext, 'json', {
+                get() {
+                    if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
+                    const jsonString = body!.toString(contentType.encoding);
+                    return JSON.parse(jsonString);
+                },
             });
-        };
 
-        Object.defineProperty(crawlingContext, 'json', {
-            get() {
-                if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
-                const jsonString = body!.toString(contentType.encoding);
-                return JSON.parse(jsonString);
-            },
-        });
-
-        Object.defineProperty(crawlingContext, 'body', {
-            get() {
+            Object.defineProperty(crawlingContext, 'body', {
+                get() {
                 // NOTE: For XML/HTML documents, we don't store the original body and only reconstruct it from Cheerio's DOM.
                 // This is to save memory for high-concurrency crawls. The downside is that changes
                 // made to DOM are reflected in the HTML, but we can live with that...
-                if (dom) {
-                    return isXml ? $!.xml() : $!.html({ decodeEntities: false });
-                }
-                return body;
-            },
-        });
+                    if (dom) {
+                        return isXml ? $!.xml() : $!.html({ decodeEntities: false });
+                    }
+                    return body;
+                },
+            });
+        }
 
         return addTimeoutToPromise(
             () => Promise.resolve(this.requestHandler(crawlingContext)),
