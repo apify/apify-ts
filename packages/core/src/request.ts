@@ -169,14 +169,13 @@ export class Request {
             value: this.userData.__crawlee,
             enumerable: false,
             writable: true,
-            configurable: true,
         });
 
         Object.defineProperty(this.userData, 'toJSON', {
             value: () => {
                 return {
                     ...this.userData,
-                    toJSON: undefined,
+                    toJSON: undefined as any,
                     // eslint-disable-next-line no-underscore-dangle
                     __crawlee: this.userData?.__crawlee,
                 };

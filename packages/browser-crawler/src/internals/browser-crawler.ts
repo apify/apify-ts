@@ -341,6 +341,7 @@ export abstract class BrowserCrawler<
 
     launchContext?: BrowserLaunchContext<LaunchOptions, unknown>;
 
+    protected userProvidedRequestHandler!: BrowserCrawlerHandleRequest<Context>;
     protected navigationTimeoutMillis: number;
     protected gotoFunction?: GotoFunction<Context, GoToOptions>;
     protected defaultGotoOptions: GoToOptions;
@@ -386,7 +387,7 @@ export abstract class BrowserCrawler<
             // Ignored
             handleRequestFunction,
 
-            requestHandler,
+            requestHandler: userProvidedRequestHandler,
             handlePageFunction,
 
             failedRequestHandler,
@@ -396,15 +397,15 @@ export abstract class BrowserCrawler<
 
         super({
             ...basicCrawlerOptions,
-            requestHandler,
+            requestHandler: (...args) => this._runRequestHandler(...args),
             requestHandlerTimeoutSecs: navigationTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
         this._handlePropertyNameChange({
             newName: 'requestHandler',
             oldName: 'handlePageFunction',
-            propertyKey: 'requestHandler',
-            newProperty: requestHandler,
+            propertyKey: 'userProvidedRequestHandler',
+            newProperty: userProvidedRequestHandler,
             oldProperty: handlePageFunction,
         });
 
@@ -522,7 +523,7 @@ export abstract class BrowserCrawler<
             }
 
             await addTimeoutToPromise(
-                () => Promise.resolve(this.requestHandler(crawlingContext)),
+                () => Promise.resolve(this.userProvidedRequestHandler(crawlingContext)),
                 this.requestHandlerTimeoutMillis,
                 `requestHandler timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds.`,
             );
