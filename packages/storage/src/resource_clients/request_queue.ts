@@ -230,11 +230,6 @@ export class RequestQueueClient {
         const orderNo = this._calculateOrderNo(request, forefront);
         const id = uniqueKeyToRequestId(request.uniqueKey);
         if (request.id && id !== request.id) throw new Error('Request ID does not match its uniqueKey.');
-        // @ts-ignore
-        request.userData = { ...request.userData, __crawlee: request.internalVariables };
-        // @ts-ignore
-        delete request.internalVariables;
-
         const json = JSON.stringify({ ...request, id });
         return {
             id,

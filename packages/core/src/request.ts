@@ -95,7 +95,7 @@ export class Request {
     headers?: Record<string, string>;
 
     /** Custom user data assigned to the request. */
-    userData: Record<string, unknown> & { '__crawlee'?: Record<string, unknown> };
+    userData: Record<string, any>;
 
     /**
      * ISO datetime string that indicates the time when the request has been processed.
@@ -164,30 +164,28 @@ export class Request {
         this.userData = { ...userData };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
 
-        Object.defineProperty(this.userData, '__crawlee', {
-            // eslint-disable-next-line no-underscore-dangle
-            value: this.userData.__crawlee,
-            enumerable: false,
-            writable: true,
-        });
-
-        Object.defineProperty(this.userData, 'toJSON', {
-            value: () => {
-                return {
+        Object.defineProperties(this.userData, {
+            __crawlee: {
+                // eslint-disable-next-line no-underscore-dangle
+                value: this.userData.__crawlee,
+                enumerable: false,
+                writable: true,
+            },
+            toJSON: {
+                value: () => ({
                     ...this.userData,
-                    toJSON: undefined as any,
                     // eslint-disable-next-line no-underscore-dangle
                     __crawlee: this.userData?.__crawlee,
-                };
+                }),
+                enumerable: false,
             },
-            enumerable: false,
         });
 
         if (skipNavigation != null) this.skipNavigation = skipNavigation;
     }
 
     /** Tells the crawler processing this request to skip the navigation and process the request directly. */
-    get skipNavigation() : boolean {
+    get skipNavigation(): boolean {
         // eslint-disable-next-line no-underscore-dangle
         return !!this.userData?.__crawlee?.skipNavigation ?? false;
     }
@@ -316,7 +314,7 @@ export interface RequestOptions {
      * Custom user data assigned to the request. Use this to save any request related data to the
      * request's scope, keeping them accessible on retries, failures etc.
      */
-    userData?: Record<string, unknown>;
+    userData?: Record<string, any>;
 
     /**
      * If `false` then the hash part of a URL is removed when computing the `uniqueKey` property.
