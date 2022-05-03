@@ -257,35 +257,6 @@ describe('CheerioCrawler', () => {
         expect(cheerioCrawler.ignoreSslErrors).toBeTruthy();
     });
 
-    test('should trigger prepareRequestFunction', async () => {
-        const MODIFIED_URL = 'http://example.com/?q=2';
-        const sources = [
-            { url: 'http://example.com/' },
-
-        ];
-        let failed = null;
-        let success: Request;
-        const requestList = new RequestList({ sources });
-        const requestHandler: CheerioRequestHandler = ({ request }) => {
-            success = request;
-        };
-        await requestList.initialize();
-
-        const cheerioCrawler = new CheerioCrawler({
-            requestList,
-            requestHandler,
-            failedRequestHandler: ({ request }) => {
-                failed = request;
-            },
-            prepareRequestFunction: ({ request }) => {
-                request.url = MODIFIED_URL;
-            },
-        });
-        await cheerioCrawler.run();
-        expect(failed).toBe(null);
-        expect(success.url).toEqual(MODIFIED_URL);
-    });
-
     test('should work with not encoded urls', async () => {
         const sources = [
             { url: `http://${HOST}:${port}/mirror?q=abc` },
@@ -320,29 +291,6 @@ describe('CheerioCrawler', () => {
         expect(processed[0].loadedUrl).toBe(`http://${HOST}:${port}/mirror?q=abc`);
         expect(processed[1].loadedUrl).toBe(`http://${HOST}:${port}/mirror?q=%`);
         expect(processed[2].loadedUrl).toBe(`http://${HOST}:${port}/mirror?q=%cf`);
-    });
-
-    test('postResponseFunction should work', async () => {
-        const sources = ['http://example.com/'];
-        const requestList = await RequestList.open(null, sources.slice());
-
-        const cheerioCrawler = new CheerioCrawler({
-            requestList,
-            maxRequestRetries: 0,
-            maxConcurrency: 1,
-            useSessionPool: true,
-            prepareRequestFunction: () => {
-            },
-            postResponseFunction: ({ response }) => {
-                response.headers['content-type'] = 'application/json; charset=utf-8'; // text/html is set
-            },
-            requestHandler: ({ contentType }) => {
-                const { type } = contentType;
-                expect(type).toEqual('application/json');
-            },
-        });
-
-        await cheerioCrawler.run();
     });
 
     test('should serialize body and html', async () => {
@@ -1102,20 +1050,6 @@ describe('CheerioCrawler', () => {
             expect(deprecatedSpy).toBeCalledWith(`Found cookies with similar name during cookie merging: 'coo' and 'Coo'`);
         });
 
-        test('should pass session to prepareRequestFunction when Session pool is used', async () => {
-            const requestHandler = () => {};
-
-            const cheerioCrawler = new CheerioCrawler({
-                requestList,
-                requestHandler,
-                useSessionPool: true,
-                prepareRequestFunction: ({ session }) => {
-                    expect(session.constructor.name).toEqual('Session');
-                },
-            });
-            await cheerioCrawler.run();
-        });
-
         test('should use sessionId in proxyUrl when the session pool is enabled', async () => {
             const sourcesNew = [
                 { url: 'http://example.com/?q=1' },
@@ -1214,7 +1148,7 @@ describe('CheerioCrawler', () => {
                 maxRequestRetries: 0,
                 maxConcurrency: 1,
                 useSessionPool: true,
-                prepareRequestFunction,
+                preNavigationHooks: [prepareRequestFunction],
                 requestHandler,
                 failedRequestHandler,
             });
@@ -1298,10 +1232,8 @@ describe('CheerioCrawler', () => {
         });
 
         test('should override crawler properties', () => {
-            const prepareRequestFunction = () => ({});
             const extension = new DummyExtension({
                 useSessionPool: true,
-                prepareRequestFunction,
                 requestHandler: undefined,
             });
             const cheerioCrawler = new CheerioCrawler({
@@ -1318,8 +1250,6 @@ describe('CheerioCrawler', () => {
             cheerioCrawler.use(extension);
             // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.useSessionPool).toEqual(true);
-            // @ts-expect-error Accessing private prop
-            expect(cheerioCrawler.prepareRequestFunction).toEqual(prepareRequestFunction);
             // @ts-expect-error Accessing private prop
             expect(cheerioCrawler.requestHandler).toBeUndefined();
             // @ts-expect-error Accessing private prop

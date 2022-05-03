@@ -13,7 +13,7 @@ import {
     Dataset,
     CheerioFailedRequestHandlerInput,
     KeyValueStore,
-    PrepareRequestInputs,
+    // PrepareRequestInputs,
     ProxyConfiguration,
     Request,
     RequestList,
@@ -165,7 +165,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             requestQueue: this.requestQueue,
             requestTimeoutSecs: this.input.pageLoadTimeoutSecs,
             requestHandlerTimeoutSecs: this.input.pageFunctionTimeoutSecs,
-            prepareRequestFunction: this._prepareRequestFunction.bind(this),
+            // prepareRequestFunction: this._prepareRequestFunction.bind(this),
             ignoreSslErrors: this.input.ignoreSslErrors,
             failedRequestHandler: this._failedRequestHandler.bind(this),
             maxRequestRetries: this.input.maxRequestRetries,
@@ -207,26 +207,27 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return this.crawler;
     }
 
-    private async _prepareRequestFunction({ request, session }: PrepareRequestInputs) {
-        // Normalize headers
-        request.headers = Object
-            .entries(request.headers ?? {})
-            .reduce((newHeaders, [key, value]) => {
-                newHeaders[key.toLowerCase()] = value;
-                return newHeaders;
-            }, {} as Dictionary<string>);
-
-        // Add initial cookies, if any.
-        if (this.input.initialCookies && this.input.initialCookies.length) {
-            const cookiesToSet = session
-                ? tools.getMissingCookiesFromSession(session, this.input.initialCookies, request.url)
-                : this.input.initialCookies;
-            if (cookiesToSet?.length) {
-                // setting initial cookies that are not already in the session and page
-                session?.setPuppeteerCookies(cookiesToSet, request.url);
-            }
-        }
-    }
+    // TODO this was always used, we need to convert it to nav hooks, not just comment it out
+    // private async _prepareRequestFunction({ request, session }: PrepareRequestInputs) {
+    //     // Normalize headers
+    //     request.headers = Object
+    //         .entries(request.headers ?? {})
+    //         .reduce((newHeaders, [key, value]) => {
+    //             newHeaders[key.toLowerCase()] = value;
+    //             return newHeaders;
+    //         }, {} as Dictionary<string>);
+    //
+    //     // Add initial cookies, if any.
+    //     if (this.input.initialCookies && this.input.initialCookies.length) {
+    //         const cookiesToSet = session
+    //             ? tools.getMissingCookiesFromSession(session, this.input.initialCookies, request.url)
+    //             : this.input.initialCookies;
+    //         if (cookiesToSet?.length) {
+    //             // setting initial cookies that are not already in the session and page
+    //             session?.setPuppeteerCookies(cookiesToSet, request.url);
+    //         }
+    //     }
+    // }
 
     private _failedRequestHandler({ request }: CheerioFailedRequestHandlerInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
