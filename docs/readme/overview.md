@@ -2,7 +2,7 @@
 ---
 ## Overview
 
-Crawlee is available as the [`apify`](https://www.npmjs.com/package/apify) NPM package and it provides the following tools:
+Crawlee is available as the [`crawlee`](https://www.npmjs.com/package/crawlee) NPM package and it provides the following tools:
 
 - [`CheerioCrawler`](https://sdk.apify.com/docs/api/cheerio-crawler) - Enables the parallel crawling of a large
   number of web pages using the [cheerio](https://www.npmjs.com/package/cheerio) HTML parser. This is the most
@@ -47,3 +47,4 @@ Crawlee is available as the [`apify`](https://www.npmjs.com/package/apify) NPM p
 Additionally, the package provides various helper functions to simplify running your code on the Apify Cloud and thus
 take advantage of its pool of proxies, job scheduler, data storage, etc.
 For more information, see the [Crawlee Programmer's Reference](https://sdk.apify.com).
+
