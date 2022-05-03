@@ -95,7 +95,13 @@ export class Request {
     headers?: Record<string, string>;
 
     /** Custom user data assigned to the request. */
-    userData: Record<string, any>;
+    userData: Record<string, any> = {};
+
+    /** Private store for the custom user data assigned to the request. */
+    #userData: Record<string, any>;
+
+    /** Private store for internal `Request` variables */
+    #internalVariables: Record<string, any>;
 
     /**
      * ISO datetime string that indicates the time when the request has been processed.
@@ -161,38 +167,36 @@ export class Request {
         this.retryCount = retryCount;
         this.errorMessages = [...errorMessages];
         this.headers = { ...headers };
-        this.userData = { ...userData };
+        this.#userData = { ...userData };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
 
-        Object.defineProperties(this.userData, {
-            __crawlee: {
-                // eslint-disable-next-line no-underscore-dangle
-                value: this.userData.__crawlee,
-                enumerable: false,
-                writable: true,
-            },
-            toJSON: {
-                value: () => ({
-                    ...this.userData,
-                    // eslint-disable-next-line no-underscore-dangle
-                    __crawlee: this.userData?.__crawlee,
-                }),
-                enumerable: false,
-            },
-        });
+        // eslint-disable-next-line no-underscore-dangle
+        this.#internalVariables = userData.__crawlee ?? {};
 
         if (skipNavigation != null) this.skipNavigation = skipNavigation;
+
+        Object.defineProperty(this, 'userData', {
+            get: () => ({
+                ...this.#userData,
+                toJSON: () => ({
+                    ...this.#userData,
+                    ...(Object.keys(this.#internalVariables).length ? { __crawlee: this.#internalVariables } : {}),
+                }),
+            }),
+            set: (value: Record<string, any>) => {
+                this.#userData = value;
+            },
+            enumerable: true,
+        });
     }
 
     /** Tells the crawler processing this request to skip the navigation and process the request directly. */
     get skipNavigation(): boolean {
-        // eslint-disable-next-line no-underscore-dangle
-        return !!this.userData?.__crawlee?.skipNavigation ?? false;
+        return this.#internalVariables.skipNavigation ?? false;
     }
 
     set skipNavigation(value: boolean) {
-        // eslint-disable-next-line no-underscore-dangle
-        this.userData.__crawlee = { ...this.userData?.__crawlee, skipNavigation: value };
+        this.#internalVariables.skipNavigation = value;
     }
 
     /**
