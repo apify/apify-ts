@@ -94,14 +94,11 @@ export class Request {
     /** Object with HTTP headers. Key is header name, value is the value. */
     headers?: Record<string, string>;
 
+    /** Private store for the custom user data assigned to the request. */
+    private _userData: Record<string, any> = {};
+
     /** Custom user data assigned to the request. */
     userData: Record<string, any> = {};
-
-    /** Private store for the custom user data assigned to the request. */
-    #userData: Record<string, any>;
-
-    /** Private store for internal `Request` variables */
-    #internalVariables: Record<string, any>;
 
     /**
      * ISO datetime string that indicates the time when the request has been processed.
@@ -167,36 +164,50 @@ export class Request {
         this.retryCount = retryCount;
         this.errorMessages = [...errorMessages];
         this.headers = { ...headers };
-        this.#userData = { ...userData };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
 
-        // eslint-disable-next-line no-underscore-dangle
-        this.#internalVariables = userData.__crawlee ?? {};
+        Object.defineProperties(this, {
+            _userData: {
+                value: { ...userData },
+                enumerable: false,
+                writable: true,
+            },
+            userData: {
+                get: () => this._userData,
+                set: (value: Record<string, any>) => {
+                    const newValue = { ...value };
+                    Object.defineProperties(newValue, {
+                        __crawlee: {
+                            // eslint-disable-next-line no-underscore-dangle
+                            value: this._userData.__crawlee,
+                            enumerable: false,
+                        },
+                        toJSON: {
+                            // eslint-disable-next-line no-underscore-dangle
+                            value: () => ({ ...this._userData, __crawlee: this._userData.__crawlee }),
+                            enumerable: false,
+                        },
+                    });
+                    this._userData = newValue;
+                },
+                enumerable: true,
+            },
+        });
 
         if (skipNavigation != null) this.skipNavigation = skipNavigation;
-
-        Object.defineProperty(this, 'userData', {
-            get: () => ({
-                ...this.#userData,
-                toJSON: () => ({
-                    ...this.#userData,
-                    ...(Object.keys(this.#internalVariables).length ? { __crawlee: this.#internalVariables } : {}),
-                }),
-            }),
-            set: (value: Record<string, any>) => {
-                this.#userData = value;
-            },
-            enumerable: true,
-        });
     }
 
     /** Tells the crawler processing this request to skip the navigation and process the request directly. */
     get skipNavigation(): boolean {
-        return this.#internalVariables.skipNavigation ?? false;
+        // eslint-disable-next-line no-underscore-dangle
+        return this.userData.__crawlee?.skipNavigation ?? false;
     }
 
     set skipNavigation(value: boolean) {
-        this.#internalVariables.skipNavigation = value;
+        // eslint-disable-next-line no-underscore-dangle
+        if (!this.userData.__crawlee) this.userData.__crawlee = { skipNavigation: value };
+        // eslint-disable-next-line no-underscore-dangle
+        else this.userData.__crawlee.skipNavigation = value;
     }
 
     /**
