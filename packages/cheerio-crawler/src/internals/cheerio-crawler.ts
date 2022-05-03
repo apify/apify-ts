@@ -188,63 +188,6 @@ export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
     handlePageFunction?: CheerioRequestHandler<JSONData>;
 
     /**
-     * > This option is deprecated, use `preNavigationHooks` instead.
-     *
-     * A function that executes before the HTTP request is made to the target resource.
-     * This function is suitable for setting dynamic properties such as cookies to the {@link Request}.
-     *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     session: Session,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: CheerioCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the initialized request
-     * and the {@link Session} instance corresponds to used session.
-     *
-     * The function should modify the properties of the passed {@link Request} instance
-     * in place because there are already earlier references to it. Making a copy and returning it from
-     * this function is therefore not supported, because it would create inconsistencies where
-     * different parts of SDK would have access to a different {@link Request} instance.
-     */
-    prepareRequestFunction?: PrepareRequest<JSONData>;
-
-    /**
-     * > This option is deprecated, use `postNavigationHooks` instead.
-     *
-     * A function that executes right after the HTTP request is made to the target resource and response is returned.
-     * This function is suitable for overriding custom properties of response e.g. setting headers because of response parsing.
-     *
-     * **Example usage:**
-     *
-     * ```javascript
-     * const cheerioCrawlerOptions = {
-     *     // ...
-     *     postResponseFunction: ({ request, response }) => {
-     *         if (request.userData.parseAsJSON) {
-     *             response.headers['content-type'] = 'application/json; charset=utf-8';
-     *         }
-     *     }
-     * }
-     * ```
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     response: Object,
-     *     request: Request,
-     *     session: Session,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: CheerioCrawler,
-     * }
-     * ```
-     * The response is an instance of Node's http.IncomingMessage object.
-     */
-    postResponseFunction?: PostResponse<JSONData>;
-
-    /**
      * Timeout in which the HTTP request to the resource needs to finish, given in seconds.
      */
     requestTimeoutSecs?: number;
@@ -565,8 +508,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
     protected ignoreSslErrors: boolean;
     protected suggestResponseEncoding?: string;
     protected forceResponseEncoding?: string;
-    protected prepareRequestFunction?: PrepareRequest<JSONData>;
-    protected postResponseFunction?: PostResponse<JSONData>;
     protected readonly supportedMimeTypes: Set<string>;
 
     protected static override optionsShape = {
@@ -579,8 +520,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
         suggestResponseEncoding: ow.optional.string,
         forceResponseEncoding: ow.optional.string,
         proxyConfiguration: ow.optional.object.validate(validators.proxyConfiguration),
-        prepareRequestFunction: ow.optional.function,
-        postResponseFunction: ow.optional.function,
         persistCookiesPerSession: ow.optional.boolean,
 
         preNavigationHooks: ow.optional.array,
@@ -604,8 +543,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
             suggestResponseEncoding,
             forceResponseEncoding,
             proxyConfiguration,
-            prepareRequestFunction,
-            postResponseFunction,
             persistCookiesPerSession,
             preNavigationHooks = [],
             postNavigationHooks = [],
@@ -653,8 +590,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
         this.ignoreSslErrors = ignoreSslErrors;
         this.suggestResponseEncoding = suggestResponseEncoding;
         this.forceResponseEncoding = forceResponseEncoding;
-        this.prepareRequestFunction = prepareRequestFunction;
-        this.postResponseFunction = postResponseFunction;
         this.proxyConfiguration = proxyConfiguration;
         this.preNavigationHooks = preNavigationHooks;
         this.postNavigationHooks = [
@@ -780,14 +715,7 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
     }
 
     protected async _handleNavigation(crawlingContext: CheerioCrawlingContext<JSONData>) {
-        if (this.prepareRequestFunction) {
-            this.log.deprecated('Option "prepareRequestFunction" is deprecated. Use "preNavigationHooks" instead.');
-            await this.prepareRequestFunction(crawlingContext);
-            tryCancel();
-        }
-
         const gotOptions = {} as OptionsInit;
-
         const { request, session } = crawlingContext;
         const preNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
 
@@ -811,12 +739,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
 
         await this._executeHooks(this.postNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
-
-        if (this.postResponseFunction) {
-            this.log.deprecated('Option "postResponseFunction" is deprecated. Use "postNavigationHooks" instead.');
-            await this.postResponseFunction(crawlingContext);
-            tryCancel();
-        }
     }
 
     /**

@@ -18,6 +18,7 @@
   - `maxUsedCpuRatio` has been moved to the top level configuration
   - `ProxyConfiguration.newUrlFunction` can be async. `.newUrl()` and `.newProxyInfo()` now return promises.
 - stealth mode has been removed in favour of fingerprints and fingerprints are now enabled by default
+- `prepareRequestFunction` and `postResponseFunction` options are removed, use navigation hooks instead
 
 2.3.0 / 2022/04/07
 ====================
