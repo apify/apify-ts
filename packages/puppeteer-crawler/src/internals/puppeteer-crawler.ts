@@ -5,9 +5,6 @@ import {
     BrowserCrawlingContext,
     BrowserHook,
 } from '@crawlee/browser';
-import {
-    Dictionary,
-} from '@crawlee/utils';
 import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
@@ -23,7 +20,6 @@ export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
 export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
     PuppeteerCrawlingContext,
-    PuppeteerGoToOptions,
     { browserPlugins: [PuppeteerPlugin] }
 > {
     /**
@@ -166,12 +162,6 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
     }
 
     protected override async _navigationHandler(crawlingContext: PuppeteerCrawlingContext, gotoOptions: DirectNavigationOptions) {
-        // TODO remove deprecated options in v3
-        if (this.gotoFunction) {
-            this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
-
-            return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
-        }
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
     }
 }

@@ -605,6 +605,17 @@ export class BasicCrawler<
         await this.requestHandler(crawlingContext);
     }
 
+    /**
+     * Handles blocked request
+     */
+    protected _throwOnBlockedRequest(session: Session, statusCode: number) {
+        const isBlocked = session.retireOnBlockedStatusCodes(statusCode);
+
+        if (isBlocked) {
+            throw new Error(`Request blocked - received ${statusCode} status code.`);
+        }
+    }
+
     protected async _pauseOnMigration() {
         if (this.autoscaledPool) {
             // if run wasn't called, this is going to crash

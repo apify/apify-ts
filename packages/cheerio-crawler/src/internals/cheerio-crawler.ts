@@ -500,7 +500,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
     public proxyConfiguration?: ProxyConfiguration;
 
     protected userRequestHandlerTimeoutMillis: number;
-    protected defaultGotoOptions!: { timeout: number };
     protected preNavigationHooks: CheerioHook<JSONData>[];
     protected postNavigationHooks: CheerioHook<JSONData>[];
     protected persistCookiesPerSession: boolean;
@@ -908,17 +907,6 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
                 throw new Error(`Can not parse mime type ${mimeType} from "options.additionalMimeTypes".`);
             }
         });
-    }
-
-    /**
-     * Handles blocked request
-     */
-    protected _throwOnBlockedRequest(session: Session, statusCode: number) {
-        const isBlocked = session.retireOnBlockedStatusCodes(statusCode);
-
-        if (isBlocked) {
-            throw new Error(`Request blocked - received ${statusCode} status code`);
-        }
     }
 
     /**
