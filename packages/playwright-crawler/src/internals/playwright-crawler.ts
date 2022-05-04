@@ -1,7 +1,6 @@
 import ow from 'ow';
 import { LaunchOptions, Page, Response } from 'playwright';
 import { BrowserPoolOptions, PlaywrightPlugin } from '@crawlee/browser-pool';
-import { Dictionary } from '@crawlee/utils';
 import {
     BrowserCrawler,
     BrowserCrawlerOptions,
@@ -23,7 +22,6 @@ export type PlaywrightCookie = Parameters<ReturnType<Page['context']>['addCookie
 
 export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
     PlaywrightCrawlingContext,
-    PlaywrightGotoOptions,
     { browserPlugins: [PlaywrightPlugin] }
 > {
     /**
@@ -246,11 +244,6 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
     }
 
     protected override async _navigationHandler(crawlingContext: PlaywrightCrawlingContext, gotoOptions: DirectNavigationOptions) {
-        if (this.gotoFunction) {
-            this.log.deprecated('PlaywrightCrawler.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
-            return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
-        }
-
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
     }
 

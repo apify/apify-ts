@@ -8,7 +8,6 @@ import {
     PlaywrightCrawler,
     PlaywrightGotoOptions,
     PlaywrightRequestHandler,
-    PlaywrightRequestHandlerParam,
     Request,
     RequestList,
 } from '@crawlee/playwright';
@@ -110,54 +109,6 @@ describe('PlaywrightCrawler', () => {
         });
     });
 
-    test('should override goto timeout with gotoTimeoutSecs', async () => {
-        const timeoutSecs = 10;
-        let options: PlaywrightGotoOptions;
-        const playwrightCrawler = new PlaywrightCrawler({ //eslint-disable-line
-            requestList,
-            maxRequestRetries: 0,
-            maxConcurrency: 1,
-            requestHandler: () => {
-            },
-            preNavigationHooks: [(_context, gotoOptions) => {
-                options = gotoOptions;
-            }],
-            gotoTimeoutSecs: timeoutSecs,
-        });
-
-        // @ts-expect-error Accessing private prop
-        expect(playwrightCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
-        await playwrightCrawler.run();
-
-        expect(options.timeout).toEqual(timeoutSecs * 1000);
-
-        expect.hasAssertions();
-    });
-    test('should support custom gotoFunction', async () => {
-        const functions = {
-            requestHandler: () => { },
-            gotoFunction: ({ page, request }: PlaywrightRequestHandlerParam, options: PlaywrightGotoOptions) => {
-                return page.goto(request.url, options);
-            },
-        };
-        jest.spyOn(functions, 'gotoFunction');
-        jest.spyOn(functions, 'requestHandler');
-        const playwrightCrawler = new PlaywrightCrawler({ //eslint-disable-line
-            requestList,
-            maxRequestRetries: 0,
-            maxConcurrency: 1,
-            requestHandler: functions.requestHandler,
-            gotoFunction: functions.gotoFunction,
-        });
-
-        // @ts-expect-error Accessing private method
-        expect(playwrightCrawler.gotoFunction).toEqual(functions.gotoFunction);
-        await playwrightCrawler.run();
-
-        expect(functions.gotoFunction).toBeCalled();
-        expect(functions.requestHandler).toBeCalled();
-    });
-
     test('should override goto timeout with navigationTimeoutSecs', async () => {
         const timeoutSecs = 10;
         let options: PlaywrightGotoOptions;
@@ -173,10 +124,7 @@ describe('PlaywrightCrawler', () => {
             navigationTimeoutSecs: timeoutSecs,
         });
 
-        // @ts-expect-error Accessing private prop
-        expect(playwrightCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
         await playwrightCrawler.run();
-
         expect(options.timeout).toEqual(timeoutSecs * 1000);
     });
 });

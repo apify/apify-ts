@@ -7,7 +7,6 @@ import {
     PuppeteerCrawler,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
-    PuppeteerRequestHandlerParam,
     Request,
     RequestList,
     RequestQueue,
@@ -126,53 +125,7 @@ describe('PuppeteerCrawler', () => {
         });
     });
 
-    test('should override goto timeout with gotoTimeoutSecs ', async () => {
-        const timeoutSecs = 10;
-        let options: PuppeteerGoToOptions;
-        const puppeteerCrawler = new PuppeteerCrawler({
-            requestList,
-            maxRequestRetries: 0,
-            maxConcurrency: 1,
-            requestHandler: () => {},
-            preNavigationHooks: [(_context, gotoOptions) => {
-                options = gotoOptions;
-            }],
-            gotoTimeoutSecs: timeoutSecs,
-        });
-
-        // @ts-expect-error Accessing private prop
-        expect(puppeteerCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
-        await puppeteerCrawler.run();
-
-        expect(options.timeout).toEqual(timeoutSecs * 1000);
-    });
-
-    test('should support custom gotoFunction', async () => {
-        const functions = {
-            requestHandler: async () => {},
-            gotoFunction: ({ page, request }: PuppeteerRequestHandlerParam, options: PuppeteerGoToOptions) => {
-                return page.goto(request.url, options);
-            },
-        };
-        jest.spyOn(functions, 'gotoFunction');
-        jest.spyOn(functions, 'requestHandler');
-        const puppeteerCrawler = new PuppeteerCrawler({
-            requestList,
-            maxRequestRetries: 0,
-            maxConcurrency: 1,
-            requestHandler: functions.requestHandler,
-            gotoFunction: functions.gotoFunction,
-        });
-
-        // @ts-expect-error Accessing private method
-        expect(puppeteerCrawler.gotoFunction).toEqual(functions.gotoFunction);
-        await puppeteerCrawler.run();
-
-        expect(functions.gotoFunction).toBeCalled();
-        expect(functions.requestHandler).toBeCalled();
-    });
-
-    test('should override goto timeout with navigationTimeoutSecs ', async () => {
+    test('should override goto timeout with navigationTimeoutSecs', async () => {
         const timeoutSecs = 10;
         let options: PuppeteerGoToOptions;
         const puppeteerCrawler = new PuppeteerCrawler({
@@ -186,10 +139,7 @@ describe('PuppeteerCrawler', () => {
             navigationTimeoutSecs: timeoutSecs,
         });
 
-        // @ts-expect-error Accessing private method
-        expect(puppeteerCrawler.defaultGotoOptions.timeout).toEqual(timeoutSecs * 1000);
         await puppeteerCrawler.run();
-
         expect(options.timeout).toEqual(timeoutSecs * 1000);
     });
 

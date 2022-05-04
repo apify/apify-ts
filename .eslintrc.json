@@ -24,6 +24,8 @@
     ],
     "rules": {
         "no-void": 0,
+        "no-underscore-dangle": 0,
+        "max-classes-per-file": 0,
         "no-console": "error",
         "@typescript-eslint/array-type": "error",
         "@typescript-eslint/no-floating-promises": "error",

@@ -1,9 +1,7 @@
-/* eslint-disable no-prototype-builtins */
-
 import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
 import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from '@crawlee/browser-pool';
-import puppeteer from 'puppeteer';
+import puppeteer, { HTTPResponse } from 'puppeteer';
 import log from '@apify/log';
 import {
     BrowserCrawler,
@@ -16,10 +14,10 @@ import {
     Request,
     AutoscaledPool,
     Session,
-    EVENT_SESSION_RETIRED,
     Configuration,
     RequestList,
     ProxyConfiguration,
+    PuppeteerCrawlingContext,
 } from '@crawlee/puppeteer';
 import { Actor } from 'apify';
 import { gotScraping } from 'got-scraping';
@@ -97,7 +95,6 @@ describe('BrowserCrawler', () => {
                 browserPlugins: [puppeteerPlugin],
             },
             requestList,
-            gotoFunction: ({ page, request }) => page.goto(request.url),
             minConcurrency: 1,
             maxConcurrency: 1,
             requestHandler,
@@ -130,12 +127,8 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: true,
-            requestHandler: async () => {
-                return Promise.resolve();
-            },
+            requestHandler: async () => {},
             maxRequestRetries: 1,
-            gotoFunction: async () => {
-            },
         });
         jest.spyOn(browserCrawler.browserPool, 'destroy');
 
@@ -144,31 +137,28 @@ describe('BrowserCrawler', () => {
         expect(browserCrawler.browserPool.destroy).toBeCalled();
     });
 
-    test('should retire session after TimeouError', async () => {
+    test('should retire session after TimeoutError', async () => {
         const requestList = new RequestList({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
         });
-        class TimeoutError extends Error {
-
-        }
+        class TimeoutError extends Error {}
         let sessionGoto: Session;
-        const browserCrawler = new BrowserCrawlerTest({
+        const browserCrawler = new class extends BrowserCrawlerTest {
+            protected override _navigationHandler(ctx: PuppeteerCrawlingContext): Promise<HTTPResponse | null | undefined> {
+                jest.spyOn(ctx.session, 'markBad');
+                sessionGoto = ctx.session;
+                throw new TimeoutError();
+            }
+        }({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
             },
             requestList,
             useSessionPool: true,
-            requestHandler: async () => {
-                return Promise.resolve();
-            },
+            requestHandler: async () => {},
             maxRequestRetries: 1,
-            gotoFunction: async ({ session }) => {
-                jest.spyOn(session, 'markBad');
-                sessionGoto = session;
-                throw new TimeoutError();
-            },
         });
 
         await requestList.initialize();
@@ -184,19 +174,19 @@ describe('BrowserCrawler', () => {
         });
         let isEvaluated = false;
 
-        const browserCrawler = new BrowserCrawlerTest({
+        const browserCrawler = new class extends BrowserCrawlerTest {
+            protected override _navigationHandler(ctx: PuppeteerCrawlingContext, gotoOptions: PuppeteerGoToOptions): Promise<HTTPResponse | null | undefined> {
+                isEvaluated = ctx.hookFinished as boolean;
+                return ctx.page.goto(ctx.request.url, gotoOptions);
+            }
+        }({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
             },
             requestList,
             useSessionPool: true,
-            requestHandler: async () => {
-                return Promise.resolve();
-            },
+            requestHandler: async () => {},
             maxRequestRetries: 0,
-            gotoFunction: async ({ hookFinished }) => {
-                isEvaluated = hookFinished as boolean;
-            },
             preNavigationHooks: [
                 async (crawlingContext) => {
                     await sleep(10);
@@ -229,7 +219,6 @@ describe('BrowserCrawler', () => {
                 isEvaluated = hookFinished as boolean;
             },
             maxRequestRetries: 0,
-            gotoFunction: ({ page, request }) => page.goto(request.url),
             postNavigationHooks: [
                 async (crawlingContext) => {
                     await sleep(10);
@@ -251,7 +240,12 @@ describe('BrowserCrawler', () => {
             ],
         });
         let optionsGoto: PuppeteerGoToOptions;
-        const browserCrawler = new BrowserCrawlerTest({
+        const browserCrawler = new class extends BrowserCrawlerTest {
+            protected override _navigationHandler(ctx: PuppeteerCrawlingContext, gotoOptions: PuppeteerGoToOptions): Promise<HTTPResponse | null | undefined> {
+                optionsGoto = gotoOptions;
+                return ctx.page.goto(ctx.request.url, gotoOptions);
+            }
+        }({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
             },
@@ -259,10 +253,6 @@ describe('BrowserCrawler', () => {
             useSessionPool: true,
             requestHandler: async () => {},
             maxRequestRetries: 0,
-            gotoFunction: ({ page, request }, gotoOptions) => {
-                optionsGoto = gotoOptions;
-                return page.goto(request.url, gotoOptions);
-            },
             preNavigationHooks: [
                 async (_crawlingContext, gotoOptions) => {
                     gotoOptions.timeout = 60000;
@@ -290,7 +280,6 @@ describe('BrowserCrawler', () => {
                     browserPlugins: [puppeteerPlugin],
                 },
                 requestList,
-                gotoFunction: ({ page, request }) => page.goto(request.url),
                 requestHandler: ({ page }) => {
                     page.close = async () => {
                         if (i === 0) {
@@ -309,43 +298,6 @@ describe('BrowserCrawler', () => {
             await browserCrawler.run();
             expect(failedCalled).toBe(false);
         }
-    });
-
-    test('should use SessionPool', async () => {
-        const requestList = new RequestList({
-            sources: [
-                { url: 'http://example.com/?q=1' },
-            ],
-        });
-        const handlePageSessions: Session[] = [];
-        const goToPageSessions: Session[] = [];
-        const browserCrawler = new BrowserCrawlerTest({
-            browserPoolOptions: {
-                browserPlugins: [puppeteerPlugin],
-            },
-            requestList,
-            useSessionPool: true,
-            requestHandler: async ({ session }) => {
-                handlePageSessions.push(session);
-                return Promise.resolve();
-            },
-
-        });
-
-        // @ts-expect-error Overriding protected method
-        browserCrawler.gotoFunction = async ({ session, page, request }) => {
-            goToPageSessions.push(session);
-            return page.goto(request.url);
-        };
-
-        await requestList.initialize();
-        await browserCrawler.run();
-
-        expect(browserCrawler.sessionPool.constructor.name).toEqual('SessionPool');
-        expect(handlePageSessions).toHaveLength(1);
-        expect(goToPageSessions).toHaveLength(1);
-        handlePageSessions.forEach((session) => expect(session.constructor.name).toEqual('Session'));
-        goToPageSessions.forEach((session) => expect(session.constructor.name).toEqual('Session'));
     });
 
     test('should not throw without SessionPool', async () => {
@@ -421,14 +373,13 @@ describe('BrowserCrawler', () => {
                 loadedCookies.push(session.getCookieString(request.url));
                 return Promise.resolve();
             },
+            preNavigationHooks: [
+                async ({ session, page }) => {
+                    await page.setCookie({ name: 'TEST', value: '12321312312', domain: 'example.com', expires: Date.now() + 100000 });
+                    goToPageSessions.push(session);
+                },
+            ],
         });
-
-        // @ts-expect-error Overriding protected method
-        browserCrawler.gotoFunction = async ({ session, page, request }) => {
-            await page.setCookie({ name: 'TEST', value: '12321312312', domain: 'example.com', expires: Date.now() + 100000 });
-            goToPageSessions.push(session);
-            return page.goto(request.url);
-        };
 
         await requestList.initialize();
         await browserCrawler.run();
@@ -477,7 +428,7 @@ describe('BrowserCrawler', () => {
         });
 
         // @ts-expect-error Overriding protected method
-        crawler.gotoFunction = async ({ request }) => {
+        crawler._navigationHandler = async ({ request }) => {
             return { status: () => request.userData.statusCode };
         };
 
@@ -514,14 +465,13 @@ describe('BrowserCrawler', () => {
             requestHandler: async () => {
                 called = true;
             },
-            gotoFunction: ({ page, request }) => page.goto(request.url),
             failedRequestHandler: async ({ request }) => {
                 failedRequests.push(request);
             },
         });
 
         // @ts-expect-error Overriding protected method
-        crawler.gotoFunction = async ({ request }) => {
+        crawler._navigationHandler = async ({ request }) => {
             return { status: () => request.userData.statusCode };
         };
 
@@ -547,7 +497,16 @@ describe('BrowserCrawler', () => {
             resolve = r;
         });
         let called = false;
-        const browserCrawler = new BrowserCrawlerTest({
+        const browserCrawler = new class extends BrowserCrawlerTest {
+            protected override _navigationHandler(ctx: PuppeteerCrawlingContext): Promise<HTTPResponse | null | undefined> {
+                ctx.crawler.browserPool.on(BROWSER_POOL_EVENTS.BROWSER_RETIRED, () => {
+                    resolve();
+                    called = true;
+                });
+                ctx.session.retire();
+                return ctx.page.goto(ctx.request.url);
+            }
+        }({
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
             },
@@ -557,62 +516,12 @@ describe('BrowserCrawler', () => {
                 await retirementPromise;
             },
             maxRequestRetries: 1,
-            gotoFunction: async ({ session, crawler, page, request }) => {
-                crawler.browserPool.on(BROWSER_POOL_EVENTS.BROWSER_RETIRED, () => {
-                    resolve();
-                    called = true;
-                });
-
-                session.retire();
-
-                return page.goto(request.url);
-            },
         });
 
         await requestList.initialize();
         await browserCrawler.run();
 
         expect(called).toBeTruthy();
-    });
-
-    // TODO this test was always passing, after the assertions are fixed, the test actually fails (same way as in stable JS version)
-    test.skip('should remove browser listener on session pool', async () => {
-        const requestList = new RequestList({
-            sources: [
-                { url: 'http://example.com/?q=1' },
-                { url: 'http://example.com/?q=2' },
-            ],
-        });
-        const listenersPerSession: unknown[][] = [];
-        const browserCrawler = new BrowserCrawlerTest({
-            browserPoolOptions: {
-                browserPlugins: [puppeteerPlugin],
-                maxOpenPagesPerBrowser: 1,
-            },
-            requestList,
-            useSessionPool: true,
-            requestHandler: async () => {
-                return Promise.resolve();
-            },
-            maxRequestRetries: 1,
-            gotoFunction: async ({ session }) => {
-                // adding to array for future assertions - we can't use them here as they throw on failure which would make the test false positive
-                // @ts-expect-error Accessing private prop
-                listenersPerSession.push(session.sessionPool.listeners(EVENT_SESSION_RETIRED));
-                session.retire();
-            },
-        });
-
-        await requestList.initialize();
-        await browserCrawler.run();
-        await sleep(5000);
-
-        for (const listeners of listenersPerSession) {
-            expect(listeners).toHaveLength(1);
-        }
-
-        expect(browserCrawler.sessionPool.listeners(EVENT_SESSION_RETIRED)).toHaveLength(0);
-        await browserCrawler.browserPool.destroy();
     });
 
     test('should allow using fingerprints from browser pool', async () => {
@@ -633,13 +542,9 @@ describe('BrowserCrawler', () => {
             },
             requestList,
             useSessionPool: false,
-            gotoFunction: async ({ page, request }) => {
-                return page.goto(request.url);
-            },
             requestHandler: async ({ browserController }) => {
                 expect(browserController.launchContext.fingerprint).toBeDefined();
             },
-
         });
         await requestList.initialize();
 
@@ -687,13 +592,11 @@ describe('BrowserCrawler', () => {
                 },
                 useSessionPool: false,
                 persistCookiesPerSession: false,
+                navigationTimeoutSecs: 1,
                 requestList,
                 maxRequestsPerCrawl: 1,
                 maxRequestRetries: 0,
-
-                gotoFunction: ({ page, request }) => page.goto(request.url, { timeout: 1000 }),
-                requestHandler: async () => {
-                },
+                requestHandler: async () => {},
                 proxyConfiguration,
             });
             await browserCrawler.run();
@@ -729,7 +632,6 @@ describe('BrowserCrawler', () => {
                 requestList,
                 requestHandler,
 
-                gotoFunction: ({ page, request }) => page.goto(request.url),
                 proxyConfiguration,
                 useSessionPool: true,
                 sessionPoolOptions: {
@@ -770,10 +672,6 @@ describe('BrowserCrawler', () => {
                 maxRequestRetries: 0,
                 maxConcurrency: 1,
             });
-
-            // @ts-expect-error Overriding protected method
-            browserCrawler.gotoFunction = async () => {
-            };
 
             browserCrawler.browserPool.postLaunchHooks.push((_pageId, browserController) => {
                 browserProxies.push(browserController.launchContext.proxyUrl);
@@ -852,8 +750,8 @@ describe('BrowserCrawler', () => {
                 requestHandler,
                 failedRequestHandler,
             });
-            // @ts-expect-error Overriding private method
-            browserCrawler.gotoFunction = gotoFunction;
+            // @ts-expect-error Overriding protected method
+            browserCrawler._navigationHandler = gotoFunction;
 
             await browserCrawler.run();
         });
