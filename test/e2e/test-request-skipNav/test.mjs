@@ -1,5 +1,4 @@
 import { Actor } from 'apify';
-import { purgeLocalStorage } from '@crawlee/utils';
 import { CheerioCrawler, log, Request } from '@crawlee/cheerio';
 import { initialize, expect } from '../tools.mjs';
 
@@ -10,10 +9,7 @@ let navigationCounter = 0;
 
 // Persisting internal settings of `Request`.
 await Actor.main(async () => {
-    await purgeLocalStorage();
     log.setLevel(log.LEVELS.DEBUG);
-
-    const requestQueue = await Actor.openRequestQueue();
 
     const r1 = await new Request({
         url: 'https://example.com/?q=1',
@@ -30,12 +26,7 @@ await Actor.main(async () => {
 
     const r3 = await new Request({ url: 'https://example.com/?q=3' });
 
-    requestQueue.addRequest(r1);
-    requestQueue.addRequest(r2);
-    requestQueue.addRequest(r3);
-
     const crawler = new CheerioCrawler({
-        requestQueue,
         requestHandler: async (ctx) => {
             requestCounter++;
             if (ctx.request.skipNavigation) {
@@ -48,6 +39,8 @@ await Actor.main(async () => {
             () => { navigationCounter++; },
         ],
     });
+
+    await crawler.addRequests([r1, r2, r3]);
 
     await crawler.run();
 }, { exit: false, purge: true });
