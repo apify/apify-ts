@@ -9,7 +9,7 @@ import {
     RequestQueue,
     EnqueueLinksByClickingElementsOptions,
     BrowserCrawlerHandleFailedRequestInput,
-    PuppeteerCrawlContext,
+    PuppeteerCrawlingContext,
     PuppeteerCrawler,
     PuppeteerCrawlerOptions,
     puppeteerUtils,
@@ -285,7 +285,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
      */
-    private async _requestHandler(crawlingContext: PuppeteerCrawlContext) {
+    private async _requestHandler(crawlingContext: PuppeteerCrawlingContext) {
         const { request, response, crawler } = crawlingContext;
 
         /**
@@ -348,7 +348,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return true;
     }
 
-    private async _handleLinks({ request, enqueueLinks }: PuppeteerCrawlContext) {
+    private async _handleLinks({ request, enqueueLinks }: PuppeteerCrawlingContext) {
         if (!this.requestQueue) return;
         const currentDepth = (request.userData![META_KEY] as RequestMetadata).depth;
         const hasReachedMaxDepth = this.input.maxCrawlingDepth && currentDepth >= this.input.maxCrawlingDepth;

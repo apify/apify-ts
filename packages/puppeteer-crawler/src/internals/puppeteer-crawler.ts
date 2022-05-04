@@ -12,22 +12,17 @@ import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
-import { DirectNavigationOptions, gotoExtended } from './utils/puppeteer_utils';
+import { DirectNavigationOptions, gotoExtended, PuppeteerContextUtils, registerUtilsToContext } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
-
-export type PuppeteerCrawlContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
-
-export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext, PuppeteerGoToOptions>;
-
-export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
-
+export type PuppeteerCrawlingContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> & PuppeteerContextUtils;
+export type PuppeteerHook = BrowserHook<PuppeteerCrawlingContext, PuppeteerGoToOptions>;
+export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>;
 export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerRequestHandlerParam>;
-
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
 export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
-    PuppeteerCrawlContext,
+    PuppeteerCrawlingContext,
     PuppeteerGoToOptions,
     { browserPlugins: [PuppeteerPlugin] }
 > {
@@ -131,7 +126,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  * ```
  * @category Crawlers
  */
-export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlContext> {
+export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlingContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
@@ -164,7 +159,13 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
         super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions });
     }
 
-    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlContext, gotoOptions: DirectNavigationOptions) {
+    protected override async _runRequestHandler(context: PuppeteerCrawlingContext) {
+        registerUtilsToContext(context);
+        // eslint-disable-next-line no-underscore-dangle
+        await super._runRequestHandler(context);
+    }
+
+    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlingContext, gotoOptions: DirectNavigationOptions) {
         // TODO remove deprecated options in v3
         if (this.gotoFunction) {
             this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');

@@ -11,24 +11,18 @@ import {
 } from '@crawlee/browser';
 import { Cookie } from 'tough-cookie';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from './playwright-launcher';
-import { DirectNavigationOptions, gotoExtended } from './utils/playwright-utils';
+import { DirectNavigationOptions, gotoExtended, PlaywrightContextUtils, registerUtilsToContext } from './utils/playwright-utils';
 
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
-
-export type PlaywrightCrawlContext = BrowserCrawlingContext<Page, Response, PlaywrightController>
-
-export type PlaywrightHook = BrowserHook<PlaywrightCrawlContext, PlaywrightGotoOptions>;
-
+export type PlaywrightCrawlingContext = BrowserCrawlingContext<Page, Response, PlaywrightController> & PlaywrightContextUtils;
+export type PlaywrightHook = BrowserHook<PlaywrightCrawlingContext, PlaywrightGotoOptions>;
 export type PlaywrightRequestHandlerParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
-
 export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightRequestHandlerParam>;
-
 export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
-
 export type PlaywrightCookie = Parameters<ReturnType<Page['context']>['addCookies']>[0][0];
 
 export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
-    PlaywrightCrawlContext,
+    PlaywrightCrawlingContext,
     PlaywrightGotoOptions,
     { browserPlugins: [PlaywrightPlugin] }
 > {
@@ -212,7 +206,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
  * ```
  * @category Crawlers
  */
-export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [PlaywrightPlugin] }, LaunchOptions, PlaywrightCrawlContext> {
+export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [PlaywrightPlugin] }, LaunchOptions, PlaywrightCrawlingContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
@@ -245,7 +239,13 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
         this.launchContext = launchContext;
     }
 
-    protected override async _navigationHandler(crawlingContext: PlaywrightCrawlContext, gotoOptions: DirectNavigationOptions) {
+    protected override async _runRequestHandler(context: PlaywrightCrawlingContext) {
+        registerUtilsToContext(context);
+        // eslint-disable-next-line no-underscore-dangle
+        await super._runRequestHandler(context);
+    }
+
+    protected override async _navigationHandler(crawlingContext: PlaywrightCrawlingContext, gotoOptions: DirectNavigationOptions) {
         if (this.gotoFunction) {
             this.log.deprecated('PlaywrightCrawler.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
             return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
@@ -254,7 +254,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
     }
 
-    protected override async _applyCookies({ session, request, page }: PlaywrightCrawlContext, preHooksCookies: string, postHooksCookies: string) {
+    protected override async _applyCookies({ session, request, page }: PlaywrightCrawlingContext, preHooksCookies: string, postHooksCookies: string) {
         const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
         const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON() as PlaywrightCookie | undefined);
         const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON() as PlaywrightCookie | undefined);

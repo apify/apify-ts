@@ -24,6 +24,7 @@ import { Page, Response, Route } from 'playwright';
 import log_ from '@apify/log';
 import { validators, Request } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
+import { PlaywrightCrawlingContext } from '../playwright-crawler';
 
 const log = log_.child({ prefix: 'Playwright Utils' });
 
@@ -105,4 +106,12 @@ export async function gotoExtended(page: Page, request: Request, gotoOptions: Di
     }
 
     return page.goto(url, gotoOptions);
+}
+
+export interface PlaywrightContextUtils {
+    // TODO update when we have some utils
+}
+
+export function registerUtilsToContext(_context: PlaywrightCrawlingContext): void {
+    // TODO register utils to context when we have some (to be backported from apify-js)
 }
