@@ -1,0 +1,285 @@
+import type { storage } from '@crawlee/core';
+import { s } from '@sapphire/shapeshift';
+import mime from 'mime-types';
+import { randomUUID } from 'node:crypto';
+import { Readable } from 'node:stream';
+import { maybeParseBody } from '../body-parser';
+import { DEFAULT_API_PARAM_LIMIT, StorageTypes } from '../consts';
+import { keyValueStores } from '../memory-stores';
+import { isBuffer, isStream } from '../utils';
+import { BaseClient } from './common/base-client';
+
+const DEFAULT_LOCAL_FILE_EXTENSION = 'bin';
+
+export interface KeyValueStoreClientOptions {
+    name?: string;
+    id?: string;
+}
+
+export interface InternalKeyRecord {
+    key: string;
+    value: Buffer | string;
+    contentType?: string;
+    extension: string;
+}
+
+export class KeyValueStoreClient extends BaseClient {
+    name?: string;
+    createdAt = new Date();
+    accessedAt = new Date();
+    modifiedAt = new Date();
+
+    private readonly keyValueEntries = new Map<string, InternalKeyRecord>();
+
+    constructor(options: KeyValueStoreClientOptions = {}) {
+        super(options.id ?? randomUUID());
+        this.name = options.name;
+    }
+
+    async get(): Promise<storage.KeyValueStoreInfo | undefined> {
+        const found = keyValueStores.find((store) => store.id === this.id);
+
+        if (found) {
+            found.updateTimestamps(false);
+            return found.toKeyValueStoreInfo();
+        }
+
+        return undefined;
+    }
+
+    async update(newFields: storage.KeyValueStoreClientUpdateOptions): Promise<storage.KeyValueStoreInfo> {
+        const parsed = s.object({
+            name: s.string.lengthGt(0).optional,
+        }).partial.parse(newFields);
+
+        // Check by id
+        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+
+        if (!existingStoreById) {
+            this.throwOnNonExisting(StorageTypes.KeyValueStore);
+        }
+
+        // Skip if no changes
+        if (!parsed.name) {
+            return existingStoreById.toKeyValueStoreInfo();
+        }
+
+        // Check that name is not in use already
+        const existingStoreByName = keyValueStores.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
+
+        if (!existingStoreByName) {
+            this.throwOnDuplicateEntry(StorageTypes.KeyValueStore, 'name', parsed.name);
+        }
+
+        existingStoreById.name = parsed.name;
+
+        // Update timestamps
+        existingStoreById.updateTimestamps(true);
+
+        return existingStoreById.toKeyValueStoreInfo();
+    }
+
+    async delete(): Promise<void> {
+        const storeIndex = keyValueStores.findIndex((store) => store.id === this.id);
+
+        if (storeIndex !== -1) {
+            keyValueStores.splice(storeIndex, 1);
+        }
+    }
+
+    async listKeys(options: storage.KeyValueStoreClientListOptions = {}): Promise<storage.KeyValueStoreClientListData> {
+        const {
+            limit = DEFAULT_API_PARAM_LIMIT,
+            exclusiveStartKey,
+        } = s.object({
+            limit: s.number.gt(0).optional,
+            exclusiveStartKey: s.string.optional,
+        }).parse(options);
+
+        // Check by id
+        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+
+        if (!existingStoreById) {
+            this.throwOnNonExisting(StorageTypes.KeyValueStore);
+        }
+
+        const items = [];
+
+        for (const record of existingStoreById.keyValueEntries.values()) {
+            const size = Buffer.byteLength(record.value);
+            items.push({
+                key: record.key,
+                size,
+            });
+        }
+
+        // Lexically sort to emulate API.
+        // TODO(vladfrangu): ensure the sorting works the same way as before (if it matters)
+        items.sort((a, b) => {
+            return a.key.localeCompare(b.key);
+        });
+
+        let truncatedItems = items;
+        if (exclusiveStartKey) {
+            const keyPos = items.findIndex((item) => item.key === exclusiveStartKey);
+            if (keyPos !== -1) truncatedItems = items.slice(keyPos + 1);
+        }
+
+        const limitedItems = truncatedItems.slice(0, limit);
+
+        const lastItemInStore = items[items.length - 1];
+        const lastSelectedItem = limitedItems[limitedItems.length - 1];
+        const isLastSelectedItemAbsolutelyLast = lastItemInStore === lastSelectedItem;
+        const nextExclusiveStartKey = isLastSelectedItemAbsolutelyLast
+            ? undefined
+            : lastSelectedItem.key;
+
+        this.updateTimestamps(false);
+
+        return {
+            count: items.length,
+            limit,
+            exclusiveStartKey,
+            isTruncated: !isLastSelectedItemAbsolutelyLast,
+            nextExclusiveStartKey,
+            items: limitedItems,
+        };
+    }
+
+    async getRecord(key: string, options: storage.KeyValueStoreClientGetRecordOptions = {}): Promise<storage.KeyValueStoreRecord | undefined> {
+        s.string.parse(key);
+        s.object({
+            buffer: s.boolean.optional,
+            // These options are ignored, but kept here
+            // for validation consistency with API client.
+            stream: s.boolean.optional,
+            disableRedirect: s.boolean.optional,
+        }).parse(options);
+
+        // Check by id
+        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+
+        if (!existingStoreById) {
+            this.throwOnNonExisting(StorageTypes.KeyValueStore);
+        }
+
+        const entry = existingStoreById.keyValueEntries.get(key);
+
+        if (!entry) {
+            return undefined;
+        }
+
+        const record: storage.KeyValueStoreRecord = {
+            key: entry.key,
+            value: entry.value,
+            contentType: entry.contentType ?? mime.contentType(entry.extension) as string,
+        };
+
+        if (options.stream) {
+            record.value = Readable.from(record.value);
+        } else if (options.buffer) {
+            record.value = Buffer.from(record.value);
+        } else {
+            record.value = maybeParseBody(record.value, record.contentType!);
+        }
+
+        this.updateTimestamps(false);
+
+        return record;
+    }
+
+    async setRecord(record: storage.KeyValueStoreRecord): Promise<void> {
+        s.object({
+            key: s.string.lengthGt(0),
+            value: s.union(s.null, s.string, s.number, s.object({}).partial),
+            contentType: s.string.lengthGt(0).optional,
+        }).parse(record);
+
+        // Check by id
+        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+
+        if (!existingStoreById) {
+            this.throwOnNonExisting(StorageTypes.KeyValueStore);
+        }
+
+        const { key } = record;
+        let { value, contentType } = record;
+
+        const valueIsStream = isStream(value);
+
+        const isValueStreamOrBuffer = valueIsStream || isBuffer(value);
+        // To allow saving Objects to JSON without providing content type
+        if (!contentType) {
+            if (isValueStreamOrBuffer) contentType = 'application/octet-stream';
+            else if (typeof value === 'string') contentType = 'text/plain; charset=utf-8';
+            else contentType = 'application/json; charset=utf-8';
+        }
+
+        const extension = mime.extension(contentType) || DEFAULT_LOCAL_FILE_EXTENSION;
+
+        const isContentTypeJson = extension === 'json';
+
+        if (isContentTypeJson && !isValueStreamOrBuffer && typeof value !== 'string') {
+            try {
+                value = JSON.stringify(value, null, 2);
+            } catch (err: any) {
+                const msg = `The record value cannot be stringified to JSON. Please provide other content type.\nCause: ${err.message}`;
+                throw new Error(msg);
+            }
+        }
+
+        if (valueIsStream) {
+            const chunks = [];
+            for await (const chunk of value) {
+                chunks.push(chunk);
+            }
+            value = Buffer.concat(chunks);
+        }
+
+        existingStoreById.keyValueEntries.set(key, {
+            extension,
+            key,
+            value,
+            contentType,
+        });
+
+        this.updateTimestamps(true);
+    }
+
+    async deleteRecord(key: string): Promise<void> {
+        s.string.parse(key);
+
+        // Check by id
+        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+
+        if (!existingStoreById) {
+            this.throwOnNonExisting(StorageTypes.KeyValueStore);
+        }
+
+        const entry = existingStoreById.keyValueEntries.get(key);
+
+        if (entry) {
+            existingStoreById.keyValueEntries.delete(key);
+            existingStoreById.updateTimestamps(true);
+        }
+    }
+
+    toKeyValueStoreInfo(): storage.KeyValueStoreInfo {
+        return {
+            id: this.id,
+            name: this.name,
+            accessedAt: this.accessedAt,
+            createdAt: this.createdAt,
+            modifiedAt: this.modifiedAt,
+            userId: '1',
+        };
+    }
+
+    private updateTimestamps(hasBeenModified: boolean) {
+        this.accessedAt = new Date();
+
+        if (hasBeenModified) {
+            this.modifiedAt = new Date();
+        }
+    }
+}
