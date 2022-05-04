@@ -26,10 +26,11 @@ import util from 'util';
 import { LruCache } from '@apify/datastructures';
 import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log_ from '@apify/log';
-import { KeyValueStore, Request, validators } from '@crawlee/core';
+import { KeyValueStore, Request, storage, validators } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
-import { enqueueLinksByClickingElements } from '../enqueue-links/click-elements';
-import { addInterceptRequestHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
+import { enqueueLinksByClickingElements, EnqueueLinksByClickingElementsOptions } from '../enqueue-links/click-elements';
+import { addInterceptRequestHandler, InterceptHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
+import { PuppeteerCrawlingContext } from '../puppeteer-crawler';
 
 const jqueryPath = require.resolve('jquery');
 const readFilePromised = util.promisify(fs.readFile);
@@ -601,6 +602,41 @@ export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}
     } catch (err) {
         throw new Error(`saveSnapshot with key ${key} failed.\nCause:${(err as Error).message}`);
     }
+}
+
+export interface PuppeteerContextUtils {
+    injectFile(filePath: string, options?: InjectFileOptions): Promise<unknown>;
+    injectJQuery(): Promise<unknown>;
+    enqueueLinksByClickingElements(options: Omit<EnqueueLinksByClickingElementsOptions, 'page' | 'requestQueue'>): Promise<storage.BatchAddRequestsResult>;
+    blockRequests(options?: BlockRequestsOptions): Promise<void>;
+    blockResources(resourceTypes?: string[]): Promise<void>;
+    cacheResponses(cache: Dictionary<Partial<ResponseForRequest>>, responseUrlRules: (string | RegExp)[]): Promise<void>;
+    compileScript(scriptString: string, ctx?: Dictionary): CompiledScriptFunction;
+    addInterceptRequestHandler(handler: InterceptHandler): Promise<void>;
+    removeInterceptRequestHandler(handler: InterceptHandler): Promise<void>;
+    infiniteScroll(options?: InfiniteScrollOptions): Promise<void>;
+    saveSnapshot(options?: SaveSnapshotOptions): Promise<void>;
+}
+
+/** @internal */
+export function registerUtilsToContext(context: PuppeteerCrawlingContext): void {
+    context.injectFile = (filePath: string, options?: InjectFileOptions) => injectFile(context.page, filePath, options);
+    context.injectJQuery = () => injectJQuery(context.page);
+    context.enqueueLinksByClickingElements = (options: Omit<EnqueueLinksByClickingElementsOptions, 'page' | 'requestQueue'>) => enqueueLinksByClickingElements({
+        page: context.page,
+        requestQueue: context.crawler.requestQueue!,
+        ...options,
+    });
+    context.blockRequests = (options?: BlockRequestsOptions) => blockRequests(context.page, options);
+    context.blockResources = (resourceTypes?: string[]) => blockResources(context.page, resourceTypes);
+    context.cacheResponses = (cache: Dictionary<Partial<ResponseForRequest>>, responseUrlRules: (string | RegExp)[]) => {
+        return cacheResponses(context.page, cache, responseUrlRules);
+    };
+    context.compileScript = (scriptString: string, ctx?: Dictionary) => compileScript(scriptString, ctx);
+    context.addInterceptRequestHandler = (handler: InterceptHandler) => addInterceptRequestHandler(context.page, handler);
+    context.removeInterceptRequestHandler = (handler: InterceptHandler) => removeInterceptRequestHandler(context.page, handler);
+    context.infiniteScroll = (options?: InfiniteScrollOptions) => infiniteScroll(context.page, options);
+    context.saveSnapshot = (options?: SaveSnapshotOptions) => saveSnapshot(context.page, options);
 }
 
 export {

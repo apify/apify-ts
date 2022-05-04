@@ -1,16 +1,17 @@
 import { Actor } from 'apify';
-import { PuppeteerCrawler, puppeteerUtils } from '@crawlee/puppeteer';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import { getDatasetItems, initialize, expect, validateDataset, delay } from '../tools.mjs';
 
 await initialize(import.meta.url);
 
 const crawler = new PuppeteerCrawler({
-    async requestHandler({ page, enqueueLinks, request, log }) {
+    async requestHandler(ctx) {
+        const { page, enqueueLinks, request, log } = ctx;
         const { userData: { label } } = request;
 
         switch (label) {
             case 'START': return handleStart();
-            case 'DETAIL': return handleDetail();
+            case 'DETAIL': return handleDetail(ctx);
             default: log.error(`Unknown label: ${label}`);
         }
 
@@ -47,14 +48,17 @@ const crawler = new PuppeteerCrawler({
             }
         }
 
-        async function handleDetail() {
-            await puppeteerUtils.injectJQuery(page);
+        /** @param {import('@crawlee/puppeteer').PuppeteerCrawlingContext} ctx */
+        async function handleDetail(ctx) {
+            await ctx.injectJQuery();
 
             const { url } = request;
             log.info(`Scraping ${url}`);
 
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
 
+            /** @type any */
+            let $ = {};
             const results = await page.evaluate(() => ({
                 // eslint-disable-next-line no-undef
                 title: $('header h1').text(),
