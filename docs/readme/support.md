@@ -2,7 +2,7 @@
 ---
 ## Support
 
-If you find any bug or issue with the Apify SDK, please [submit an issue on GitHub](https://github.com/apify/apify-js/issues).
+If you find any bug or issue with Crawlee, please [submit an issue on GitHub](https://github.com/apify/apify-js/issues).
 For questions, you can ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/apify) or contact support@apify.com
 
 ## Contributing
