@@ -168,7 +168,7 @@ export class Request {
 
         Object.defineProperties(this, {
             _userData: {
-                value: { ...userData },
+                value: { __crawlee: {}, ...userData },
                 enumerable: false,
                 writable: true,
             },
@@ -193,6 +193,9 @@ export class Request {
                 enumerable: true,
             },
         });
+
+        // reassign userData to ensure internal `__crawlee` object is non-enumerable
+        this.userData = userData;
 
         if (skipNavigation != null) this.skipNavigation = skipNavigation;
     }

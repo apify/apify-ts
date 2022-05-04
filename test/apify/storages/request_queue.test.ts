@@ -679,4 +679,33 @@ describe('RequestQueue remote', () => {
         expect(request.handledAt).toBeUndefined();
         expect(request.method).toBe(method);
     });
+
+    test('Request.userData.__crawlee internal object is non-enumerable and always defined', async () => {
+        const url = 'http://example.com';
+        const method = 'POST';
+        const r1 = new Request({
+            url,
+            method,
+            userData: { __crawlee: { skipNavigation: true, foo: 123, bar: true } },
+        });
+        const r2 = new Request({
+            url,
+            method,
+            userData: {},
+        });
+        const r3 = new Request({
+            url,
+            method,
+        });
+        const desc1 = Object.getOwnPropertyDescriptor(r1.userData, '__crawlee');
+        expect(desc1.enumerable).toBe(false);
+        expect(r1.skipNavigation).toBe(true);
+        expect(r1.userData.__crawlee).toMatchObject({ skipNavigation: true, foo: 123, bar: true });
+        const desc2 = Object.getOwnPropertyDescriptor(r2.userData, '__crawlee');
+        expect(desc2.enumerable).toBe(false);
+        expect(r2.userData.__crawlee).toEqual({});
+        const desc3 = Object.getOwnPropertyDescriptor(r3.userData, '__crawlee');
+        expect(desc3.enumerable).toBe(false);
+        expect(r3.userData.__crawlee).toEqual({});
+    });
 });
