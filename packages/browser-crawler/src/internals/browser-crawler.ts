@@ -506,18 +506,20 @@ export abstract class BrowserCrawler<
         const { request, session } = crawlingContext;
 
         try {
-            await this._handleNavigation(crawlingContext);
-            tryCancel();
-
-            await this._responseHandler(crawlingContext);
-            tryCancel();
-
-            // save cookies
-            // TODO: Should we save the cookies also after/only the handle page?
-            if (this.persistCookiesPerSession) {
-                const cookies = await crawlingContext.browserController.getCookies(page);
+            if (!request.skipNavigation) {
+                await this._handleNavigation(crawlingContext);
                 tryCancel();
-                session?.setPuppeteerCookies(cookies, request.loadedUrl!);
+
+                await this._responseHandler(crawlingContext);
+                tryCancel();
+
+                // save cookies
+                // TODO: Should we save the cookies also after/only the handle page?
+                if (this.persistCookiesPerSession) {
+                    const cookies = await crawlingContext.browserController.getCookies(page);
+                    tryCancel();
+                    session?.setPuppeteerCookies(cookies, request.loadedUrl!);
+                }
             }
 
             await addTimeoutToPromise(
