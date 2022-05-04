@@ -11,20 +11,20 @@ let navigationCounter = 0;
 await Actor.main(async () => {
     log.setLevel(log.LEVELS.DEBUG);
 
-    const r1 = await new Request({
+    const r1 = new Request({
         url: 'https://example.com/?q=1',
         skipNavigation: true,
         userData: { abc: { def: 'ghi' } },
     });
 
-    const r2 = await new Request({
+    const r2 = new Request({
         url: 'https://example.com/?q=2',
         skipNavigation: true,
     });
 
     r2.userData = { xyz: { kjl: 'mno' } };
 
-    const r3 = await new Request({ url: 'https://example.com/?q=3' });
+    const r3 = new Request({ url: 'https://example.com/?q=3' });
 
     const crawler = new CheerioCrawler({
         requestHandler: async (ctx) => {
