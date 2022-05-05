@@ -134,7 +134,7 @@ export class KeyValueStoreClient extends BaseClient {
             ? undefined
             : lastSelectedItem.key;
 
-        this.updateTimestamps(false);
+        existingStoreById.updateTimestamps(false);
 
         return {
             count: items.length,
@@ -183,7 +183,7 @@ export class KeyValueStoreClient extends BaseClient {
             record.value = maybeParseBody(record.value, record.contentType!);
         }
 
-        this.updateTimestamps(false);
+        existingStoreById.updateTimestamps(false);
 
         return record;
     }
@@ -243,7 +243,7 @@ export class KeyValueStoreClient extends BaseClient {
             contentType,
         });
 
-        this.updateTimestamps(true);
+        existingStoreById.updateTimestamps(true);
     }
 
     async deleteRecord(key: string): Promise<void> {

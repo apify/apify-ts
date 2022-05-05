@@ -122,7 +122,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             items.push(existingStoreById.datasetEntries.get(entryNumber)!);
         }
 
-        this.updateTimestamps(false);
+        existingStoreById.updateTimestamps(false);
 
         return {
             count: items.length,
