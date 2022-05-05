@@ -48,10 +48,10 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         return undefined;
     }
 
-    async update(newFields: storage.DatasetClientUpdateOptions): Promise<storage.DatasetInfo> {
+    async update(newFields: storage.DatasetClientUpdateOptions = {}): Promise<storage.DatasetInfo> {
         const parsed = s.object({
             name: s.string.lengthGt(0).optional,
-        }).partial.parse(newFields);
+        }).parse(newFields);
 
         // Check by id
         const existingStoreById = datasetClients.find((store) => store.id === this.id);

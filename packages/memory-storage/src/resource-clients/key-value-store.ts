@@ -47,10 +47,10 @@ export class KeyValueStoreClient extends BaseClient {
         return undefined;
     }
 
-    async update(newFields: storage.KeyValueStoreClientUpdateOptions): Promise<storage.KeyValueStoreInfo> {
+    async update(newFields: storage.KeyValueStoreClientUpdateOptions = {}): Promise<storage.KeyValueStoreInfo> {
         const parsed = s.object({
             name: s.string.lengthGt(0).optional,
-        }).partial.parse(newFields);
+        }).parse(newFields);
 
         // Check by id
         const existingStoreById = keyValueStores.find((store) => store.id === this.id);
@@ -191,7 +191,7 @@ export class KeyValueStoreClient extends BaseClient {
     async setRecord(record: storage.KeyValueStoreRecord): Promise<void> {
         s.object({
             key: s.string.lengthGt(0),
-            value: s.union(s.null, s.string, s.number, s.object({}).partial),
+            value: s.union(s.null, s.string, s.number, s.object({}).passthrough),
             contentType: s.string.lengthGt(0).optional,
         }).parse(record);
 

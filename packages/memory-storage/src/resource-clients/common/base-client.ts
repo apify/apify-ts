@@ -11,7 +11,7 @@ export class BaseClient {
         throw new Error(`${clientType} with id: ${this.id} does not exist.`);
     }
 
-    protected throwOnDuplicateEntry(clientType: StorageTypes, keyName:string, value: string): never {
+    protected throwOnDuplicateEntry(clientType: StorageTypes, keyName: string, value: string): never {
         throw new Error(`${clientType} with ${keyName}: ${value} already exists.`);
     }
 }

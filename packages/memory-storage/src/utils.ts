@@ -47,7 +47,7 @@ export function isStream(value: unknown): boolean {
         s.object({
             on: s.any,
             pipe: s.any,
-        }).partial.parse(value);
+        }).passthrough.parse(value);
 
         return true;
     } catch {
