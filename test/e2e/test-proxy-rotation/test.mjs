@@ -8,6 +8,7 @@ const store = await KeyValueStore.open();
 
 const crawler = new PuppeteerCrawler({
     async requestHandler({ page }) {
+        // @ts-ignore
         const pageContent = await page.evaluate(() => document.body.children[0].innerText);
         const parsed = JSON.parse(pageContent);
 

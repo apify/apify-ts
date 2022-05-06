@@ -53,6 +53,6 @@
         "@crawlee/core": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
         "semver": "^7.3.5",
-        "apify-client": "^2.2.1-beta.5"
+        "apify-client": "^2.3.1"
     }
 }

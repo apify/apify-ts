@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { setTimeout as sleep } from 'node:timers/promises';
 import fs from 'fs-extra';
 import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
 
@@ -89,6 +88,17 @@ export async function initialize(url) {
 }
 
 /**
+ * @param {number} timeout
+ */
+function waitSync(timeout) {
+    const now = Date.now();
+
+    while (true) {
+        if (Date.now() - now >= timeout) break;
+    }
+}
+
+/**
  * @param {boolean} bool
  * @param {string} message
  */
@@ -97,6 +107,7 @@ export function expect(bool, message) {
         console.log(`[assertion] passed: ${message}`);
     } else {
         console.log(`[assertion] failed: ${message}`);
+        waitSync(10);
         process.exit(1);
     }
 }
@@ -110,10 +121,27 @@ export async function skipTest(reason) {
 }
 
 /**
- * @param {number} ms
+ * @param {Record<string, any>} item
+ * @param {string} propName
+ * @returns {boolean}
  */
-export function delay(ms) {
-    return sleep(ms);
+function checkDatasetItem(item, propName) {
+    console.log('checkDatasetItem', item, propName);
+    if (!item.hasOwnProperty(propName)) {
+        console.log(1);
+        return false;
+    }
+
+    switch (propName) {
+        case 'url':
+            return item.url.match(URL_NO_COMMAS_REGEX);
+        case 'modifiedDate':
+            return !Number.isNaN(Date.parse(item.modifiedDate));
+        case 'runCount':
+            return Number.isInteger(item.runCount);
+        default:
+            return typeof item[propName] === 'string';
+    }
 }
 
 /**
@@ -122,32 +150,13 @@ export function delay(ms) {
  */
 export function validateDataset(items, schema = []) {
     for (const item of items) {
-        if (!item.hasOwnProperty('url') || !item.url.match(URL_NO_COMMAS_REGEX)) {
-            return false;
-        }
-
-        const modifiedDateIndex = schema.indexOf('modifiedDate');
-        if (modifiedDateIndex !== -1) {
-            if (!item.hasOwnProperty('modifiedDate') || Number.isNaN(Date.parse(item.modifiedDate))) {
-                return false;
-            }
-            schema.splice(modifiedDateIndex, 1);
-        }
-
-        const runCountIndex = schema.indexOf('runCount');
-        if (runCountIndex !== -1) {
-            if (!item.hasOwnProperty('runCount') || !Number.isInteger(item.runCount)) {
-                return false;
-            }
-            schema.splice(runCountIndex, 1);
-        }
-
         for (const propName of schema) {
-            if (!item.hasOwnProperty(propName) || typeof item[propName] !== 'string') {
+            if (!checkDatasetItem(item, propName)) {
                 return false;
             }
         }
     }
+
     return true;
 }
 
