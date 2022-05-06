@@ -1,6 +1,7 @@
 name: E2E tests (local)
 
 on:
+    workflow_dispatch:
     schedule:
         # Runs at 2 am every day
         - cron: '0 2 * * *'
