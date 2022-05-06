@@ -175,20 +175,30 @@ export class Request {
             userData: {
                 get: () => this._userData,
                 set: (value: Record<string, any>) => {
-                    const newValue = { ...value };
-                    Object.defineProperties(newValue, {
+                    Object.defineProperties(value, {
                         __crawlee: {
                             // eslint-disable-next-line no-underscore-dangle
                             value: this._userData.__crawlee,
                             enumerable: false,
+                            writable: true,
                         },
                         toJSON: {
                             // eslint-disable-next-line no-underscore-dangle
-                            value: () => ({ ...this._userData, __crawlee: this._userData.__crawlee }),
+                            value: () => {
+                                if (Object.keys(this._userData.__crawlee).length > 0) {
+                                    return ({
+                                        ...this._userData,
+                                        __crawlee: this._userData.__crawlee,
+                                    });
+                                }
+
+                                return this._userData;
+                            },
                             enumerable: false,
+                            writable: true,
                         },
                     });
-                    this._userData = newValue;
+                    this._userData = value;
                 },
                 enumerable: true,
             },

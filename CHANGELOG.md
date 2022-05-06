@@ -20,6 +20,7 @@
 - stealth mode has been removed in favour of fingerprints and fingerprints are now enabled by default
 - `prepareRequestFunction` and `postResponseFunction` options are removed, use navigation hooks instead
 - `gotoFunction` and `gotoTimeoutSecs` are removed
+- removed compatibility fix for old/broken request queues with null Request props
 
 2.3.0 / 2022/04/07
 ====================

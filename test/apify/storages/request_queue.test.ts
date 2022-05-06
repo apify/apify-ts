@@ -656,30 +656,6 @@ describe('RequestQueue remote', () => {
         expect(deleteMock).toHaveBeenLastCalledWith();
     });
 
-    test('getRequest should remove nulls from stored requests', async () => {
-        const url = 'http://example.com';
-        const method = 'POST';
-        const queue = new RequestQueue({ id: 'some-id', name: 'some-name', client: storageClient });
-        const getRequestMock = jest
-            .spyOn(queue.client, 'getRequest')
-            .mockResolvedValueOnce({
-                url,
-                loadedUrl: null,
-                errorMessages: null,
-                handledAt: null,
-                method,
-            });
-
-        const request = await queue.getRequest('abc');
-        expect(getRequestMock).toBeCalledTimes(1);
-        expect(getRequestMock).toHaveBeenLastCalledWith('abc');
-        expect(request.url).toBe(url);
-        expect(request.loadedUrl).toBeUndefined();
-        expect(request.errorMessages).toEqual([]);
-        expect(request.handledAt).toBeUndefined();
-        expect(request.method).toBe(method);
-    });
-
     test('Request.userData.__crawlee internal object is non-enumerable and always defined', async () => {
         const url = 'http://example.com';
         const method = 'POST';

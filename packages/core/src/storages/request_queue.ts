@@ -4,7 +4,6 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import crypto from 'crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
-import { Dictionary, entries } from '../typedefs';
 import { StorageManager } from './storage_manager';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
@@ -188,8 +187,6 @@ export class RequestQueue {
 
     // Caching requests to avoid redundant addRequest() calls.
     // Key is computed using getRequestId() and value is { id, isHandled }.
-    // TODO: We could extend the caching to improve performance
-    //       of other operations such as fetchNextRequest().
     requestsCache = new LruCache<
         Pick<QueueOperationInfo, 'uniqueKey' | 'wasAlreadyHandled'> & { isHandled: boolean; id: string }
     >({ maxLength: MAX_CACHED_REQUESTS });
@@ -388,21 +385,10 @@ export class RequestQueue {
     async getRequest(id: string): Promise<Request | null> {
         ow(id, ow.string);
 
-        // TODO: Could we also use requestsCache here? It would be consistent with addRequest()
-        //   Downside is that it wouldn't reflect changes from outside...
         const requestOptions = await this.client.getRequest(id);
         if (!requestOptions) return null;
 
-        // TODO: compatibility fix for old/broken request queues with null Request props
-        const optionsWithoutNulls = entries(requestOptions).reduce((opts, [key, value]) => {
-            if (value !== null) {
-                opts[key] = value;
-            }
-
-            return opts;
-        }, {} as Dictionary);
-
-        return new Request(optionsWithoutNulls as unknown as RequestOptions);
+        return new Request(requestOptions as unknown as RequestOptions);
     }
 
     /**
