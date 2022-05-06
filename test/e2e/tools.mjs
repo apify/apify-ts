@@ -126,9 +126,7 @@ export async function skipTest(reason) {
  * @returns {boolean}
  */
 function checkDatasetItem(item, propName) {
-    console.log('checkDatasetItem', item, propName);
     if (!item.hasOwnProperty(propName)) {
-        console.log(1);
         return false;
     }
 
