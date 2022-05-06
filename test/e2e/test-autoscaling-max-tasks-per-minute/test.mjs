@@ -25,7 +25,7 @@ const crawler = new BasicCrawler({
 await crawler.addRequests(['https://example.com/1', 'https://example.com/2']);
 
 const start = Date.now();
-await Actor.main(() => crawler.run(), { exit: false, purge: true });
+await Actor.main(() => crawler.run(), { exit: false });
 const finish = Date.now();
 
 const difference = finish - start;

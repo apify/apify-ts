@@ -44,12 +44,11 @@ const crawler = new PuppeteerCrawler({
 
 await crawler.addRequests([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
 
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await Actor.main(() => crawler.run(), { exit: false });
 expect(stats.requestsFinished > 20, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 5, 'Minimum number of dataset items');
-await delay(1);
 expect(validateDataset(datasetItems, ['title']), 'Dataset items validation');
 
 process.exit(0);

@@ -84,14 +84,12 @@ const crawler = new PuppeteerCrawler({
 
 await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
 
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await Actor.main(() => crawler.run(), { exit: false });
 expect(stats.requestsFinished > 700, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 700, 'Minimum number of dataset items');
-await delay(1);
 expect(datasetItems.length < 1000, 'Maximum number of dataset items');
-await delay(1);
 expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
     'Dataset items validation');
 

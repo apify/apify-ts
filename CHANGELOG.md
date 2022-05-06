@@ -21,6 +21,7 @@
 - `prepareRequestFunction` and `postResponseFunction` options are removed, use navigation hooks instead
 - `gotoFunction` and `gotoTimeoutSecs` are removed
 - removed compatibility fix for old/broken request queues with null Request props
+- `Actor.main/init` purges the storage by default
 
 2.3.0 / 2022/04/07
 ====================

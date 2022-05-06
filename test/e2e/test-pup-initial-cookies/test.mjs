@@ -52,7 +52,7 @@ const crawler = new PuppeteerCrawler({
 
 await crawler.addRequests(['https://api.apify.com/v2/browser-info']);
 
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await Actor.main(() => crawler.run(), { exit: false });
 
 expect(stats.requestsFinished === 1, 'All requests finished');
 

@@ -24,7 +24,7 @@ const crawler = new PuppeteerCrawler({
 });
 
 await crawler.addRequests(['https://apify.com/about']);
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await Actor.main(() => crawler.run(), { exit: false });
 expect(stats.requestsFinished > 50, 'All requests finished');
 
 process.exit(0);

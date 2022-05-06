@@ -43,7 +43,7 @@ await Actor.main(async () => {
     await crawler.addRequests([r1, r2, r3]);
 
     await crawler.run();
-}, { exit: false, purge: true });
+}, { exit: false });
 
 expect(requestCounter === 3, 'Processed 3 requests');
 expect(navigationCounter === 1, 'Navigated on one request only.');

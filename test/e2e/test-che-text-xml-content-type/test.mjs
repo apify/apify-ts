@@ -19,7 +19,7 @@ const crawler = new CheerioCrawler({
 
 await crawler.addRequests(['https://apify.com/sitemap.xml']);
 
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await Actor.main(() => crawler.run(), { exit: false });
 
 expect(stats.requestsFinished === 1, 'All requests finished');
 

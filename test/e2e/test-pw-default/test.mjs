@@ -24,16 +24,14 @@ const crawler = new PlaywrightCrawler({
     ],
 });
 
+await Actor.init();
 await crawler.addRequests(['https://apify.com']);
-
-const stats = await Actor.main(() => crawler.run(), { exit: false, purge: true });
+const stats = await crawler.run();
 expect(stats.requestsFinished > 50, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 50, 'Minimum number of dataset items');
-await delay(1);
 expect(datasetItems.length < 150, 'Maximum number of dataset items');
-await delay(1);
 expect(validateDataset(datasetItems, ['pageTitle']), 'Dataset items validation');
 
 process.exit(0);

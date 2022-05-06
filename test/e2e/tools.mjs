@@ -92,13 +92,12 @@ export async function initialize(url) {
  * @param {boolean} bool
  * @param {string} message
  */
-export async function expect(bool, message) {
+export function expect(bool, message) {
     if (bool) {
         console.log(`[assertion] passed: ${message}`);
     } else {
         console.log(`[assertion] failed: ${message}`);
-        await delay(1);
-        process.exit(1);
+        setTimeout(() => process.exit(1), 1);
     }
 }
 
@@ -107,8 +106,7 @@ export async function expect(bool, message) {
  */
 export async function skipTest(reason) {
     console.error(`[test skipped] ${reason}`);
-    await delay(1);
-    process.exit(SKIPPED_TEST_CLOSE_CODE);
+        process.exit(SKIPPED_TEST_CLOSE_CODE);
 }
 
 /**

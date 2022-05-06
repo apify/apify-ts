@@ -130,11 +130,7 @@ export class Actor {
         }
 
         return (async () => {
-            if (options?.purge) {
-                await purgeLocalStorage();
-            }
-
-            await this.init();
+            await this.init(options);
             let ret: T;
 
             try {
@@ -152,9 +148,14 @@ export class Actor {
     /**
      * @ignore
      */
-    async init(): Promise<void> {
+    async init(options: InitOptions = {}): Promise<void> {
         logSystemInfo();
         printOutdatedSdkWarning();
+
+        // purge the storage by default
+        if (options?.purge ?? true) {
+            await purgeLocalStorage();
+        }
 
         await this.eventManager.init();
 
@@ -819,8 +820,8 @@ export class Actor {
         return Actor.getDefaultInstance().main<T>(userFunc, options);
     }
 
-    static async init(): Promise<void> {
-        return Actor.getDefaultInstance().init();
+    static async init(options: InitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().init(options);
     }
 
     static async exit(options: ExitOptions = {}): Promise<void> {
@@ -1292,9 +1293,11 @@ export class Actor {
     }
 }
 
-export interface MainOptions extends ExitOptions {
+export interface InitOptions {
     purge?: boolean;
 }
+
+export interface MainOptions extends ExitOptions, InitOptions {}
 
 /**
  * Parsed representation of the `APIFY_XXX` environmental variables.
