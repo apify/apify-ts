@@ -1,6 +1,6 @@
 import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
-import { getDatasetItems, initialize, expect, validateDataset, skipTest, delay } from '../tools.mjs';
+import { getDatasetItems, initialize, expect, validateDataset, skipTest } from '../tools.mjs';
 
 await skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
 

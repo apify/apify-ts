@@ -1,6 +1,6 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
-import { getDatasetItems, initialize, expect, validateDataset, delay } from '../tools.mjs';
+import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
 await initialize(import.meta.url);
 
@@ -45,7 +45,7 @@ const crawler = new PuppeteerCrawler({
 await crawler.addRequests([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
 
 const stats = await Actor.main(() => crawler.run(), { exit: false });
-expect(stats.requestsFinished > 20, 'All requests finished');
+expect(stats.requestsFinished >= 7, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 5, 'Minimum number of dataset items');

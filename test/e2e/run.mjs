@@ -1,7 +1,8 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdir } from 'node:fs/promises';
-import { isMainThread, Worker, workerData } from 'worker_threads';
+import { once } from 'node:events';
+import { isMainThread, Worker, workerData } from 'node:worker_threads';
 import { colors, getApifyToken, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
@@ -62,6 +63,7 @@ async function run() {
             // eslint-disable-next-line max-len
             console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
         });
+        await once(worker, 'exit');
     }
 }
 

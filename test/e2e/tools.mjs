@@ -1,10 +1,10 @@
 /* eslint-disable import/no-relative-packages */
-import { join } from 'path';
+import { join } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { homedir } from 'os';
+import { homedir } from 'node:os';
 import { setTimeout as sleep } from 'node:timers/promises';
 import fs from 'fs-extra';
 import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
@@ -97,7 +97,7 @@ export function expect(bool, message) {
         console.log(`[assertion] passed: ${message}`);
     } else {
         console.log(`[assertion] failed: ${message}`);
-        setTimeout(() => process.exit(1), 1);
+        process.exit(1);
     }
 }
 
@@ -106,7 +106,7 @@ export function expect(bool, message) {
  */
 export async function skipTest(reason) {
     console.error(`[test skipped] ${reason}`);
-        process.exit(SKIPPED_TEST_CLOSE_CODE);
+    process.exit(SKIPPED_TEST_CLOSE_CODE);
 }
 
 /**

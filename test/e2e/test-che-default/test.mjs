@@ -1,6 +1,6 @@
 import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
-import { getDatasetItems, expect, validateDataset, initialize, delay } from '../tools.mjs';
+import { getDatasetItems, expect, validateDataset, initialize } from '../tools.mjs';
 
 await initialize(import.meta.url);
 
