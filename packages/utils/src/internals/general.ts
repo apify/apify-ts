@@ -108,18 +108,16 @@ export function snakeCaseToCamelCase(snakeCaseStr: string): string {
  */
 export async function purgeLocalStorage(folder?: string): Promise<void> {
     // If the user did not provide a folder, try to get it from the env variables, or the default one
-    if (!folder) {
-        folder = process.env[ENV_VARS.LOCAL_STORAGE_DIR] || 'apify_storage';
+    if (!folder) folder = process.env[ENV_VARS.LOCAL_STORAGE_DIR] || 'apify_storage';
 
-        const defaultDatasetPath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.datasets, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_DATASET_ID]);
-        await removeFiles(defaultDatasetPath);
+    const defaultDatasetPath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.datasets, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_DATASET_ID]);
+    await removeFiles(defaultDatasetPath);
 
-        const defaultKeyValueStorePath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.keyValueStores, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID]);
-        await removeFiles(defaultKeyValueStorePath);
+    const defaultKeyValueStorePath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.keyValueStores, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID]);
+    await removeFiles(defaultKeyValueStorePath);
 
-        const defaultRequestQueuePath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.requestQueues, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_REQUEST_QUEUE_ID]);
-        await removeFiles(defaultRequestQueuePath);
-    }
+    const defaultRequestQueuePath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.requestQueues, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_REQUEST_QUEUE_ID]);
+    await removeFiles(defaultRequestQueuePath);
 }
 
 async function removeFiles(folder: string): Promise<void> {
