@@ -66,6 +66,7 @@
         "@types/ps-tree": "^1.1.1",
         "@types/rimraf": "^3.0.2",
         "@types/semver": "^7.3.9",
+        "@types/stream-json": "^1.7.1",
         "@types/tough-cookie": "^4.0.1",
         "@types/ws": "^8.5.2",
         "@typescript-eslint/eslint-plugin": "5.22.0",
