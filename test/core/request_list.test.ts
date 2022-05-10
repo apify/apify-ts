@@ -1,8 +1,7 @@
 import log from '@apify/log';
-import { Configuration, deserializeArray, EventType, KeyValueStore, Request, RequestList } from '@crawlee/core';
+import { Configuration, deserializeArray, EventType, KeyValueStore, ProxyConfiguration, Request, RequestList } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
 import { gotScraping } from 'got-scraping';
-import { Actor } from 'apify';
 import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 
 /**
@@ -272,7 +271,7 @@ describe('RequestList', () => {
         const spy = jest.spyOn(RequestList.prototype as any, '_downloadListOfUrls');
         spy.mockResolvedValue([]);
 
-        const proxyConfiguration = await Actor.createProxyConfiguration({
+        const proxyConfiguration = new ProxyConfiguration({
             proxyUrls,
         });
 

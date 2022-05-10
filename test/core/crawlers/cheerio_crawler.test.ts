@@ -1,9 +1,7 @@
-import { ENV_VARS } from '@apify/consts';
 import log, { Log } from '@apify/log';
-import { sleep, Dictionary, entries } from '@crawlee/utils';
+import { Dictionary, entries, sleep } from '@crawlee/utils';
 import { gotScraping, OptionsInit } from 'got-scraping';
 import bodyParser from 'body-parser';
-import { Actor } from 'apify';
 import {
     AutoscaledPool,
     CheerioCrawler,
@@ -12,9 +10,9 @@ import {
     CheerioRequestHandlerInputs,
     Configuration,
     CrawlerExtension,
-    ProxyConfiguration,
     mergeCookies,
     PrepareRequestInputs,
+    ProxyConfiguration,
     ProxyInfo,
     Request,
     RequestList,
@@ -1054,21 +1052,11 @@ describe('CheerioCrawler', () => {
             const sourcesNew = [
                 { url: 'http://example.com/?q=1' },
             ];
-            process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-
             const requestListNew = new RequestList({ sources: sourcesNew });
             let usedSession: Session;
-            const usedRequests: OptionsInit[] = [];
-            const status = { connected: true };
 
-            const fakeCall = (opt: OptionsInit) => {
-                usedRequests.push(opt);
-                return { body: status } as never;
-            };
-
-            gotScrapingSpy.mockImplementation(fakeCall);
-
-            const proxyConfiguration = await Actor.createProxyConfiguration();
+            const proxyConfiguration = new ProxyConfiguration({ proxyUrls: ['http://localhost:8080'] });
+            const newUrlSpy = jest.spyOn(proxyConfiguration, 'newUrl');
             const cheerioCrawler = new CheerioCrawler({
                 requestList: requestListNew,
                 maxRequestRetries: 0,
@@ -1089,8 +1077,7 @@ describe('CheerioCrawler', () => {
             await requestListNew.initialize();
             await cheerioCrawler.run();
 
-            const cheerioCrawlerRequest = usedRequests[1];
-            expect(cheerioCrawlerRequest.proxyUrl.includes(usedSession.id)).toBeTruthy();
+            expect(newUrlSpy).toBeCalledWith(usedSession.id);
         });
     });
 
@@ -1156,11 +1143,7 @@ describe('CheerioCrawler', () => {
         });
 
         test('failedRequestHandler contains proxyInfo', async () => {
-            process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-
-            gotScrapingSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
-
-            const proxyConfiguration = await Actor.createProxyConfiguration();
+            const proxyConfiguration = new ProxyConfiguration({ proxyUrls: ['http://localhost:8080'] });
 
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
@@ -1177,8 +1160,6 @@ describe('CheerioCrawler', () => {
                 useSessionPool: true,
             });
             await cheerioCrawler.run();
-
-            delete process.env[ENV_VARS.PROXY_PASSWORD];
         });
     });
 
