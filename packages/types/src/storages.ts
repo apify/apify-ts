@@ -1,5 +1,4 @@
-import { RequestOptions as RequestModel } from '../request';
-import { AllowedHttpMethods, Dictionary } from '../typedefs';
+import { AllowedHttpMethods, Dictionary } from './utility-types';
 
 /**
  * A helper class that is used to report results from various
@@ -184,7 +183,15 @@ export interface QueueHead {
     limit: number;
     queueModifiedAt: Date;
     hadMultipleClients: boolean;
-    items: RequestModel[];
+    items: RequestQueueHeadItem[];
+}
+
+export interface RequestQueueHeadItem {
+    id: string;
+    retryCount: number;
+    uniqueKey: string;
+    url: string;
+    method: AllowedHttpMethods;
 }
 
 export interface RequestQueueInfo {

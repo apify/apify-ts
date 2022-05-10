@@ -1,4 +1,4 @@
-import { storage } from '@crawlee/core';
+import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { requestQueues } from '../memory-stores';
 import { RequestQueueClient } from './request-queue';

@@ -1,8 +1,8 @@
 import { ENV_VARS } from '@apify/consts';
 import { LruCache } from '@apify/datastructures';
+import { StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { Constructor } from '../typedefs';
-import { StorageClient } from './storage';
 
 const DEFAULT_ID_ENV_VAR_NAMES = {
     Dataset: ENV_VARS.DEFAULT_DATASET_ID,

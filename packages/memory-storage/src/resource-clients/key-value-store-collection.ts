@@ -1,4 +1,4 @@
-import { storage } from '@crawlee/core';
+import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { keyValueStores } from '../memory-stores';
 import { KeyValueStoreClient } from './key-value-store';

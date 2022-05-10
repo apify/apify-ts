@@ -1,4 +1,4 @@
-import { storage } from '@crawlee/core';
+import type * as storage from '@crawlee/types';
 import { Dictionary } from '@crawlee/utils';
 import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';

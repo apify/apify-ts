@@ -48,7 +48,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@crawlee/core": "^3.0.0",
+		"@crawlee/types": "^3.0.0",
 		"@crawlee/utils": "^3.0.0",
 		"@sapphire/shapeshift": "^3.0.0",
 		"content-type": "^1.0.4",

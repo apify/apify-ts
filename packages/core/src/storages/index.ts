@@ -3,4 +3,3 @@ export * from './key_value_store';
 export * from './request_list';
 export * from './request_queue';
 export * from './storage_manager';
-export * as storage from './storage';

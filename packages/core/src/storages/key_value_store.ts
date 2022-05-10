@@ -1,10 +1,10 @@
 import { KEY_VALUE_STORE_KEY_REGEX } from '@apify/consts';
 import { jsonStringifyExtended } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
+import { StorageClient, KeyValueStoreClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { Awaitable, Dictionary } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
-import { StorageClient, KeyValueStoreClient } from './storage';
 
 /**
  * Helper function to possibly stringify value if options.contentType is not set.

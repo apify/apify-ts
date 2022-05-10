@@ -1,4 +1,4 @@
-import type { storage } from '@crawlee/core';
+import type * as storage from '@crawlee/types';
 import { Dictionary } from '@crawlee/utils';
 import { s } from '@sapphire/shapeshift';
 import { DatasetClient } from './resource-clients/dataset';

@@ -1,10 +1,10 @@
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import ow from 'ow';
+import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { log } from '../log';
 import { Awaitable, Dictionary } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
-import { DatasetClient, DatasetInfo, PaginatedList, StorageClient } from './storage';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;

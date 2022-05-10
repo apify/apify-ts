@@ -2,10 +2,10 @@ import { Log } from '@apify/log';
 import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
 import { getMemoryInfo } from '@crawlee/utils';
 import ow from 'ow';
+import { StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { log as defaultLog } from '../log';
 import { SystemInfo } from './system_status';
-import { StorageClient } from '../storages/storage';
 import { EventManager, EventType } from '../events/event_manager';
 
 const RESERVE_MEMORY_RATIO = 0.5;

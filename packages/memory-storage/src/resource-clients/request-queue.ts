@@ -1,4 +1,4 @@
-import { RequestOptions, storage } from '@crawlee/core';
+import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
 import { StorageTypes } from '../consts';
@@ -35,7 +35,7 @@ export interface InternalRequest {
     orderNo: number | null;
     url: string;
     uniqueKey: string;
-    method: Exclude<RequestOptions['method'], undefined>;
+    method: Exclude<storage.RequestOptions['method'], undefined>;
     retryCount: number;
     json: string;
 }
@@ -352,7 +352,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         };
     }
 
-    private _calculateOrderNo(request: RequestOptions, forefront?: boolean) {
+    private _calculateOrderNo(request: storage.RequestSchema, forefront?: boolean) {
         if (request.handledAt) return null;
 
         const timestamp = Date.now();
