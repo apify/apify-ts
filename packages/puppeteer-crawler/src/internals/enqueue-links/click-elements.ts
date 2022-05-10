@@ -10,7 +10,6 @@ import {
     RequestTransform,
     UrlPatternObject,
     RequestQueue,
-    storage,
     RequestOptions,
 } from '@crawlee/browser';
 import log_ from '@apify/log';
@@ -27,6 +26,7 @@ import {
     Target,
 } from 'puppeteer';
 import { URL } from 'url';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;
@@ -194,7 +194,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  *
  * @returns Promise that resolves to {@link BatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<storage.BatchAddRequestsResult> {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<BatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
