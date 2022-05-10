@@ -16,7 +16,7 @@ const requestShape = s.object({
 }).passthrough;
 
 const requestShapeWithoutId = requestShape.extend({
-    id: s.never,
+    id: s.undefined,
 });
 
 const batchRequestShapeWithoutId = requestShapeWithoutId.array;
