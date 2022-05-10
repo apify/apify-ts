@@ -327,7 +327,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     }
 
     private _jsonToRequest<T>(requestJson?: string): T | undefined {
-        if (!requestJson) return;
+        if (!requestJson) return undefined;
         const request = JSON.parse(requestJson);
         return purgeNullsFromObject(request);
     }
