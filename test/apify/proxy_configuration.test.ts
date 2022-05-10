@@ -2,6 +2,8 @@ import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
 import { gotScraping } from 'got-scraping';
 import { UserClient } from 'apify-client';
 import { Actor, ProxyConfiguration } from 'apify';
+import { ProxyInfo, RequestList, Session } from '@crawlee/core';
+import { URL } from 'url';
 
 const groups = ['GROUP1', 'GROUP2'];
 const hostname = LOCAL_ENV_VARS[ENV_VARS.PROXY_HOSTNAME];
