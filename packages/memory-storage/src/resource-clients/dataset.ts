@@ -50,7 +50,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
 
     async update(newFields: storage.DatasetClientUpdateOptions = {}): Promise<storage.DatasetInfo> {
         const parsed = s.object({
-            name: s.string.lengthGt(0).optional,
+            name: s.string.lengthGreaterThan(0).optional,
         }).parse(newFields);
 
         // Check by id
@@ -68,7 +68,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         // Check that name is not in use already
         const existingStoreByName = datasetClients.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
 
-        if (!existingStoreByName) {
+        if (existingStoreByName) {
             this.throwOnDuplicateEntry(StorageTypes.Dataset, 'name', parsed.name);
         }
 
@@ -84,10 +84,9 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         const storeIndex = datasetClients.findIndex((store) => store.id === this.id);
 
         if (storeIndex !== -1) {
-            const oldClient = datasetClients[storeIndex];
+            const [oldClient] = datasetClients.splice(storeIndex, 1);
             oldClient.itemCount = 0;
             oldClient.datasetEntries.clear();
-            datasetClients.splice(storeIndex, 1);
         }
     }
 

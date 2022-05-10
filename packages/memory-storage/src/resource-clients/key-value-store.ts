@@ -49,7 +49,7 @@ export class KeyValueStoreClient extends BaseClient {
 
     async update(newFields: storage.KeyValueStoreClientUpdateOptions = {}): Promise<storage.KeyValueStoreInfo> {
         const parsed = s.object({
-            name: s.string.lengthGt(0).optional,
+            name: s.string.lengthGreaterThan(0).optional,
         }).parse(newFields);
 
         // Check by id
@@ -67,7 +67,7 @@ export class KeyValueStoreClient extends BaseClient {
         // Check that name is not in use already
         const existingStoreByName = keyValueStores.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
 
-        if (!existingStoreByName) {
+        if (existingStoreByName) {
             this.throwOnDuplicateEntry(StorageTypes.KeyValueStore, 'name', parsed.name);
         }
 
@@ -92,7 +92,7 @@ export class KeyValueStoreClient extends BaseClient {
             limit = DEFAULT_API_PARAM_LIMIT,
             exclusiveStartKey,
         } = s.object({
-            limit: s.number.gt(0).optional,
+            limit: s.number.greaterThan(0).optional,
             exclusiveStartKey: s.string.optional,
         }).parse(options);
 
@@ -190,9 +190,9 @@ export class KeyValueStoreClient extends BaseClient {
 
     async setRecord(record: storage.KeyValueStoreRecord): Promise<void> {
         s.object({
-            key: s.string.lengthGt(0),
+            key: s.string.lengthGreaterThan(0),
             value: s.union(s.null, s.string, s.number, s.object({}).passthrough),
-            contentType: s.string.lengthGt(0).optional,
+            contentType: s.string.lengthGreaterThan(0).optional,
         }).parse(record);
 
         // Check by id

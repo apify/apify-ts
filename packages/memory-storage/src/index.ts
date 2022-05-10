@@ -5,6 +5,8 @@ import { DatasetClient } from './resource-clients/dataset';
 import { DatasetCollectionClient } from './resource-clients/dataset-collection';
 import { KeyValueStoreClient } from './resource-clients/key-value-store';
 import { KeyValueStoreCollectionClient } from './resource-clients/key-value-store-collection';
+import { RequestQueueClient } from './resource-clients/request-queue';
+import { RequestQueueCollectionClient } from './resource-clients/request-queue-collection';
 
 export class MemoryStorage implements storage.StorageClient {
     datasets(): storage.DatasetCollectionClient {
@@ -28,10 +30,16 @@ export class MemoryStorage implements storage.StorageClient {
     }
 
     requestQueues(): storage.RequestQueueCollectionClient {
-        throw new Error('Method not implemented.');
+        return new RequestQueueCollectionClient();
     }
 
-    requestQueue(id: string, options?: storage.RequestQueueOptions): storage.RequestQueueClient {
-        throw new Error('Method not implemented.');
+    requestQueue(id: string, options: storage.RequestQueueOptions = {}): storage.RequestQueueClient {
+        s.string.parse(id);
+        s.object({
+            clientKey: s.string.optional,
+            timeoutSecs: s.number.optional,
+        }).parse(options);
+
+        return new RequestQueueClient({ id });
     }
 }
