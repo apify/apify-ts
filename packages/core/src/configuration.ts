@@ -1,7 +1,7 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@apify/storage-local';
-import { AsyncLocalStorage } from 'async_hooks';
-import { EventEmitter } from 'events';
+import { MemoryStorage } from '@crawlee/memory-storage';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { EventEmitter } from 'node:events';
 import { Dictionary, entries } from './typedefs';
 import { StorageClient } from './storages/storage';
 import { EventManager, LocalEventManager } from './events';
@@ -216,8 +216,7 @@ export class Configuration {
             return this.options.get('storageClient') as StorageClient;
         }
 
-        const options = this.options.get('storageClientOptions') as Dictionary;
-        return this.createStorageLocal(options) as any;
+        return this.createMemoryStorage() as any;
     }
 
     getEventManager(): EventManager {
@@ -239,20 +238,15 @@ export class Configuration {
      * Creates an instance of ApifyStorageLocal using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
-        const cacheKey = `StorageLocal~${JSON.stringify(options)}`;
+    createMemoryStorage(): MemoryStorage {
+        const cacheKey = 'MemoryStorage';
 
         if (this.services.has(cacheKey)) {
-            return this.services.get(cacheKey) as ApifyStorageLocal;
+            return this.services.get(cacheKey) as MemoryStorage;
         }
 
-        const storage = new ApifyStorageLocal(options);
+        const storage = new MemoryStorage();
         this.services.set(cacheKey, storage);
-
-        process.on('exit', () => {
-            // TODO this is not public API, need to update storage local with some teardown
-            storage.dbConnections.closeAllConnections();
-        });
 
         return storage;
     }
