@@ -1,7 +1,7 @@
 {
-	"name": "test-che-default",
+	"name": "test-cheerio-default",
 	"version": "0.0.1",
-	"description": "Test - Cheerio Crawler Default",
+	"description": "Cheerio Crawler Test - Default",
 	"dependencies": {
         "apify": "file:./packages/apify",
         "@crawlee/core": "file:./packages/core",
