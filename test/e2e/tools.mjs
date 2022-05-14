@@ -118,6 +118,14 @@ export async function clearPackages(dirName) {
     await fs.remove(destPackagesDir);
 }
 
+/**
+ * @param {string} dirName
+ */
+export async function clearStorage(dirName) {
+    const destPackagesDir = join(dirName, 'actor', 'apify_storage');
+    await fs.remove(destPackagesDir);
+}
+
 export async function getApifyToken() {
     const authPath = join(homedir(), '.apify', 'auth.json');
 

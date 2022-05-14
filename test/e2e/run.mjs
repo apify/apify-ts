@@ -60,9 +60,13 @@ async function run() {
             }
 
             const took = (Date.now() - now) / 1000;
-            // eslint-disable-next-line max-len
-            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
+            console.log(code === 0
+                ? `${colors.yellow(`[${dir.name}]`)} ${colors.green(`Test finished with status: success`)} ${colors.grey(`[took ${took}s]`)}`
+                : `${colors.yellow(`[${dir.name}]`)} ${colors.red(`Test finished with status: failure`)} ${colors.grey(`[took ${took}s]`)}`
+            );
+
             if (process.env.npm_config_platform) await clearPackages(`${basePath}/${dir.name}`);
+            if (!process.env.npm_config_platform) await clearStorage(`${basePath}/${dir.name}`);
         });
         await once(worker, 'exit');
     }
