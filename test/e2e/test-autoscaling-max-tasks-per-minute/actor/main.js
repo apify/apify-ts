@@ -21,5 +21,10 @@ await Actor.main(async () => {
         requestHandler,
     });
     await crawler.addRequests(['https://example.com/1', 'https://example.com/2']);
+
+    const start = Date.now();
     await crawler.run();
+    const finish = Date.now();
+
+    await Actor.pushData({ difference: finish - start });
 });
