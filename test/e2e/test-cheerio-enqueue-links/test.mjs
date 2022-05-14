@@ -1,30 +1,11 @@
-import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
-import deepEqual from 'deep-equal';
-import { expect, initialize } from '../tools.mjs';
+import { initialize, getActorTestDir, runActor, expect } from '../tools.mjs';
 
-await initialize(import.meta.url);
+const testActorDirname = getActorTestDir(import.meta.url);
+await initialize(testActorDirname);
 
-const crawler = new CheerioCrawler({
-    async requestHandler({ $, enqueueLinks, request, log }) {
-        const { url, loadedUrl } = request;
+const { datasetItems } = await runActor(testActorDirname, true);
+const { isEqual } = datasetItems[0];
 
-        const pageTitle = $('title').first().text();
-        log.info(`URL: ${url}; LOADED_URL: ${loadedUrl}; TITLE: ${pageTitle}`);
-
-        const results = await enqueueLinks();
-
-        if (loadedUrl.startsWith('https://drive')) {
-            const isEqual = deepEqual(results, { processedRequests: [], unprocessedRequests: [] });
-
-            expect(isEqual, 'enqueueing on same subdomain but different loaded url doesn\'t enqueue');
-            process.exit(0);
-        }
-    },
-});
-
-await crawler.addRequests(['https://apify.com/about']);
-const stats = await Actor.main(() => crawler.run(), { exit: false });
-expect(stats.requestsFinished > 50, 'All requests finished');
+expect(isEqual, `enqueueing on same subdomain but different loaded url doesn't enqueue`);
 
 process.exit(0);
