@@ -17,7 +17,7 @@ const crawler = new PlaywrightCrawler({
 
     // This function will be called for each URL to crawl.
     // Here you can write the Playwright scripts you are familiar with,
-    // with the exception that browsers and pages are automatically managed by the Apify SDK.
+    // with the exception that browsers and pages are automatically managed by Crawlee.
     // The function accepts a single parameter, which is an object with a lot of properties,
     // the most important being:
     // - request: an instance of the Request class with information such as URL and HTTP method

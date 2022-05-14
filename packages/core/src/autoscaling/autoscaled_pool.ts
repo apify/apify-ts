@@ -114,6 +114,12 @@ export interface AutoscaledPoolOptions {
      */
     systemStatusOptions?: SystemStatusOptions;
 
+    /**
+     * The maximum number of tasks per minute the pool can run.
+     * By default, this is set to `Infinity`, but you can pass any positive, non-zero integer.
+     */
+    maxTasksPerMinute?: number;
+
     log?: Log;
 }
 
@@ -179,6 +185,7 @@ export class AutoscaledPool {
     private readonly runTaskFunction: () => Promise<unknown>;
     private readonly isFinishedFunction: () => Promise<boolean>;
     private readonly isTaskReadyFunction: () => Promise<boolean>;
+    private readonly maxTasksPerMinute: number;
 
     // Internal properties.
     private _minConcurrency: number;
@@ -196,6 +203,8 @@ export class AutoscaledPool {
     private maybeRunInterval!: BetterIntervalID;
     private queryingIsTaskReady!: boolean;
     private queryingIsFinished!: boolean;
+    private tasksDonePerSecondInterval?: BetterIntervalID;
+    private _tasksPerMinute: number[] = Array.from({ length: 60 }, () => 0);
 
     constructor(
         options: AutoscaledPoolOptions,
@@ -218,6 +227,7 @@ export class AutoscaledPool {
             systemStatusOptions: ow.optional.object,
             snapshotterOptions: ow.optional.object,
             log: ow.optional.object,
+            maxTasksPerMinute: ow.optional.number.integerOrInfinite.positive.greaterThanOrEqual(1),
         }));
 
         const {
@@ -237,6 +247,7 @@ export class AutoscaledPool {
             systemStatusOptions,
             snapshotterOptions,
             log = defaultLog,
+            maxTasksPerMinute = Infinity,
         } = options;
 
         this.log = log.child({ prefix: 'AutoscaledPool' });
@@ -252,6 +263,7 @@ export class AutoscaledPool {
         this.runTaskFunction = runTaskFunction;
         this.isFinishedFunction = isFinishedFunction;
         this.isTaskReadyFunction = isTaskReadyFunction;
+        this.maxTasksPerMinute = maxTasksPerMinute;
 
         // Internal properties.
         this._minConcurrency = minConcurrency;
@@ -264,6 +276,7 @@ export class AutoscaledPool {
         this.reject = null;
         this._autoscale = this._autoscale.bind(this);
         this._maybeRunTask = this._maybeRunTask.bind(this);
+        this._incrementTasksDonePerSecond = this._incrementTasksDonePerSecond.bind(this);
 
         // Create instances with correct options.
         const ssoCopy = { ...systemStatusOptions };
@@ -354,6 +367,11 @@ export class AutoscaledPool {
         // this._maybeRunTask() doesn't trigger another one. So if that 1 instance gets stuck it results
         // in the actor getting stuck and even after scaling up it never triggers another promise.
         this.maybeRunInterval = betterSetInterval(this._maybeRunTask, this.maybeRunIntervalMillis);
+
+        if (this.maxTasksPerMinute !== Infinity) {
+            // Start the interval that resets the counter of tasks per minute.
+            this.tasksDonePerSecondInterval = betterSetInterval(this._incrementTasksDonePerSecond, 1000);
+        }
 
         try {
             await this.poolPromise;
@@ -488,9 +506,18 @@ export class AutoscaledPool {
             return this._maybeFinish();
         }
 
+        // - we have already reached the maximum tasks per minute
+        // we need to check this *after* checking if a task is ready to prevent hanging the pool
+        // for an extra minute if there are no more tasks
+        if (this._isOverMaxRequestLimit) {
+            this.log.perf('Task will not run. Maximum tasks per minute reached.');
+            return done();
+        }
+
         try {
             // Everything's fine. Run task.
             this._currentConcurrency++;
+            this._tasksPerMinute[0]++;
             // Try to run next task to build up concurrency,
             // but defer it so it doesn't create a cycle.
             setImmediate(this._maybeRunTask);
@@ -535,6 +562,9 @@ export class AutoscaledPool {
     protected _autoscale(intervalCallback: () => void) {
         // Don't scale if paused.
         if (this.isStopped) return intervalCallback();
+
+        // Don't scale if we've hit the maximum requests per minute
+        if (this._isOverMaxRequestLimit) return intervalCallback();
 
         // Only scale up if:
         // - system has not been overloaded lately.
@@ -640,6 +670,23 @@ export class AutoscaledPool {
 
         betterClearInterval(this.autoscaleInterval);
         betterClearInterval(this.maybeRunInterval);
+        if (this.tasksDonePerSecondInterval) betterClearInterval(this.tasksDonePerSecondInterval);
         if (this.snapshotter) await this.snapshotter.stop();
+    }
+
+    protected _incrementTasksDonePerSecond(intervalCallback: () => void) {
+        this._tasksPerMinute.unshift(0);
+
+        this._tasksPerMinute.pop();
+
+        return intervalCallback();
+    }
+
+    protected get _isOverMaxRequestLimit() {
+        if (this.maxTasksPerMinute === Infinity) {
+            return false;
+        }
+
+        return this._tasksPerMinute.reduce((acc, curr) => acc + curr, 0) >= this.maxTasksPerMinute;
     }
 }

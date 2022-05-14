@@ -455,7 +455,14 @@ export class BasicCrawler<
             oldProperty: handleRequestTimeoutSecs ? handleRequestTimeoutSecs * 1000 : undefined,
         });
 
-        this.internalTimeoutMillis = Math.max(this.requestHandlerTimeoutMillis, 300e3); // allow at least 5min for internal timeouts
+        const tryEnv = (val?: string) => (val == null ? null : +val);
+        // allow at least 5min for internal timeouts
+        this.internalTimeoutMillis = tryEnv(process.env.CRAWLEE_INTERNAL_TIMEOUT) ?? Math.max(this.requestHandlerTimeoutMillis * 2, 300e3);
+        // override the default internal timeout of request queue to respect `requestHandlerTimeoutMillis`
+        if (this.requestQueue) {
+            this.requestQueue.internalTimeoutMillis = this.internalTimeoutMillis;
+        }
+
         this.maxRequestRetries = maxRequestRetries;
         this.handledRequestsCount = 0;
         this.stats = new Statistics({ logMessage: `${log.getOptions().prefix} request statistics:`, config });
@@ -468,7 +475,7 @@ export class BasicCrawler<
 
         const maxSignedInteger = 2 ** 31 - 1;
         if (this.requestHandlerTimeoutMillis > maxSignedInteger) {
-            log.warning(`handleRequestTimeoutMillis ${this.requestHandlerTimeoutMillis}`
+            log.warning(`requestHandlerTimeoutMillis ${this.requestHandlerTimeoutMillis}`
                 + `does not fit a signed 32-bit integer. Limiting the value to ${maxSignedInteger}`);
 
             this.requestHandlerTimeoutMillis = maxSignedInteger;
@@ -596,6 +603,17 @@ export class BasicCrawler<
 
     protected async _runRequestHandler(crawlingContext: Context): Promise<void> {
         await this.requestHandler(crawlingContext);
+    }
+
+    /**
+     * Handles blocked request
+     */
+    protected _throwOnBlockedRequest(session: Session, statusCode: number) {
+        const isBlocked = session.retireOnBlockedStatusCodes(statusCode);
+
+        if (isBlocked) {
+            throw new Error(`Request blocked - received ${statusCode} status code.`);
+        }
     }
 
     protected async _pauseOnMigration() {
@@ -913,6 +931,10 @@ export class BasicCrawler<
         } else if (!allowUndefined) {
             throw new ArgumentError(`"${newName}" must be provided in the crawler options`, this.constructor);
         }
+    }
+
+    protected _getCookieHeaderFromRequest(request: Request) {
+        return request.headers?.Cookie ?? request.headers?.cookie ?? '';
     }
 }
 

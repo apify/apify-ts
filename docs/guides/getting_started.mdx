@@ -11,22 +11,22 @@ requests, but that only gets you raw HTML and sometimes not even that. Then you 
 extracted, it must be stored in a machine-readable format and easily accessible for further processing, because it is the processed data that holds
 value.
 
-Apify SDK covers the process end-to-end. From crawling the web for links and scraping the raw data to storing it in various machine readable formats,
+Crawlee covers the process end-to-end. From crawling the web for links and scraping the raw data to storing it in various machine readable formats,
 ready for processing. With this guide in hand, you should have your own data extraction solutions up and running in a few hours.
 
 ## Intro
 
-The goal of this getting started guide is to provide a step-by-step introduction to all the features of the Apify SDK. It will walk you through
+The goal of this getting started guide is to provide a step-by-step introduction to all the features of Crawlee. It will walk you through
 creating the simplest of crawlers that only prints text to console, all the way up to complex systems that crawl pages, interact with them as if a real
 user were sitting in front of a real browser and output structured data.
 
-Since Apify SDK is usable both locally on any computer and on the [Apify platform](../guides/apify-platform), you will be able
+Since Crawlee is usable both locally on any computer and on the [Apify platform](../guides/apify-platform), you will be able
 to use the source code in both environments interchangeably. Nevertheless, some initial setup is still required, so choose your preferred starting
 environment and let's get into it.
 
 ## Setting up locally
 
-To run Apify SDK on your own computer, you need to meet the following pre-requisites first:
+To run Crawlee on your own computer, you need to meet the following pre-requisites first:
 
 1. Have Node.js version 15.10 or higher installed.
  - Visit [Node.js website](https://nodejs.org/en/download/) to download or use
@@ -46,7 +46,7 @@ npm -v
 
 ### Creating a new project
 
-The fastest and best way to create new projects with the Apify SDK is to use our own
+The fastest and best way to create new projects with Crawlee is to use our own
 [Apify CLI](https://www.npmjs.com/package/apify-cli). This command line tool allows you to create, run and manage Apify
 projects with ease, including their deployment to the [Apify platform](../guides/apify-platform) if you wish to run them in the
 cloud after developing them locally.
@@ -57,7 +57,7 @@ Let's install the Apify CLI with the following command:
 npm install -g apify-cli
 ```
 
-Once the installation finishes, all you need to do to set up an Apify SDK project is to run:
+Once the installation finishes, all you need to do to set up an Crawlee project is to run:
 
 ```bash
 apify create my-new-project
@@ -127,11 +127,11 @@ options.
 ## First crawler
 
 Whether you've chosen to develop locally or in the cloud, it's time to start writing some actual source code. But before we do, let's just briefly
-introduce all the Apify SDK classes necessary to make it happen.
+introduce all Crawlee classes necessary to make it happen.
 
 ### The general idea
 
-There are 4 crawler classes available for use in the Apify SDK. <ApiLink to="basic-crawler/class/BasicCrawler">`BasicCrawler`</ApiLink>, <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>, <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> and <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>. We'll talk about their differences later. Now, let's talk about what they have in common.
+There are 4 crawler classes available for use in Crawlee. <ApiLink to="basic-crawler/class/BasicCrawler">`BasicCrawler`</ApiLink>, <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>, <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> and <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>. We'll talk about their differences later. Now, let's talk about what they have in common.
 
 The general idea of each crawler is to go to a web page, open it, do some stuff there, save some results and continue to the next page, until it's done
 its job. So the crawler always needs to find answers to two questions: **Where should I go?** and **What should I do there?** Answering those two
@@ -496,7 +496,7 @@ first enqueued page and so on and so on.
 > If you need help with running the code, refer back to the chapters on environment setup: [Setting up locally](#setting-up-locally) and
 > [Setting up on the Apify platform](#setting-up-on-the-apify-platform).
 
-## Using Apify SDK to enqueue links like a boss
+## Using Crawlee to enqueue links like a boss
 
 If you were paying attention carefully in the previous chapter, we said that we would show you a way to enqueue new `Requests` with a single function
 call. You might be wondering why we had to go through the whole process of getting the individual links, filtering the same domain ones and then
@@ -504,7 +504,7 @@ manually enqueuing them into the `RequestQueue`, when there is a simpler way.
 
 Well, the obvious reason is practice. This is a tutorial after all. The other reason is to make you think about all the bits and pieces that come
 together, so that in the end, a new page, not previously entered in by you, can be scraped. We think that by seeing the bigger picture, you will be
-able to get the most out of Apify SDK.
+able to get the most out of Crawlee.
 
 ### Meet `Actor.utils`
 
@@ -765,7 +765,7 @@ Actor.main(async () => {
 ```
 
 And that's it! No more parsing the links from HTML using Cheerio, filtering them and enqueueing them one by one It all gets done automatically!
-`enqueueLinks()` is just one example of Apify SDK's powerful helper functions. They're all designed to make your life easier so you can focus on
+`enqueueLinks()` is just one example of Crawlee's powerful helper functions. They're all designed to make your life easier so you can focus on
 getting your data, while leaving the mundane crawling management to your tools.
 
 `Actor.utils.enqueueLinks()` has a lot more tricks up its sleeve. Make sure to check out the
@@ -1057,7 +1057,7 @@ because you absolutely can!
 
 ##### Finally, the `userData` of `enqueueLinks()`
 
-You will see `userData` used often throughout Apify SDK and it's nothing more than a place to store your own data on a `Request` instance. You can
+You will see `userData` used often throughout Crawlee and it's nothing more than a place to store your own data on a `Request` instance. You can
 access it with `request.userData` and it's a plain `Object` that can be used to store anything that needs to survive the full life-cycle of the
 `Request`.
 
@@ -1449,7 +1449,7 @@ also the possibility of downloading only clean items, i.e. a filtered dataset wi
 
 ##### Local Dataset
 
-Unless you changed the environment variables that Apify SDK uses locally, which would suggest that you knew what you were doing and you didn't need
+Unless you changed the environment variables that Crawlee uses locally, which would suggest that you knew what you were doing and you didn't need
 this tutorial anyway, you'll find your data in your local Apify Storage.
 
 ```
@@ -1466,7 +1466,7 @@ The above folder will hold all your saved data in numbered files, as they were p
 
 It may seem that the data are extracted and the actor is done, but honestly, this is just the beginning. For the sake of brevity, we've completely
 omitted error handling, proxies, debug logging, tests, documentation and other stuff that a reliable software should have. The good thing is, **error
-handling is mostly done by Apify SDK itself**, so no worries on that front, unless you need some custom magic.
+handling is mostly done by Crawlee itself**, so no worries on that front, unless you need some custom magic.
 
 Anyway, to spark some ideas, let's look at two more things. First, passing an input to the actor, which will enable us to change the categories we
 want to scrape without changing the source code itself! And then some refactoring, to show you how we reckon is preferable to structure and annotate

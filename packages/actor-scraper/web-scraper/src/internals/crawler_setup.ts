@@ -5,7 +5,7 @@ import {
     BrowserCrawlerHandleFailedRequestInput,
     Dataset,
     KeyValueStore,
-    PuppeteerCrawlContext,
+    PuppeteerCrawlingContext,
     PuppeteerCrawler,
     PuppeteerCrawlerOptions,
     puppeteerUtils,
@@ -223,7 +223,6 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             },
             launchContext: {
                 useChrome: this.input.useChrome,
-                stealth: this.input.useStealth,
                 launchOptions: {
                     ignoreHTTPSErrors: this.input.ignoreSslErrors,
                     defaultViewport: DEFAULT_VIEWPORT,
@@ -357,7 +356,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
      */
-    private async _requestHandler(crawlingContext: PuppeteerCrawlContext) {
+    private async _requestHandler(crawlingContext: PuppeteerCrawlingContext) {
         const { request, response, page, crawler, proxyInfo } = crawlingContext;
         const start = process.hrtime();
         const pageContext = this.pageContexts.get(page)!;
@@ -483,7 +482,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return true;
     }
 
-    private async _handleLinks({ request, enqueueLinks }: PuppeteerCrawlContext) {
+    private async _handleLinks({ request, enqueueLinks }: PuppeteerCrawlingContext) {
         if (!(this.input.linkSelector && this.requestQueue)) return;
         const start = process.hrtime();
 

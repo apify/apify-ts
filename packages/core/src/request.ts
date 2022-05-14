@@ -22,6 +22,7 @@ const requestOptionalPredicates = {
     handledAt: ow.optional.any(ow.string.date, ow.date),
     keepUrlFragment: ow.optional.boolean,
     useExtendedUniqueKey: ow.optional.boolean,
+    skipNavigation: ow.optional.boolean,
 };
 
 /**
@@ -93,8 +94,11 @@ export class Request {
     /** Object with HTTP headers. Key is header name, value is the value. */
     headers?: Record<string, string>;
 
+    /** Private store for the custom user data assigned to the request. */
+    private _userData: Record<string, any> = {};
+
     /** Custom user data assigned to the request. */
-    userData?: Record<string, unknown>;
+    userData: Record<string, any> = {};
 
     /**
      * ISO datetime string that indicates the time when the request has been processed.
@@ -139,6 +143,7 @@ export class Request {
             handledAt,
             keepUrlFragment = false,
             useExtendedUniqueKey = false,
+            skipNavigation,
         } = options as RequestOptions & { loadedUrl?: string; retryCount?: number; errorMessages?: string[]; handledAt?: string | Date };
 
         let {
@@ -159,8 +164,63 @@ export class Request {
         this.retryCount = retryCount;
         this.errorMessages = [...errorMessages];
         this.headers = { ...headers };
-        this.userData = { ...userData };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
+
+        Object.defineProperties(this, {
+            _userData: {
+                value: { __crawlee: {}, ...userData },
+                enumerable: false,
+                writable: true,
+            },
+            userData: {
+                get: () => this._userData,
+                set: (value: Record<string, any>) => {
+                    Object.defineProperties(value, {
+                        __crawlee: {
+                            // eslint-disable-next-line no-underscore-dangle
+                            value: this._userData.__crawlee,
+                            enumerable: false,
+                            writable: true,
+                        },
+                        toJSON: {
+                            // eslint-disable-next-line no-underscore-dangle
+                            value: () => {
+                                if (Object.keys(this._userData.__crawlee).length > 0) {
+                                    return ({
+                                        ...this._userData,
+                                        __crawlee: this._userData.__crawlee,
+                                    });
+                                }
+
+                                return this._userData;
+                            },
+                            enumerable: false,
+                            writable: true,
+                        },
+                    });
+                    this._userData = value;
+                },
+                enumerable: true,
+            },
+        });
+
+        // reassign userData to ensure internal `__crawlee` object is non-enumerable
+        this.userData = userData;
+
+        if (skipNavigation != null) this.skipNavigation = skipNavigation;
+    }
+
+    /** Tells the crawler processing this request to skip the navigation and process the request directly. */
+    get skipNavigation(): boolean {
+        // eslint-disable-next-line no-underscore-dangle
+        return this.userData.__crawlee?.skipNavigation ?? false;
+    }
+
+    set skipNavigation(value: boolean) {
+        // eslint-disable-next-line no-underscore-dangle
+        if (!this.userData.__crawlee) this.userData.__crawlee = { skipNavigation: value };
+        // eslint-disable-next-line no-underscore-dangle
+        else this.userData.__crawlee.skipNavigation = value;
     }
 
     /**
@@ -282,7 +342,7 @@ export interface RequestOptions {
      * Custom user data assigned to the request. Use this to save any request related data to the
      * request's scope, keeping them accessible on retries, failures etc.
      */
-    userData?: Record<string, unknown>;
+    userData?: Record<string, any>;
 
     /**
      * If `false` then the hash part of a URL is removed when computing the `uniqueKey` property.
@@ -306,6 +366,13 @@ export interface RequestOptions {
      * @default false
      */
     noRetry?: boolean;
+
+    /**
+     * If set to `true` then the crawler processing this request evaluates
+     * the `handleRequestFunction` immediately without prior browser navigation.
+     * @default false
+     */
+    skipNavigation?: boolean;
 
     /** @internal */
     id?: string;

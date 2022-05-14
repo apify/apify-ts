@@ -10,7 +10,6 @@ import {
     ProxyInfo,
     RequestQueue,
     Session,
-    throwOnBlockedRequest,
     validators,
     storage,
     resolveBaseUrl,
@@ -29,15 +28,17 @@ import {
     BrowserPoolHooks,
     BrowserPoolOptions,
     CommonPage,
+    Cookie as BrowserPoolCookie,
     InferBrowserPluginArray,
     LaunchContext,
 } from '@crawlee/browser-pool';
 import ow from 'ow';
+import { Cookie } from 'tough-cookie';
 import { BrowserLaunchContext } from './browser-launcher';
 
 export interface BrowserCrawlingContext<
     Page extends CommonPage = CommonPage,
-    Response = Dictionary<any>,
+    Response = Dictionary,
     ProvidedController = BrowserController,
 > extends CrawlingContext {
     browserController: ProvidedController;
@@ -62,14 +63,8 @@ export type BrowserHook<
     GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary
 > = (crawlingContext: Context, gotoOptions: GoToOptions) => Awaitable<void>;
 
-export type GotoFunction<
-    Context = BrowserCrawlingContext,
-    GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary
-> = (context: Context, gotoOptions?: GoToOptions) => Awaitable<any>;
-
 export interface BrowserCrawlerOptions<
     Context extends BrowserCrawlingContext = BrowserCrawlingContext,
-    GoToOptions extends Record<PropertyKey, any> | undefined = Dictionary,
     InternalBrowserPoolOptions extends BrowserPoolOptions = BrowserPoolOptions,
     __BrowserPlugins extends BrowserPlugin[] = InferBrowserPluginArray<InternalBrowserPoolOptions['browserPlugins']>,
     __BrowserControllerReturn extends BrowserController = ReturnType<__BrowserPlugins[number]['createController']>,
@@ -83,6 +78,7 @@ export interface BrowserCrawlerOptions<
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
 > {
+    launchContext?: BrowserLaunchContext<any, any>;
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -166,11 +162,6 @@ export interface BrowserCrawlerOptions<
      * @deprecated `handlePageFunction` has been renamed to `requestHandler` and will be removed in a future version.
      */
     handlePageFunction?: BrowserCrawlerHandleRequest<Context>;
-
-    /**
-     * Navigation function for corresponding library. `page.goto(url)` is supported by both `playwright` and `puppeteer`.
-     */
-    gotoFunction?: GotoFunction<Context, GoToOptions>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -269,11 +260,6 @@ export interface BrowserCrawlerOptions<
     navigationTimeoutSecs?: number;
 
     /**
-     * @deprecated Use `navigationTimeoutSecs` instead
-     */
-    gotoTimeoutSecs?: number;
-
-    /**
      * If cookies should be persisted between sessions.
      * This can only be used when `useSessionPool` is set to `true`.
      */
@@ -340,8 +326,6 @@ export abstract class BrowserCrawler<
 
     protected userProvidedRequestHandler!: BrowserCrawlerHandleRequest<Context>;
     protected navigationTimeoutMillis: number;
-    protected gotoFunction?: GotoFunction<Context, GoToOptions>;
-    protected defaultGotoOptions: GoToOptions;
     protected preNavigationHooks: BrowserHook<Context>[];
     protected postNavigationHooks: BrowserHook<Context>[];
     protected persistCookiesPerSession: boolean;
@@ -350,13 +334,11 @@ export abstract class BrowserCrawler<
         ...BasicCrawler.optionsShape,
         handlePageFunction: ow.optional.function,
 
-        gotoFunction: ow.optional.function,
-
-        gotoTimeoutSecs: ow.optional.number.greaterThan(0),
         navigationTimeoutSecs: ow.optional.number.greaterThan(0),
         preNavigationHooks: ow.optional.array,
         postNavigationHooks: ow.optional.array,
 
+        launchContext: ow.optional.object,
         browserPoolOptions: ow.object,
         sessionPoolOptions: ow.optional.object,
         persistCookiesPerSession: ow.optional.boolean,
@@ -367,15 +349,14 @@ export abstract class BrowserCrawler<
     /**
      * All `BrowserCrawler` parameters are passed via an options object.
      */
-    protected constructor(options: BrowserCrawlerOptions<Context, GoToOptions>) {
+    protected constructor(options: BrowserCrawlerOptions<Context>) {
         ow(options, 'BrowserCrawlerOptions', ow.object.exactShape(BrowserCrawler.optionsShape));
         const {
             navigationTimeoutSecs = 60,
             requestHandlerTimeoutSecs = 60,
-            gotoFunction, // deprecated
-            gotoTimeoutSecs, // deprecated
             persistCookiesPerSession,
             proxyConfiguration,
+            launchContext,
             browserPoolOptions,
             preNavigationHooks = [],
             postNavigationHooks = [],
@@ -418,19 +399,9 @@ export abstract class BrowserCrawler<
             throw new Error('You cannot use "persistCookiesPerSession" without "useSessionPool" set to true.');
         }
 
-        if (gotoTimeoutSecs) {
-            this.log.deprecated('Option "gotoTimeoutSecs" is deprecated. Use "navigationTimeoutSecs" instead.');
-        }
-
-        this.navigationTimeoutMillis = (gotoTimeoutSecs || navigationTimeoutSecs) * 1000;
-
-        this.gotoFunction = gotoFunction;
-        this.defaultGotoOptions = {
-            timeout: this.navigationTimeoutMillis,
-        } as unknown as GoToOptions;
-
+        this.launchContext = launchContext;
+        this.navigationTimeoutMillis = navigationTimeoutSecs * 1000;
         this.proxyConfiguration = proxyConfiguration;
-
         this.preNavigationHooks = preNavigationHooks;
         this.postNavigationHooks = postNavigationHooks;
 
@@ -438,6 +409,11 @@ export abstract class BrowserCrawler<
             this.persistCookiesPerSession = persistCookiesPerSession !== undefined ? persistCookiesPerSession : true;
         } else {
             this.persistCookiesPerSession = false;
+        }
+
+        if (launchContext?.userAgent) {
+            browserPoolOptions.useFingerprints = false;
+            this.log.info('Disabling automatic fingerprint injection because custom user agent has been provided.');
         }
 
         const { preLaunchHooks = [], postLaunchHooks = [], ...rest } = browserPoolOptions;
@@ -468,7 +444,7 @@ export abstract class BrowserCrawler<
         if (this.proxyConfiguration && useIncognitoPages) {
             const { session } = crawlingContext;
 
-            const proxyInfo = this.proxyConfiguration.newProxyInfo(session?.id);
+            const proxyInfo = await this.proxyConfiguration.newProxyInfo(session?.id);
             crawlingContext.proxyInfo = proxyInfo;
 
             newPageOptions.proxyUrl = proxyInfo.url;
@@ -494,27 +470,21 @@ export abstract class BrowserCrawler<
         // So we must not save the session prior to making sure it was used only once, otherwise we would use it twice.
         const { request, session } = crawlingContext;
 
-        if (this.useSessionPool) {
-            const sessionCookies = session!.getPuppeteerCookies(request.url);
-            if (sessionCookies.length) {
-                await crawlingContext.browserController.setCookies(page, sessionCookies);
-                tryCancel();
-            }
-        }
-
         try {
-            await this._handleNavigation(crawlingContext);
-            tryCancel();
-
-            await this._responseHandler(crawlingContext);
-            tryCancel();
-
-            // save cookies
-            // TODO: Should we save the cookies also after/only the handle page?
-            if (this.persistCookiesPerSession) {
-                const cookies = await crawlingContext.browserController.getCookies(page);
+            if (!request.skipNavigation) {
+                await this._handleNavigation(crawlingContext);
                 tryCancel();
-                session?.setPuppeteerCookies(cookies, request.loadedUrl!);
+
+                await this._responseHandler(crawlingContext);
+                tryCancel();
+
+                // save cookies
+                // TODO: Should we save the cookies also after/only the handle page?
+                if (this.persistCookiesPerSession) {
+                    const cookies = await crawlingContext.browserController.getCookies(page);
+                    tryCancel();
+                    session?.setPuppeteerCookies(cookies, request.loadedUrl!);
+                }
             }
 
             await addTimeoutToPromise(
@@ -560,12 +530,19 @@ export abstract class BrowserCrawler<
     }
 
     protected async _handleNavigation(crawlingContext: Context) {
-        const gotoOptions = { ...this.defaultGotoOptions };
+        const gotoOptions = { timeout: this.navigationTimeoutMillis } as unknown as GoToOptions;
+
+        const preNavigationHooksCookies = this._getCookieHeaderFromRequest(crawlingContext.request);
+
         await this._executeHooks(this.preNavigationHooks, crawlingContext, gotoOptions);
         tryCancel();
 
+        const postNavigationHooksCookies = this._getCookieHeaderFromRequest(crawlingContext.request);
+
+        await this._applyCookies(crawlingContext, preNavigationHooksCookies, postNavigationHooksCookies);
+
         try {
-            crawlingContext.response = await this._navigationHandler(crawlingContext, gotoOptions);
+            crawlingContext.response = await this._navigationHandler(crawlingContext, gotoOptions) ?? undefined;
         } catch (error) {
             this._handleNavigationTimeout(crawlingContext, error as Error);
 
@@ -574,6 +551,21 @@ export abstract class BrowserCrawler<
 
         tryCancel();
         await this._executeHooks(this.postNavigationHooks, crawlingContext, gotoOptions);
+    }
+
+    protected async _applyCookies({ session, request, page, browserController }: Context, preHooksCookies: string, postHooksCookies: string) {
+        const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
+        const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+        const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+
+        await browserController.setCookies(
+            page,
+            [
+                ...sessionCookie,
+                ...parsedPreHooksCookies,
+                ...parsedPostHooksCookies,
+            ].filter((c): c is BrowserPoolCookie => typeof c !== 'undefined'),
+        );
     }
 
     /**
@@ -587,14 +579,7 @@ export abstract class BrowserCrawler<
         }
     }
 
-    protected async _navigationHandler(crawlingContext: Context, gotoOptions: GoToOptions) {
-        if (!this.gotoFunction) {
-            // @TODO: although it is optional in the validation,
-            //   because when you make automation library specific you can override this handler.
-            throw new Error('BrowserCrawler: You must specify a gotoFunction!');
-        }
-        return this.gotoFunction(crawlingContext, gotoOptions);
-    }
+    protected abstract _navigationHandler(crawlingContext: Context, gotoOptions: GoToOptions): Promise<Context['response'] | null | undefined>;
 
     /**
      * Should be overridden in case of different automation library that does not support this response API.
@@ -605,7 +590,7 @@ export abstract class BrowserCrawler<
 
         if (this.sessionPool && response && session) {
             if (typeof response === 'object' && typeof response.status === 'function') {
-                throwOnBlockedRequest(session, response.status());
+                this._throwOnBlockedRequest(session, response.status());
             } else {
                 this.log.debug('Got a malformed Browser response.', { request, response });
             }
@@ -622,7 +607,7 @@ export abstract class BrowserCrawler<
         }
 
         if (this.proxyConfiguration) {
-            const proxyInfo = this.proxyConfiguration.newProxyInfo(launchContextExtends.session && launchContextExtends.session.id);
+            const proxyInfo = await this.proxyConfiguration.newProxyInfo(launchContextExtends.session?.id);
             launchContext.proxyUrl = proxyInfo.url;
             launchContextExtends.proxyInfo = proxyInfo;
 

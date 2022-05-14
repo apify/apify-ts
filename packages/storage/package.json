@@ -1,5 +1,6 @@
 {
     "name": "@crawlee/storage",
+    "private": true,
     "version": "3.0.0",
     "description": "Drop in replacement of Apify API with a local SQLite and filesystem implementation. Not all API features are supported.",
     "engines": {
@@ -36,9 +37,6 @@
         "url": "https://github.com/apifytech/apify-client-local/issues"
     },
     "homepage": "https://sdk.apify.com/",
-    "files": [
-        "dist"
-    ],
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
@@ -47,7 +45,7 @@
     },
     "dependencies": {
         "@apify/consts": "^1.4.2",
-        "@apify/log": "^1.1.6",
+        "@apify/log": "^1.2.0",
         "better-sqlite3-with-prebuilds": "^7.4.3",
         "content-type": "^1.0.4",
         "fs-extra": "^10.0.0",

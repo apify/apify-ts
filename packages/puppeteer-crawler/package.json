@@ -39,9 +39,6 @@
         "url": "https://github.com/apify/apify-js/issues"
     },
     "homepage": "https://sdk.apify.com/",
-    "files": [
-        "dist"
-    ],
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
@@ -52,8 +49,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/log": "^1.1.10",
-        "@crawlee/browser": "^3.0.0"
+        "@apify/log": "^1.2.0",
+        "@crawlee/browser": "^3.0.0",
+        "jquery": "^3.6.0"
     },
     "peerDependencies": {
         "puppeteer": ">= 9.x <= 13.x"

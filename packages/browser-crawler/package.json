@@ -39,9 +39,6 @@
         "url": "https://github.com/apify/apify-js/issues"
     },
     "homepage": "https://sdk.apify.com/",
-    "files": [
-        "dist"
-    ],
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
@@ -52,6 +49,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlee/basic": "^3.0.0"
+        "@crawlee/basic": "^3.0.0",
+        "tough-cookie": "^4.0.0"
     }
 }

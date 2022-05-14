@@ -4,7 +4,6 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import crypto from 'crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
-import { Dictionary, entries } from '../typedefs';
 import { StorageManager } from './storage_manager';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
@@ -170,6 +169,12 @@ export class RequestQueue {
     // i.e. which were returned by fetchNextRequest() but not markRequestHandled()
     inProgress = new Set();
 
+    // To track whether the queue gets stuck, and we need to reset it
+    // `lastActivity` tracks the time when we either added, processed or reclaimed a request,
+    // or when we add new request to in-progress cache
+    lastActivity = new Date();
+    internalTimeoutMillis = 5 * 60e3; // defaults to 5 minutes, will be overridden by BasicCrawler
+
     // Contains a list of recently handled requests. It is used to avoid inconsistencies
     // caused by delays in the underlying DynamoDB storage.
     // Keys are request IDs, values are true.
@@ -182,8 +187,6 @@ export class RequestQueue {
 
     // Caching requests to avoid redundant addRequest() calls.
     // Key is computed using getRequestId() and value is { id, isHandled }.
-    // TODO: We could extend the caching to improve performance
-    //       of other operations such as fetchNextRequest().
     requestsCache = new LruCache<
         Pick<QueueOperationInfo, 'uniqueKey' | 'wasAlreadyHandled'> & { isHandled: boolean; id: string }
     >({ maxLength: MAX_CACHED_REQUESTS });
@@ -230,6 +233,7 @@ export class RequestQueue {
             forefront: ow.optional.boolean,
         }));
 
+        this.lastActivity = new Date();
         const { forefront = false } = options;
 
         const request = requestLike instanceof Request
@@ -318,7 +322,7 @@ export class RequestQueue {
                 : new Request(requestLike);
         });
 
-        const requestsToAdd: Request[] = [];
+        const requestsToAdd = new Map<string, Request>();
 
         for (const request of requests) {
             // TODO we dont need to hash the cache key probably
@@ -336,17 +340,17 @@ export class RequestQueue {
                     requestId: cachedInfo.id,
                     uniqueKey: cachedInfo.uniqueKey,
                 });
-            } else {
-                requestsToAdd.push(request);
+            } else if (!requestsToAdd.has(request.uniqueKey)) {
+                requestsToAdd.set(request.uniqueKey, request);
             }
         }
 
         // Early exit if all provided requests were already added
-        if (!requestsToAdd.length) {
+        if (!requestsToAdd.size) {
             return results;
         }
 
-        const apiResults = await this.client.batchAddRequests(requestsToAdd, { forefront });
+        const apiResults = await this.client.batchAddRequests([...requestsToAdd.values()], { forefront });
 
         // Report unprocessed requests
         results.unprocessedRequests = apiResults.unprocessedRequests;
@@ -381,21 +385,10 @@ export class RequestQueue {
     async getRequest(id: string): Promise<Request | null> {
         ow(id, ow.string);
 
-        // TODO: Could we also use requestsCache here? It would be consistent with addRequest()
-        //   Downside is that it wouldn't reflect changes from outside...
         const requestOptions = await this.client.getRequest(id);
         if (!requestOptions) return null;
 
-        // TODO: compatibility fix for old/broken request queues with null Request props
-        const optionsWithoutNulls = entries(requestOptions).reduce((opts, [key, value]) => {
-            if (value !== null) {
-                opts[key] = value;
-            }
-
-            return opts;
-        }, {} as Dictionary);
-
-        return new Request(optionsWithoutNulls as unknown as RequestOptions);
+        return new Request(requestOptions as unknown as RequestOptions);
     }
 
     /**
@@ -434,6 +427,7 @@ export class RequestQueue {
         }
 
         this.inProgress.add(nextRequestId);
+        this.lastActivity = new Date();
 
         let request;
         try {
@@ -479,6 +473,7 @@ export class RequestQueue {
      * Handled requests will never again be returned by the `fetchNextRequest` function.
      */
     async markRequestHandled(request: Request): Promise<QueueOperationInfo | null> {
+        this.lastActivity = new Date();
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -514,6 +509,7 @@ export class RequestQueue {
      * For example, this lets you store the number of retries or error messages for the request.
      */
     async reclaimRequest(request: Request, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo | null> {
+        this.lastActivity = new Date();
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -570,10 +566,27 @@ export class RequestQueue {
      * but it will never return a false positive.
      */
     async isFinished(): Promise<boolean> {
+        if (this.inProgressCount() > 0 && (Date.now() - +this.lastActivity) > this.internalTimeoutMillis) {
+            const message = `The request queue seems to be stuck for ${this.internalTimeoutMillis / 1e3}s, resetting internal state.`;
+            this.log.warning(message, { inProgress: [...this.inProgress] });
+            this._reset();
+        }
+
         if (this.queueHeadDict.length() > 0 || this.inProgressCount() > 0) return false;
 
         const isHeadConsistent = await this._ensureHeadIsNonEmpty(true);
         return isHeadConsistent && this.queueHeadDict.length() === 0 && this.inProgressCount() === 0;
+    }
+
+    private _reset() {
+        this.queueHeadDict.clear();
+        this.queryQueueHeadPromise = null;
+        this.inProgress.clear();
+        this.recentlyHandled.clear();
+        this.assumedTotalCount = 0;
+        this.assumedHandledCount = 0;
+        this.requestsCache.clear();
+        this.lastActivity = new Date();
     }
 
     /**

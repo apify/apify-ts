@@ -21,6 +21,7 @@ module.exports = {
                 'guides/session-management',
                 'guides/type-script-actor',
                 'guides/docker-images',
+                'guides/avoid-blocking',
             ],
         },
         {

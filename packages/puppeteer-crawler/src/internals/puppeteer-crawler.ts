@@ -5,31 +5,21 @@ import {
     BrowserCrawlingContext,
     BrowserHook,
 } from '@crawlee/browser';
-import {
-    Dictionary,
-} from '@crawlee/utils';
 import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
-import { applyStealthToBrowser } from './stealth';
-import { DirectNavigationOptions, gotoExtended } from './utils/puppeteer_utils';
+import { DirectNavigationOptions, gotoExtended, PuppeteerContextUtils, registerUtilsToContext } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
-
-export type PuppeteerCrawlContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
-
-export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext, PuppeteerGoToOptions>;
-
-export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
-
+export type PuppeteerCrawlingContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> & PuppeteerContextUtils;
+export type PuppeteerHook = BrowserHook<PuppeteerCrawlingContext, PuppeteerGoToOptions>;
+export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>;
 export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerRequestHandlerParam>;
-
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
 export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
-    PuppeteerCrawlContext,
-    PuppeteerGoToOptions,
+    PuppeteerCrawlingContext,
     { browserPlugins: [PuppeteerPlugin] }
 > {
     /**
@@ -132,11 +122,10 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  * ```
  * @category Crawlers
  */
-export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlContext> {
+export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlingContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
-        launchContext: ow.optional.object,
     };
 
     /**
@@ -152,8 +141,6 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             ...browserCrawlerOptions
         } = options;
 
-        const { stealth = false } = launchContext;
-
         if (launchContext.proxyUrl) {
             throw new Error('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.'
                 + 'Use PuppeteerCrawlerOptions.proxyConfiguration');
@@ -165,26 +152,16 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
-
-        if (stealth) {
-            this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
-                // TODO: We can do this better now. It is not necessary to override the page.
-                //  we can modify the page in the postPageCreateHook
-                const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
-                applyStealthToBrowser(browserController.browser, newStealthOptions);
-            });
-        }
-
-        this.launchContext = launchContext;
+        super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions });
     }
 
-    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlContext, gotoOptions: DirectNavigationOptions) {
-        if (this.gotoFunction) {
-            this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
+    protected override async _runRequestHandler(context: PuppeteerCrawlingContext) {
+        registerUtilsToContext(context);
+        // eslint-disable-next-line no-underscore-dangle
+        await super._runRequestHandler(context);
+    }
 
-            return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
-        }
+    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlingContext, gotoOptions: DirectNavigationOptions) {
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
     }
 }

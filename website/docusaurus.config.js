@@ -42,7 +42,7 @@ module.exports = {
                     rehypePlugins: [externalLinkProcessor],
                 },
                 theme: {
-                    customCss: '../src/css/customTheme.css',
+                    customCss: '/src/css/customTheme.css',
                 },
             }),
         ],
@@ -52,6 +52,7 @@ module.exports = {
             'docusaurus-plugin-typedoc-api',
             {
                 projectRoot: `${__dirname}/..`,
+                changelogs: true,
                 packages: [
                     {
                         path: 'packages/apify',
@@ -91,6 +92,9 @@ module.exports = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */ ({
         docs: {
             versionPersistence: 'localStorage',
+            sidebar: {
+                hideable: true,
+            },
         },
         navbar: {
             hideOnScroll: true,
@@ -250,6 +254,5 @@ module.exports = {
         gaGtag: {
             trackingID: 'UA-67003981-4',
         },
-        hideableSidebar: true,
     }),
 };

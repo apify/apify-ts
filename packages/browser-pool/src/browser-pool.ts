@@ -79,7 +79,7 @@ export interface BrowserPoolOptions<Plugin extends BrowserPlugin = BrowserPlugin
      */
     closeInactiveBrowserAfterSecs?: number;
     /**
-     * @default false
+     * @default true
      */
     useFingerprints?: boolean;
     fingerprintsOptions?: FingerprintsOptions;
@@ -263,47 +263,26 @@ export class BrowserPool<
     PageReturn extends UnwrapPromise<ReturnType<BrowserControllerReturn['newPage']>> = UnwrapPromise<ReturnType<BrowserControllerReturn['newPage']>>,
 > extends TypedEmitter<BrowserPoolEvents<BrowserControllerReturn, PageReturn>> {
     browserPlugins: BrowserPlugins;
-
     maxOpenPagesPerBrowser: number;
-
     retireBrowserAfterPageCount: number;
-
     operationTimeoutMillis: number;
-
     closeInactiveBrowserAfterMillis: number;
-
     useFingerprints?: boolean;
-
     fingerprintsOptions: FingerprintsOptions;
-
     preLaunchHooks: PreLaunchHook<LaunchContextReturn>[];
-
     postLaunchHooks: PostLaunchHook<BrowserControllerReturn>[];
-
     prePageCreateHooks: PrePageCreateHook<BrowserControllerReturn, PageOptions>[];
-
     postPageCreateHooks: PostPageCreateHook<BrowserControllerReturn, PageReturn>[];
-
     prePageCloseHooks: PrePageCloseHook<BrowserControllerReturn, PageReturn>[];
-
     postPageCloseHooks: PostPageCloseHook<BrowserControllerReturn>[];
-
     pageCounter = 0;
-
     pages = new Map<string, PageReturn>();
-
     pageIds = new WeakMap<PageReturn, string>();
-
     activeBrowserControllers = new Set<BrowserControllerReturn>();
-
     retiredBrowserControllers = new Set<BrowserControllerReturn>();
-
     pageToBrowserController = new WeakMap<PageReturn, BrowserControllerReturn>();
-
     fingerprintInjector?: FingerprintInjector;
-
     fingerprintGenerator?: FingerprintGenerator;
-
     fingerprintCache?: QuickLRU<string, Fingerprint>;
 
     private browserKillerInterval? = setInterval(
@@ -315,6 +294,8 @@ export class BrowserPool<
 
     constructor(options: Options & BrowserPoolHooks<BrowserControllerReturn, LaunchContextReturn, PageReturn>) {
         super();
+
+        this.browserKillerInterval!.unref();
 
         ow(options, ow.object.exactShape({
             browserPlugins: ow.array.minLength(1),
@@ -344,7 +325,7 @@ export class BrowserPool<
             postPageCreateHooks = [],
             prePageCloseHooks = [],
             postPageCloseHooks = [],
-            useFingerprints = false,
+            useFingerprints = true,
             fingerprintsOptions = {},
         } = options;
 
@@ -775,9 +756,7 @@ export class BrowserPool<
             ...this.preLaunchHooks,
             // This is flipped because of the fingerprint cache.
             // It is usual to generate proxy per browser and we want to know the proxyUrl for the caching.
-
             createFingerprintPreLaunchHook(this),
-
         ];
         this.prePageCreateHooks = [
             createPrePageCreateHook(),

@@ -5,14 +5,14 @@ title: Environment Variables
 
 import ApiLink from '@site/src/components/ApiLink';
 
-The following is a list of the environment variables used by Apify SDK that are available to the user.
-The SDK is capable of running without any env vars present, but certain features will only become available
+The following is a list of the environment variables used by Crawlee that are available to the user.
+Crawlee is capable of running without any env vars present, but certain features will only become available
 after env vars are properly set. You can use [Apify CLI](https://github.com/apify/apify-cli)
 to set the env vars for you. [Apify platform](../guides/apify-platform) also sets the variables automatically.
 
 ## Important env vars
 
-The following environment variables have large impact on the way Apify SDK works and its behavior
+The following environment variables have large impact on the way Crawlee works and its behavior
 can be changed significantly by setting or unsetting them.
 
 ### `APIFY_LOCAL_STORAGE_DIR`
@@ -28,7 +28,7 @@ you should define the `APIFY_LOCAL_STORAGE_DIR` environment variable instead.
 
 ### Combinations of `APIFY_LOCAL_STORAGE_DIR` and `APIFY_TOKEN`
 
-By combining the env vars in various ways, you can greatly influence the behavior of Apify SDK.
+By combining the env vars in various ways, you can greatly influence the Crawlee's behavior.
 
 | Env Vars                                    | API | Storages       |
 | ------------------------------------------- | --- | -------------- |
@@ -52,7 +52,7 @@ your code, such as temporarily switching log level to DEBUG.
 
 ### `APIFY_HEADLESS`
 
-If set to `1`, web browsers launched by Apify SDK will run in the headless mode. You can still override
+If set to `1`, web browsers launched by Crawlee will run in the headless mode. You can still override
 this setting in the code, e.g. by passing the `headless: true` option to the
 <ApiLink to="apify/class/Actor#launchPuppeteer">`Actor.launchPuppeteer()`</ApiLink> function. But having this setting
 in an environment variable allows you to develop the crawler locally in headful mode to simplify the debugging,

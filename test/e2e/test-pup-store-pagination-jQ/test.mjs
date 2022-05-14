@@ -1,55 +1,64 @@
-import { getStats, getDatasetItems, run, expect, validateDataset } from '../tools.mjs';
+import { Actor } from 'apify';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
+import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
-await run(import.meta.url, 'puppeteer-scraper', {
-    startUrls: [{
-        url: 'https://apify.com/store',
-        method: 'GET',
-        userData: { label: 'START' },
-    }],
-    pseudoUrls: [{
-        purl: 'https://apify.com/[.+]/[.+]',
-        method: 'GET',
-        userData: { label: 'DETAIL' },
-    }],
-    linkSelector: 'a',
-    keepUrlFragments: false,
-    pageFunction: async function pageFunction(context) {
-        const { request: { userData: { label } } } = context;
+await initialize(import.meta.url);
+
+const crawler = new PuppeteerCrawler({
+    async requestHandler(ctx) {
+        const { page, enqueueLinks, request, log } = ctx;
+        const { userData: { label } } = request;
 
         switch (label) {
-            case 'START': return handleStart(context);
-            case 'DETAIL': return handleDetail(context);
-            default:
+            case 'START': return handleStart();
+            case 'DETAIL': return handleDetail(ctx);
+            default: log.error(`Unknown label: ${label}`);
         }
 
-        async function handleStart({ log, page }) {
+        async function handleStart() {
             log.info('Store opened!');
-            let timeout;
-            const buttonSelector = 'div.show-more > button';
+            let pageNo = 2;
+            const nextButtonSelector = '[data-test="pagination-button-next"]:not([disabled])';
+
             while (true) {
-                log.info('Waiting for the Show more button.');
+                // Wait network events
+                await page.waitForNetworkIdle();
+
+                // Enqueue all loaded links
+                await enqueueLinks({
+                    selector: 'a.ActorStoreItem',
+                    globs: [{ glob: 'https://apify.com/*/*', userData: { label: 'DETAIL' } }],
+                });
+
+                log.info(`Enqueued actors for page ${pageNo++}`);
+
+                log.info('Going to the next page if possible');
                 try {
-                    await page.waitForSelector(buttonSelector, { timeout });
-                    timeout = 2000;
-                } catch (err) {
-                    log.info(`Could not find the Show more button, we've reached the end.`);
+                    const isButtonClickable = (await page.$(nextButtonSelector)) !== null;
+
+                    if (isButtonClickable) {
+                        await page.evaluate((el) => document.querySelector(el)?.click(), nextButtonSelector);
+                    } else {
+                        log.info('No more pages to load');
+                        break;
+                    }
+                } catch {
                     break;
                 }
-
-                log.info('Clicking the Show more button.');
-                await page.evaluate((providedButtonSelector) => document.querySelector(providedButtonSelector).click(), buttonSelector);
             }
         }
 
-        async function handleDetail({ request, log, skipLinks, page, puppeteerUtils }) {
-            await puppeteerUtils.injectJQuery(page);
+        /** @param {import('@crawlee/puppeteer').PuppeteerCrawlingContext} ctx */
+        async function handleDetail(ctx) {
+            await ctx.injectJQuery();
 
             const { url } = request;
             log.info(`Scraping ${url}`);
-            await skipLinks();
 
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
 
+            /** @type any */
+            let $ = {};
             const results = await page.evaluate(() => ({
                 // eslint-disable-next-line no-undef
                 title: $('header h1').text(),
@@ -61,31 +70,26 @@ await run(import.meta.url, 'puppeteer-scraper', {
                 runCount: Number($('ul.ActorHeader-stats > li:nth-of-type(3)').text().match(/[\d,]+/)[0].replace(/,/g, '')),
             }));
 
-            return { url, uniqueIdentifier, ...results };
+            await Actor.pushData({ url, uniqueIdentifier, ...results });
         }
     },
-    proxyConfiguration: { useApifyProxy: false },
-    proxyRotation: 'RECOMMENDED',
-    useChrome: false,
-    useStealth: false,
-    ignoreSslErrors: false,
-    ignoreCorsAndCsp: false,
-    downloadMedia: true,
-    downloadCss: true,
-    waitUntil: ['networkidle2'],
-    debugLog: false,
-    browserLog: false,
-    maxPagesPerCrawl: 750,
+    preNavigationHooks: [
+        ({ session, request }, goToOptions) => {
+            session?.setPuppeteerCookies([{ name: 'OptanonAlertBoxClosed', value: new Date().toISOString() }], request.url);
+            goToOptions.waitUntil = ['networkidle2'];
+        },
+    ],
+    maxRequestsPerCrawl: 750,
 });
 
-const stats = await getStats(import.meta.url);
+await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
+
+const stats = await Actor.main(() => crawler.run(), { exit: false });
 expect(stats.requestsFinished > 700, 'All requests finished');
 
 const datasetItems = await getDatasetItems(import.meta.url);
 expect(datasetItems.length > 700, 'Minimum number of dataset items');
-await new Promise((resolve) => setTimeout(resolve, 100));
 expect(datasetItems.length < 1000, 'Maximum number of dataset items');
-await new Promise((resolve) => setTimeout(resolve, 100));
 expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
     'Dataset items validation');
 
