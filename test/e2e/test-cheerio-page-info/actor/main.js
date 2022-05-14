@@ -1,18 +1,11 @@
 import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
-import { getDatasetItems, expect, validateDataset, skipTest, initialize } from '../tools.mjs';
 
-await skipTest('Apify store lazy loads items now, which cannot be easily tested with Cheerio');
-
-await initialize(import.meta.url);
-
-const crawler = new CheerioCrawler({
-    ignoreSslErrors: false,
-    async requestHandler({ request, log, $, enqueueLinks }) {
+await Actor.main(async () => {
+    const requestHandler = async ({ request, $, enqueueLinks }) => {
         const { userData: { label } } = request;
 
         if (label === 'START') {
-            log.info('Store opened!');
             await enqueueLinks({
                 globs: [{ glob: 'https://apify.com/apify/web-scraper', userData: { label: 'DETAIL' } }],
             });
@@ -20,7 +13,6 @@ const crawler = new CheerioCrawler({
 
         if (label === 'DETAIL') {
             const { url } = request;
-            log.info(`Scraping ${url}`);
 
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
             const title = $('header h1').text();
@@ -37,19 +29,9 @@ const crawler = new CheerioCrawler({
                 runCount: Number(runCount),
             });
         }
-    },
+    };
+
+    const crawler = new CheerioCrawler({ requestHandler });
+    await crawler.addRequests([{ url: 'https://apify.com/apify', userData: { label: 'START' } }]);
+    await crawler.run();
 });
-
-await crawler.addRequests([{ url: 'https://apify.com/store', userData: { label: 'START' } }]);
-
-const stats = await Actor.main(() => crawler.run(), { exit: false });
-
-expect(stats.requestsFinished === 2, 'All requests finished');
-
-const datasetItems = await getDatasetItems(import.meta.url);
-expect(datasetItems.length === 1, 'Minimum number of dataset items');
-expect(datasetItems.length === 1, 'Maximum number of dataset items');
-expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
-    'Dataset items validation');
-
-process.exit(0);
