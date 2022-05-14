@@ -53,14 +53,16 @@ export function getActorTestDir(url) {
 
 /**
  * @param {string} dirName
+ * @param {boolean} returnStats
  */
-export async function runActor(dirName) {
+export async function runActor(dirName, returnStats) {
     let stats;
     let datasetItems;
 
     if (process.env.npm_config_platform) {
         await copyPackages(dirName);
         // TODO: add some check for token (or check that we are logged in)
+        // TODO: take care of 'returnStats === false' option
         await exec('apify push', { cwd: dirName });
 
         const actorName = await getActorName(dirName);
@@ -75,11 +77,13 @@ export async function runActor(dirName) {
         datasetItems = items;
     } else {
         await exec('apify run -p', { cwd: dirName });
-        stats = await getStats(dirName);
-        datasetItems = await getDatasetItems(dirName);
+        if (returnStats) {
+            stats = await getStats(dirName);
+            datasetItems = await getDatasetItems(dirName);
+        }
     }
 
-    return { stats, datasetItems };
+    return returnStats ? { stats, datasetItems } : null;
 }
 
 /**

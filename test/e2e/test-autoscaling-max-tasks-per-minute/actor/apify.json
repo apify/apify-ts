@@ -1,5 +1,5 @@
 {
-	"name": "test-cheerio-default",
+	"name": "test-autoscaling-max-tasks-per-minute",
 	"version": "0.0",
 	"buildTag": "latest",
 	"env": null
