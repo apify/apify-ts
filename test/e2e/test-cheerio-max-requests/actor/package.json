@@ -1,7 +1,7 @@
 {
-	"name": "test-cheerio-store-pagination",
+	"name": "test-cheerio-max-requests",
 	"version": "0.0.1",
-	"description": "Cheerio Crawler Test - Store Pagination",
+	"description": "Cheerio Crawler Test - Max Requests Per Crawl",
 	"dependencies": {
         "apify": "file:./packages/apify",
         "@crawlee/core": "file:./packages/core",
