@@ -843,7 +843,7 @@ export class BasicCrawler<
             // Mark the request as failed and do not retry.
             this.handledRequestsCount++;
             await source.markRequestHandled(request);
-            this.stats.failJob(request.id || request.url);
+            this.stats.failJob(request.id || request.uniqueKey);
 
             // @ts-expect-error It is assignable, but TS says otherwise...
             const castedErrorContext = crawlingContext as ErrorContext;
