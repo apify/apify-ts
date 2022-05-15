@@ -1,20 +1,16 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
-import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
-await initialize(import.meta.url);
+await Actor.main(async () => {
+    const preNavigationHooks = [({ session, request }, goToOptions) => {
+        session?.setPuppeteerCookies([{ name: 'OptanonAlertBoxClosed', value: new Date().toISOString() }], request.url);
+        goToOptions.waitUntil = ['networkidle2'];
+    }];
 
-const crawler = new PuppeteerCrawler({
-    async requestHandler({ page, enqueueLinks, request, log }) {
-        const { userData: { label } } = request;
+    const requestHandler = async ({ page, enqueueLinks, request, log }) => {
+        const { url, userData: { label } } = request;
 
-        switch (label) {
-            case 'START': return handleStart();
-            case 'DETAIL': return handleDetail();
-            default: log.error(`Unknown label: ${label}`);
-        }
-
-        async function handleStart() {
+        if (label === 'START') {
             log.info('Store opened!');
             let pageNo = 1;
             const nextButtonSelector = '[data-test="pagination-button-next"]:not([disabled])';
@@ -22,13 +18,11 @@ const crawler = new PuppeteerCrawler({
             while (true) {
                 // Wait network events
                 await page.waitForNetworkIdle();
-
                 // Enqueue all loaded links
                 await enqueueLinks({
                     selector: 'a.ActorStoreItem',
                     globs: [{ glob: 'https://apify.com/*/*', userData: { label: 'DETAIL' } }],
                 });
-
                 log.info(`Enqueued actors for page ${pageNo++}`);
 
                 log.info('Going to the next page if possible');
@@ -45,10 +39,7 @@ const crawler = new PuppeteerCrawler({
                     break;
                 }
             }
-        }
-
-        async function handleDetail() {
-            const { url } = request;
+        } else if (label === 'DETAIL') {
             log.info(`Scraping ${url}`);
 
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
@@ -75,25 +66,9 @@ const crawler = new PuppeteerCrawler({
 
             await Actor.pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
         }
-    },
-    preNavigationHooks: [
-        ({ session, request }, goToOptions) => {
-            session?.setPuppeteerCookies([{ name: 'OptanonAlertBoxClosed', value: new Date().toISOString() }], request.url);
-            goToOptions.waitUntil = ['networkidle2'];
-        },
-    ],
-    maxRequestsPerCrawl: 750,
+    };
+
+    const crawler = new PuppeteerCrawler({ requestHandler, preNavigationHooks, maxRequestsPerCrawl: 750 });
+    await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
+    await crawler.run();
 });
-
-await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
-
-const stats = await Actor.main(() => crawler.run(), { exit: false });
-expect(stats.requestsFinished > 700, 'All requests finished');
-
-const datasetItems = await getDatasetItems(import.meta.url);
-expect(datasetItems.length > 700, 'Minimum number of dataset items');
-expect(datasetItems.length < 1000, 'Maximum number of dataset items');
-expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
-    'Dataset items validation');
-
-process.exit(0);
