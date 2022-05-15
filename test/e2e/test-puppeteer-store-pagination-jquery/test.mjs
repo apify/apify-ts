@@ -7,7 +7,7 @@ const { stats, datasetItems } = await runActor(testActorDirname);
 
 expect(stats.requestsFinished > 700, 'All requests finished');
 
-expect(datasetItems.length > 700 && datasetItems.length < 800, 'Number of dataset items');
+expect(datasetItems.length > 700 && datasetItems.length < 1000, 'Number of dataset items');
 await new Promise((resolve) => setTimeout(resolve, 10));
 expect(
     validateDataset(
