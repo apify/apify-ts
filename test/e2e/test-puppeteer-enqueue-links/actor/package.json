@@ -11,7 +11,8 @@
         "@crawlee/puppeteer": "file:./packages/puppeteer-crawler",
         "@crawlee/storage": "file:./packages/storage",
         "@crawlee/utils": "file:./packages/utils",
-        "puppeteer": "*"
+        "puppeteer": "*",
+        "deep-equal": "^2.0.5"
     },
 	"devDependencies": {
 		"@apify/eslint-config": "^0.3.1",
