@@ -23,10 +23,11 @@
 - removed compatibility fix for old/broken request queues with null Request props
 - `Actor.main/init` purges the storage by default
 
-2.3.1 / TBA
+2.3.1 / 2022/05/02
 ====================
 - fix: `utils.apifyClient` early instantiation (#1330)
-- feat: `playwright.injectJQuery()` (#1337)
+- feat: `utils.playwright.injectJQuery()` (#1337)
+- feat: add `keyValueStore` option to `Statistics` class (#1345)
 
 2.3.0 / 2022/04/07
 ====================
