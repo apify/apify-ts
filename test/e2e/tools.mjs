@@ -61,7 +61,6 @@ export async function runActor(dirName) {
     if (process.env.npm_config_platform) {
         await copyPackages(dirName);
         // TODO: add some check for token (or check that we are logged in)
-        // TODO: take care of 'returnStats === false' option
         await exec('npx -y apify-cli push', { cwd: dirName });
 
         const actorName = await getActorName(dirName);
