@@ -148,6 +148,10 @@ export async function getDatasetItems(dirName) {
     const dir = getStorage(dirName);
     const datasetPath = join(dir, 'datasets/default/');
 
+    if (!existsSync(datasetPath)) {
+        return [];
+    }
+
     const dirents = await readdir(datasetPath, { withFileTypes: true });
     const fileNames = dirents.filter((dirent) => dirent.isFile());
     const datasetItems = [];
