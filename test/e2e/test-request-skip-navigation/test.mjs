@@ -3,7 +3,7 @@ import { initialize, getActorTestDir, runActor, expect } from '../tools.mjs';
 const testActorDirname = getActorTestDir(import.meta.url);
 await initialize(testActorDirname);
 
-const { datasetItems } = await runActor(testActorDirname, true);
+const { datasetItems } = await runActor(testActorDirname);
 const { requestCounter, navigationCounter } = datasetItems[0];
 
 expect(requestCounter === 3, 'Processed 3 requests');

@@ -53,9 +53,8 @@ export function getActorTestDir(url) {
 
 /**
  * @param {string} dirName
- * @param {boolean} returnStats
  */
-export async function runActor(dirName, returnStats) {
+export async function runActor(dirName) {
     let stats;
     let datasetItems;
 
@@ -77,13 +76,11 @@ export async function runActor(dirName, returnStats) {
         datasetItems = items;
     } else {
         await exec('apify run -p', { cwd: dirName });
-        if (returnStats) {
-            stats = await getStats(dirName);
-            datasetItems = await getDatasetItems(dirName);
-        }
+        stats = await getStats(dirName);
+        datasetItems = await getDatasetItems(dirName);
     }
 
-    return returnStats ? { stats, datasetItems } : null;
+    return { stats, datasetItems };
 }
 
 /**

@@ -3,7 +3,7 @@ import { initialize, getActorTestDir, runActor, expect, validateDataset } from '
 const testActorDirname = getActorTestDir(import.meta.url);
 await initialize(testActorDirname);
 
-const { stats, datasetItems } = await runActor(testActorDirname, true);
+const { stats, datasetItems } = await runActor(testActorDirname);
 
 expect(stats.requestsFinished >= 5, 'All requests finished');
 await new Promise((resolve) => setTimeout(resolve, 10));

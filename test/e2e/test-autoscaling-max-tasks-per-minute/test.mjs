@@ -3,7 +3,7 @@ import { initialize, expect, getActorTestDir, runActor } from '../tools.mjs';
 const testActorDirname = getActorTestDir(import.meta.url);
 await initialize(testActorDirname);
 
-const { stats } = await runActor(testActorDirname, true);
+const { stats } = await runActor(testActorDirname);
 
 expect(stats.requestsFinished === 2, 'All requests finished');
 await new Promise((resolve) => setTimeout(resolve, 10));
