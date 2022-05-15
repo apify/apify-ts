@@ -1,8 +1,5 @@
 import { Actor } from 'apify';
 import { CheerioCrawler, log, Request } from '@crawlee/cheerio';
-import { initialize, expect } from '../tools.mjs';
-
-await initialize(import.meta.url);
 
 let requestCounter = 0;
 let navigationCounter = 0;
@@ -26,24 +23,20 @@ await Actor.main(async () => {
 
     const r3 = new Request({ url: 'https://example.com/?q=3' });
 
-    const crawler = new CheerioCrawler({
-        requestHandler: async (ctx) => {
-            requestCounter++;
-            if (ctx.request.skipNavigation) {
-                log.info(`Skipping ${ctx.request.id}...`);
-                return;
-            }
-            log.info(`Navigating on ${ctx.request.id}...`);
-        },
-        preNavigationHooks: [
-            () => { navigationCounter++; },
-        ],
-    });
+    const requestHandler = async (context) => {
+        requestCounter++;
+        if (context.request.skipNavigation) {
+            log.info(`Skipping ${context.request.id}...`);
+            return;
+        }
+        log.info(`Navigating on ${context.request.id}...`);
+    };
 
+    const preNavigationHooks = [() => { navigationCounter++; }];
+
+    const crawler = new CheerioCrawler({ requestHandler, preNavigationHooks });
     await crawler.addRequests([r1, r2, r3]);
-
     await crawler.run();
-}, { exit: false });
 
-expect(requestCounter === 3, 'Processed 3 requests');
-expect(navigationCounter === 1, 'Navigated on one request only.');
+    await Actor.pushData({ requestCounter, navigationCounter });
+});
