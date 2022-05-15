@@ -1,8 +1,14 @@
 import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
 
 await Actor.main(async () => {
-    const requestHandler = async ({ $, enqueueLinks, request, log }) => {
+    const preNavigationHooks = [(_ctx, goToOptions) => {
+        goToOptions.waitUntil = ['networkidle2'];
+    }];
+
+    const launchContext = { launchOptions: { ignoreHTTPSErrors: true } };
+
+    const requestHandler = async ({ page, enqueueLinks, request, log }) => {
         const { url, userData: { label } } = request;
 
         if (label === 'START') {
@@ -13,12 +19,12 @@ await Actor.main(async () => {
             });
         } else if (label === 'DETAIL') {
             log.info(`Scraping ${url}`);
-            const title = $('title').text();
+            const title = await page.title();
             await Actor.pushData({ url, title });
         }
     };
 
-    const crawler = new CheerioCrawler({ requestHandler, ignoreSslErrors: true });
+    const crawler = new PuppeteerCrawler({ requestHandler, preNavigationHooks, launchContext });
     await crawler.addRequests([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
     await crawler.run();
 });
