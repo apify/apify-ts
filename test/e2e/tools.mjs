@@ -62,7 +62,7 @@ export async function runActor(dirName) {
         await copyPackages(dirName);
         // TODO: add some check for token (or check that we are logged in)
         // TODO: take care of 'returnStats === false' option
-        await exec('apify push', { cwd: dirName });
+        await exec('npx -y apify-cli push', { cwd: dirName });
 
         const actorName = await getActorName(dirName);
         const client = new ApifyClient({ token: process.env.APIFY_TOKEN });
@@ -75,7 +75,7 @@ export async function runActor(dirName) {
         const { items } = await client.dataset(defaultDatasetId).listItems();
         datasetItems = items;
     } else {
-        await exec('apify run -p', { cwd: dirName });
+        await exec('npx -y apify-cli run -p', { cwd: dirName });
         stats = await getStats(dirName);
         datasetItems = await getDatasetItems(dirName);
     }
