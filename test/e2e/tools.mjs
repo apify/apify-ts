@@ -100,6 +100,11 @@ async function copyPackages(dirName) {
     await fs.remove(destPackagesDir);
 
     const { dependencies } = await fs.readJSON(join(dirName, 'package.json'));
+    // We don't need to copy the following packages
+    delete dependencies['deep-equal'];
+    delete dependencies['puppeteer'];
+    delete dependencies['playwright'];
+
     for (const dependency of Object.values(dependencies)) {
         const packageDirName = dependency.split('/').pop();
         const srcDir = join(srcPackagesDir, packageDirName, 'dist');
