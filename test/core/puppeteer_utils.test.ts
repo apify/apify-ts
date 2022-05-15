@@ -36,7 +36,7 @@ afterAll(() => {
     server.close();
 });
 
-describe('Apify.puppeteerUtils', () => {
+describe('puppeteerUtils', () => {
     let ll: number;
     let localStorageEmulator: LocalStorageDirEmulator;
 
@@ -58,7 +58,6 @@ describe('Apify.puppeteerUtils', () => {
 
     describe.each([
         [launchPuppeteer, { launchOptions: { headless: true } }],
-        // [launchPlaywright, { launchOptions: { headless: true } }],
     ] as const)('with %s', (method, launchContext) => {
         test('injectFile()', async () => {
         /* eslint-disable no-shadow */
@@ -85,19 +84,19 @@ describe('Apify.puppeteerUtils', () => {
             const remove = async (browser: Browser) => {
                 // Remove with navigations
                 const page = await browser.newPage();
-                // @ts-ignore
+                // @ts-expect-error
                 let result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await page.goto('about:chrome');
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await puppeteerUtils.injectFile(page, path.join(__dirname, '..', 'shared', 'data', 'inject_file.txt'));
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('https://www.example.com');
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
             };
@@ -119,7 +118,7 @@ describe('Apify.puppeteerUtils', () => {
                 // (https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#queryselector)
                 const result1 = await page.evaluate(() => {
                     return {
-                        // @ts-ignore
+                        // @ts-expect-error
                         isDefined: window.jQuery !== undefined,
                     };
                 });
@@ -131,13 +130,28 @@ describe('Apify.puppeteerUtils', () => {
                 const result2 = await page.evaluate(() => {
                 /* global $ */
                     return {
-                        // @ts-ignore
+                        // @ts-expect-error
                         isDefined: window.jQuery === window.$,
-                        // @ts-ignore
+                        // @ts-expect-error
                         text: $('h1').text(),
                     };
                 });
                 expect(result2).toEqual({
+                    isDefined: true,
+                    text: '',
+                });
+
+                await page.reload();
+
+                const result3 = await page.evaluate(() => {
+                    return {
+                        // @ts-expect-error
+                        isDefined: window.jQuery === window.$,
+                        // @ts-expect-error
+                        text: $('h1').text(),
+                    };
+                });
+                expect(result3).toEqual({
                     isDefined: true,
                     text: '',
                 });

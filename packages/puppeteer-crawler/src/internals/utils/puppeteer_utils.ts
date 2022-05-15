@@ -19,10 +19,9 @@
  * @module puppeteerUtils
  */
 
-import fs from 'fs';
+import { readFile } from 'fs/promises';
 import ow from 'ow';
 import vm from 'vm';
-import util from 'util';
 import { LruCache } from '@apify/datastructures';
 import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log_ from '@apify/log';
@@ -33,7 +32,6 @@ import { addInterceptRequestHandler, InterceptHandler, removeInterceptRequestHan
 import { PuppeteerCrawlingContext } from '../puppeteer-crawler';
 
 const jqueryPath = require.resolve('jquery');
-const readFilePromised = util.promisify(fs.readFile);
 
 const MAX_INJECT_FILE_CACHE_SIZE = 10;
 const DEFAULT_BLOCK_REQUEST_URL_PATTERNS = ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip'];
@@ -119,13 +117,17 @@ export async function injectFile(page: Page, filePath: string, options: InjectFi
 
     let contents = injectedFilesCache.get(filePath);
     if (!contents) {
-        contents = await readFilePromised(filePath, 'utf8');
+        contents = await readFile(filePath, 'utf8');
         injectedFilesCache.add(filePath, contents);
     }
     const evalP = page.evaluate(contents);
-    return options.surviveNavigations
-        ? Promise.all([page.evaluateOnNewDocument(contents), evalP])
-        : evalP;
+    if (options.surviveNavigations) {
+        page.on('framenavigated',
+            () => page.evaluate(contents)
+                .catch((error) => log.warning('An error occurred during the script injection!', { error })));
+    }
+
+    return evalP;
 }
 
 /**
