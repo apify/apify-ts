@@ -365,7 +365,7 @@ describe('addRequest', () => {
         request.id = undefined;
     });
 
-    test('adds a request', async () => { /* eslint-disable no-shadow */
+    test('adds a request', async () => {
         const newRequest = numToRequest(startCount + 1);
         const newRequestId = newRequest.id;
         newRequest.id = undefined;
@@ -450,7 +450,7 @@ describe('addRequest', () => {
         expect(counter.requests(queueName)).toBe(startCount);
     });
 
-    test('forefront adds request to queue head', async () => { /* eslint-disable no-shadow */
+    test('forefront adds request to queue head', async () => {
         const newRequest = numToRequest(startCount + 1);
         const newRequestId = newRequest.id;
         newRequest.id = undefined;

@@ -657,7 +657,7 @@ describe('RequestList', () => {
         // Get requests from list
         let reqs: Request[] = [];
         for (let i = 0; i < 5; i++) {
-            const request = await requestList.fetchNextRequest(); // eslint-disable-line
+            const request = await requestList.fetchNextRequest();
             if (!request) break;
             reqs.push(request);
         }
@@ -665,7 +665,7 @@ describe('RequestList', () => {
         reqs = shuffle(reqs) as typeof reqs;
 
         for (let i = 0; i < reqs.length; i++) {
-            await requestList.reclaimRequest(reqs[i]); // eslint-disable-line
+            await requestList.reclaimRequest(reqs[i]);
         }
     });
 

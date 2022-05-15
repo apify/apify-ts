@@ -165,7 +165,7 @@ describe('dataset', () => {
             } catch (err) {
                 e = err;
             }
-            expect((e as Error).message).toEqual('dataset.getData(): The response is too large for parsing. You can fix this by lowering the "limit" option.'); // eslint-disable-line max-len
+            expect((e as Error).message).toEqual('dataset.getData(): The response is too large for parsing. You can fix this by lowering the "limit" option.');
             spy.mockRestore();
         });
 

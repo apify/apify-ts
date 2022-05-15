@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import ow from 'ow';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';

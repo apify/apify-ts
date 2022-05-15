@@ -131,7 +131,7 @@ describe('pushItems', () => {
     const datasetName = 'first';
     const startCount = TEST_DATASETS[1].itemCount;
 
-    test('adds an object', async () => { /* eslint-disable no-shadow */
+    test('adds an object', async () => {
         const item = numToItem(startCount + 1);
 
         await storageLocal.dataset(datasetName).pushItems(item);

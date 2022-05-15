@@ -108,7 +108,7 @@ describe('BasicCrawler', () => {
 
         // clean up
         // @ts-expect-error Accessing private method
-        await basicCrawler.autoscaledPool._destroy(); // eslint-disable-line no-underscore-dangle
+        await basicCrawler.autoscaledPool._destroy();
         getValueSpy.mockRestore();
         setValueSpy.mockRestore();
     });
@@ -351,7 +351,7 @@ describe('BasicCrawler', () => {
         });
 
         // @ts-expect-error Accessing private prop
-        expect(await crawler._isTaskReadyFunction()).toBe(false); // eslint-disable-line no-underscore-dangle
+        expect(await crawler._isTaskReadyFunction()).toBe(false);
     });
 
     test('should be possible to override isFinishedFunction of underlying AutoscaledPool', async () => {
@@ -650,7 +650,7 @@ describe('BasicCrawler', () => {
             });
 
             // @ts-expect-error Accessing private prop
-            crawler._loadHandledRequestCount = () => { // eslint-disable-line
+            crawler._loadHandledRequestCount = () => {
                 expect(crawler.sessionPool).toBeDefined();
                 expect(events.listenerCount(EventType.PERSIST_STATE)).toEqual(1);
             };

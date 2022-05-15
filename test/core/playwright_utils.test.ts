@@ -59,7 +59,6 @@ describe('playwrightUtils', () => {
         [launchPlaywright, { launchOptions: { headless: true } }],
     ] as const)('with %s', (launchName, launchContext) => {
         test('injectFile()', async () => {
-            /* eslint-disable no-shadow */
             const browser2 = await launchName(launchContext);
             const survive = async (browser: Browser) => {
                 // Survive navigations

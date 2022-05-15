@@ -1,5 +1,4 @@
 // eslint isn't compatible with `import type`
-/* eslint-disable import/no-duplicates */
 import type Puppeteer from './puppeteer-proxy-per-page';
 import type { Browser, Target, BrowserContext } from './puppeteer-proxy-per-page';
 import { BrowserController } from '../abstract-classes/browser-controller';

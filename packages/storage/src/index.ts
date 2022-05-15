@@ -177,7 +177,7 @@ export class ApifyStorageLocal {
 
         const dirents = readdirSync(storageDir, { withFileTypes: true });
         for (const dirent of dirents) {
-            if (!dirent.isDirectory()) continue; // eslint-disable-line
+            if (!dirent.isDirectory()) continue;
 
             const innerStorageDir = resolve(storageDir, dirent.name);
 

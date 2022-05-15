@@ -57,7 +57,6 @@ describe('Statistics', () => {
             await stats.persistState();
 
             // console.dir(stats);
-            // eslint-disable-next-line no-unused-vars
             // @ts-expect-error Accessing private prop
             const state = await stats.keyValueStore.getValue(stats.persistStateKey);
 

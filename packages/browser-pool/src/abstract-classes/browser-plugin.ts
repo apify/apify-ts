@@ -153,7 +153,7 @@ export abstract class BrowserPlugin<
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars, max-len
+    // eslint-disable-next-line max-len
     protected abstract _addProxyToLaunchOptions(launchContext: LaunchContext<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>): Promise<void> {
         throwImplementationNeeded('_addProxyToLaunchOptions');
     }
@@ -162,7 +162,6 @@ export abstract class BrowserPlugin<
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars, max-len
     protected abstract _launch(launchContext: LaunchContext<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>): Promise<LaunchResult> {
         throwImplementationNeeded('_launch');
     }

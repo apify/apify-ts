@@ -244,7 +244,6 @@ export abstract class BrowserController<
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars
     protected abstract async _newPage(pageOptions?: NewPageOptions): Promise<NewPageResult> {
         throwImplementationNeeded('_newPage');
     }
@@ -253,7 +252,6 @@ export abstract class BrowserController<
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars
     protected abstract async _setCookies(page: NewPageResult, cookies: Cookie[]): Promise<void> {
         throwImplementationNeeded('_setCookies');
     }
@@ -262,7 +260,6 @@ export abstract class BrowserController<
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars
     protected abstract async _getCookies(page: NewPageResult): Promise<Cookie[]> {
         throwImplementationNeeded('_getCookies');
     }
@@ -271,7 +268,6 @@ export abstract class BrowserController<
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars
     abstract normalizeProxyOptions(proxyUrl: string | undefined, pageOptions: any): Record<string, unknown> {
         throwImplementationNeeded('_normalizeProxyOptions');
     }

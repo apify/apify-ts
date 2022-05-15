@@ -42,7 +42,6 @@ const crawler = new PuppeteerCrawler({
 
         expect(
             numberOfSameCookies === initialCookiesLength,
-            // eslint-disable-next-line max-len
             `The number of the page cookies matches the defined initial cookies number. Number of wrong cookies is ${initialCookiesLength - numberOfSameCookies}`,
         );
 

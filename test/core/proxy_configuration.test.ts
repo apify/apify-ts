@@ -144,7 +144,6 @@ describe('ProxyConfiguration', () => {
                 return proxyUrls[Math.floor(Math.random() * proxyUrls.length)];
             };
             try {
-                // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls,
                     newUrlFunction,
@@ -157,7 +156,6 @@ describe('ProxyConfiguration', () => {
 
         test('should throw proxyUrls array is empty', async () => {
             try {
-                // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls: [],
                 });
@@ -169,7 +167,6 @@ describe('ProxyConfiguration', () => {
 
         test('should throw invalid custom URL form', async () => {
             try {
-                // eslint-disable-next-line no-unused-vars
                 const proxyConfiguration = new ProxyConfiguration({
                     proxyUrls: ['http://proxy.com:1111*invalid_url'],
                 });

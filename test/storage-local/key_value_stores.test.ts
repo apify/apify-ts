@@ -100,7 +100,7 @@ describe('setRecord', () => {
     const storeName = 'first';
     const startCount = TEST_STORES[1].recordCount;
 
-    test('adds a value', async () => { /* eslint-disable no-shadow */
+    test('adds a value', async () => {
         const record = numToRecord(startCount + 1);
 
         await storageLocal.keyValueStore(storeName).setRecord(stripRecord(record));
@@ -512,7 +512,6 @@ function numToRecord(num: number) {
 }
 
 function stripRecord(record: ReturnType<typeof numToRecord>) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Because we strip these variables from the record
     const { filename, size, ...strippedRecord } = record;
     return strippedRecord;
 }

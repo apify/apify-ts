@@ -60,7 +60,6 @@ describe('puppeteerUtils', () => {
         [launchPuppeteer, { launchOptions: { headless: true } }],
     ] as const)('with %s', (method, launchContext) => {
         test('injectFile()', async () => {
-        /* eslint-disable no-shadow */
             const browser2 = await method(launchContext);
             const survive = async (browser: Browser) => {
                 // Survive navigations

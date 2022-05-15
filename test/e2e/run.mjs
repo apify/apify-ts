@@ -60,7 +60,6 @@ async function run() {
             }
 
             const took = (Date.now() - now) / 1000;
-            // eslint-disable-next-line max-len
             console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
         });
         await once(worker, 'exit');

@@ -54,7 +54,7 @@ const responseSamples = {
         + '        background-color: #f0f0f2;\n'
         + '        margin: 0;\n'
         + '        padding: 0;\n'
-        + '        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;\n' // eslint-disable-line max-len
+        + '        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;\n'
         + '        \n'
         + '    }\n'
         + '    div {\n'
