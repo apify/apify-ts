@@ -23,6 +23,10 @@
 - removed compatibility fix for old/broken request queues with null Request props
 - `Actor.main/init` purges the storage by default
 
+2.3.1 / TBA
+====================
+- fix: `utils.apifyClient` early instantiation (#1330)
+
 2.3.0 / 2022/04/07
 ====================
 - feat: accept more social media patterns (#1286)
@@ -68,7 +72,6 @@ stuck requests in the `inProgress` cache.
 - fix: ensure `request.headers` is set
 - fix: lower `RequestQueue` API timeout to 30 seconds
 - improve logging for fetching next request and timeouts
-
 
 2.2.1 / 2022/01/03
 ====================
