@@ -1,0 +1,29 @@
+{
+	"name": "test-puppeteer-page-info",
+	"version": "0.0.1",
+	"description": "Puppeteer Test - Page Info",
+	"dependencies": {
+        "apify": "file:./packages/apify",
+        "@crawlee/basic": "file:./packages/basic-crawler",
+        "@crawlee/browser": "file:./packages/browser-crawler",
+        "@crawlee/browser-pool": "file:./packages/browser-pool",
+        "@crawlee/core": "file:./packages/core",
+        "@crawlee/puppeteer": "file:./packages/puppeteer-crawler",
+        "@crawlee/storage": "file:./packages/storage",
+        "@crawlee/utils": "file:./packages/utils",
+        "puppeteer": "*"
+    },
+	"devDependencies": {
+		"@apify/eslint-config": "^0.3.1",
+		"eslint": "^8.13.0"
+	},
+	"scripts": {
+		"start": "node main.js",
+		"lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx",
+		"lint:fix": "./node_modules/.bin/eslint ./src --ext .js,.jsx --fix",
+		"test": "echo \"Error: oops, the actor has no tests yet, sad!\" && exit 1"
+	},
+	"type": "module",
+	"author": "It's not you it's me",
+	"license": "ISC"
+}

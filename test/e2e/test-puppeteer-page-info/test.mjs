@@ -1,4 +1,4 @@
-import { initialize, expect, validateDataset, getActorTestDir, runActor } from '../tools.mjs';
+import { initialize, getActorTestDir, runActor, expect, validateDataset } from '../tools.mjs';
 
 const testActorDirname = getActorTestDir(import.meta.url);
 await initialize(testActorDirname);
@@ -12,7 +12,7 @@ await new Promise((resolve) => setTimeout(resolve, 10));
 expect(
     validateDataset(
         datasetItems,
-        ['url', 'title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount'],
+        ['url','title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount'],
     ),
     'Dataset items validation',
 );

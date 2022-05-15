@@ -1,15 +1,15 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
-import { getDatasetItems, initialize, expect, validateDataset } from '../tools.mjs';
 
-await initialize(import.meta.url);
+await Actor.main(async () => {
+    const preNavigationHooks = [(_ctx, goToOptions) => {
+        goToOptions.waitUntil = ['networkidle2'];
+    }];
 
-const crawler = new PuppeteerCrawler({
-    async requestHandler({ page, enqueueLinks, request, log }) {
+    const requestHandler = async ({ page, enqueueLinks, request }) => {
         const { userData: { label } } = request;
 
         if (label === 'START') {
-            log.info('Store opened!');
             await enqueueLinks({
                 globs: [{ glob: 'https://apify.com/apify/web-scraper', userData: { label: 'DETAIL' } }],
             });
@@ -17,7 +17,6 @@ const crawler = new PuppeteerCrawler({
 
         if (label === 'DETAIL') {
             const { url } = request;
-            log.info(`Scraping ${url}`);
 
             const uniqueIdentifier = url.split('/').slice(-2).join('/');
 
@@ -42,23 +41,9 @@ const crawler = new PuppeteerCrawler({
 
             await Actor.pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
         }
-    },
-    preNavigationHooks: [
-        (_ctx, goToOptions) => {
-            goToOptions.waitUntil = ['networkidle2'];
-        },
-    ],
+    };
+
+    const crawler = new PuppeteerCrawler({ requestHandler, preNavigationHooks });
+    await crawler.addRequests([{ url: 'https://apify.com/store', userData: { label: 'START' } }]);
+    await crawler.run();
 });
-
-await crawler.addRequests([{ url: 'https://apify.com/store', userData: { label: 'START' } }]);
-
-const stats = await Actor.main(() => crawler.run(), { exit: false });
-expect(stats.requestsFinished === 2, 'All requests finished');
-
-const datasetItems = await getDatasetItems(import.meta.url);
-expect(datasetItems.length === 1, 'Minimum number of dataset items');
-expect(datasetItems.length === 1, 'Maximum number of dataset items');
-expect(validateDataset(datasetItems, ['title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount']),
-    'Dataset items validation');
-
-process.exit(0);

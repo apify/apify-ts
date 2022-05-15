@@ -14,6 +14,7 @@ expect(
         datasetItems,
         ['url', 'title', 'uniqueIdentifier', 'description', 'modifiedDate', 'runCount'],
     ),
-    'Dataset items validation');
+    'Dataset items validation',
+);
 
 process.exit(0);
