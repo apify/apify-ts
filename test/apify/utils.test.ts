@@ -1,5 +1,4 @@
 import { ENV_VARS } from '@apify/consts';
-import { addTimeoutToPromise } from '@apify/timeout';
 import { Request, log } from '@crawlee/core';
 import { tools } from '@apify/scraper-tools';
 import { Actor } from 'apify';
@@ -87,45 +86,6 @@ describe('printOutdatedSdkWarning()', () => {
 
         delete process.env[ENV_VARS.SDK_LATEST_VERSION];
         spy.mockRestore();
-    });
-});
-
-describe('addTimeoutToPromise()', () => {
-    beforeAll(() => {
-        jest.useFakeTimers();
-    });
-
-    afterAll(() => {
-        jest.useRealTimers();
-    });
-
-    test('should timeout', async () => {
-        try {
-            const p = addTimeoutToPromise(
-                () => new Promise((r) => setTimeout(r, 500)),
-                100,
-                'Timed out.',
-            );
-            jest.advanceTimersByTime(101);
-            await p;
-            throw new Error('Wrong error.');
-        } catch (err) {
-            expect((err as Error).message).toBe('Timed out.');
-        }
-    });
-
-    test('should not timeout too soon', async () => {
-        try {
-            const p = addTimeoutToPromise(
-                () => new Promise((r) => setTimeout(() => r('Done'), 100)),
-                500,
-                'Timed out.',
-            );
-            jest.advanceTimersByTime(101);
-            expect(await p).toBe('Done');
-        } catch {
-            throw new Error('This should not fail.');
-        }
     });
 });
 

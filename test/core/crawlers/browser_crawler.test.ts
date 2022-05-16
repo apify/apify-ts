@@ -1,23 +1,20 @@
-import { URL } from 'url';
 import { ENV_VARS } from '@apify/consts';
-import { BrowserPool, PuppeteerPlugin, OperatingSystemsName, BROWSER_POOL_EVENTS } from '@crawlee/browser-pool';
+import { BROWSER_POOL_EVENTS, BrowserPool, OperatingSystemsName, PuppeteerPlugin } from '@crawlee/browser-pool';
 import puppeteer, { HTTPResponse } from 'puppeteer';
 import log from '@apify/log';
 import {
+    AutoscaledPool,
     BrowserCrawler,
-    BrowserCrawlingContext,
     BrowserCrawlerHandleFailedRequestInput,
-    ProxyInfo,
+    BrowserCrawlingContext,
+    Configuration, ProxyConfiguration, ProxyInfo,
+    PuppeteerCrawlingContext,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
-    STATUS_CODES_BLOCKED,
     Request,
-    AutoscaledPool,
-    Session,
-    Configuration,
     RequestList,
-    ProxyConfiguration,
-    PuppeteerCrawlingContext,
+    Session,
+    STATUS_CODES_BLOCKED,
 } from '@crawlee/puppeteer';
 import { Actor } from 'apify';
 import { gotScraping } from 'got-scraping';
@@ -757,10 +754,7 @@ describe('BrowserCrawler', () => {
         });
 
         test('failedRequestHandler contains proxyInfo', async () => {
-            process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-            const stub = gotScrapingSpy.mockResolvedValueOnce({ body: { connected: true } } as never);
-
-            const proxyConfiguration = await Actor.createProxyConfiguration();
+            const proxyConfiguration = new ProxyConfiguration({ proxyUrls: ['http://localhost'] });
 
             const browserCrawler = new BrowserCrawlerTest({
                 browserPoolOptions: {
@@ -781,8 +775,6 @@ describe('BrowserCrawler', () => {
             });
 
             await browserCrawler.run();
-
-            delete process.env[ENV_VARS.PROXY_PASSWORD];
         });
     });
 });

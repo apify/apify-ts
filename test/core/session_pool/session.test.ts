@@ -1,6 +1,5 @@
-import { EVENT_SESSION_RETIRED, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlee/core';
+import { EVENT_SESSION_RETIRED, ProxyConfiguration, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlee/core';
 import { Dictionary, entries, sleep } from '@crawlee/utils';
-import { ProxyConfiguration } from 'apify';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool: SessionPool;
@@ -160,7 +159,7 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should be valid proxy session', async () => {
-        const proxyConfiguration = new ProxyConfiguration({ password: '12312' });
+        const proxyConfiguration = new ProxyConfiguration({ proxyUrls: ['http://localhost:1234'] });
         session = new Session({ sessionPool });
         let error;
         try {
