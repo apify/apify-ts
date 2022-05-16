@@ -40,7 +40,7 @@ export class MemoryStorage implements storage.StorageClient {
             localDataDirectory: s.string.optional,
         }).parse(options);
 
-        this.localDataDirectory = process.env.APIFY_LOCAL_STORAGE_DIR ?? options.localDataDirectory ?? './memory-storage';
+        this.localDataDirectory = options.localDataDirectory ?? process.env.APIFY_LOCAL_STORAGE_DIR ?? './memory-storage';
         this.datasetsDirectory = resolve(this.localDataDirectory, 'datasets');
         this.keyValueStoresDirectory = resolve(this.localDataDirectory, 'key-value-stores');
         this.requestQueuesDirectory = resolve(this.localDataDirectory, 'request-queues');

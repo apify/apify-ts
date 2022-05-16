@@ -27,6 +27,8 @@ describe.each(StorageTestCases)('Statistics - %s', (Emulator) => {
 
     afterAll(async () => {
         await localStorageEmulator.destroy();
+        // eslint-disable-next-line dot-notation
+        Statistics['id'] = 0;
     });
 
     describe('persist state', () => {
