@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { StorageEmulator, StorageTestCases } from './StorageEmulator';
+import { StorageTestCases } from './StorageEmulator';
 
-test.each(StorageTestCases)('TestName with %s', (Emulator) => {
+describe.each(StorageTestCases)('TestName with %s', (Emulator) => {
     const emulator = new Emulator();
 
     beforeEach(async () => {

@@ -239,8 +239,8 @@ export class Configuration {
      * Creates an instance of MemoryStorage using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createMemoryStorage(options?: MemoryStorageOptions): MemoryStorage {
-        const cacheKey = 'MemoryStorage';
+    createMemoryStorage(options: MemoryStorageOptions = {}): MemoryStorage {
+        const cacheKey = `MemoryStorage-${JSON.stringify(options)}`;
 
         if (this.services.has(cacheKey)) {
             return this.services.get(cacheKey) as MemoryStorage;

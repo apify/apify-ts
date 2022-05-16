@@ -42,8 +42,8 @@ export class MemoryStorage implements storage.StorageClient {
 
         this.localDataDirectory = options.localDataDirectory ?? process.env.APIFY_LOCAL_STORAGE_DIR ?? './memory-storage';
         this.datasetsDirectory = resolve(this.localDataDirectory, 'datasets');
-        this.keyValueStoresDirectory = resolve(this.localDataDirectory, 'key-value-stores');
-        this.requestQueuesDirectory = resolve(this.localDataDirectory, 'request-queues');
+        this.keyValueStoresDirectory = resolve(this.localDataDirectory, 'key_value_stores');
+        this.requestQueuesDirectory = resolve(this.localDataDirectory, 'request_queues');
 
         this.createWorker();
     }
@@ -106,7 +106,7 @@ export class MemoryStorage implements storage.StorageClient {
         }
     }
 
-    protected sendMessageToWorker(message: WorkerReceivedMessage) {
-        this.fileStorageWorker.postMessage(message);
+    protected async sendMessageToWorker(message: WorkerReceivedMessage) {
+        await this.fileStorageWorker.postMessage(message);
     }
 }

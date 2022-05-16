@@ -1,12 +1,12 @@
 import { rm } from 'node:fs/promises';
 
 export abstract class StorageEmulator {
-    protected localeStorageDirectories: string[] = [];
+    protected localStorageDirectories: string[] = [];
 
     abstract init(dirName?: string): Promise<void>;
 
     async destroy() {
-        const promises = this.localeStorageDirectories.map((dir) => {
+        const promises = this.localStorageDirectories.map((dir) => {
             return rm(dir, { force: true, recursive: true });
         });
 
