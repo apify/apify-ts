@@ -4,6 +4,7 @@ import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { move } from 'fs-extra';
 import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
 import { BaseClient } from './common/base-client';
@@ -36,13 +37,13 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
     itemCount = 0;
 
     private readonly datasetEntries = new Map<string, Data>();
-    private readonly datasetDirectory: string;
+    private datasetDirectory: string;
     private readonly client: MemoryStorage;
 
     constructor(options: DatasetClientOptions) {
         super(options.id ?? randomUUID());
         this.name = options.name;
-        this.datasetDirectory = resolve(options.baseStorageDirectory, this.id);
+        this.datasetDirectory = resolve(options.baseStorageDirectory, this.name ?? this.id);
         this.client = options.client;
     }
 
@@ -85,6 +86,12 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
 
         // Update timestamps
         existingStoreById.updateTimestamps(true);
+
+        const previousDir = existingStoreById.datasetDirectory;
+
+        existingStoreById.datasetDirectory = resolve(this.client.datasetsDirectory, parsed.name ?? existingStoreById.name);
+
+        await move(previousDir, existingStoreById.datasetDirectory, { overwrite: true });
 
         return existingStoreById.toDatasetInfo();
     }
@@ -160,20 +167,23 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
 
         const normalized = this.normalizeItems(rawItems);
 
+        const addedIds: string[] = [];
+
         for (const entry of normalized) {
             const idx = this.generateLocalEntryName(++existingStoreById.itemCount);
 
             existingStoreById.datasetEntries.set(idx, entry);
+            addedIds.push(idx);
         }
 
-        existingStoreById.updateTimestamps(true);
+        const dataEntries: [string, Dictionary][] = addedIds.map((id) => [id, existingStoreById.datasetEntries.get(id)!]);
 
-        const dataEntries = Object.fromEntries(existingStoreById.datasetEntries);
+        existingStoreById.updateTimestamps(true);
         existingStoreById.triggerWorkerUpdate({
             data: dataEntries,
             action: 'update-entries',
             entityType: 'datasets',
-            id: this.id,
+            id: existingStoreById.name ?? existingStoreById.id,
         });
     }
 
@@ -243,7 +253,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             action: 'update-metadata',
             data,
             entityType: 'datasets',
-            id: this.id,
+            id: this.name ?? this.id,
         });
     }
 

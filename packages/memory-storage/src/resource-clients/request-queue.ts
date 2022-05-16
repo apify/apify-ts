@@ -3,6 +3,7 @@ import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { rm } from 'node:fs/promises';
+import { move } from 'fs-extra';
 import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
 import { purgeNullsFromObject, uniqueKeyToRequestId, WorkerReceivedMessage } from '../utils';
@@ -53,7 +54,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     pendingRequestCount = 0;
 
     private readonly requests = new Map<string, InternalRequest>();
-    private readonly requestQueueDirectory: string;
+    private requestQueueDirectory: string;
     private readonly client: MemoryStorage;
 
     constructor(options: RequestQueueClientOptions) {
@@ -103,6 +104,12 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
 
         // Update timestamps
         existingQueueById.updateTimestamps(true);
+
+        const previousDir = existingQueueById.requestQueueDirectory;
+
+        existingQueueById.requestQueueDirectory = resolve(this.client.requestQueuesDirectory, parsed.name ?? existingQueueById.name);
+
+        await move(previousDir, existingQueueById.requestQueueDirectory, { overwrite: true });
 
         return existingQueueById.toRequestQueueInfo();
     }
@@ -344,7 +351,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             action: 'update-metadata',
             data,
             entityType: 'requestQueues',
-            id: this.id,
+            id: this.name ?? this.id,
         });
     }
 
@@ -358,7 +365,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             action: 'update-entries',
             data: [...this.requests.values()],
             entityType: 'requestQueues',
-            id: this.id,
+            id: this.name ?? this.id,
         });
     }
 

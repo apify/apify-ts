@@ -47,45 +47,54 @@ async function updateMetadata(entityTypeToDirectory: EntityTypeToDirectoryMap, m
 
     // Ensure the directory for the entity exists
     const dir = entityTypeToDirectory.get(message.entityType)!;
-    await ensureDir(resolve(dir, message.id));
+    const entityDir = resolve(dir, message.id);
+    await ensureDir(entityDir);
 
     // Write the metadata to the file
-    const filePath = resolve(dir, message.id, '__metadata__.json');
+    const filePath = resolve(entityDir, '__metadata__.json');
     await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
 }
 
 async function updateItems(entityTypeToDirectory: EntityTypeToDirectoryMap, message: WorkerUpdateEntriesMessage) {
-    workerLog.info(`Updating items for ${message.entityType} with id ${message.id}`);
+    workerLog.info(`Updating entries for ${message.entityType} with id ${message.id}`);
 
     // Ensure the directory for the entity exists
     const dir = entityTypeToDirectory.get(message.entityType)!;
-    await ensureDir(resolve(dir, message.id));
+    const entityDir = resolve(dir, message.id);
+    await ensureDir(entityDir);
 
     switch (message.entityType) {
-        case 'datasets':
         case 'requestQueues': {
-            // Write the metadata to the file
-            const filePath = resolve(dir, message.id, 'entries.json');
+            // Write the entries to the file
+            const filePath = resolve(entityDir, 'entries.json');
             await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
             break;
         }
-        case 'keyValueStores': {
-            const itemsDirectory = resolve(dir, message.id, 'entries');
+        case 'datasets': {
+            // Save all the new items to the disk
+            for (const [idx, data] of message.data) {
+                await writeFile(
+                    resolve(entityDir, `${idx}.json`),
+                    JSON.stringify(data, null, '\t'),
+                );
+            }
 
+            break;
+        }
+        case 'keyValueStores': {
+            // Create files for the record
             const { action, record } = message.data;
 
-            const itemDirectory = resolve(itemsDirectory, record.key);
+            const itemPath = resolve(entityDir, `${record.key}.${record.extension}`);
 
             switch (action) {
                 case 'delete':
-                    await rm(itemDirectory, { force: true, recursive: true });
+                    await rm(itemPath, { force: true, recursive: true });
                     break;
                 case 'set': {
-                    await rm(itemDirectory, { force: true, recursive: true });
-                    await ensureDir(itemDirectory);
+                    await rm(itemPath, { force: true, recursive: true });
 
-                    const metadataPath = resolve(itemDirectory, '__metadata__.json');
-                    const dataBlobPath = resolve(itemDirectory, `${record.key}.${record.extension}`);
+                    const metadataPath = resolve(entityDir, `${record.key}.__metadata__.json`);
 
                     await writeFile(
                         metadataPath,
@@ -100,7 +109,7 @@ async function updateItems(entityTypeToDirectory: EntityTypeToDirectoryMap, mess
                         ),
                     );
 
-                    await writeFile(dataBlobPath, record.value);
+                    await writeFile(itemPath, record.value);
 
                     break;
                 }

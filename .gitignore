@@ -23,4 +23,5 @@ docs/typedefs
 tsconfig.tsbuildinfo
 apify_storage
 memory-storage
+!packages/memory-storage
 .turbo

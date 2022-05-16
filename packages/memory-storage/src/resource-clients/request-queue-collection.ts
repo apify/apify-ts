@@ -44,7 +44,7 @@ export class RequestQueueCollectionClient implements storage.RequestQueueCollect
         this.client['sendMessageToWorker']({
             action: 'update-metadata',
             entityType: 'requestQueues',
-            id: queueInfo.id,
+            id: queueInfo.name ?? queueInfo.id,
             data: queueInfo,
         });
 

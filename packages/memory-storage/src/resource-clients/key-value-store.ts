@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { resolve } from 'node:path';
 import { rm } from 'node:fs/promises';
+import { move } from 'fs-extra';
 import { MemoryStorage } from '../index';
 import { maybeParseBody } from '../body-parser';
 import { DEFAULT_API_PARAM_LIMIT, StorageTypes } from '../consts';
@@ -34,7 +35,7 @@ export class KeyValueStoreClient extends BaseClient {
     modifiedAt = new Date();
 
     private readonly keyValueEntries = new Map<string, InternalKeyRecord>();
-    private readonly keyValueStoreDirectory: string;
+    private keyValueStoreDirectory: string;
     private readonly client: MemoryStorage;
 
     constructor(options: KeyValueStoreClientOptions) {
@@ -83,6 +84,12 @@ export class KeyValueStoreClient extends BaseClient {
 
         // Update timestamps
         existingStoreById.updateTimestamps(true);
+
+        const previousDir = existingStoreById.keyValueStoreDirectory;
+
+        existingStoreById.keyValueStoreDirectory = resolve(this.client.keyValueStoresDirectory, parsed.name ?? existingStoreById.name);
+
+        await move(previousDir, existingStoreById.keyValueStoreDirectory, { overwrite: true });
 
         return existingStoreById.toKeyValueStoreInfo();
     }
@@ -264,7 +271,7 @@ export class KeyValueStoreClient extends BaseClient {
                 record: entry,
             },
             entityType: 'keyValueStores',
-            id: existingStoreById.id,
+            id: existingStoreById.name ?? existingStoreById.id,
         });
     }
 
@@ -290,7 +297,7 @@ export class KeyValueStoreClient extends BaseClient {
                     record: entry,
                 },
                 entityType: 'keyValueStores',
-                id: existingStoreById.id,
+                id: existingStoreById.name ?? existingStoreById.id,
             });
         }
     }
@@ -318,7 +325,7 @@ export class KeyValueStoreClient extends BaseClient {
             action: 'update-metadata',
             data,
             entityType: 'keyValueStores',
-            id: this.id,
+            id: this.name ?? this.id,
         });
     }
 

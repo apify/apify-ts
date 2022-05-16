@@ -44,7 +44,7 @@ export class KeyValueStoreCollectionClient implements storage.KeyValueStoreColle
         this.client['sendMessageToWorker']({
             action: 'update-metadata',
             entityType: 'keyValueStores',
-            id: kvStoreInfo.id,
+            id: kvStoreInfo.name ?? kvStoreInfo.id,
             data: kvStoreInfo,
         });
 

@@ -173,6 +173,8 @@ export async function getDatasetItems(dirName) {
     const datasetItems = [];
 
     for (const fileName of fileNames) {
+        if (fileName.name.includes('__metadata__')) continue;
+
         const filePath = join(datasetPath, fileName.name);
         const datasetItem = await fs.readJSON(filePath);
 

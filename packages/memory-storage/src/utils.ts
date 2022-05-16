@@ -72,7 +72,7 @@ export type WorkerUpdateMetadataMessage =
     | MetadataUpdate<'requestQueues', storage.RequestQueueInfo>;
 
 export type WorkerUpdateEntriesMessage =
-    | EntriesUpdate<'datasets', Record<string, storage.Dictionary>>
+    | EntriesUpdate<'datasets', [string, storage.Dictionary][]>
     | EntriesUpdate<'keyValueStores', KeyValueStoreItemData>
     | EntriesUpdate<'requestQueues', InternalRequest[]>;
 

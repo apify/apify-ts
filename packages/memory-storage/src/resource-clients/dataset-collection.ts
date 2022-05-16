@@ -44,7 +44,7 @@ export class DatasetCollectionClient implements storage.DatasetCollectionClient 
         this.client['sendMessageToWorker']({
             action: 'update-metadata',
             entityType: 'datasets',
-            id: datasetInfo.id,
+            id: datasetInfo.name ?? datasetInfo.id,
             data: datasetInfo,
         });
 

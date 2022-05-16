@@ -55,7 +55,6 @@
         "@apify/pseudo_url": "^1.1.0",
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.5",
-        "@apify/storage-local": "^2.0.3-beta.3",
         "@crawlee/browser-pool": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
         "@crawlee/memory-storage": "^3.0.0",
