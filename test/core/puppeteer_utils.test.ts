@@ -6,8 +6,8 @@ import { Dictionary } from '@crawlee/utils';
 import { Browser, Page, ResponseForRequest } from 'puppeteer';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
 import { startExpressAppPromise } from '../shared/_helper';
+import { StorageTestCases } from '../_test_internals/test-cases';
 
 const HOSTNAME = '127.0.0.1';
 let port: number;
@@ -36,19 +36,17 @@ afterAll(() => {
     server.close();
 });
 
-describe('Apify.puppeteerUtils', () => {
+describe.each(StorageTestCases)('Apify.puppeteerUtils - %s', (Emulator) => {
     let ll: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
 
     beforeAll(async () => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
-        localStorageEmulator = new LocalStorageDirEmulator();
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
     });
 
     afterAll(async () => {

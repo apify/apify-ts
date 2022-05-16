@@ -22,4 +22,5 @@ docs/typedefs
 .docusaurus
 tsconfig.tsbuildinfo
 apify_storage
+memory-storage
 .turbo

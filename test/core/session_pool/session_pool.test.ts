@@ -1,20 +1,15 @@
 import { SessionPool, Session, KeyValueStore, Configuration, EventType } from '@crawlee/core';
 import { entries } from '@crawlee/utils';
 import { Log } from '@apify/log';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
+import { StorageTestCases } from 'test/_test_internals/test-cases';
 
-describe('SessionPool - testing session pool', () => {
+describe.each(StorageTestCases)('SessionPool - testing session pool - %s', (Emulator) => {
     let sessionPool: SessionPool;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
     const events = Configuration.getGlobalConfig().getEventManager();
 
-    beforeAll(async () => {
-        localStorageEmulator = new LocalStorageDirEmulator();
-    });
-
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
         sessionPool = await SessionPool.open();
     });
 

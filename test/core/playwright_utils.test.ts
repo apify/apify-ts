@@ -4,7 +4,7 @@ import log from '@apify/log';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { Configuration, Request, playwrightUtils } from '@crawlee/playwright';
-import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
+import { StorageTestCases } from 'test/_test_internals/test-cases';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const HOSTNAME = '127.0.0.1';
@@ -34,19 +34,17 @@ afterAll(() => {
     server.close();
 });
 
-describe('Apify.utils.playwright', () => {
+describe.each(StorageTestCases)('Apify.utils.playwright - %s', (Emulator) => {
     let ll: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
 
     beforeAll(async () => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
-        localStorageEmulator = new LocalStorageDirEmulator();
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
     });
 
     afterAll(async () => {

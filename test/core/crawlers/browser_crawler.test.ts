@@ -19,8 +19,8 @@ import {
 import { Actor } from 'apify';
 import { gotScraping } from 'got-scraping';
 import { sleep } from '@crawlee/utils';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
+import { StorageTestCases } from '../../_test_internals/test-cases';
 
 jest.mock('got-scraping', () => {
     const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
@@ -36,10 +36,10 @@ afterAll(() => {
     jest.unmock('got-scraping');
 });
 
-describe('BrowserCrawler', () => {
+describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
     let prevEnvHeadless: string;
     let logLevel: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
     let puppeteerPlugin: PuppeteerPlugin;
 
     beforeAll(async () => {
@@ -47,12 +47,10 @@ describe('BrowserCrawler', () => {
         process.env[ENV_VARS.HEADLESS] = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
-        localStorageEmulator = new LocalStorageDirEmulator();
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
         puppeteerPlugin = new PuppeteerPlugin(puppeteer);
     });
 

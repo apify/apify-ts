@@ -1,24 +1,22 @@
 import { Statistics, Configuration, EventType } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
+import { StorageTestCases } from 'test/_test_internals/test-cases';
 
-describe('Statistics', () => {
+describe.each(StorageTestCases)('Statistics - %s', (Emulator) => {
     const getPerMinute = (jobCount: number, totalTickMillis: number) => {
         return Math.round(jobCount / (totalTickMillis / 1000 / 60));
     };
 
     let stats: Statistics;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
     const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
-        localStorageEmulator = new LocalStorageDirEmulator();
         jest.useFakeTimers();
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
         stats = new Statistics();
     });
 

@@ -78,10 +78,10 @@ async function updateItems(entityTypeToDirectory: EntityTypeToDirectoryMap, mess
 
             switch (action) {
                 case 'delete':
-                    await rm(itemDirectory, { recursive: true });
+                    await rm(itemDirectory, { force: true, recursive: true });
                     break;
                 case 'set': {
-                    await rm(itemDirectory, { recursive: true });
+                    await rm(itemDirectory, { force: true, recursive: true });
                     await ensureDir(itemDirectory);
 
                     const metadataPath = resolve(itemDirectory, '__metadata__.json');

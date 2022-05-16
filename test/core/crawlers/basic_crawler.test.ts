@@ -12,22 +12,20 @@ import {
     EventType,
 } from '@crawlee/basic';
 import { Dictionary, sleep } from '@crawlee/utils';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
+import { StorageTestCases } from '../../_test_internals/test-cases';
 
-describe('BasicCrawler', () => {
+describe.each(StorageTestCases)('BasicCrawler - %s', (Emulator) => {
     let logLevel: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
     const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(async () => {
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.OFF);
-        localStorageEmulator = new LocalStorageDirEmulator();
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
     });
 
     afterAll(async () => {
