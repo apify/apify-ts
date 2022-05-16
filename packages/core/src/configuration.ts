@@ -1,5 +1,5 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { MemoryStorage } from '@crawlee/memory-storage';
+import { MemoryStorage, MemoryStorageOptions } from '@crawlee/memory-storage';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { EventEmitter } from 'node:events';
 import { StorageClient } from '@crawlee/types';
@@ -216,7 +216,8 @@ export class Configuration {
             return this.options.get('storageClient') as StorageClient;
         }
 
-        return this.createMemoryStorage() as any;
+        const options = this.options.get('storageClientOptions') as Dictionary;
+        return this.createMemoryStorage(options);
     }
 
     getEventManager(): EventManager {
@@ -235,17 +236,17 @@ export class Configuration {
     }
 
     /**
-     * Creates an instance of ApifyStorageLocal using options as defined in the environment variables or in this `Configuration` instance.
+     * Creates an instance of MemoryStorage using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createMemoryStorage(): MemoryStorage {
+    createMemoryStorage(options?: MemoryStorageOptions): MemoryStorage {
         const cacheKey = 'MemoryStorage';
 
         if (this.services.has(cacheKey)) {
             return this.services.get(cacheKey) as MemoryStorage;
         }
 
-        const storage = new MemoryStorage();
+        const storage = new MemoryStorage(options);
         this.services.set(cacheKey, storage);
 
         return storage;

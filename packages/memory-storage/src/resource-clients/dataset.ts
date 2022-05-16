@@ -2,9 +2,12 @@ import type * as storage from '@crawlee/types';
 import { Dictionary } from '@crawlee/utils';
 import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
+import { rm } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
-import { datasetClients } from '../memory-stores';
 import { BaseClient } from './common/base-client';
+import { WorkerReceivedMessage } from '../utils';
 
 /**
  * This is what API returns in the x-apify-pagination-limit
@@ -21,6 +24,8 @@ const LOCAL_ENTRY_NAME_DIGITS = 9;
 export interface DatasetClientOptions {
     id?: string;
     name?: string;
+    baseStorageDirectory: string;
+    client: MemoryStorage;
 }
 
 export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseClient implements storage.DatasetClient<Data> {
@@ -31,14 +36,18 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
     itemCount = 0;
 
     private readonly datasetEntries = new Map<string, Data>();
+    private readonly datasetDirectory: string;
+    private readonly client: MemoryStorage;
 
-    constructor(options: DatasetClientOptions = {}) {
+    constructor(options: DatasetClientOptions) {
         super(options.id ?? randomUUID());
         this.name = options.name;
+        this.datasetDirectory = resolve(options.baseStorageDirectory, this.id);
+        this.client = options.client;
     }
 
     async get(): Promise<storage.DatasetInfo | undefined> {
-        const found = datasetClients.find((store) => store.id === this.id);
+        const found = this.client.datasetClientsHandled.find((store) => store.id === this.id);
 
         if (found) {
             found.updateTimestamps(false);
@@ -54,7 +63,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }).parse(newFields);
 
         // Check by id
-        const existingStoreById = datasetClients.find((store) => store.id === this.id);
+        const existingStoreById = this.client.datasetClientsHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -66,7 +75,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }
 
         // Check that name is not in use already
-        const existingStoreByName = datasetClients.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
+        const existingStoreByName = this.client.datasetClientsHandled.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
 
         if (existingStoreByName) {
             this.throwOnDuplicateEntry(StorageTypes.Dataset, 'name', parsed.name);
@@ -81,16 +90,18 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
     }
 
     async delete(): Promise<void> {
-        const storeIndex = datasetClients.findIndex((store) => store.id === this.id);
+        const storeIndex = this.client.datasetClientsHandled.findIndex((store) => store.id === this.id);
 
         if (storeIndex !== -1) {
-            const [oldClient] = datasetClients.splice(storeIndex, 1);
+            const [oldClient] = this.client.datasetClientsHandled.splice(storeIndex, 1);
             oldClient.itemCount = 0;
             oldClient.datasetEntries.clear();
+
+            await rm(oldClient.datasetDirectory, { recursive: true });
         }
     }
 
-    downloadItems(): Promise<Buffer> {
+    async downloadItems(): Promise<Buffer> {
         throw new Error('This method is not implemented in @crawlee/memory-storage');
     }
 
@@ -106,7 +117,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }).parse(options);
 
         // Check by id
-        const existingStoreById = datasetClients.find((store) => store.id === this.id);
+        const existingStoreById = this.client.datasetClientsHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -141,7 +152,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         ).parse(items);
 
         // Check by id
-        const existingStoreById = datasetClients.find((store) => store.id === this.id);
+        const existingStoreById = this.client.datasetClientsHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -156,6 +167,14 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }
 
         existingStoreById.updateTimestamps(true);
+
+        const dataEntries = Object.fromEntries(existingStoreById.datasetEntries);
+        existingStoreById.triggerWorkerUpdate({
+            data: dataEntries,
+            action: 'update-entries',
+            entityType: 'datasets',
+            id: this.id,
+        });
     }
 
     toDatasetInfo(): storage.DatasetInfo {
@@ -165,6 +184,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             createdAt: this.createdAt,
             itemCount: this.itemCount,
             modifiedAt: this.modifiedAt,
+            name: this.name,
         };
     }
 
@@ -217,5 +237,18 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         if (hasBeenModified) {
             this.modifiedAt = new Date();
         }
+
+        const data = this.toDatasetInfo();
+        this.triggerWorkerUpdate({
+            action: 'update-metadata',
+            data,
+            entityType: 'datasets',
+            id: this.id,
+        });
+    }
+
+    private triggerWorkerUpdate(message: WorkerReceivedMessage) {
+        // eslint-disable-next-line dot-notation
+        this.client['sendMessageToWorker'](message);
     }
 }

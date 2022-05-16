@@ -1,17 +1,24 @@
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
-import { datasetClients } from '../memory-stores';
+import { resolve } from 'path';
+import { MemoryStorage } from '../index';
 import { DatasetClient } from './dataset';
 
 export class DatasetCollectionClient implements storage.DatasetCollectionClient {
+    private readonly datasetsDirectory: string;
+
+    constructor(storageDirectory: string, private readonly client: MemoryStorage) {
+        this.datasetsDirectory = resolve(storageDirectory);
+    }
+
     async list(): ReturnType<storage.DatasetCollectionClient['list']> {
         return {
-            total: datasetClients.length,
-            count: datasetClients.length,
+            total: this.client.datasetClientsHandled.length,
+            count: this.client.datasetClientsHandled.length,
             offset: 0,
-            limit: datasetClients.length,
+            limit: this.client.datasetClientsHandled.length,
             desc: false,
-            items: datasetClients.map(
+            items: this.client.datasetClientsHandled.map(
                 (store) => store.toDatasetInfo())
                 .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
         };
@@ -21,16 +28,26 @@ export class DatasetCollectionClient implements storage.DatasetCollectionClient 
         s.string.optional.parse(name);
 
         if (name) {
-            const found = datasetClients.find((store) => store.name === name);
+            const found = this.client.datasetClientsHandled.find((store) => store.name === name);
 
             if (found) {
                 return found.toDatasetInfo();
             }
         }
 
-        const newStore = new DatasetClient({ name });
-        datasetClients.push(newStore);
+        const newStore = new DatasetClient({ name, baseStorageDirectory: this.datasetsDirectory, client: this.client });
+        this.client.datasetClientsHandled.push(newStore);
 
-        return newStore.toDatasetInfo();
+        // Schedule the worker to write to the disk
+        const datasetInfo = newStore.toDatasetInfo();
+        // eslint-disable-next-line dot-notation
+        this.client['sendMessageToWorker']({
+            action: 'update-metadata',
+            entityType: 'datasets',
+            id: datasetInfo.id,
+            data: datasetInfo,
+        });
+
+        return datasetInfo;
     }
 }

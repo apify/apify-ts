@@ -3,10 +3,12 @@ import { s } from '@sapphire/shapeshift';
 import mime from 'mime-types';
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
+import { resolve } from 'node:path';
+import { rm } from 'node:fs/promises';
+import { MemoryStorage } from '../index';
 import { maybeParseBody } from '../body-parser';
 import { DEFAULT_API_PARAM_LIMIT, StorageTypes } from '../consts';
-import { keyValueStores } from '../memory-stores';
-import { isBuffer, isStream } from '../utils';
+import { isBuffer, isStream, WorkerReceivedMessage } from '../utils';
 import { BaseClient } from './common/base-client';
 
 const DEFAULT_LOCAL_FILE_EXTENSION = 'bin';
@@ -14,6 +16,8 @@ const DEFAULT_LOCAL_FILE_EXTENSION = 'bin';
 export interface KeyValueStoreClientOptions {
     name?: string;
     id?: string;
+    baseStorageDirectory: string;
+    client: MemoryStorage;
 }
 
 export interface InternalKeyRecord {
@@ -30,14 +34,18 @@ export class KeyValueStoreClient extends BaseClient {
     modifiedAt = new Date();
 
     private readonly keyValueEntries = new Map<string, InternalKeyRecord>();
+    private readonly keyValueStoreDirectory: string;
+    private readonly client: MemoryStorage;
 
-    constructor(options: KeyValueStoreClientOptions = {}) {
+    constructor(options: KeyValueStoreClientOptions) {
         super(options.id ?? randomUUID());
         this.name = options.name;
+        this.keyValueStoreDirectory = resolve(options.baseStorageDirectory, this.id);
+        this.client = options.client;
     }
 
     async get(): Promise<storage.KeyValueStoreInfo | undefined> {
-        const found = keyValueStores.find((store) => store.id === this.id);
+        const found = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
 
         if (found) {
             found.updateTimestamps(false);
@@ -53,7 +61,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(newFields);
 
         // Check by id
-        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -65,7 +73,7 @@ export class KeyValueStoreClient extends BaseClient {
         }
 
         // Check that name is not in use already
-        const existingStoreByName = keyValueStores.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
+        const existingStoreByName = this.client.keyValueStoresHandled.find((store) => store.name?.toLowerCase() === parsed.name!.toLowerCase());
 
         if (existingStoreByName) {
             this.throwOnDuplicateEntry(StorageTypes.KeyValueStore, 'name', parsed.name);
@@ -80,10 +88,13 @@ export class KeyValueStoreClient extends BaseClient {
     }
 
     async delete(): Promise<void> {
-        const storeIndex = keyValueStores.findIndex((store) => store.id === this.id);
+        const storeIndex = this.client.keyValueStoresHandled.findIndex((store) => store.id === this.id);
 
         if (storeIndex !== -1) {
-            keyValueStores.splice(storeIndex, 1);
+            const [oldClient] = this.client.keyValueStoresHandled.splice(storeIndex, 1);
+            oldClient.keyValueEntries.clear();
+
+            await rm(oldClient.keyValueStoreDirectory, { recursive: true });
         }
     }
 
@@ -97,7 +108,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(options);
 
         // Check by id
-        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -157,7 +168,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(options);
 
         // Check by id
-        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -196,7 +207,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(record);
 
         // Check by id
-        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -236,21 +247,32 @@ export class KeyValueStoreClient extends BaseClient {
             value = Buffer.concat(chunks);
         }
 
-        existingStoreById.keyValueEntries.set(key, {
+        const entry = {
             extension,
             key,
             value,
             contentType,
-        });
+        };
+
+        existingStoreById.keyValueEntries.set(key, entry);
 
         existingStoreById.updateTimestamps(true);
+        existingStoreById.triggerWorkerUpdate({
+            action: 'update-entries',
+            data: {
+                action: 'set',
+                record: entry,
+            },
+            entityType: 'keyValueStores',
+            id: existingStoreById.id,
+        });
     }
 
     async deleteRecord(key: string): Promise<void> {
         s.string.parse(key);
 
         // Check by id
-        const existingStoreById = keyValueStores.find((store) => store.id === this.id);
+        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -261,6 +283,15 @@ export class KeyValueStoreClient extends BaseClient {
         if (entry) {
             existingStoreById.keyValueEntries.delete(key);
             existingStoreById.updateTimestamps(true);
+            existingStoreById.triggerWorkerUpdate({
+                action: 'update-entries',
+                data: {
+                    action: 'delete',
+                    record: entry,
+                },
+                entityType: 'keyValueStores',
+                id: existingStoreById.id,
+            });
         }
     }
 
@@ -281,5 +312,18 @@ export class KeyValueStoreClient extends BaseClient {
         if (hasBeenModified) {
             this.modifiedAt = new Date();
         }
+
+        const data = this.toKeyValueStoreInfo();
+        this.triggerWorkerUpdate({
+            action: 'update-metadata',
+            data,
+            entityType: 'keyValueStores',
+            id: this.id,
+        });
+    }
+
+    private triggerWorkerUpdate(message: WorkerReceivedMessage) {
+        // eslint-disable-next-line dot-notation
+        this.client['sendMessageToWorker'](message);
     }
 }

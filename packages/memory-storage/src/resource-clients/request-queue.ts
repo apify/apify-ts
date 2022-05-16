@@ -1,9 +1,11 @@
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
+import { resolve } from 'node:path';
+import { rm } from 'node:fs/promises';
+import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
-import { requestQueues } from '../memory-stores';
-import { purgeNullsFromObject, uniqueKeyToRequestId } from '../utils';
+import { purgeNullsFromObject, uniqueKeyToRequestId, WorkerReceivedMessage } from '../utils';
 import { BaseClient } from './common/base-client';
 
 const requestShape = s.object({
@@ -28,6 +30,8 @@ const requestOptionsShape = s.object({
 export interface RequestQueueClientOptions {
     name?: string;
     id?: string;
+    baseStorageDirectory: string;
+    client: MemoryStorage;
 }
 
 export interface InternalRequest {
@@ -49,14 +53,18 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     pendingRequestCount = 0;
 
     private readonly requests = new Map<string, InternalRequest>();
+    private readonly requestQueueDirectory: string;
+    private readonly client: MemoryStorage;
 
-    constructor(options: RequestQueueClientOptions = {}) {
+    constructor(options: RequestQueueClientOptions) {
         super(options.id ?? randomUUID());
         this.name = options.name;
+        this.requestQueueDirectory = resolve(options.baseStorageDirectory, this.id);
+        this.client = options.client;
     }
 
     async get(): Promise<storage.RequestQueueInfo | undefined> {
-        const found = requestQueues.find((queue) => queue.id === this.id);
+        const found = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (found) {
             found.updateTimestamps(false);
@@ -73,7 +81,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             name: s.string.lengthGreaterThan(0).optional,
         }).passthrough.parse(newFields);
 
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -85,7 +93,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         }
 
         // Check that name is not in use already
-        const existingQueueByName = requestQueues.find((queue) => queue.name?.toLowerCase() === parsed.name!.toLowerCase());
+        const existingQueueByName = this.client.requestQueuesHandled.find((queue) => queue.name?.toLowerCase() === parsed.name!.toLowerCase());
 
         if (existingQueueByName) {
             this.throwOnDuplicateEntry(StorageTypes.RequestQueue, 'name', parsed.name);
@@ -100,12 +108,14 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     }
 
     async delete(): Promise<void> {
-        const storeIndex = requestQueues.findIndex((queue) => queue.id === this.id);
+        const storeIndex = this.client.requestQueuesHandled.findIndex((queue) => queue.id === this.id);
 
         if (storeIndex !== -1) {
-            const [oldClient] = requestQueues.splice(storeIndex, 1);
+            const [oldClient] = this.client.requestQueuesHandled.splice(storeIndex, 1);
             oldClient.pendingRequestCount = 0;
             oldClient.requests.clear();
+
+            await rm(oldClient.requestQueueDirectory, { recursive: true });
         }
     }
 
@@ -114,7 +124,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             limit: s.number.optional.default(100),
         }).parse(options);
 
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -146,7 +156,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         requestShapeWithoutId.parse(request);
         requestOptionsShape.parse(options);
 
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -170,6 +180,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         existingQueueById.requests.set(requestModel.id, requestModel);
         existingQueueById.pendingRequestCount += requestModel.orderNo === null ? 1 : 0;
         existingQueueById.updateTimestamps(true);
+        existingQueueById.updateItems();
 
         return {
             requestId: requestModel.id,
@@ -184,7 +195,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         batchRequestShapeWithoutId.parse(requests);
         requestOptionsShape.parse(options);
 
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -224,13 +235,14 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         }
 
         existingQueueById.updateTimestamps(true);
+        existingQueueById.updateItems();
 
         return result;
     }
 
     async getRequest(id: string): Promise<storage.RequestOptions | undefined> {
         s.string.parse(id);
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -246,7 +258,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         requestShape.parse(request);
         requestOptionsShape.parse(options);
 
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -278,6 +290,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
 
         existingQueueById.pendingRequestCount += handledCountAdjustment;
         existingQueueById.updateTimestamps(true);
+        existingQueueById.updateItems();
 
         return {
             requestId: requestModel.id,
@@ -287,7 +300,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     }
 
     async deleteRequest(id: string): Promise<void> {
-        const existingQueueById = requestQueues.find((queue) => queue.id === this.id);
+        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -299,6 +312,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             existingQueueById.requests.delete(id);
             existingQueueById.pendingRequestCount -= request.orderNo ? 1 : 0;
             existingQueueById.updateTimestamps(true);
+            existingQueueById.updateItems();
         }
     }
 
@@ -324,6 +338,28 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         if (hasBeenModified) {
             this.modifiedAt = new Date();
         }
+
+        const data = this.toRequestQueueInfo();
+        this.triggerWorkerUpdate({
+            action: 'update-metadata',
+            data,
+            entityType: 'requestQueues',
+            id: this.id,
+        });
+    }
+
+    private triggerWorkerUpdate(message: WorkerReceivedMessage) {
+        // eslint-disable-next-line dot-notation
+        this.client['sendMessageToWorker'](message);
+    }
+
+    private updateItems() {
+        this.triggerWorkerUpdate({
+            action: 'update-entries',
+            data: [...this.requests.values()],
+            entityType: 'requestQueues',
+            id: this.id,
+        });
     }
 
     private _jsonToRequest<T>(requestJson?: string): T | undefined {

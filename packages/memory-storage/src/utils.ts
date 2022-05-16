@@ -1,6 +1,9 @@
+import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { createHash } from 'node:crypto';
 import { REQUEST_ID_LENGTH } from './consts';
+import { InternalKeyRecord } from './resource-clients/key-value-store';
+import { InternalRequest } from './resource-clients/request-queue';
 
 /**
  * Removes all properties with a null value
@@ -53,4 +56,43 @@ export function isStream(value: unknown): boolean {
     } catch {
         return false;
     }
+}
+
+export interface WorkerData {
+    datasetsDirectory: string;
+    keyValueStoresDirectory: string;
+    requestQueuesDirectory: string;
+}
+
+export type WorkerReceivedMessage = WorkerUpdateMetadataMessage | WorkerUpdateEntriesMessage;
+
+export type WorkerUpdateMetadataMessage =
+    | MetadataUpdate<'datasets', storage.DatasetInfo>
+    | MetadataUpdate<'keyValueStores', storage.KeyValueStoreInfo>
+    | MetadataUpdate<'requestQueues', storage.RequestQueueInfo>;
+
+export type WorkerUpdateEntriesMessage =
+    | EntriesUpdate<'datasets', Record<string, storage.Dictionary>>
+    | EntriesUpdate<'keyValueStores', KeyValueStoreItemData>
+    | EntriesUpdate<'requestQueues', InternalRequest[]>;
+
+type EntityType = 'datasets' | 'keyValueStores' | 'requestQueues';
+
+interface MetadataUpdate<Type extends EntityType, DataType> {
+    entityType: Type;
+    id: string;
+    action: 'update-metadata';
+    data: DataType;
+}
+
+interface EntriesUpdate<Type extends EntityType, DataType> {
+    entityType: Type;
+    id: string;
+    action: 'update-entries';
+    data: DataType;
+}
+
+interface KeyValueStoreItemData {
+    action: 'set' | 'delete';
+    record: InternalKeyRecord;
 }
