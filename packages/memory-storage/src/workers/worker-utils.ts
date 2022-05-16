@@ -2,44 +2,47 @@ import defaultLog from '@apify/log';
 import { ensureDir } from 'fs-extra';
 import { rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { isMainThread, workerData, parentPort } from 'node:worker_threads';
-import { WorkerData, WorkerReceivedMessage, WorkerUpdateEntriesMessage, WorkerUpdateMetadataMessage } from './utils';
-
-if (isMainThread || !parentPort) {
-    throw new Error('This file should only be run in a worker thread!');
-}
+import { WorkerReceivedMessage, WorkerUpdateEntriesMessage, WorkerUpdateMetadataMessage } from '../utils';
 
 const workerLog = defaultLog.child({ prefix: 'MemoryStorageWorker' });
 
-// Keep worker alive
-setInterval(() => {
-    parentPort!.postMessage('ping');
-}, 30_000);
+export interface WorkerDirectoryMap {
+    datasetsDirectory: string;
+    keyValueStoresDirectory: string;
+    requestQueuesDirectory: string;
+}
 
-const { datasetsDirectory, keyValueStoresDirectory, requestQueuesDirectory } = workerData as WorkerData;
+export type EntityTypeToDirectoryMap = Map<'datasets' | 'keyValueStores' | 'requestQueues', string>;
 
-const entityTypeToDirectory = new Map([
-    ['datasets', datasetsDirectory],
-    ['keyValueStores', keyValueStoresDirectory],
-    ['requestQueues', requestQueuesDirectory],
-] as const);
+export async function handleMessage(
+    {
+        datasetsDirectory,
+        keyValueStoresDirectory,
+        requestQueuesDirectory,
+    }: WorkerDirectoryMap,
+    message: WorkerReceivedMessage,
+) {
+    const entityTypeToDirectory = new Map([
+        ['datasets', datasetsDirectory],
+        ['keyValueStores', keyValueStoresDirectory],
+        ['requestQueues', requestQueuesDirectory],
+    ] as const);
 
-parentPort!.on('message', async (message: WorkerReceivedMessage) => {
     switch (message.action) {
         case 'update-metadata':
-            await updateMetadata(message);
+            await updateMetadata(entityTypeToDirectory, message);
             break;
         case 'update-entries':
-            await updateItems(message);
+            await updateItems(entityTypeToDirectory, message);
             break;
         default:
             // @ts-expect-error We're keeping this to make eslint happy + in the event we add a new action without adding checks for it
             // we should be aware of them
             workerLog.warning(`Unknown worker message action ${message.action}`);
     }
-});
+}
 
-async function updateMetadata(message: WorkerUpdateMetadataMessage) {
+async function updateMetadata(entityTypeToDirectory: EntityTypeToDirectoryMap, message: WorkerUpdateMetadataMessage) {
     workerLog.info(`Updating metadata for ${message.entityType} with id ${message.id}`);
 
     // Ensure the directory for the entity exists
@@ -51,7 +54,7 @@ async function updateMetadata(message: WorkerUpdateMetadataMessage) {
     await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
 }
 
-async function updateItems(message: WorkerUpdateEntriesMessage) {
+async function updateItems(entityTypeToDirectory: EntityTypeToDirectoryMap, message: WorkerUpdateEntriesMessage) {
     workerLog.info(`Updating items for ${message.entityType} with id ${message.id}`);
 
     // Ensure the directory for the entity exists

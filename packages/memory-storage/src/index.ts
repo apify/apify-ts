@@ -2,6 +2,7 @@ import defaultLog from '@apify/log';
 import type * as storage from '@crawlee/types';
 import { Dictionary } from '@crawlee/utils';
 import { s } from '@sapphire/shapeshift';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { DatasetClient } from './resource-clients/dataset';
@@ -11,6 +12,7 @@ import { KeyValueStoreCollectionClient } from './resource-clients/key-value-stor
 import { RequestQueueClient } from './resource-clients/request-queue';
 import { RequestQueueCollectionClient } from './resource-clients/request-queue-collection';
 import { WorkerReceivedMessage } from './utils';
+import { FileStorageWorkerEmulator } from './workers/file-storage-emulator';
 
 export interface MemoryStorageOptions {
     /**
@@ -30,7 +32,7 @@ export class MemoryStorage implements storage.StorageClient {
     readonly datasetClientsHandled: DatasetClient[] = [];
     readonly requestQueuesHandled: RequestQueueClient[] = []; ;
 
-    private fileStorageWorker!: Worker;
+    private fileStorageWorker!: Worker | FileStorageWorkerEmulator;
     private readonly log = defaultLog.child({ prefix: 'MemoryStorage' });
 
     constructor(options: MemoryStorageOptions = {}) {
@@ -81,19 +83,27 @@ export class MemoryStorage implements storage.StorageClient {
     }
 
     private createWorker() {
-        const workerPath = resolve(__dirname, './file-storage-worker.js');
-        this.fileStorageWorker = new Worker(workerPath, {
-            workerData: {
-                datasetsDirectory: this.datasetsDirectory,
-                keyValueStoresDirectory: this.keyValueStoresDirectory,
-                requestQueuesDirectory: this.requestQueuesDirectory,
-            },
-        });
+        const directoryMap = {
+            datasetsDirectory: this.datasetsDirectory,
+            keyValueStoresDirectory: this.keyValueStoresDirectory,
+            requestQueuesDirectory: this.requestQueuesDirectory,
+        };
 
-        this.fileStorageWorker.once('exit', (code) => {
-            this.log.debug(`File storage worker exited with code ${code}`);
-            this.createWorker();
-        });
+        const workerPath = resolve(__dirname, './workers/file-storage-worker.js');
+        const exists = existsSync(workerPath);
+
+        if (exists) {
+            this.fileStorageWorker = new Worker(workerPath, {
+                workerData: directoryMap,
+            });
+
+            this.fileStorageWorker.once('exit', (code) => {
+                this.log.debug(`File storage worker exited with code ${code}`);
+                this.createWorker();
+            });
+        } else {
+            this.fileStorageWorker = new FileStorageWorkerEmulator(directoryMap);
+        }
     }
 
     protected sendMessageToWorker(message: WorkerReceivedMessage) {
