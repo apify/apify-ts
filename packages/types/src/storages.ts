@@ -240,7 +240,7 @@ export interface RequestSchema {
     id?: string;
     url: string;
     uniqueKey: string;
-    method: AllowedHttpMethods;
+    method?: AllowedHttpMethods;
     payload?: string;
     noRetry?: boolean;
     retryCount?: number;
