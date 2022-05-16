@@ -106,7 +106,7 @@ export class MemoryStorage implements storage.StorageClient {
         }
     }
 
-    protected async sendMessageToWorker(message: WorkerReceivedMessage) {
-        await this.fileStorageWorker.postMessage(message);
+    protected sendMessageToWorker(message: WorkerReceivedMessage) {
+        this.fileStorageWorker.postMessage(message);
     }
 }
