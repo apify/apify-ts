@@ -60,7 +60,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     constructor(options: RequestQueueClientOptions) {
         super(options.id ?? randomUUID());
         this.name = options.name;
-        this.requestQueueDirectory = resolve(options.baseStorageDirectory, this.id);
+        this.requestQueueDirectory = resolve(options.baseStorageDirectory, this.name ?? this.id);
         this.client = options.client;
     }
 
@@ -102,14 +102,14 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
 
         existingQueueById.name = parsed.name;
 
-        // Update timestamps
-        existingQueueById.updateTimestamps(true);
-
         const previousDir = existingQueueById.requestQueueDirectory;
 
-        existingQueueById.requestQueueDirectory = resolve(this.client.requestQueuesDirectory, parsed.name ?? existingQueueById.name);
+        existingQueueById.requestQueueDirectory = resolve(this.client.requestQueuesDirectory, parsed.name ?? existingQueueById.name ?? existingQueueById.id);
 
         await move(previousDir, existingQueueById.requestQueueDirectory, { overwrite: true });
+
+        // Update timestamps
+        existingQueueById.updateTimestamps(true);
 
         return existingQueueById.toRequestQueueInfo();
     }

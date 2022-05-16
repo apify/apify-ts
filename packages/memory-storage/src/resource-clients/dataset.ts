@@ -84,14 +84,14 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
 
         existingStoreById.name = parsed.name;
 
-        // Update timestamps
-        existingStoreById.updateTimestamps(true);
-
         const previousDir = existingStoreById.datasetDirectory;
 
-        existingStoreById.datasetDirectory = resolve(this.client.datasetsDirectory, parsed.name ?? existingStoreById.name);
+        existingStoreById.datasetDirectory = resolve(this.client.datasetsDirectory, parsed.name ?? existingStoreById.name ?? existingStoreById.id);
 
         await move(previousDir, existingStoreById.datasetDirectory, { overwrite: true });
+
+        // Update timestamps
+        existingStoreById.updateTimestamps(true);
 
         return existingStoreById.toDatasetInfo();
     }

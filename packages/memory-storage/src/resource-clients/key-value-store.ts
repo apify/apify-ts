@@ -41,7 +41,7 @@ export class KeyValueStoreClient extends BaseClient {
     constructor(options: KeyValueStoreClientOptions) {
         super(options.id ?? randomUUID());
         this.name = options.name;
-        this.keyValueStoreDirectory = resolve(options.baseStorageDirectory, this.id);
+        this.keyValueStoreDirectory = resolve(options.baseStorageDirectory, this.name ?? this.id);
         this.client = options.client;
     }
 
@@ -82,14 +82,14 @@ export class KeyValueStoreClient extends BaseClient {
 
         existingStoreById.name = parsed.name;
 
-        // Update timestamps
-        existingStoreById.updateTimestamps(true);
-
         const previousDir = existingStoreById.keyValueStoreDirectory;
 
-        existingStoreById.keyValueStoreDirectory = resolve(this.client.keyValueStoresDirectory, parsed.name ?? existingStoreById.name);
+        existingStoreById.keyValueStoreDirectory = resolve(this.client.keyValueStoresDirectory, parsed.name ?? existingStoreById.name ?? existingStoreById.id);
 
         await move(previousDir, existingStoreById.keyValueStoreDirectory, { overwrite: true });
+
+        // Update timestamps
+        existingStoreById.updateTimestamps(true);
 
         return existingStoreById.toKeyValueStoreInfo();
     }
