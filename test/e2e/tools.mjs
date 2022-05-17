@@ -97,7 +97,7 @@ async function getActorName(dirName) {
  * @param {string} dirName
  */
 async function copyPackages(dirName) {
-    const srcPackagesDir = resolve('../apify-ts', 'packages');
+    const srcPackagesDir = resolve('./', 'packages');
     const destPackagesDir = join(dirName, 'packages');
     await fs.remove(destPackagesDir);
 
