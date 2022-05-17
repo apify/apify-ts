@@ -22,4 +22,4 @@ await Actor.main(async () => {
     });
 
     await crawler.run();
-});
+}, { exit: false });

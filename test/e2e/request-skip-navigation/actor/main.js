@@ -40,4 +40,4 @@ await Actor.main(async () => {
     await crawler.run();
 
     await Actor.pushData({ requestCounter, navigationCounter });
-});
+}, { exit: false });

@@ -72,4 +72,4 @@ await Actor.main(async () => {
 
     await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
     await crawler.run();
-});
+}, { exit: false });

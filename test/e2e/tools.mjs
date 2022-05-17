@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import child_process from 'node:child_process';
 import fs from 'fs-extra';
 import { ApifyClient } from 'apify-client';
-import { URL_NO_COMMAS_REGEX, purgeLocalStorage } from '../../packages/utils/dist/index.mjs';
+import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
 
 const exec = promisify(child_process.exec);
 
@@ -58,8 +58,8 @@ export async function runActor(dirName) {
     let stats;
     let datasetItems;
 
-    if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL'){
-        await exec('npx -y apify-cli run -p', { cwd: dirName });
+    if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') {
+        await import(join(dirName, 'main.js'));
         stats = await getStats(dirName);
         datasetItems = await getDatasetItems(dirName);
     }
@@ -182,7 +182,8 @@ export async function initialize(dirName) {
     process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
     process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 
-    await purgeLocalStorage();
+    process.env.STORAGE_IMPLEMENTATION = process.env.STORAGE_IMPLEMENTATION || 'LOCAL';
+
     console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 

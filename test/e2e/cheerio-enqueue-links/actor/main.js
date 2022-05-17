@@ -22,4 +22,4 @@ await Actor.main(async () => {
 
     await crawler.addRequests(['https://apify.com/about']);
     await crawler.run();
-});
+}, { exit: false });

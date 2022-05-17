@@ -40,4 +40,4 @@ await Actor.main(async () => {
         { url: 'https://apify.com/mshopik', userData: { label: 'START' } },
     ]);
     await crawler.run();
-});
+}, { exit: false });

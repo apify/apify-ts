@@ -16,4 +16,4 @@ await Actor.main(async () => {
 
     await crawler.addRequests(['https://apify.com']);
     await crawler.run();
-});
+}, { exit: false });
