@@ -28,9 +28,9 @@ export class MemoryStorage implements storage.StorageClient {
     readonly keyValueStoresDirectory: string;
     readonly requestQueuesDirectory: string;
 
-    readonly keyValueStoresHandled: KeyValueStoreClient[] = []; ;
+    readonly keyValueStoresHandled: KeyValueStoreClient[] = [];
     readonly datasetClientsHandled: DatasetClient[] = [];
-    readonly requestQueuesHandled: RequestQueueClient[] = []; ;
+    readonly requestQueuesHandled: RequestQueueClient[] = [];
 
     private fileStorageWorker!: Worker | FileStorageWorkerEmulator;
     private readonly log = defaultLog.child({ prefix: 'MemoryStorage' });
