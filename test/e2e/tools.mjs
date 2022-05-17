@@ -60,7 +60,6 @@ export async function runActor(dirName) {
 
     if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') {
         await copyPackages(dirName);
-        // TODO: add some check for token (or check that we are logged in)
         await exec('npx -y apify-cli push', { cwd: dirName });
 
         const actorName = await getActorName(dirName);
