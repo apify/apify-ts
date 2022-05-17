@@ -13,34 +13,31 @@ const initialCookies = [{
 }];
 
 await Actor.main(async () => {
-    const preNavigationHooks = [({ session, request }) => {
-        session.setPuppeteerCookies(initialCookies, request.url);
-    }];
-
-    const requestHandler = async ({ json }) => {
-        const initialCookiesLength = initialCookies.length;
-
-        const cookieString = json.headers.cookie;
-        const pageCookies = cookieString.split(';').map((cookie) => {
-            const [name, value] = cookie.split('=').map((str) => str.trim());
-            return { name, value };
-        });
-
-        let numberOfMatchingCookies = 0;
-        for (const cookie of initialCookies) {
-            if (pageCookies.some((pageCookie) => pageCookie.name === cookie.name && pageCookie.value === cookie.value)) {
-                numberOfMatchingCookies++;
-            }
-        }
-
-        await Actor.pushData({ initialCookiesLength, numberOfMatchingCookies });
-    };
-
     const crawler = new CheerioCrawler({
-        preNavigationHooks,
-        requestHandler,
         additionalMimeTypes: ['application/json'],
+        preNavigationHooks: [({ session, request }) => {
+            session.setPuppeteerCookies(initialCookies, request.url);
+        }],
+        async requestHandler({ json }) {
+            const initialCookiesLength = initialCookies.length;
+
+            const cookieString = json.headers.cookie;
+            const pageCookies = cookieString.split(';').map((cookie) => {
+                const [name, value] = cookie.split('=').map((str) => str.trim());
+                return { name, value };
+            });
+
+            let numberOfMatchingCookies = 0;
+            for (const cookie of initialCookies) {
+                if (pageCookies.some((pageCookie) => pageCookie.name === cookie.name && pageCookie.value === cookie.value)) {
+                    numberOfMatchingCookies++;
+                }
+            }
+
+            await Actor.pushData({ initialCookiesLength, numberOfMatchingCookies });
+        },
     });
+
     await crawler.addRequests(['https://api.apify.com/v2/browser-info']);
     await crawler.run();
 });

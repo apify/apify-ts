@@ -10,15 +10,13 @@ const crawlerLogger = defaultLog.child({
 let crawlCalledAt = Date.now();
 
 await Actor.main(async () => {
-    const requestHandler = ({ log }) => {
-        log.info(`Crawler requestHandler called after ${Date.now() - crawlCalledAt}ms`);
-        crawlCalledAt = Date.now();
-    };
-
     const crawler = new BasicCrawler({
         log: crawlerLogger,
         autoscaledPoolOptions: { maxTasksPerMinute: 1 },
-        requestHandler,
+        requestHandler({ log }) {
+            log.info(`Crawler requestHandler called after ${Date.now() - crawlCalledAt}ms`);
+            crawlCalledAt = Date.now();
+        },
     });
 
     await crawler.addRequests(['https://example.com/1', 'https://example.com/2']);
