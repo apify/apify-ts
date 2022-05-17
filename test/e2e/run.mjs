@@ -13,6 +13,17 @@ process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
 process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
 process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 
+/**
+ * Depending on STORAGE_IMPLEMENTATION the workflow of the tests slightly differs:
+ *   - for 'LOCAL': the 'apify_storage' folder should be removed after the test actor finishes;
+ *   - for 'MEMORY': ...;
+ *   - for 'PLATFORM': SDK packages should be copied to respective test actor folders
+ *      (and also should be removed after pushing the actor to platform and starting the test run there)
+ *      to check the latest changes on the platform;
+ * @ignore
+ */
+process.env.STORAGE_IMPLEMENTATION = process.env.STORAGE_IMPLEMENTATION || 'LOCAL';
+
 async function run() {
     const paths = await readdir(basePath, { withFileTypes: true });
     const dirs = paths.filter((dirent) => dirent.isDirectory());
@@ -65,8 +76,9 @@ async function run() {
                 : `${colors.yellow(`[${dir.name}]`)} ${colors.red(`Test finished with status: failure`)} ${colors.grey(`[took ${took}s]`)}`
             );
 
-            if (process.env.npm_config_platform) await clearPackages(`${basePath}/${dir.name}`);
-            if (!process.env.npm_config_platform) await clearStorage(`${basePath}/${dir.name}`);
+            if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') await clearStorage(`${basePath}/${dir.name}`);
+            // if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') {}
+            if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') await clearPackages(`${basePath}/${dir.name}`);
         });
         await once(worker, 'exit');
     }
