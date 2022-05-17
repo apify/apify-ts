@@ -204,9 +204,9 @@ function waitSync(timeout) {
 export function expect(bool, message) {
     if (bool) {
         console.log(`[assertion] passed: ${message}`);
-        waitSync(10);
     } else {
         console.log(`[assertion] failed: ${message}`);
+        waitSync(10);
         process.exit(1);
     }
 }
