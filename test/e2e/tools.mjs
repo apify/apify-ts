@@ -64,9 +64,7 @@ export async function runActor(dirName) {
         datasetItems = await getDatasetItems(dirName);
     }
 
-    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY'){
-
-    }
+    // if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') {}
 
     if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') {
         await copyPackages(dirName);
