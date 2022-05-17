@@ -58,6 +58,16 @@ export async function runActor(dirName) {
     let stats;
     let datasetItems;
 
+    if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL'){
+        await exec('npx -y apify-cli run -p', { cwd: dirName });
+        stats = await getStats(dirName);
+        datasetItems = await getDatasetItems(dirName);
+    }
+
+    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY'){
+
+    }
+
     if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') {
         await copyPackages(dirName);
         await exec('npx -y apify-cli push', { cwd: dirName });
@@ -72,10 +82,6 @@ export async function runActor(dirName) {
         stats = value;
         const { items } = await client.dataset(defaultDatasetId).listItems();
         datasetItems = items;
-    } else {
-        await exec('npx -y apify-cli run -p', { cwd: dirName });
-        stats = await getStats(dirName);
-        datasetItems = await getDatasetItems(dirName);
     }
 
     return { stats, datasetItems };
