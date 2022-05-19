@@ -1,4 +1,4 @@
-FROM apify/actor-node-puppeteer-chrome:16
+FROM node:16 AS builder
 
 COPY packages ./packages
 COPY package*.json ./
@@ -12,4 +12,8 @@ RUN npm --quiet set progress=false \
  && echo "NPM version:" \
  && npm --version
 
-COPY . ./
+FROM apify/actor-node-puppeteer-chrome:16
+COPY --from=builder /node_modules ./node_modules
+COPY --from=builder /packages ./packages
+COPY --from=builder package*.json ./
+COPY main.js ./

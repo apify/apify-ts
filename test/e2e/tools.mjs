@@ -54,8 +54,9 @@ export function getActorTestDir(url) {
 
 /**
  * @param {string} dirName
+ * @param {number} [memory=4096]
  */
-export async function runActor(dirName) {
+export async function runActor(dirName, memory = 4096) {
     let stats;
     let datasetItems;
 
@@ -76,7 +77,7 @@ export async function runActor(dirName) {
         const { items: actors } = await client.actors().list();
         const { id } = actors.find((actor) => actor.name === actorName);
 
-        const { defaultKeyValueStoreId, defaultDatasetId } = await client.actor(id).call();
+        const { defaultKeyValueStoreId, defaultDatasetId } = await client.actor(id).call(null, { memory });
         const { value } = await client.keyValueStore(defaultKeyValueStoreId).getRecord('SDK_CRAWLER_STATISTICS_0');
         stats = value;
         const { items } = await client.dataset(defaultDatasetId).listItems();
