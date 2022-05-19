@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
+import { setTimeout } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import child_process from 'node:child_process';
 import fs from 'fs-extra';
@@ -196,6 +197,13 @@ function waitSync(timeout) {
     while (true) {
         if (Date.now() - now >= timeout) break;
     }
+}
+
+/**
+ * @param {number} timeout
+ */
+export function waitAsync(timeout) {
+    return setTimeout(timeout);
 }
 
 /**
