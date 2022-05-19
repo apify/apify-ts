@@ -191,6 +191,7 @@ export async function getDatasetItems(dirName) {
  */
 export async function initialize(dirName) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(dirName);
+    process.env.CRAWLEE_STORAGE_DIR = getStorage(dirName);
     process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
     process.env.APIFY_TOKEN ??= await getApifyToken();
     process.env.APIFY_CONTAINER_URL ??= 'http://127.0.0.1';
