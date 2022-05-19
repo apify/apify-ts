@@ -96,6 +96,7 @@ async function getActorName(dirName) {
 
 /**
  * @param {string} dirName
+ * @internal
  */
 async function copyPackages(dirName) {
     const srcPackagesDir = resolve('./', 'packages');
@@ -103,6 +104,11 @@ async function copyPackages(dirName) {
     await fs.remove(destPackagesDir);
 
     const { dependencies } = await fs.readJSON(join(dirName, 'package.json'));
+
+    // Note: Actor SDK will be in a separate repository,
+    // we will need to get it from NPM probably once that happens,
+    // Thus, test actors dependencies should be updated respectively.
+
     // We don't need to copy the following packages
     delete dependencies['deep-equal'];
     delete dependencies['puppeteer'];
