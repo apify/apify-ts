@@ -49,7 +49,10 @@ export class MemoryStorage implements storage.StorageClient {
     }
 
     datasets(): storage.DatasetCollectionClient {
-        return new DatasetCollectionClient(this.datasetsDirectory, this);
+        return new DatasetCollectionClient({
+            baseStorageDirectory: this.datasetsDirectory,
+            client: this,
+        });
     }
 
     dataset<Data extends Dictionary = Dictionary>(id: string): storage.DatasetClient<Data> {
@@ -59,7 +62,10 @@ export class MemoryStorage implements storage.StorageClient {
     }
 
     keyValueStores(): storage.KeyValueStoreCollectionClient {
-        return new KeyValueStoreCollectionClient(this.keyValueStoresDirectory, this);
+        return new KeyValueStoreCollectionClient({
+            baseStorageDirectory: this.keyValueStoresDirectory,
+            client: this,
+        });
     }
 
     keyValueStore(id: string): storage.KeyValueStoreClient {
@@ -69,7 +75,10 @@ export class MemoryStorage implements storage.StorageClient {
     }
 
     requestQueues(): storage.RequestQueueCollectionClient {
-        return new RequestQueueCollectionClient(this.requestQueuesDirectory, this);
+        return new RequestQueueCollectionClient({
+            baseStorageDirectory: this.requestQueuesDirectory,
+            client: this,
+        });
     }
 
     requestQueue(id: string, options: storage.RequestQueueOptions = {}): storage.RequestQueueClient {

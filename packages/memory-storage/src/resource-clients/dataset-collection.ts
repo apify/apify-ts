@@ -4,11 +4,18 @@ import { resolve } from 'path';
 import { MemoryStorage } from '../index';
 import { DatasetClient } from './dataset';
 
+export interface DatasetCollectionClientOptions {
+    baseStorageDirectory: string;
+    client: MemoryStorage;
+}
+
 export class DatasetCollectionClient implements storage.DatasetCollectionClient {
     private readonly datasetsDirectory: string;
+    private readonly client: MemoryStorage;
 
-    constructor(storageDirectory: string, private readonly client: MemoryStorage) {
-        this.datasetsDirectory = resolve(storageDirectory);
+    constructor({ baseStorageDirectory, client }: DatasetCollectionClientOptions) {
+        this.datasetsDirectory = resolve(baseStorageDirectory);
+        this.client = client;
     }
 
     async list(): ReturnType<storage.DatasetCollectionClient['list']> {

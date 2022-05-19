@@ -4,11 +4,18 @@ import { resolve } from 'node:path';
 import { MemoryStorage } from '../index';
 import { KeyValueStoreClient } from './key-value-store';
 
+export interface KeyValueStoreCollectionClientOptions {
+    baseStorageDirectory: string;
+    client: MemoryStorage;
+}
+
 export class KeyValueStoreCollectionClient implements storage.KeyValueStoreCollectionClient {
     private readonly keyValueStoresDirectory: string;
+    private readonly client: MemoryStorage;
 
-    constructor(storageDirectory: string, private readonly client: MemoryStorage) {
-        this.keyValueStoresDirectory = resolve(storageDirectory);
+    constructor({ baseStorageDirectory, client }: KeyValueStoreCollectionClientOptions) {
+        this.keyValueStoresDirectory = resolve(baseStorageDirectory);
+        this.client = client;
     }
 
     async list(): ReturnType<storage.KeyValueStoreCollectionClient['list']> {

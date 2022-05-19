@@ -4,11 +4,18 @@ import { resolve } from 'node:path';
 import { MemoryStorage } from '../index';
 import { RequestQueueClient } from './request-queue';
 
+export interface RequestQueueCollectionClientOptions {
+    baseStorageDirectory: string;
+    client: MemoryStorage;
+}
+
 export class RequestQueueCollectionClient implements storage.RequestQueueCollectionClient {
     private readonly requestQueuesDirectory: string;
+    private readonly client: MemoryStorage;
 
-    constructor(storageDirectory: string, private readonly client: MemoryStorage) {
-        this.requestQueuesDirectory = resolve(storageDirectory);
+    constructor({ baseStorageDirectory, client }: RequestQueueCollectionClientOptions) {
+        this.requestQueuesDirectory = resolve(baseStorageDirectory);
+        this.client = client;
     }
 
     async list(): ReturnType<storage.RequestQueueCollectionClient['list']> {
