@@ -7,7 +7,7 @@ import { setTimeout } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import child_process from 'node:child_process';
 import fs from 'fs-extra';
-import { ApifyClient } from 'apify-client';
+import { Actor } from '../../packages/apify/dist/index.mjs';
 import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
 
 const exec = promisify(child_process.exec);
@@ -72,7 +72,7 @@ export async function runActor(dirName) {
         await exec('npx -y apify-cli push', { cwd: dirName });
 
         const actorName = await getActorName(dirName);
-        const client = new ApifyClient({ token: process.env.APIFY_TOKEN });
+        const client = Actor.newClient();
         const { items: actors } = await client.actors().list();
         const { id } = actors.find((actor) => actor.name === actorName);
 
