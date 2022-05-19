@@ -17,7 +17,7 @@ import { FileStorageWorkerEmulator } from './workers/file-storage-emulator';
 export interface MemoryStorageOptions {
     /**
      * Path to directory where the data will also be saved.
-     * @default process.env.APIFY_LOCAL_STORAGE_DIR ?? './memory-storage'
+     * @default process.env.CRAWLEE_STORAGE_DIR ?? './memory_storage'
      */
     localDataDirectory?: string;
 }
@@ -40,7 +40,7 @@ export class MemoryStorage implements storage.StorageClient {
             localDataDirectory: s.string.optional,
         }).parse(options);
 
-        this.localDataDirectory = options.localDataDirectory ?? process.env.APIFY_LOCAL_STORAGE_DIR ?? './memory-storage';
+        this.localDataDirectory = options.localDataDirectory ?? process.env.CRAWLEE_STORAGE_DIR ?? './memory_storage';
         this.datasetsDirectory = resolve(this.localDataDirectory, 'datasets');
         this.keyValueStoresDirectory = resolve(this.localDataDirectory, 'key_value_stores');
         this.requestQueuesDirectory = resolve(this.localDataDirectory, 'request_queues');
