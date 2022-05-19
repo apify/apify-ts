@@ -189,33 +189,16 @@ export async function initialize(dirName) {
 }
 
 /**
- * @param {number} timeout
- */
-function waitSync(timeout) {
-    const now = Date.now();
-
-    while (true) {
-        if (Date.now() - now >= timeout) break;
-    }
-}
-
-/**
- * @param {number} timeout
- */
-export function waitAsync(timeout) {
-    return setTimeout(timeout);
-}
-
-/**
  * @param {boolean} bool
  * @param {string} message
  */
-export function expect(bool, message) {
+export async function expect(bool, message) {
     if (bool) {
         console.log(`[assertion] passed: ${message}`);
+        await setTimeout(10);
     } else {
         console.log(`[assertion] failed: ${message}`);
-        waitSync(10);
+        await setTimeout(10);
         process.exit(1);
     }
 }
