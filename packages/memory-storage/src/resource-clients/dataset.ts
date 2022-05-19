@@ -8,7 +8,7 @@ import { move } from 'fs-extra';
 import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
 import { BaseClient } from './common/base-client';
-import { WorkerReceivedMessage } from '../utils';
+import { sendWorkerMessage } from '../workers/instance';
 
 /**
  * This is what API returns in the x-apify-pagination-limit
@@ -35,9 +35,9 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
     accessedAt = new Date();
     modifiedAt = new Date();
     itemCount = 0;
+    datasetDirectory: string;
 
     private readonly datasetEntries = new Map<string, Data>();
-    private datasetDirectory: string;
     private readonly client: MemoryStorage;
 
     constructor(options: DatasetClientOptions) {
@@ -179,10 +179,11 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         const dataEntries: [string, Dictionary][] = addedIds.map((id) => [id, existingStoreById.datasetEntries.get(id)!]);
 
         existingStoreById.updateTimestamps(true);
-        existingStoreById.triggerWorkerUpdate({
+        sendWorkerMessage({
             data: dataEntries,
             action: 'update-entries',
             entityType: 'datasets',
+            entityDirectory: existingStoreById.datasetDirectory,
             id: existingStoreById.name ?? existingStoreById.id,
         });
     }
@@ -249,16 +250,12 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }
 
         const data = this.toDatasetInfo();
-        this.triggerWorkerUpdate({
+        sendWorkerMessage({
             action: 'update-metadata',
             data,
             entityType: 'datasets',
+            entityDirectory: this.datasetDirectory,
             id: this.name ?? this.id,
         });
-    }
-
-    private triggerWorkerUpdate(message: WorkerReceivedMessage) {
-        // eslint-disable-next-line dot-notation
-        this.client['sendMessageToWorker'](message);
     }
 }

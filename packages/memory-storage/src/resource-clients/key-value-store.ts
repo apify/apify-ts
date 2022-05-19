@@ -9,8 +9,9 @@ import { move } from 'fs-extra';
 import { MemoryStorage } from '../index';
 import { maybeParseBody } from '../body-parser';
 import { DEFAULT_API_PARAM_LIMIT, StorageTypes } from '../consts';
-import { isBuffer, isStream, WorkerReceivedMessage } from '../utils';
+import { isBuffer, isStream } from '../utils';
 import { BaseClient } from './common/base-client';
+import { sendWorkerMessage } from '../workers/instance';
 
 const DEFAULT_LOCAL_FILE_EXTENSION = 'bin';
 
@@ -33,9 +34,9 @@ export class KeyValueStoreClient extends BaseClient {
     createdAt = new Date();
     accessedAt = new Date();
     modifiedAt = new Date();
+    keyValueStoreDirectory: string;
 
     private readonly keyValueEntries = new Map<string, InternalKeyRecord>();
-    private keyValueStoreDirectory: string;
     private readonly client: MemoryStorage;
 
     constructor(options: KeyValueStoreClientOptions) {
@@ -264,13 +265,14 @@ export class KeyValueStoreClient extends BaseClient {
         existingStoreById.keyValueEntries.set(key, entry);
 
         existingStoreById.updateTimestamps(true);
-        existingStoreById.triggerWorkerUpdate({
+        sendWorkerMessage({
             action: 'update-entries',
             data: {
                 action: 'set',
                 record: entry,
             },
             entityType: 'keyValueStores',
+            entityDirectory: existingStoreById.keyValueStoreDirectory,
             id: existingStoreById.name ?? existingStoreById.id,
         });
     }
@@ -290,13 +292,14 @@ export class KeyValueStoreClient extends BaseClient {
         if (entry) {
             existingStoreById.keyValueEntries.delete(key);
             existingStoreById.updateTimestamps(true);
-            existingStoreById.triggerWorkerUpdate({
+            sendWorkerMessage({
                 action: 'update-entries',
                 data: {
                     action: 'delete',
                     record: entry,
                 },
                 entityType: 'keyValueStores',
+                entityDirectory: existingStoreById.keyValueStoreDirectory,
                 id: existingStoreById.name ?? existingStoreById.id,
             });
         }
@@ -321,16 +324,12 @@ export class KeyValueStoreClient extends BaseClient {
         }
 
         const data = this.toKeyValueStoreInfo();
-        this.triggerWorkerUpdate({
+        sendWorkerMessage({
             action: 'update-metadata',
             data,
             entityType: 'keyValueStores',
+            entityDirectory: this.keyValueStoreDirectory,
             id: this.name ?? this.id,
         });
-    }
-
-    private triggerWorkerUpdate(message: WorkerReceivedMessage) {
-        // eslint-disable-next-line dot-notation
-        this.client['sendMessageToWorker'](message);
     }
 }

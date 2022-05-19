@@ -2,6 +2,7 @@ import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { resolve } from 'node:path';
 import { MemoryStorage } from '../index';
+import { sendWorkerMessage } from '../workers/instance';
 import { RequestQueueClient } from './request-queue';
 
 export interface RequestQueueCollectionClientOptions {
@@ -48,9 +49,10 @@ export class RequestQueueCollectionClient implements storage.RequestQueueCollect
         // Schedule the worker to write to the disk
         const queueInfo = newStore.toRequestQueueInfo();
         // eslint-disable-next-line dot-notation
-        this.client['sendMessageToWorker']({
+        sendWorkerMessage({
             action: 'update-metadata',
             entityType: 'requestQueues',
+            entityDirectory: newStore.requestQueueDirectory,
             id: queueInfo.name ?? queueInfo.id,
             data: queueInfo,
         });

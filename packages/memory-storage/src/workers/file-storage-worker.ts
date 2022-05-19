@@ -1,4 +1,4 @@
-import { isMainThread, workerData, parentPort } from 'node:worker_threads';
+import { isMainThread, parentPort } from 'node:worker_threads';
 import { WorkerReceivedMessage } from '../utils';
 import { handleMessage } from './worker-utils';
 
@@ -12,5 +12,5 @@ setInterval(() => {
 }, 30_000);
 
 parentPort!.on('message', async (message: WorkerReceivedMessage) => {
-    await handleMessage(workerData, message);
+    await handleMessage(message);
 });

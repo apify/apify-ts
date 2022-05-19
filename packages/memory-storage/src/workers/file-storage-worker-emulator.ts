@@ -1,9 +1,9 @@
-import { handleMessage, WorkerDirectoryMap } from './worker-utils';
+import { handleMessage } from './worker-utils';
 
 export class FileStorageWorkerEmulator {
-    constructor(readonly directoryMap: WorkerDirectoryMap) {}
-
     postMessage(value: any): void {
-        void handleMessage(this.directoryMap, value);
+        void handleMessage(value);
     }
+
+    terminate(): void {}
 }

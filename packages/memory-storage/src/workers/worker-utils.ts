@@ -14,26 +14,13 @@ export interface WorkerDirectoryMap {
 
 export type EntityTypeToDirectoryMap = Map<'datasets' | 'keyValueStores' | 'requestQueues', string>;
 
-export async function handleMessage(
-    {
-        datasetsDirectory,
-        keyValueStoresDirectory,
-        requestQueuesDirectory,
-    }: WorkerDirectoryMap,
-    message: WorkerReceivedMessage,
-) {
-    const entityTypeToDirectory = new Map([
-        ['datasets', datasetsDirectory],
-        ['keyValueStores', keyValueStoresDirectory],
-        ['requestQueues', requestQueuesDirectory],
-    ] as const);
-
+export async function handleMessage(message: WorkerReceivedMessage) {
     switch (message.action) {
         case 'update-metadata':
-            await updateMetadata(entityTypeToDirectory, message);
+            await updateMetadata(message);
             break;
         case 'update-entries':
-            await updateItems(entityTypeToDirectory, message);
+            await updateItems(message);
             break;
         default:
             // @ts-expect-error We're keeping this to make eslint happy + in the event we add a new action without adding checks for it
@@ -42,11 +29,11 @@ export async function handleMessage(
     }
 }
 
-async function updateMetadata(entityTypeToDirectory: EntityTypeToDirectoryMap, message: WorkerUpdateMetadataMessage) {
+async function updateMetadata(message: WorkerUpdateMetadataMessage) {
     workerLog.info(`Updating metadata for ${message.entityType} with id ${message.id}`);
 
     // Ensure the directory for the entity exists
-    const dir = entityTypeToDirectory.get(message.entityType)!;
+    const dir = message.entityDirectory;
     const entityDir = resolve(dir, message.id);
     await ensureDir(entityDir);
 
@@ -55,11 +42,11 @@ async function updateMetadata(entityTypeToDirectory: EntityTypeToDirectoryMap, m
     await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
 }
 
-async function updateItems(entityTypeToDirectory: EntityTypeToDirectoryMap, message: WorkerUpdateEntriesMessage) {
+async function updateItems(message: WorkerUpdateEntriesMessage) {
     workerLog.info(`Updating entries for ${message.entityType} with id ${message.id}`);
 
     // Ensure the directory for the entity exists
-    const dir = entityTypeToDirectory.get(message.entityType)!;
+    const dir = message.entityDirectory;
     const entityDir = resolve(dir, message.id);
     await ensureDir(entityDir);
 

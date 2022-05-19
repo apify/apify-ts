@@ -2,6 +2,7 @@ import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { resolve } from 'node:path';
 import { MemoryStorage } from '../index';
+import { sendWorkerMessage } from '../workers/instance';
 import { KeyValueStoreClient } from './key-value-store';
 
 export interface KeyValueStoreCollectionClientOptions {
@@ -48,9 +49,10 @@ export class KeyValueStoreCollectionClient implements storage.KeyValueStoreColle
         // Schedule the worker to write to the disk
         const kvStoreInfo = newStore.toKeyValueStoreInfo();
         // eslint-disable-next-line dot-notation
-        this.client['sendMessageToWorker']({
+        sendWorkerMessage({
             action: 'update-metadata',
             entityType: 'keyValueStores',
+            entityDirectory: newStore.keyValueStoreDirectory,
             id: kvStoreInfo.name ?? kvStoreInfo.id,
             data: kvStoreInfo,
         });

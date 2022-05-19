@@ -1,3 +1,4 @@
+import defaultLog from '@apify/log';
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { createHash } from 'node:crypto';
@@ -58,6 +59,8 @@ export function isStream(value: unknown): boolean {
     }
 }
 
+export const memoryStorageLog = defaultLog.child({ prefix: 'MemoryStorage' });
+
 export interface WorkerData {
     datasetsDirectory: string;
     keyValueStoresDirectory: string;
@@ -82,6 +85,7 @@ interface MetadataUpdate<Type extends EntityType, DataType> {
     entityType: Type;
     id: string;
     action: 'update-metadata';
+    entityDirectory: string;
     data: DataType;
 }
 
@@ -89,6 +93,7 @@ interface EntriesUpdate<Type extends EntityType, DataType> {
     entityType: Type;
     id: string;
     action: 'update-entries';
+    entityDirectory: string;
     data: DataType;
 }
 

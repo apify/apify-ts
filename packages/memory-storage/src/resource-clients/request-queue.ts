@@ -6,8 +6,9 @@ import { rm } from 'node:fs/promises';
 import { move } from 'fs-extra';
 import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
-import { purgeNullsFromObject, uniqueKeyToRequestId, WorkerReceivedMessage } from '../utils';
+import { purgeNullsFromObject, uniqueKeyToRequestId } from '../utils';
 import { BaseClient } from './common/base-client';
+import { sendWorkerMessage } from '../workers/instance';
 
 const requestShape = s.object({
     id: s.string,
@@ -52,9 +53,9 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     modifiedAt = new Date();
     handledRequestCount = 0;
     pendingRequestCount = 0;
+    requestQueueDirectory: string;
 
     private readonly requests = new Map<string, InternalRequest>();
-    private requestQueueDirectory: string;
     private readonly client: MemoryStorage;
 
     constructor(options: RequestQueueClientOptions) {
@@ -347,24 +348,21 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         }
 
         const data = this.toRequestQueueInfo();
-        this.triggerWorkerUpdate({
+        sendWorkerMessage({
             action: 'update-metadata',
             data,
             entityType: 'requestQueues',
+            entityDirectory: this.requestQueueDirectory,
             id: this.name ?? this.id,
         });
     }
 
-    private triggerWorkerUpdate(message: WorkerReceivedMessage) {
-        // eslint-disable-next-line dot-notation
-        this.client['sendMessageToWorker'](message);
-    }
-
     private updateItems() {
-        this.triggerWorkerUpdate({
+        sendWorkerMessage({
             action: 'update-entries',
             data: [...this.requests.values()],
             entityType: 'requestQueues',
+            entityDirectory: this.requestQueueDirectory,
             id: this.name ?? this.id,
         });
     }
