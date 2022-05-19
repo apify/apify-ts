@@ -4,7 +4,7 @@ import { Actor, ApifyEnv, ProxyConfiguration } from 'apify';
 import { ActorClient, ApifyClient, RunClient, TaskClient, WebhookUpdateData } from 'apify-client';
 import { Configuration, EventType, Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
-import { StorageTestCases } from '../_test_internals/test-cases';
+import { StorageTestCases } from '../shared/test-cases';
 
 const getEmptyEnv = () => {
     return {

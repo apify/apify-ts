@@ -13,7 +13,7 @@ import {
 } from '@crawlee/playwright';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
 
 if (os.platform() === 'win32') jest.setTimeout(2 * 60 * 1e3);

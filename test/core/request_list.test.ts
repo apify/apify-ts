@@ -2,7 +2,7 @@ import log from '@apify/log';
 import { Configuration, deserializeArray, EventType, KeyValueStore, ProxyConfiguration, Request, RequestList } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
 import { gotScraping } from 'got-scraping';
-import { StorageTestCases } from '../_test_internals/test-cases';
+import { StorageTestCases } from '../shared/test-cases';
 
 /**
  * Stand-in for underscore.js shuffle (weird, but how else?)

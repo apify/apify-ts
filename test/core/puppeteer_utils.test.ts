@@ -7,7 +7,7 @@ import { Browser, Page, ResponseForRequest } from 'puppeteer';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { startExpressAppPromise } from '../shared/_helper';
-import { StorageTestCases } from '../_test_internals/test-cases';
+import { StorageTestCases } from '../shared/test-cases';
 
 const HOSTNAME = '127.0.0.1';
 let port: number;

@@ -1,6 +1,6 @@
 import { Statistics, Configuration, EventType } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 
 describe.each(StorageTestCases)('Statistics - %s', (Emulator) => {
     const getPerMinute = (jobCount: number, totalTickMillis: number) => {

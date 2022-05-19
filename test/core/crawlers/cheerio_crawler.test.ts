@@ -27,7 +27,7 @@ import iconv from 'iconv-lite';
 import { AddressInfo } from 'net';
 import path from 'path';
 import { Readable } from 'stream';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 
 const HOST = '127.0.0.1';
 

@@ -18,7 +18,7 @@ import { createServer, Server } from 'http';
 import { AddressInfo } from 'net';
 import os from 'os';
 import { Server as ProxyChainServer } from 'proxy-chain';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 import { promisify } from 'util';
 import { createProxyServer } from '../create-proxy-server';
 

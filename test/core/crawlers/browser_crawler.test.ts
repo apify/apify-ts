@@ -20,7 +20,7 @@ import { Actor } from 'apify';
 import { gotScraping } from 'got-scraping';
 import { sleep } from '@crawlee/utils';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
-import { StorageTestCases } from '../../_test_internals/test-cases';
+import { StorageTestCases } from '../../shared/test-cases';
 
 jest.mock('got-scraping', () => {
     const original: typeof import('got-scraping') = jest.requireActual('got-scraping');

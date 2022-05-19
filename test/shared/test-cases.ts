@@ -20,3 +20,11 @@ export const StorageTestCases: Constructor<StorageEmulator>[] = [
     MemoryStorageEmulator,
     SqliteStorageEmulator,
 ];
+
+/**
+ * A list containing just the memory storage emulator, for consistency with the `StorageTestCases`.
+ * This should only be used in the event tests are flaky with both cases. Otherwise, `StorageTestCases` should be used.
+ */
+export const SingleStorageCase: Constructor<StorageEmulator>[] = [
+    StorageTestCases[0],
+];

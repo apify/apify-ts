@@ -4,7 +4,7 @@ import log from '@apify/log';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { Configuration, Request, playwrightUtils } from '@crawlee/playwright';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const HOSTNAME = '127.0.0.1';

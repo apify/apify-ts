@@ -12,9 +12,9 @@ import {
     EventType,
 } from '@crawlee/basic';
 import { Dictionary, sleep } from '@crawlee/utils';
-import { StorageTestCases } from '../../_test_internals/test-cases';
+import { SingleStorageCase } from '../../shared/test-cases';
 
-describe.each(StorageTestCases)('BasicCrawler - %s', (Emulator) => {
+describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
     let logLevel: number;
     const localStorageEmulator = new Emulator();
     const events = Configuration.getGlobalConfig().getEventManager();

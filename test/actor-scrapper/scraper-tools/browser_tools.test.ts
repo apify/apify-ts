@@ -1,7 +1,7 @@
 import { browserTools } from '@apify/scraper-tools';
 import { launchPuppeteer, KeyValueStore } from '@crawlee/puppeteer';
 import log from '@apify/log';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 
 describe.each(StorageTestCases)('browserTools. - %s', (Emulator) => {
     const emulator = new Emulator();

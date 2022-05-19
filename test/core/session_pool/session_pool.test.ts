@@ -1,7 +1,7 @@
 import { SessionPool, Session, KeyValueStore, Configuration, EventType } from '@crawlee/core';
 import { entries } from '@crawlee/utils';
 import { Log } from '@apify/log';
-import { StorageTestCases } from 'test/_test_internals/test-cases';
+import { StorageTestCases } from 'test/shared/test-cases';
 
 describe.each(StorageTestCases)('SessionPool - testing session pool - %s', (Emulator) => {
     let sessionPool: SessionPool;
