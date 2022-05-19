@@ -96,6 +96,10 @@ async function getActorName(dirName) {
 }
 
 /**
+ * In order to test the most recent 'Crawlee' changes we copy locally built packages,
+ * push them to the platform together with actor code,
+ * and install them there from the disk (not from NPM).
+ * These changes are not merged to 'master' yet and thus not yet published to NPM.
  * @param {string} dirName
  * @internal
  */
