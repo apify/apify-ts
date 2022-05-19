@@ -12,7 +12,7 @@ import { KeyValueStoreCollectionClient } from './resource-clients/key-value-stor
 import { RequestQueueClient } from './resource-clients/request-queue';
 import { RequestQueueCollectionClient } from './resource-clients/request-queue-collection';
 import { WorkerReceivedMessage } from './utils';
-import { FileStorageWorkerEmulator } from './workers/file-storage-emulator';
+import { FileStorageWorkerEmulator } from './workers/file-storage-worker-emulator';
 
 export interface MemoryStorageOptions {
     /**
