@@ -34,11 +34,10 @@ async function updateMetadata(message: WorkerUpdateMetadataMessage) {
 
     // Ensure the directory for the entity exists
     const dir = message.entityDirectory;
-    const entityDir = resolve(dir, message.id);
-    await ensureDir(entityDir);
+    await ensureDir(dir);
 
     // Write the metadata to the file
-    const filePath = resolve(entityDir, '__metadata__.json');
+    const filePath = resolve(dir, '__metadata__.json');
     await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
 }
 
@@ -47,13 +46,12 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
 
     // Ensure the directory for the entity exists
     const dir = message.entityDirectory;
-    const entityDir = resolve(dir, message.id);
-    await ensureDir(entityDir);
+    await ensureDir(dir);
 
     switch (message.entityType) {
         case 'requestQueues': {
             // Write the entries to the file
-            const filePath = resolve(entityDir, 'entries.json');
+            const filePath = resolve(dir, 'entries.json');
             await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
             break;
         }
@@ -61,7 +59,7 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
             // Save all the new items to the disk
             for (const [idx, data] of message.data) {
                 await writeFile(
-                    resolve(entityDir, `${idx}.json`),
+                    resolve(dir, `${idx}.json`),
                     JSON.stringify(data, null, '\t'),
                 );
             }
@@ -72,7 +70,7 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
             // Create files for the record
             const { action, record } = message.data;
 
-            const itemPath = resolve(entityDir, `${record.key}.${record.extension}`);
+            const itemPath = resolve(dir, `${record.key}.${record.extension}`);
 
             switch (action) {
                 case 'delete':
@@ -81,7 +79,7 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
                 case 'set': {
                     await rm(itemPath, { force: true, recursive: true });
 
-                    const metadataPath = resolve(entityDir, `${record.key}.__metadata__.json`);
+                    const metadataPath = resolve(dir, `${record.key}.__metadata__.json`);
 
                     await writeFile(
                         metadataPath,
