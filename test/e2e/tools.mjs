@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
@@ -62,6 +62,7 @@ export async function runActor(dirName, memory = 4096) {
 
     if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') {
         await import(join(dirName, 'main.js'));
+        await setTimeout(10);
         stats = await getStats(dirName);
         datasetItems = await getDatasetItems(dirName);
     }
@@ -116,8 +117,8 @@ async function copyPackages(dirName) {
 
     // We don't need to copy the following packages
     delete dependencies['deep-equal'];
-    delete dependencies['puppeteer'];
-    delete dependencies['playwright'];
+    delete dependencies.puppeteer;
+    delete dependencies.playwright;
 
     for (const dependency of Object.values(dependencies)) {
         const packageDirName = dependency.split('/').pop();
@@ -125,7 +126,7 @@ async function copyPackages(dirName) {
         const destDir = join(destPackagesDir, packageDirName, 'dist');
         await fs.copy(srcDir, destDir);
         const srcPackageFile = join(srcPackagesDir, packageDirName, 'package.json');
-        const destPackageFile = join(destPackagesDir, packageDirName, 'package.json')
+        const destPackageFile = join(destPackagesDir, packageDirName, 'package.json');
         await fs.copy(srcPackageFile, destPackageFile);
     }
 }
