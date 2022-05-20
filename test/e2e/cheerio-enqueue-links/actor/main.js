@@ -4,7 +4,7 @@ import deepEqual from 'deep-equal';
 
 await Actor.main(async () => {
     const crawler = new CheerioCrawler({
-        maxRequestsPerCrawl: 100,
+        maxRequestsPerCrawl: 300,
         async requestHandler({ $, enqueueLinks, request, log }) {
             const { url, loadedUrl } = request;
 

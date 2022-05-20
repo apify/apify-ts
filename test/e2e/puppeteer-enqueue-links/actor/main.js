@@ -4,7 +4,7 @@ import deepEqual from 'deep-equal';
 
 await Actor.main(async () => {
     const crawler = new PuppeteerCrawler({
-        maxRequestsPerCrawl: 100,
+        maxRequestsPerCrawl: 300,
         async requestHandler({ page, enqueueLinks, request, log }) {
             const { url, loadedUrl } = request;
 
