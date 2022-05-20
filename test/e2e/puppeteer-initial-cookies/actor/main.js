@@ -1,16 +1,20 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
 
-const initialCookies = [{
-    name: 'test',
-    value: 'testing cookies',
-}, {
-    name: 'store',
-    value: 'value store',
-}, {
-    name: 'market_place',
-    value: 'value market place',
-}];
+const initialCookies = [
+    {
+        name: 'test',
+        value: 'testing cookies',
+    },
+    {
+        name: 'store',
+        value: 'value store',
+    },
+    {
+        name: 'market_place',
+        value: 'value market place',
+    },
+];
 
 await Actor.main(async () => {
     const crawler = new PuppeteerCrawler({

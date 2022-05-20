@@ -5,12 +5,12 @@ import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { setTimeout } from 'node:timers/promises';
 import { promisify } from 'node:util';
-import child_process from 'node:child_process';
+import { exec as execCallback } from 'node:child_process';
 import fs from 'fs-extra';
 import { Actor } from '../../packages/apify/dist/index.mjs';
 import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
 
-const exec = promisify(child_process.exec);
+const exec = promisify(execCallback);
 
 export const SKIPPED_TEST_CLOSE_CODE = 404;
 
@@ -47,9 +47,9 @@ export async function getStats(dirName) {
  * @param {string | URL} url
  */
 export function getActorTestDir(url) {
-    const __filename = fileURLToPath(url);
-    const __dirname = dirname(__filename);
-    return join(__dirname, 'actor');
+    const filename = fileURLToPath(url);
+    const actorDirName = dirname(filename);
+    return join(actorDirName, 'actor');
 }
 
 /**
