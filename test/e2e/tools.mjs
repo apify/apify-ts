@@ -190,11 +190,11 @@ export async function getDatasetItems(dirName) {
 export async function initialize(dirName) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(dirName);
     process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
-    process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
-    process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
-    process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
+    process.env.APIFY_TOKEN ??= await getApifyToken();
+    process.env.APIFY_CONTAINER_URL ??= 'http://127.0.0.1';
+    process.env.APIFY_CONTAINER_PORT ??= '8000';
 
-    process.env.STORAGE_IMPLEMENTATION = process.env.STORAGE_IMPLEMENTATION || 'LOCAL';
+    process.env.STORAGE_IMPLEMENTATION ??= LOCAL';
 
     console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
