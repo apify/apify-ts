@@ -22,7 +22,7 @@ process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
  *      to check the latest changes on the platform;
  * @ignore
  */
-process.env.STORAGE_IMPLEMENTATION = process.env.STORAGE_IMPLEMENTATION || 'LOCAL';
+process.env.STORAGE_IMPLEMENTATION ??= 'LOCAL';
 
 async function run() {
     const paths = await readdir(basePath, { withFileTypes: true });
