@@ -1,9 +1,9 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readdir } from 'node:fs/promises';
 import { once } from 'node:events';
+import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'node:worker_threads';
-import { colors, getApifyToken, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
+import { colors, getApifyToken, clearPackages, clearStorage, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
@@ -12,6 +12,17 @@ process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on pl
 process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
 process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
 process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
+
+/**
+ * Depending on STORAGE_IMPLEMENTATION the workflow of the tests slightly differs:
+ *   - for 'LOCAL': the 'apify_storage' folder should be removed after the test actor finishes;
+ *   - for 'MEMORY': ...;
+ *   - for 'PLATFORM': SDK packages should be copied to respective test actor folders
+ *      (and also should be removed after pushing the actor to platform and starting the test run there)
+ *      to check the latest changes on the platform;
+ * @ignore
+ */
+process.env.STORAGE_IMPLEMENTATION = process.env.STORAGE_IMPLEMENTATION || 'LOCAL';
 
 async function run() {
     const paths = await readdir(basePath, { withFileTypes: true });
@@ -53,14 +64,21 @@ async function run() {
                 console.log(`${colors.yellow(`[${dir.name}]`)} ${match[2]}: ${c(match[1])}`);
             }
         });
-        worker.on('exit', (code) => {
+        worker.on('exit', async (code) => {
             if (code === SKIPPED_TEST_CLOSE_CODE) {
                 console.log(`Test ${colors.yellow(`[${dir.name}]`)} was skipped`);
                 return;
             }
 
             const took = (Date.now() - now) / 1000;
-            console.log(`Test ${colors.yellow(`[${dir.name}]`)} finished with status: ${code === 0 ? colors.green('success') : colors.red('failure')} ${colors.grey(`[took ${took}s]`)}`);
+            console.log(code === 0
+                ? `${colors.yellow(`[${dir.name}]`)} ${colors.green(`Test finished with status: success`)} ${colors.grey(`[took ${took}s]`)}`
+                : `${colors.yellow(`[${dir.name}]`)} ${colors.red(`Test finished with status: failure`)} ${colors.grey(`[took ${took}s]`)}`
+            );
+
+            if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') await clearStorage(`${basePath}/${dir.name}`);
+            // if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') {}
+            if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') await clearPackages(`${basePath}/${dir.name}`);
         });
         await once(worker, 'exit');
     }

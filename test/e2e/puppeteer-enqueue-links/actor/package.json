@@ -1,0 +1,24 @@
+{
+	"name": "test-puppeteer-enqueue-links",
+	"version": "0.0.1",
+	"description": "Puppeteer Test - Enqueue Links",
+	"dependencies": {
+        "apify": "file:./packages/apify",
+        "@crawlee/basic": "file:./packages/basic-crawler",
+        "@crawlee/browser": "file:./packages/browser-crawler",
+        "@crawlee/browser-pool": "file:./packages/browser-pool",
+        "@crawlee/core": "file:./packages/core",
+        "@crawlee/puppeteer": "file:./packages/puppeteer-crawler",
+        "@crawlee/storage": "file:./packages/storage",
+        "@crawlee/utils": "file:./packages/utils",
+        "puppeteer": "*",
+        "deep-equal": "^2.0.5"
+    },
+	"devDependencies": {
+		"@apify/eslint-config": "^0.3.1",
+		"eslint": "^8.13.0"
+	},
+    "scripts": { "start": "node main.js" },
+	"type": "module",
+	"license": "ISC"
+}
