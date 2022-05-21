@@ -1,9 +1,9 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { ApifyStorageLocal, ApifyStorageLocalOptions } from '@apify/storage-local';
-import { AsyncLocalStorage } from 'async_hooks';
-import { EventEmitter } from 'events';
+import { MemoryStorage, MemoryStorageOptions } from '@crawlee/memory-storage';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { EventEmitter } from 'node:events';
+import { StorageClient } from '@crawlee/types';
 import { Dictionary, entries } from './typedefs';
-import { StorageClient } from './storages/storage';
 import { EventManager, LocalEventManager } from './events';
 
 // FIXME many of the options are apify specific, if they should be somewhere, its in the actor sdk
@@ -217,7 +217,7 @@ export class Configuration {
         }
 
         const options = this.options.get('storageClientOptions') as Dictionary;
-        return this.createStorageLocal(options) as any;
+        return this.createMemoryStorage(options);
     }
 
     getEventManager(): EventManager {
@@ -236,23 +236,18 @@ export class Configuration {
     }
 
     /**
-     * Creates an instance of ApifyStorageLocal using options as defined in the environment variables or in this `Configuration` instance.
+     * Creates an instance of MemoryStorage using options as defined in the environment variables or in this `Configuration` instance.
      * @internal
      */
-    createStorageLocal(options: ApifyStorageLocalOptions = {}): ApifyStorageLocal {
-        const cacheKey = `StorageLocal~${JSON.stringify(options)}`;
+    createMemoryStorage(options: MemoryStorageOptions = {}): MemoryStorage {
+        const cacheKey = `MemoryStorage-${JSON.stringify(options)}`;
 
         if (this.services.has(cacheKey)) {
-            return this.services.get(cacheKey) as ApifyStorageLocal;
+            return this.services.get(cacheKey) as MemoryStorage;
         }
 
-        const storage = new ApifyStorageLocal(options);
+        const storage = new MemoryStorage(options);
         this.services.set(cacheKey, storage);
-
-        process.on('exit', () => {
-            // TODO this is not public API, need to update storage local with some teardown
-            storage.dbConnections.closeAllConnections();
-        });
 
         return storage;
     }

@@ -1,16 +1,16 @@
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { setTimeout } from 'node:timers/promises';
 import { promisify } from 'node:util';
-import child_process from 'node:child_process';
+import { exec as execCallback } from 'node:child_process';
 import fs from 'fs-extra';
 import { Actor } from '../../packages/apify/dist/index.mjs';
 import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
 
-const exec = promisify(child_process.exec);
+const exec = promisify(execCallback);
 
 export const SKIPPED_TEST_CLOSE_CODE = 404;
 
@@ -47,9 +47,9 @@ export async function getStats(dirName) {
  * @param {string | URL} url
  */
 export function getActorTestDir(url) {
-    const __filename = fileURLToPath(url);
-    const __dirname = dirname(__filename);
-    return join(__dirname, 'actor');
+    const filename = fileURLToPath(url);
+    const actorDirName = dirname(filename);
+    return join(actorDirName, 'actor');
 }
 
 /**
@@ -62,6 +62,7 @@ export async function runActor(dirName, memory = 4096) {
 
     if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') {
         await import(join(dirName, 'main.js'));
+        await setTimeout(10);
         stats = await getStats(dirName);
         datasetItems = await getDatasetItems(dirName);
     }
@@ -116,8 +117,8 @@ async function copyPackages(dirName) {
 
     // We don't need to copy the following packages
     delete dependencies['deep-equal'];
-    delete dependencies['puppeteer'];
-    delete dependencies['playwright'];
+    delete dependencies.puppeteer;
+    delete dependencies.playwright;
 
     for (const dependency of Object.values(dependencies)) {
         const packageDirName = dependency.split('/').pop();
@@ -125,7 +126,7 @@ async function copyPackages(dirName) {
         const destDir = join(destPackagesDir, packageDirName, 'dist');
         await fs.copy(srcDir, destDir);
         const srcPackageFile = join(srcPackagesDir, packageDirName, 'package.json');
-        const destPackageFile = join(destPackagesDir, packageDirName, 'package.json')
+        const destPackageFile = join(destPackagesDir, packageDirName, 'package.json');
         await fs.copy(srcPackageFile, destPackageFile);
     }
 }
@@ -173,6 +174,8 @@ export async function getDatasetItems(dirName) {
     const datasetItems = [];
 
     for (const fileName of fileNames) {
+        if (fileName.name.includes('__metadata__')) continue;
+
         const filePath = join(datasetPath, fileName.name);
         const datasetItem = await fs.readJSON(filePath);
 
@@ -189,6 +192,7 @@ export async function getDatasetItems(dirName) {
  */
 export async function initialize(dirName) {
     process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(dirName);
+    process.env.CRAWLEE_STORAGE_DIR = getStorage(dirName);
     process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
     process.env.APIFY_TOKEN ??= await getApifyToken();
     process.env.APIFY_CONTAINER_URL ??= 'http://127.0.0.1';

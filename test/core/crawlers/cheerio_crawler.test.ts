@@ -27,7 +27,7 @@ import iconv from 'iconv-lite';
 import { AddressInfo } from 'net';
 import path from 'path';
 import { Readable } from 'stream';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
+import { StorageTestCases } from 'test/shared/test-cases';
 
 const HOST = '127.0.0.1';
 
@@ -166,17 +166,17 @@ afterEach(() => {
 });
 
 /* eslint-disable no-underscore-dangle */
-describe('CheerioCrawler', () => {
+describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
     let logLevel: number;
     let server: Server;
     let port: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
+
     beforeAll(async () => {
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
         server = await startExpressAppPromise(app, 0);
         port = (server.address() as AddressInfo).port;
-        localStorageEmulator = new LocalStorageDirEmulator();
 
         server.on('connect', (_request, socket) => {
             socket.write(`HTTP/1.1 200 Connection Established\r\n\r\n`);
@@ -192,8 +192,7 @@ describe('CheerioCrawler', () => {
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
     });
 
     afterAll(async () => {

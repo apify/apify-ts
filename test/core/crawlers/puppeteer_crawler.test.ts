@@ -18,14 +18,14 @@ import { createServer, Server } from 'http';
 import { AddressInfo } from 'net';
 import os from 'os';
 import { Server as ProxyChainServer } from 'proxy-chain';
+import { StorageTestCases } from 'test/shared/test-cases';
 import { promisify } from 'util';
 import { createProxyServer } from '../create-proxy-server';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
-describe('PuppeteerCrawler', () => {
+describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
     let prevEnvHeadless: string;
     let logLevel: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
     let requestList: RequestList;
     let servers: ProxyChainServer[];
     let target: Server;
@@ -37,7 +37,6 @@ describe('PuppeteerCrawler', () => {
         process.env[ENV_VARS.HEADLESS] = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
-        localStorageEmulator = new LocalStorageDirEmulator();
 
         target = createServer((request, response) => {
             response.write(`<html><head><title>Example Domain</title></head></html>`);
@@ -67,8 +66,8 @@ describe('PuppeteerCrawler', () => {
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
+
         const sources = [serverUrl];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });

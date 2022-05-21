@@ -73,7 +73,7 @@ async function run() {
             const took = (Date.now() - now) / 1000;
             console.log(code === 0
                 ? `${colors.yellow(`[${dir.name}]`)} ${colors.green(`Test finished with status: success`)} ${colors.grey(`[took ${took}s]`)}`
-                : `${colors.yellow(`[${dir.name}]`)} ${colors.red(`Test finished with status: failure`)} ${colors.grey(`[took ${took}s]`)}`
+                : `${colors.yellow(`[${dir.name}]`)} ${colors.red(`Test finished with status: failure`)} ${colors.grey(`[took ${took}s]`)}`,
             );
 
             if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') await clearStorage(`${basePath}/${dir.name}`);

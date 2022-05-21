@@ -16,11 +16,11 @@ pids
 yarn.lock
 tmp
 jsconfig.json
-types
 docs/api
 docs/typedefs
 .history
 .docusaurus
 tsconfig.tsbuildinfo
 apify_storage
+memory_storage
 .turbo
