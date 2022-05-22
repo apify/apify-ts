@@ -1,24 +1,24 @@
 import { browserTools } from '@apify/scraper-tools';
 import { launchPuppeteer, KeyValueStore } from '@crawlee/puppeteer';
 import log from '@apify/log';
-import fs from 'fs-extra';
-import path from 'path';
+import { StorageTestCases } from 'test/shared/test-cases';
 
-const LOCAL_STORAGE_DIR = path.join(__dirname, 'tmp');
+describe.each(StorageTestCases)('browserTools. - %s', (Emulator) => {
+    const emulator = new Emulator();
 
-describe('browserTools.', () => {
     let browser: Awaited<ReturnType<typeof launchPuppeteer>>;
 
     beforeEach(async () => {
-        fs.ensureDirSync(LOCAL_STORAGE_DIR);
-        process.env.APIFY_LOCAL_STORAGE_DIR = LOCAL_STORAGE_DIR;
+        await emulator.init();
         browser = await launchPuppeteer({ launchOptions: { headless: true } });
     });
 
     afterEach(async () => {
-        fs.removeSync(LOCAL_STORAGE_DIR);
-        delete process.env.APIFY_LOCAL_STORAGE_DIR;
         await browser.close();
+    });
+
+    afterAll(async () => {
+        await emulator.destroy();
     });
 
     describe('createBrowserHandle()', () => {

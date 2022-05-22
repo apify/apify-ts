@@ -4,7 +4,6 @@ import express from 'express';
 import playwright from 'playwright';
 import log from '@apify/log';
 import {
-    Configuration,
     PlaywrightCrawler,
     PlaywrightGotoOptions,
     PlaywrightRequestHandler,
@@ -13,15 +12,15 @@ import {
 } from '@crawlee/playwright';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
+import { StorageTestCases } from 'test/shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
-import { LocalStorageDirEmulator } from '../local_storage_dir_emulator';
 
 if (os.platform() === 'win32') jest.setTimeout(2 * 60 * 1e3);
 
-describe('PlaywrightCrawler', () => {
+describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
     let prevEnvHeadless: string;
     let logLevel: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const localStorageEmulator = new Emulator();
     let requestList: RequestList;
 
     const HOSTNAME = '127.0.0.1';
@@ -43,14 +42,15 @@ describe('PlaywrightCrawler', () => {
         process.env[ENV_VARS.HEADLESS] = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
-        localStorageEmulator = new LocalStorageDirEmulator();
     });
+
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await localStorageEmulator.init();
+
         const sources = [`http://${HOSTNAME}:${[port]}/`];
         requestList = await RequestList.open(`sources-${Math.random() * 10000}`, sources);
     });
+
     afterAll(async () => {
         log.setLevel(logLevel);
         process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;

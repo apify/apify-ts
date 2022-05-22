@@ -2,7 +2,7 @@ import log from '@apify/log';
 import { Configuration, deserializeArray, EventType, KeyValueStore, ProxyConfiguration, Request, RequestList } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
 import { gotScraping } from 'got-scraping';
-import { LocalStorageDirEmulator } from './local_storage_dir_emulator';
+import { StorageTestCases } from '../shared/test-cases';
 
 /**
  * Stand-in for underscore.js shuffle (weird, but how else?)
@@ -36,26 +36,24 @@ afterAll(() => {
     jest.unmock('got-scraping');
 });
 
-describe('RequestList', () => {
+describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
     let ll: number;
-    let localStorageEmulator: LocalStorageDirEmulator;
+    const emulator = new Emulator();
     const events = Configuration.getGlobalConfig().getEventManager();
 
     beforeAll(() => {
         ll = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
-        localStorageEmulator = new LocalStorageDirEmulator();
     });
 
     beforeEach(async () => {
-        const storageDir = await localStorageEmulator.init();
-        Configuration.getGlobalConfig().set('storageClientOptions', { storageDir });
+        await emulator.init();
         jest.restoreAllMocks();
     });
 
     afterAll(async () => {
         log.setLevel(ll);
-        await localStorageEmulator.destroy();
+        await emulator.destroy();
     });
 
     test('should not accept to pages with same uniqueKey', async () => {

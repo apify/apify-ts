@@ -18,9 +18,9 @@ import {
     RequestQueue,
     resolveBaseUrl,
     Session,
-    storage,
     validators,
 } from '@crawlee/core';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import { Awaitable, CheerioRoot, Dictionary, entries, parseContentTypeFromResponse } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
@@ -397,7 +397,7 @@ export interface CheerioRequestHandlerInputs<JSONData = Dictionary> extends Craw
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
-    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
+    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
 }
 
 export type CheerioCrawlingContext<JSONData = Dictionary> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability

@@ -25,8 +25,9 @@ import vm from 'vm';
 import { LruCache } from '@apify/datastructures';
 import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log_ from '@apify/log';
-import { KeyValueStore, Request, storage, validators } from '@crawlee/core';
+import { KeyValueStore, Request, validators } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import { enqueueLinksByClickingElements, EnqueueLinksByClickingElementsOptions } from '../enqueue-links/click-elements';
 import { addInterceptRequestHandler, InterceptHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
 import { PuppeteerCrawlingContext } from '../puppeteer-crawler';
@@ -609,7 +610,7 @@ export async function saveSnapshot(page: Page, options: SaveSnapshotOptions = {}
 export interface PuppeteerContextUtils {
     injectFile(filePath: string, options?: InjectFileOptions): Promise<unknown>;
     injectJQuery(): Promise<unknown>;
-    enqueueLinksByClickingElements(options: Omit<EnqueueLinksByClickingElementsOptions, 'page' | 'requestQueue'>): Promise<storage.BatchAddRequestsResult>;
+    enqueueLinksByClickingElements(options: Omit<EnqueueLinksByClickingElementsOptions, 'page' | 'requestQueue'>): Promise<BatchAddRequestsResult>;
     blockRequests(options?: BlockRequestsOptions): Promise<void>;
     blockResources(resourceTypes?: string[]): Promise<void>;
     cacheResponses(cache: Dictionary<Partial<ResponseForRequest>>, responseUrlRules: (string | RegExp)[]): Promise<void>;

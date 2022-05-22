@@ -1,5 +1,4 @@
-import { RequestOptions as RequestModel } from '../request';
-import { AllowedHttpMethods, Dictionary } from '../typedefs';
+import { AllowedHttpMethods, Dictionary } from './utility-types';
 
 /**
  * A helper class that is used to report results from various
@@ -184,7 +183,15 @@ export interface QueueHead {
     limit: number;
     queueModifiedAt: Date;
     hadMultipleClients: boolean;
-    items: RequestModel[];
+    items: RequestQueueHeadItem[];
+}
+
+export interface RequestQueueHeadItem {
+    id: string;
+    retryCount: number;
+    uniqueKey: string;
+    url: string;
+    method: AllowedHttpMethods;
 }
 
 export interface RequestQueueInfo {
@@ -230,17 +237,22 @@ export interface RequestOptions {
 }
 
 export interface RequestSchema {
-    uniqueKey: string;
+    id?: string;
     url: string;
+    uniqueKey: string;
     method?: AllowedHttpMethods;
     payload?: string;
+    noRetry?: boolean;
     retryCount?: number;
     errorMessages?: string[];
     headers?: Dictionary<string>;
     userData?: Dictionary;
     handledAt?: string;
-    noRetry?: boolean;
     loadedUrl?: string;
+}
+
+export interface UpdateRequestSchema extends RequestSchema {
+    id: string;
 }
 
 export interface ProcessedRequest {
@@ -266,10 +278,10 @@ export interface RequestQueueClient {
     update(newFields: { name?: string }): Promise<RequestQueueInfo | undefined>;
     delete(): Promise<void>;
     listHead(options?: ListOptions): Promise<QueueHead>;
-    addRequest(request: RequestModel, options?: RequestOptions): Promise<QueueOperationInfo>;
+    addRequest(request: RequestSchema, options?: RequestOptions): Promise<QueueOperationInfo>;
     batchAddRequests(requests: RequestSchema[], options?: RequestOptions): Promise<BatchAddRequestsResult>;
     getRequest(id: string): Promise<RequestOptions | undefined>;
-    updateRequest(request: RequestModel, options?: RequestOptions): Promise<QueueOperationInfo>;
+    updateRequest(request: UpdateRequestSchema, options?: RequestOptions): Promise<QueueOperationInfo>;
     deleteRequest(_id: string): Promise<unknown>;
 }
 

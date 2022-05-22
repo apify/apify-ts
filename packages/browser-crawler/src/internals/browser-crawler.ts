@@ -11,7 +11,6 @@ import {
     RequestQueue,
     Session,
     validators,
-    storage,
     resolveBaseUrl,
 } from '@crawlee/core';
 import {
@@ -34,6 +33,7 @@ import {
 } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { Cookie } from 'tough-cookie';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import { BrowserLaunchContext } from './browser-launcher';
 
 export interface BrowserCrawlingContext<
@@ -45,7 +45,7 @@ export interface BrowserCrawlingContext<
     page: Page;
     response?: Response;
     crawler: BrowserCrawler;
-    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<storage.BatchAddRequestsResult>;
+    enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
 }
 
 export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {

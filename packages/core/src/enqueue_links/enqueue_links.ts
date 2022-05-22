@@ -1,6 +1,7 @@
 import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import {
     constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
@@ -14,7 +15,6 @@ import {
     UrlPatternObject,
 } from './shared';
 import { RequestQueue } from '../storages/request_queue';
-import { BatchAddRequestsResult } from '../storages/storage';
 import { RequestOptions } from '../request';
 
 export interface EnqueueLinksOptions {
