@@ -176,17 +176,29 @@ export class Actor {
     async exit(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
         options = typeof messageOrOptions === 'string' ? { ...options, statusMessage: messageOrOptions } : { ...messageOrOptions, ...options };
         options.exit ??= true;
-        options.exitCode ??= 0;
+        options.exitCode ??= EXIT_CODES.SUCCESS;
         options.timeoutSecs ??= 5;
         options.statusMessage ??= `Actor finished with exit code ${options.exitCode}`;
 
         this.eventManager.emit(EventType.EXIT, options);
         await this.eventManager.close();
 
-        if (options.exit) {
-            await setTimeout(options.timeoutSecs! * 1000);
-            process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
+        if (options.exitCode > 0) {
+            log.error(options.statusMessage);
+        } else {
+            log.info(options.statusMessage);
         }
+
+        if (!options.exit) {
+            return;
+        }
+
+        if (options.timeoutSecs > 0) {
+            log.debug(`Waiting for ${options.timeoutSecs} before calling process.exit()`);
+            await setTimeout(options.timeoutSecs! * 1000);
+        }
+
+        process.exit(options.exitCode);
     }
 
     /**
