@@ -78,7 +78,7 @@ export class PlatformEventManager extends EventManager {
                 this.events.emit(name, data);
 
                 if (name === ACTOR_EVENT_NAMES.MIGRATING) {
-                    betterClearInterval(this.persistStateInterval!); // Don't send any other persist state event.
+                    betterClearInterval(this.intervals.persistState!); // Don't send any other persist state event.
                     this.events.emit(EventType.PERSIST_STATE, { isMigrating: true });
                 }
             } catch (err) {
