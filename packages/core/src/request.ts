@@ -223,6 +223,16 @@ export class Request {
         else this.userData.__crawlee.skipNavigation = value;
     }
 
+    /** shortcut for getting `request.userData.label` */
+    get label(): string | undefined {
+        return this.userData.label;
+    }
+
+    /** shortcut for setting `request.userData.label` */
+    set label(value: string | undefined) {
+        this.userData.label = value;
+    }
+
     /**
      * Stores information about an error that occurred during processing of this request.
      *
