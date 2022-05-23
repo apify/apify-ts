@@ -189,6 +189,13 @@ export class Actor {
     /**
      * @ignore
      */
+    async fail(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return this.exit(messageOrOptions, { exitCode: 1, ...options });
+    }
+
+    /**
+     * @ignore
+     */
     on(event: EventTypeName, listener: (...args: any[]) => any): void {
         this.eventManager.on(event, listener);
     }
@@ -835,6 +842,10 @@ export class Actor {
 
     static async exit(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
         return Actor.getDefaultInstance().exit(messageOrOptions, options);
+    }
+
+    static async fail(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().fail(messageOrOptions, options);
     }
 
     static on(event: EventTypeName, listener: (...args: any[]) => any): void {
