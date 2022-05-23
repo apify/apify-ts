@@ -9,7 +9,6 @@
         "@crawlee/cheerio": "file:./packages/cheerio-crawler",
         "@crawlee/utils": "file:./packages/utils",
         "@crawlee/browser-pool": "file:./packages/browser-pool",
-        "@crawlee/storage": "file:./packages/storage",
         "deep-equal": "^2.0.5"
     },
 	"devDependencies": {
