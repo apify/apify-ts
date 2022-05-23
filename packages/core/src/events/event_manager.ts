@@ -8,14 +8,20 @@ export const enum EventType {
     SYSTEM_INFO = 'systemInfo',
     MIGRATING = 'migrating',
     ABORTING = 'aborting',
+    EXIT = 'exit',
 }
 
-export type EventTypeName = EventType | 'systemInfo' | 'persistState' | 'migrating' | 'aborting';
+export type EventTypeName = EventType | 'systemInfo' | 'persistState' | 'migrating' | 'aborting' | 'exit';
+
+interface Intervals {
+    persistState?: BetterIntervalID;
+    systemInfo?: BetterIntervalID;
+}
 
 export abstract class EventManager {
     protected events = new EventEmitter();
     protected initialized = false;
-    protected persistStateInterval?: BetterIntervalID;
+    protected intervals: Intervals = {};
     protected log = log.child({ prefix: 'Events' });
 
     constructor(readonly config = Configuration.getGlobalConfig()) {}
@@ -30,7 +36,7 @@ export abstract class EventManager {
         }
 
         const persistStateIntervalMillis = this.config.get('persistStateIntervalMillis')!;
-        this.persistStateInterval = betterSetInterval((intervalCallback: () => unknown) => {
+        this.intervals.persistState = betterSetInterval((intervalCallback: () => unknown) => {
             this.emit(EventType.PERSIST_STATE, { isMigrating: false });
             intervalCallback();
         }, persistStateIntervalMillis);
@@ -46,7 +52,7 @@ export abstract class EventManager {
             return;
         }
 
-        betterClearInterval(this.persistStateInterval!);
+        betterClearInterval(this.intervals.persistState!);
         this.initialized = false;
     }
 

@@ -1,18 +1,12 @@
 // eslint-disable-next-line max-classes-per-file
 import os from 'os';
 import log from '@apify/log';
-import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
+import { betterClearInterval, betterSetInterval } from '@apify/utilities';
 import { getMemoryInfo } from '@crawlee/utils';
 import { SystemInfo } from '../autoscaling';
 import { EventManager, EventType } from './event_manager';
 
-interface Intervals {
-    persistState?: BetterIntervalID;
-    systemInfo?: BetterIntervalID;
-}
-
 export class LocalEventManager extends EventManager {
-    private intervals: Intervals = {};
     private previousTicks = { idle: 0, total: 0 };
 
     /**
