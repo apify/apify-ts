@@ -61,7 +61,7 @@ export interface PaginatedList<Data> {
     /** Maximum number of dataset entries requested. */
     limit: number;
     /** Should the results be in descending order. */
-    desc: boolean;
+    desc?: boolean;
     /** Dataset entries based on chosen format parameter. */
     items: Data[];
 }
