@@ -58,7 +58,7 @@
     },
     "peerDependencies": {
         "playwright": "^1.11.0",
-        "puppeteer": "<= 14.x"
+        "puppeteer": ">= 9.x <= 13.x"
     },
     "peerDependenciesMeta": {
         "playwright": {
