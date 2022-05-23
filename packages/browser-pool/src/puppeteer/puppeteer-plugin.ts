@@ -22,6 +22,14 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
 
         launchOptions!.userDataDir = launchOptions!.userDataDir ?? userDataDir;
 
+        if (launchOptions!.headless === false) {
+            if (Array.isArray(launchOptions!.args)) {
+                launchOptions!.args.push('--disable-site-isolation-trials');
+            } else {
+                launchOptions!.args = ['--disable-site-isolation-trials'];
+            }
+        }
+
         let browser: Puppeteer.Browser;
 
         {
