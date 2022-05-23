@@ -89,7 +89,7 @@ export interface DatasetStats {
 
 export interface DatasetClient<Data extends Dictionary = Dictionary> {
     get(): Promise<DatasetInfo | undefined>;
-    update(newFields: DatasetClientUpdateOptions): Promise<DatasetInfo>;
+    update(newFields: DatasetClientUpdateOptions): Promise<Partial<DatasetInfo>>;
     delete(): Promise<void>;
     downloadItems(...args: unknown[]): Promise<Buffer>;
     listItems(options?: DatasetClientListOptions): Promise<PaginatedList<Data>>;
@@ -99,7 +99,7 @@ export interface DatasetClient<Data extends Dictionary = Dictionary> {
 export interface KeyValueStoreInfo {
     id: string;
     name?: string;
-    userId: string;
+    userId?: string;
     createdAt: Date;
     modifiedAt: Date;
     accessedAt: Date;
@@ -163,7 +163,7 @@ export interface KeyValueStoreClientGetRecordOptions {
  */
 export interface KeyValueStoreClient {
     get(): Promise<KeyValueStoreInfo | undefined>;
-    update(newFields: KeyValueStoreClientUpdateOptions): Promise<KeyValueStoreInfo>;
+    update(newFields: KeyValueStoreClientUpdateOptions): Promise<Partial<KeyValueStoreInfo>>;
     delete(): Promise<void>;
     listKeys(options?: KeyValueStoreClientListOptions): Promise<KeyValueStoreClientListData>;
     getRecord(key: string, options?: KeyValueStoreClientGetRecordOptions): Promise<KeyValueStoreRecord | undefined>;
@@ -182,7 +182,7 @@ export interface RequestQueueCollectionClient {
 export interface QueueHead {
     limit: number;
     queueModifiedAt: Date;
-    hadMultipleClients: boolean;
+    hadMultipleClients?: boolean;
     items: RequestQueueHeadItem[];
 }
 
@@ -197,7 +197,7 @@ export interface RequestQueueHeadItem {
 export interface RequestQueueInfo {
     id: string;
     name?: string;
-    userId: string;
+    userId?: string;
     createdAt: Date;
     modifiedAt: Date;
     accessedAt: Date;
@@ -207,8 +207,8 @@ export interface RequestQueueInfo {
     pendingRequestCount: number;
     actId?: string;
     actRunId?: string;
-    hadMultipleClients: boolean;
-    stats: RequestQueueStats;
+    hadMultipleClients?: boolean;
+    stats?: RequestQueueStats;
 }
 
 export interface RequestQueueStats {
@@ -275,7 +275,7 @@ export interface BatchAddRequestsResult {
 
 export interface RequestQueueClient {
     get(): Promise<RequestQueueInfo | undefined>;
-    update(newFields: { name?: string }): Promise<RequestQueueInfo | undefined>;
+    update(newFields: { name?: string }): Promise<Partial<RequestQueueInfo> | undefined>;
     delete(): Promise<void>;
     listHead(options?: ListOptions): Promise<QueueHead>;
     addRequest(request: RequestSchema, options?: RequestOptions): Promise<QueueOperationInfo>;
