@@ -19,6 +19,7 @@ import {
     Source,
     StorageManager,
 } from '@crawlee/core';
+import type { StorageClient } from '@crawlee/types';
 import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
@@ -164,6 +165,8 @@ export class Actor {
             this.config.set('availableMemoryRatio', 1);
             this.config.useStorageClient(this.apifyClient);
             this.config.useEventManager(this.eventManager);
+        } else if (options.storage) {
+            this.config.useStorageClient(options.storage);
         }
     }
 
@@ -1315,6 +1318,7 @@ export class Actor {
 
 export interface InitOptions {
     purge?: boolean;
+    storage?: StorageClient;
 }
 
 export interface MainOptions extends ExitOptions, InitOptions {}
