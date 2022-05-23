@@ -54,7 +54,7 @@
         "jquery": "^3.6.0"
     },
     "peerDependencies": {
-        "puppeteer": ">= 9.x <= 13.x"
+        "puppeteer": "<= 14.x"
     },
     "peerDependenciesMeta": {
         "puppeteer": {
