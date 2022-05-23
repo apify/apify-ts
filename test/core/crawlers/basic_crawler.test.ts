@@ -1,3 +1,5 @@
+import http from 'http';
+import { AddressInfo } from 'net';
 import log from '@apify/log';
 import {
     CrawlingContext,
@@ -15,6 +17,7 @@ import express from 'express';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { Dictionary, sleep } from '@crawlee/utils';
+import { Response } from 'got-scraping';
 import { SingleStorageCase } from '../../shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
 
@@ -893,6 +896,45 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             otherContexts.forEach((list, idx) => {
                 expect(list).toHaveLength(idx + 1);
             });
+        });
+    });
+
+    describe('sendRequest', () => {
+        const server = http.createServer((request, response) => {
+            response.setHeader('content-type', 'text/html');
+            response.end(`<!DOCTYPE html><html><head><title>foobar</title></head><body><p>Hello, world!</p></body></html>`);
+        });
+
+        let url: string;
+
+        beforeAll((callback) => {
+            server.listen(0, () => {
+                url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`;
+
+                callback();
+            });
+        });
+
+        afterAll((callback) => {
+            server.close(callback);
+        });
+
+        test('works', async () => {
+            expect.assertions(2);
+
+            const requestList = await RequestList.open(null, [url]);
+
+            const crawler = new BasicCrawler({
+                requestList,
+                async requestHandler(crawlingContext) {
+                    const response = await crawlingContext.sendRequest() as Response<string>;
+
+                    expect(response.statusCode).toBe(200);
+                    expect(response.body.includes('Hello, world!')).toBe(true);
+                },
+            });
+
+            await crawler.run();
         });
     });
 });
