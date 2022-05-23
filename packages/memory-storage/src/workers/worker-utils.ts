@@ -1,18 +1,10 @@
-import defaultLog from '@apify/log';
+import log from '@apify/log';
 import { ensureDir } from 'fs-extra';
 import { rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { WorkerReceivedMessage, WorkerUpdateEntriesMessage, WorkerUpdateMetadataMessage } from '../utils';
 
-const workerLog = defaultLog.child({ prefix: 'MemoryStorageWorker' });
-
-export interface WorkerDirectoryMap {
-    datasetsDirectory: string;
-    keyValueStoresDirectory: string;
-    requestQueuesDirectory: string;
-}
-
-export type EntityTypeToDirectoryMap = Map<'datasets' | 'keyValueStores' | 'requestQueues', string>;
+const workerLog = log.child({ prefix: 'MemoryStorageWorker' });
 
 export async function handleMessage(message: WorkerReceivedMessage) {
     switch (message.action) {
@@ -23,15 +15,13 @@ export async function handleMessage(message: WorkerReceivedMessage) {
             await updateItems(message);
             break;
         default:
-            // @ts-expect-error We're keeping this to make eslint happy + in the event we add a new action without adding checks for it
+            // We're keeping this to make eslint happy + in the event we add a new action without adding checks for it
             // we should be aware of them
-            workerLog.warning(`Unknown worker message action ${message.action}`);
+            workerLog.warning(`Unknown worker message action ${(message as WorkerReceivedMessage).action}`);
     }
 }
 
 async function updateMetadata(message: WorkerUpdateMetadataMessage) {
-    workerLog.info(`Updating metadata for ${message.entityType} with id ${message.id}`);
-
     // Ensure the directory for the entity exists
     const dir = message.entityDirectory;
     await ensureDir(dir);
@@ -42,8 +32,6 @@ async function updateMetadata(message: WorkerUpdateMetadataMessage) {
 }
 
 async function updateItems(message: WorkerUpdateEntriesMessage) {
-    workerLog.info(`Updating entries for ${message.entityType} with id ${message.id}`);
-
     // Ensure the directory for the entity exists
     const dir = message.entityDirectory;
     await ensureDir(dir);
