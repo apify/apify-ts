@@ -34,13 +34,22 @@ const jqueryPath = require.resolve('jquery');
 
 const MAX_INJECT_FILE_CACHE_SIZE = 10;
 
+export interface InjectFileOptions {
+    /**
+     * Enables the injected script to survive page navigations and reloads without need to be re-injected manually.
+     * This does not mean, however, that internal state will be preserved. Just that it will be automatically
+     * re-injected on each navigation before any other scripts get the chance to execute.
+     */
+    surviveNavigations?: boolean;
+}
+
 /**
  * Cache contents of previously injected files to limit file system access.
  */
 const injectedFilesCache = new LruCache({ maxLength: MAX_INJECT_FILE_CACHE_SIZE });
 
 /**
- * Injects a JavaScript file into a Playright page.
+ * Injects a JavaScript file into a Playwright page.
  * Unlike Playwright's `addScriptTag` function, this function works on pages
  * with arbitrary Cross-Origin Resource Sharing (CORS) policies.
  *
@@ -48,15 +57,9 @@ const injectedFilesCache = new LruCache({ maxLength: MAX_INJECT_FILE_CACHE_SIZE 
  *
  * @param page Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
  * @param filePath File path
- * @param {object} [options]
- * @param {boolean} [options.surviveNavigations]
- *   Enables the injected script to survive page navigations and reloads without need to be re-injected manually.
- *   This does not mean, however, that internal state will be preserved. Just that it will be automatically
- *   re-injected on each navigation before any other scripts get the chance to execute.
- * @return {Promise<*>}
- * @memberOf playwright
+ * @param [options]
  */
-export async function injectFile(page: Page, filePath: string, options = {}) {
+export async function injectFile(page: Page, filePath: string, options: InjectFileOptions = {}): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     ow(filePath, ow.string);
     ow(options, ow.object.exactShape({
@@ -92,7 +95,7 @@ export async function injectFile(page: Page, filePath: string, options = {}) {
  *
  * **Example usage:**
  * ```javascript
- * await Apify.utils.playwright.injectJQuery(page);
+ * await playwrightUtils.injectJQuery(page);
  * const title = await page.evaluate(() => {
  *   return $('head title').text();
  * });
@@ -103,10 +106,8 @@ export async function injectFile(page: Page, filePath: string, options = {}) {
  * function in any way.
  *
  * @param page Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
- * @return {Promise<*>}
- * @memberOf playwright
  */
-export function injectJQuery(page: Page) {
+export function injectJQuery(page: Page): Promise<unknown> {
     ow(page, ow.object.validate(validators.browserPage));
     return injectFile(page, jqueryPath, { surviveNavigations: true });
 }

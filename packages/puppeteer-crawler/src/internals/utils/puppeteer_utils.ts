@@ -144,7 +144,7 @@ export async function injectFile(page: Page, filePath: string, options: InjectFi
  *
  * **Example usage:**
  * ```javascript
- * await Actor.utils.puppeteer.injectJQuery(page);
+ * await puppeteerUtils.injectJQuery(page);
  * const title = await page.evaluate(() => {
  *   return $('head title').text();
  * });
