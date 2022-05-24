@@ -55,7 +55,7 @@ export class Statistics {
      */
     readonly requestRetryHistogram: number[] = [];
 
-    private keyValueStore: KeyValueStore | undefined = undefined;
+    private keyValueStore?: KeyValueStore = undefined;
     private persistStateKey = `SDK_CRAWLER_STATISTICS_${this.id}`;
     private logIntervalMillis: number;
     private logMessage: string;
