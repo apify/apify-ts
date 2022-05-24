@@ -162,7 +162,7 @@ export class RequestQueue {
         prevLimit: number;
         queueModifiedAt: Date;
         queryStartedAt: Date;
-        hadMultipleClients: boolean;
+        hadMultipleClients?: boolean;
     }> | null = null;
 
     // A set of all request IDs that are currently being handled,

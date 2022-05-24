@@ -94,7 +94,7 @@ describe.each(StorageTestCases)('Actor - %s', (Emulator) => {
 
         describe('main()', () => {
             test('throws on invalid args', () => {
-            // @ts-expect-error invalid options
+                // @ts-expect-error invalid options
                 expect(() => new Actor().main()).toThrow();
             });
 

@@ -1,4 +1,5 @@
 import ow from 'ow';
+import { setTimeout } from 'node:timers/promises';
 import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
@@ -18,6 +19,7 @@ import {
     Source,
     StorageManager,
 } from '@crawlee/core';
+import type { StorageClient } from '@crawlee/types';
 import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
@@ -163,18 +165,47 @@ export class Actor {
             this.config.set('availableMemoryRatio', 1);
             this.config.useStorageClient(this.apifyClient);
             this.config.useEventManager(this.eventManager);
+        } else if (options.storage) {
+            this.config.useStorageClient(options.storage);
         }
     }
 
     /**
      * @ignore
      */
-    async exit(options: ExitOptions = {}): Promise<void> {
+    async exit(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        options = typeof messageOrOptions === 'string' ? { ...options, statusMessage: messageOrOptions } : { ...messageOrOptions, ...options };
+        options.exit ??= true;
+        options.exitCode ??= EXIT_CODES.SUCCESS;
+        options.timeoutSecs ??= 5;
+        options.statusMessage ??= `Actor finished with exit code ${options.exitCode}`;
+
+        this.eventManager.emit(EventType.EXIT, options);
         await this.eventManager.close();
 
-        if (options.exit ?? true) {
-            process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
+        if (options.exitCode > 0) {
+            log.error(options.statusMessage);
+        } else {
+            log.info(options.statusMessage);
         }
+
+        if (!options.exit) {
+            return;
+        }
+
+        if (options.timeoutSecs > 0) {
+            log.debug(`Waiting for ${options.timeoutSecs} before calling process.exit()`);
+            await setTimeout(options.timeoutSecs! * 1000);
+        }
+
+        process.exit(options.exitCode);
+    }
+
+    /**
+     * @ignore
+     */
+    async fail(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return this.exit(messageOrOptions, { exitCode: 1, ...options });
     }
 
     /**
@@ -824,8 +855,12 @@ export class Actor {
         return Actor.getDefaultInstance().init(options);
     }
 
-    static async exit(options: ExitOptions = {}): Promise<void> {
-        return Actor.getDefaultInstance().exit(options);
+    static async exit(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().exit(messageOrOptions, options);
+    }
+
+    static async fail(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().fail(messageOrOptions, options);
     }
 
     static on(event: EventTypeName, listener: (...args: any[]) => any): void {
@@ -1295,6 +1330,7 @@ export class Actor {
 
 export interface InitOptions {
     purge?: boolean;
+    storage?: StorageClient;
 }
 
 export interface MainOptions extends ExitOptions, InitOptions {}
@@ -1427,6 +1463,10 @@ export interface MetamorphOptions {
 }
 
 export interface ExitOptions {
+    /** Exit with given status message */
+    statusMessage?: string;
+    /** Wait before calling exit(), defaults to 5s */
+    timeoutSecs?: number;
     /** Exit code, defaults to 0 */
     exitCode?: number;
     /** Call `process.exit()`? Defaults to true */
