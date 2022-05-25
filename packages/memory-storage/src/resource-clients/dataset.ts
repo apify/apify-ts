@@ -65,7 +65,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }).parse(newFields);
 
         // Check by id
-        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id)
+        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -125,7 +125,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }).parse(options);
 
         // Check by id
-        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id)
+        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -160,7 +160,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         ).parse(items);
 
         // Check by id
-        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id)
+        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
