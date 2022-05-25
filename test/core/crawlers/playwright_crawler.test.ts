@@ -88,6 +88,7 @@ describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
                 launchContext: {
                     launcher: playwright[browser],
                 },
+                browserPoolOptions: { useFingerprints: false },
                 requestList: requestListLarge,
                 minConcurrency: 1,
                 maxConcurrency: 1,

@@ -8,6 +8,16 @@ import { log } from '../logger';
 import { getLocalProxyAddress } from '../proxy-server';
 import { anonymizeProxySugar } from '../anonymize-proxy';
 
+/**
+ * The default User Agent used by `PlaywrightCrawler` and `launchPlaywright` when Chromium is launched:
+ *  - in headless mode,
+ *  - without using a fingerprint,
+ *  - without specifying a user agent,
+ *  - without specifying an executable path.
+ * Last updated on 2022-05-05.
+ */
+export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36';
+
 export class PlaywrightPlugin extends BrowserPlugin<BrowserType, Parameters<BrowserType['launch']>[0], PlaywrightBrowser> {
     private _browserVersion?: string;
 
@@ -17,7 +27,23 @@ export class PlaywrightPlugin extends BrowserPlugin<BrowserType, Parameters<Brow
             useIncognitoPages,
             userDataDir,
             proxyUrl,
+            fingerprint,
         } = launchContext;
+        // @ts-expect-error Property 'userAgent' does not exist on type 'LaunchOptions'
+        const { headless, userAgent, executablePath } = launchOptions!;
+        // When User-Agent is not set, and we're using Chromium in headless mode,
+        // it is better to use DEFAULT_USER_AGENT to reduce chance of detection,
+        // as otherwise 'HeadlessChrome' is present in User-Agent string.
+        if (this._isChromiumBasedBrowser() && headless && !fingerprint && !userAgent && !executablePath) {
+            // @ts-expect-error Property 'userAgent' does not exist on type 'LaunchOptions'
+            launchOptions!.userAgent = DEFAULT_USER_AGENT;
+            if (Array.isArray(launchOptions!.args)) {
+                launchOptions!.args.push(`--user-agent=${DEFAULT_USER_AGENT}`);
+            } else {
+                launchOptions!.args = [`--user-agent=${DEFAULT_USER_AGENT}`];
+            }
+        }
+
         let browser: PlaywrightBrowser;
 
         // Required for the `proxy` context option to work.
