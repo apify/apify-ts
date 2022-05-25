@@ -1,6 +1,7 @@
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { resolve } from 'path';
+import { findOrCacheDatasetByPossibleId } from '../cache-helpers';
 import { MemoryStorage } from '../index';
 import { sendWorkerMessage } from '../workers/instance';
 import { DatasetClient } from './dataset';
@@ -36,7 +37,7 @@ export class DatasetCollectionClient implements storage.DatasetCollectionClient 
         s.string.optional.parse(name);
 
         if (name) {
-            const found = this.client.datasetClientsHandled.find((store) => store.name === name);
+            const found = await findOrCacheDatasetByPossibleId(this.client, name);
 
             if (found) {
                 return found.toDatasetInfo();

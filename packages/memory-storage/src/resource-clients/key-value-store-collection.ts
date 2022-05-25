@@ -1,6 +1,7 @@
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { resolve } from 'node:path';
+import { findOrCacheKeyValueStoreByPossibleId } from '../cache-helpers';
 import { MemoryStorage } from '../index';
 import { sendWorkerMessage } from '../workers/instance';
 import { KeyValueStoreClient } from './key-value-store';
@@ -36,7 +37,7 @@ export class KeyValueStoreCollectionClient implements storage.KeyValueStoreColle
         s.string.optional.parse(name);
 
         if (name) {
-            const found = this.client.keyValueStoresHandled.find((store) => store.name === name);
+            const found = await findOrCacheKeyValueStoreByPossibleId(this.client, name);
 
             if (found) {
                 return found.toKeyValueStoreInfo();

@@ -12,6 +12,7 @@ import { DEFAULT_API_PARAM_LIMIT, StorageTypes } from '../consts';
 import { isBuffer, isStream } from '../utils';
 import { BaseClient } from './common/base-client';
 import { sendWorkerMessage } from '../workers/instance';
+import { findOrCacheKeyValueStoreByPossibleId } from '../cache-helpers';
 
 const DEFAULT_LOCAL_FILE_EXTENSION = 'bin';
 
@@ -47,7 +48,7 @@ export class KeyValueStoreClient extends BaseClient {
     }
 
     async get(): Promise<storage.KeyValueStoreInfo | undefined> {
-        const found = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
+        const found = await findOrCacheKeyValueStoreByPossibleId(this.client, this.name ?? this.id);
 
         if (found) {
             found.updateTimestamps(false);
@@ -63,7 +64,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(newFields);
 
         // Check by id
-        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheKeyValueStoreByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -116,7 +117,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(options);
 
         // Check by id
-        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheKeyValueStoreByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -176,7 +177,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(options);
 
         // Check by id
-        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheKeyValueStoreByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -215,7 +216,7 @@ export class KeyValueStoreClient extends BaseClient {
         }).parse(record);
 
         // Check by id
-        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheKeyValueStoreByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
@@ -281,7 +282,7 @@ export class KeyValueStoreClient extends BaseClient {
         s.string.parse(key);
 
         // Check by id
-        const existingStoreById = this.client.keyValueStoresHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheKeyValueStoreByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.KeyValueStore);
