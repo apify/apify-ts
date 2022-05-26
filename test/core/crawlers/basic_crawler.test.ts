@@ -664,7 +664,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             expect(typeof args[0]).toBe('string');
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
             expect(/Other non-timeout error/.test(args[0])).toBe(true);
-            expect(/at BasicCrawler\.handleRequestFunction/.test(args[0])).toBe(false);
+            expect(/at BasicCrawler\.requestHandler/.test(args[0])).toBe(false);
             expect(args[1]).toBeDefined();
         }
 
@@ -679,8 +679,9 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         }
     });
 
-    test('should log stack trace for timeout errors when log level set to DEBUG', async () => {
-        log.setLevel(log.LEVELS.DEBUG);
+    test('should log stack trace for timeout errors when verbose log is enabled', async () => {
+        log.setLevel(log.LEVELS.INFO);
+        process.env.CRAWLEE_VERBOSE_LOG = String(true);
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
 
@@ -719,10 +720,12 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         }
 
         log.setLevel(log.LEVELS.OFF);
+        process.env.CRAWLEE_VERBOSE_LOG = undefined;
     });
 
-    test('should log stack trace for non-timeout errors when log level set to DEBUG', async () => {
-        log.setLevel(log.LEVELS.DEBUG);
+    test('should log stack trace for non-timeout errors when verbose log is enabled', async () => {
+        log.setLevel(log.LEVELS.INFO);
+        process.env.CRAWLEE_VERBOSE_LOG = String(true);
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
 
@@ -762,6 +765,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         }
 
         log.setLevel(log.LEVELS.OFF);
+        process.env.CRAWLEE_VERBOSE_LOG = undefined;
     });
 
     describe('Uses SessionPool', () => {
