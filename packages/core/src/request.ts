@@ -379,7 +379,7 @@ export interface RequestOptions {
 
     /**
      * If set to `true` then the crawler processing this request evaluates
-     * the `handleRequestFunction` immediately without prior browser navigation.
+     * the `requestHandler` immediately without prior browser navigation.
      * @default false
      */
     skipNavigation?: boolean;

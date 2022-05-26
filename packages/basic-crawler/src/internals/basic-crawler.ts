@@ -219,7 +219,7 @@ export interface BasicCrawlerOptions<
 
     /**
      * Basic crawler will initialize the  {@link SessionPool} with the corresponding `sessionPoolOptions`.
-     * The session instance will be than available in the `handleRequestFunction`.
+     * The session instance will be than available in the `requestHandler`.
      */
     useSessionPool?: boolean;
 
@@ -277,7 +277,7 @@ export interface BasicCrawlerOptions<
  * // Crawl the URLs
  * const crawler = new BasicCrawler({
  *     requestList,
- *     handleRequestFunction: async ({ request }) => {
+ *     async requestHandler({ request }) {
  *         // 'request' contains an instance of the Request class
  *         // Here we simply fetch the HTML of the page and store it to a dataset
  *         const { body } = await gotScraping({
@@ -738,7 +738,7 @@ export class BasicCrawler<
             await addTimeoutToPromise(
                 () => this._runRequestHandler(crawlingContext),
                 this.requestHandlerTimeoutMillis,
-                `handleRequestFunction timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds (${request.id}).`,
+                `requestHandler timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds (${request.id}).`,
             );
 
             await this._timeoutAndRetry(
@@ -817,7 +817,7 @@ export class BasicCrawler<
     }
 
     /**
-     * Handles errors thrown by user provided handleRequestFunction()
+     * Handles errors thrown by user provided requestHandler()
      */
     protected async _requestFunctionErrorHandler(
         error: Error,

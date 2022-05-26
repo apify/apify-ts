@@ -21,7 +21,7 @@ export interface CrawlingContext extends Record<PropertyKey, unknown> {
 
 export interface CrawlerHandleFailedRequestInput extends CrawlingContext {
     /**
-     * The Error thrown by `handleRequestFunction`.
+     * The Error thrown by `requestHandler`.
      */
     error: Error;
 }

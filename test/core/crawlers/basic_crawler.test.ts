@@ -576,7 +576,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         await crawler.run();
         expect(results).toHaveLength(1);
         expect(results[0].url).toEqual(url);
-        results[0].errorMessages.forEach((msg) => expect(msg).toMatch('handleRequestFunction timed out'));
+        results[0].errorMessages.forEach((msg) => expect(msg).toMatch('requestHandler timed out'));
     });
 
     test('limits handleRequestTimeoutSecs to a valid value', async () => {
@@ -623,7 +623,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
-            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
             expect(args[1]).toBeDefined();
         }
@@ -633,7 +633,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
             expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
-            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
             expect(args[1]).toBeDefined();
         }
@@ -704,7 +704,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
             expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
-            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
             expect(args[1]).toBeDefined();
         }
@@ -714,7 +714,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             expect(args.length).toBe(2);
             expect(typeof args[0]).toBe('string');
             expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
-            expect(/handleRequestFunction timed out after/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
             expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
             expect(args[1]).toBeDefined();
         }
