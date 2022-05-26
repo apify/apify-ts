@@ -24,6 +24,9 @@ describe('fallback to fs for reading', () => {
             modifiedAt: expectedFsDate,
         }));
         await writeFile(resolve(storage.keyValueStoresDirectory, 'default/INPUT.json'), JSON.stringify({ foo: 'bar but from fs' }));
+
+        await ensureDir(resolve(storage.keyValueStoresDirectory, 'other'));
+        await writeFile(resolve(storage.keyValueStoresDirectory, 'other/INPUT.json'), JSON.stringify({ foo: 'bar but from fs' }));
     });
 
     afterAll(async () => {
@@ -32,7 +35,7 @@ describe('fallback to fs for reading', () => {
 
     // POST INIT //
 
-    test('attempting to read "default" key value store should read from fs', async () => {
+    test('attempting to read "default" key value store with "__metadata__" present should read from fs', async () => {
         const defaultStoreInfo = await storage.keyValueStores().getOrCreate('default');
         const defaultStore = storage.keyValueStore(defaultStoreInfo.id);
 
@@ -46,6 +49,20 @@ describe('fallback to fs for reading', () => {
             contentType: 'application/json; charset=utf-8',
         });
     });
+
+    test(
+        'attempting to read "other" key value store with no "__metadata__" present should read from fs, even if accessed without generating id first',
+        async () => {
+            const otherStore = storage.keyValueStore('other');
+
+            const input = await otherStore.getRecord('INPUT');
+            expect(input).toStrictEqual<KeyValueStoreRecord>({
+                key: 'INPUT',
+                value: { foo: 'bar but from fs' },
+                contentType: 'application/json; charset=utf-8',
+            });
+        },
+    );
 
     test('attempting to read non-existent "default_2" key value store should return undefined', async () => {
         await expect(storage.keyValueStore('default_2').get()).resolves.toBeUndefined();
