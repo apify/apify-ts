@@ -9,6 +9,7 @@ import { StorageTypes } from '../consts';
 import { purgeNullsFromObject, uniqueKeyToRequestId } from '../utils';
 import { BaseClient } from './common/base-client';
 import { sendWorkerMessage } from '../workers/instance';
+import { findRequestQueueByPossibleId } from '../cache-helpers';
 
 const requestShape = s.object({
     id: s.string,
@@ -66,7 +67,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     }
 
     async get(): Promise<storage.RequestQueueInfo | undefined> {
-        const found = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const found = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (found) {
             found.updateTimestamps(false);
@@ -83,7 +84,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             name: s.string.lengthGreaterThan(0).optional,
         }).passthrough.parse(newFields);
 
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -132,7 +133,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             limit: s.number.optional.default(100),
         }).parse(options);
 
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -164,7 +165,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         requestShapeWithoutId.parse(request);
         requestOptionsShape.parse(options);
 
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -203,7 +204,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         batchRequestShapeWithoutId.parse(requests);
         requestOptionsShape.parse(options);
 
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -250,7 +251,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
 
     async getRequest(id: string): Promise<storage.RequestOptions | undefined> {
         s.string.parse(id);
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -266,7 +267,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         requestShape.parse(request);
         requestOptionsShape.parse(options);
 
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);
@@ -308,7 +309,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
     }
 
     async deleteRequest(id: string): Promise<void> {
-        const existingQueueById = this.client.requestQueuesHandled.find((queue) => queue.id === this.id);
+        const existingQueueById = await findRequestQueueByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingQueueById) {
             this.throwOnNonExisting(StorageTypes.RequestQueue);

@@ -9,6 +9,7 @@ import { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
 import { BaseClient } from './common/base-client';
 import { sendWorkerMessage } from '../workers/instance';
+import { findOrCacheDatasetByPossibleId } from '../cache-helpers';
 
 /**
  * This is what API returns in the x-apify-pagination-limit
@@ -48,7 +49,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
     }
 
     async get(): Promise<storage.DatasetInfo | undefined> {
-        const found = this.client.datasetClientsHandled.find((store) => store.id === this.id);
+        const found = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (found) {
             found.updateTimestamps(false);
@@ -64,7 +65,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }).parse(newFields);
 
         // Check by id
-        const existingStoreById = this.client.datasetClientsHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -124,7 +125,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         }).parse(options);
 
         // Check by id
-        const existingStoreById = this.client.datasetClientsHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);
@@ -147,7 +148,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             items: desc ? items.reverse() : items,
             limit,
             offset,
-            total: this.itemCount,
+            total: existingStoreById.itemCount,
         };
     }
 
@@ -159,7 +160,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
         ).parse(items);
 
         // Check by id
-        const existingStoreById = this.client.datasetClientsHandled.find((store) => store.id === this.id);
+        const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);
 
         if (!existingStoreById) {
             this.throwOnNonExisting(StorageTypes.Dataset);

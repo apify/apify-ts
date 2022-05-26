@@ -1,6 +1,7 @@
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { resolve } from 'node:path';
+import { findRequestQueueByPossibleId } from '../cache-helpers';
 import { MemoryStorage } from '../index';
 import { sendWorkerMessage } from '../workers/instance';
 import { RequestQueueClient } from './request-queue';
@@ -36,7 +37,7 @@ export class RequestQueueCollectionClient implements storage.RequestQueueCollect
         s.string.optional.parse(name);
 
         if (name) {
-            const found = this.client.requestQueuesHandled.find((store) => store.name === name);
+            const found = await findRequestQueueByPossibleId(this.client, name);
 
             if (found) {
                 return found.toRequestQueueInfo();
