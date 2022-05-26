@@ -5,6 +5,16 @@ import { throwImplementationNeeded } from './utils';
 import { UnwrapPromise } from '../utils';
 
 /**
+ * The default User Agent used by `PlaywrightCrawler`, `launchPlaywright`, 'PuppeteerCrawler' and 'launchPuppeteer'
+ * when Chromium/Chrome browser is launched:
+ *  - in headless mode,
+ *  - without using a fingerprint,
+ *  - without specifying a user agent.
+ * Last updated on 2022-05-05.
+ */
+export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36';
+
+/**
  * Each plugin expects an instance of the object with the `.launch()` property.
  * For Puppeteer, it is the `puppeteer` module itself, whereas for Playwright
  * it is one of the browser types, such as `puppeteer.chromium`.
@@ -149,6 +159,13 @@ export abstract class BrowserPlugin<
         if (this._isChromiumBasedBrowser(launchContext)) {
             // This will set the args for chromium based browsers to hide the webdriver.
             launchOptions.args = this._mergeArgsToHideWebdriver(launchOptions.args);
+            // When User-Agent is not set, and we're using Chromium in headless mode,
+            // it is better to use DEFAULT_USER_AGENT to reduce chance of detection,
+            // as otherwise 'HeadlessChrome' is present in User-Agent string.
+            const userAgent = launchOptions.args.find((arg: string) => arg.startsWith('--user-agent'));
+            if (launchOptions.headless && !launchContext.fingerprint && !userAgent) {
+                launchOptions.args.push(`--user-agent=${DEFAULT_USER_AGENT}`);
+            }
         }
 
         return this._launch(launchContext);
