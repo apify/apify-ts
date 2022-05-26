@@ -104,6 +104,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
 
         const puppeteerCrawler = new PuppeteerCrawler({
             requestList: requestListLarge,
+            browserPoolOptions: { useFingerprints: false },
             minConcurrency: 1,
             maxConcurrency: 1,
             requestHandler,
