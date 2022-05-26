@@ -1,5 +1,5 @@
-import { Session, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions } from '@crawlers/puppeteer';
-import { Dictionary } from '@crawlers/utils';
+import { Session, ProxyConfigurationOptions, PseudoUrlObject, RequestOptions } from '@crawlee/puppeteer';
+import { Dictionary } from '@crawlee/utils';
 import { PuppeteerLifeCycleEvent } from 'puppeteer';
 
 /**
@@ -20,7 +20,6 @@ export interface Input {
     sessionPoolName?: string;
     initialCookies: Parameters<Session['setPuppeteerCookies']>[0];
     useChrome: boolean;
-    useStealth: boolean;
     ignoreSslErrors: boolean;
     ignoreCorsAndCsp: boolean;
     downloadMedia: boolean;

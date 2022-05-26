@@ -5,13 +5,13 @@
         "paths": {
             "apify": ["packages/apify/src"],
             "@apify/scraper-tools": ["packages/scraper-tools/src"],
-            "crawlers": ["packages/crawlers/src"],
-            "@crawlers/basic": ["packages/basic-crawler/src"],
-            "@crawlers/browser": ["packages/browser-crawler/src"],
-            "@crawlers/cheerio": ["packages/cheerio-crawler/src"],
-            "@crawlers/playwright": ["packages/playwright-crawler/src"],
-            "@crawlers/puppeteer": ["packages/puppeteer-crawler/src"],
-            "@crawlers/*": ["packages/*/src"],
+            "crawlee": ["packages/crawlee/src"],
+            "@crawlee/basic": ["packages/basic-crawler/src"],
+            "@crawlee/browser": ["packages/browser-crawler/src"],
+            "@crawlee/cheerio": ["packages/cheerio-crawler/src"],
+            "@crawlee/playwright": ["packages/playwright-crawler/src"],
+            "@crawlee/puppeteer": ["packages/puppeteer-crawler/src"],
+            "@crawlee/*": ["packages/*/src"],
         }
     }
 }

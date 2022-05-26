@@ -10,8 +10,8 @@ import type {
     RequestOptions,
     RequestQueue,
     RequestQueueOperationOptions,
-} from '@crawlers/puppeteer';
-import { Dictionary } from '@crawlers/utils';
+} from '@crawlee/puppeteer';
+import { Dictionary } from '@crawlee/utils';
 import { Input } from './consts';
 import { GlobalStore } from './global_store';
 

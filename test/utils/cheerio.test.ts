@@ -1,5 +1,5 @@
 import cheerio from 'cheerio';
-import { CheerioRoot, htmlToText } from '@crawlers/utils';
+import { CheerioRoot, htmlToText } from '@crawlee/utils';
 import * as htmlToTextData from '../shared/data/html_to_text_test_data';
 
 const checkHtmlToText = (html: string | CheerioRoot, expectedText: string, hasBody = false) => {

@@ -1,12 +1,13 @@
-import { downloadListOfUrls } from '@crawlers/utils';
+import { downloadListOfUrls } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
-import { ACTOR_EVENT_NAMES_EX } from '../constants';
-import { events } from '../events';
+import { EventManager, EventType } from '../events';
+import { Configuration } from '../configuration';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
 import { KeyValueStore } from '../storages/key_value_store';
 import { Dictionary } from '../typedefs';
+import { ProxyConfiguration } from '../proxy_configuration';
 
 /** @internal */
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';
@@ -95,6 +96,13 @@ export interface RequestListOptions {
     sourcesFunction?: RequestListSourcesFunction;
 
     /**
+    *   Used to pass the the proxy configuration for the `requestsFromUrls` objects.
+    *   Takes advantage of the internal address rotation and authentication process.
+    *   If undefined, the `requestsFromUrls` requests will be made without proxy.
+    */
+    proxyConfiguration?: ProxyConfiguration;
+
+    /**
      * Identifies the key in the default key-value store under which `RequestList` periodically stores its
      * state (i.e. which URLs were crawled and which not).
      * If the actor is restarted, `RequestList` will read the state
@@ -154,6 +162,9 @@ export interface RequestListOptions {
      * @default false
      */
     keepDuplicateUrls?: boolean;
+
+    /** @internal */
+    config?: Configuration;
 }
 
 /**
@@ -182,7 +193,7 @@ export interface RequestListOptions {
  * which are in progress and which were reclaimed. The state may be automatically persisted to the default
  * {@link KeyValueStore} by setting the `persistStateKey` option so that if the Node.js process is restarted,
  * the crawling can continue where it left off. The automated persisting is launched upon receiving the `persistState`
- * event that is periodically emitted by {@link events|Apify.events}.
+ * event that is periodically emitted by {@link events|Actor.events}.
  *
  * The internal state is closely tied to the provided sources (URLs). If the sources change on actor restart, the state will become corrupted and
  * `RequestList` will raise an exception. This typically happens when the sources is a list of URLs downloaded from the web.
@@ -194,7 +205,7 @@ export interface RequestListOptions {
  * ```javascript
  * // Use a helper function to simplify request list initialization.
  * // State and sources are automatically persisted. This is a preferred usage.
- * const requestList = await Apify.openRequestList('my-request-list', [
+ * const requestList = await RequestList.open('my-request-list', [
  *     'http://www.example.com/page-1',
  *     { url: 'http://www.example.com/page-2', method: 'POST', userData: { foo: 'bar' }},
  *     { requestsFromUrl: 'http://www.example.com/my-url-list.txt', userData: { isFromUrl: true } },
@@ -204,7 +215,7 @@ export interface RequestListOptions {
  * **Advanced usage:**
  * ```javascript
  * // Use the constructor to get more control over the initialization.
- * const requestList = new Apify.RequestList({
+ * const requestList = new RequestList({
  *     sources: [
  *         // Separate requests
  *         { url: 'http://www.example.com/page-1', method: 'GET', headers: { ... } },
@@ -273,6 +284,8 @@ export class RequestList {
     private keepDuplicateUrls: boolean;
     private sources: Source[];
     private sourcesFunction?: RequestListSourcesFunction;
+    private proxyConfiguration?: ProxyConfiguration;
+    private events: EventManager;
 
     /**
      * @param options All `RequestList` configuration options
@@ -284,7 +297,9 @@ export class RequestList {
             persistStateKey,
             persistRequestsKey,
             state,
+            proxyConfiguration,
             keepDuplicateUrls = false,
+            config = Configuration.getGlobalConfig(),
         } = options;
 
         if (!(sources || sourcesFunction)) {
@@ -301,11 +316,13 @@ export class RequestList {
                 inProgress: ow.object,
             }),
             keepDuplicateUrls: ow.optional.boolean,
+            proxyConfiguration: ow.optional.object,
         }));
 
         this.persistStateKey = persistStateKey ? `SDK_${persistStateKey}` : persistStateKey;
         this.persistRequestsKey = persistRequestsKey ? `SDK_${persistRequestsKey}` : persistRequestsKey;
         this.initialState = state;
+        this.events = config.getEventManager();
 
         // If this option is set then all requests will get a pre-generated unique ID and duplicate URLs will be kept in the list.
         this.keepDuplicateUrls = keepDuplicateUrls;
@@ -313,6 +330,9 @@ export class RequestList {
         // Will be empty after initialization to save memory.
         this.sources = sources || [];
         this.sourcesFunction = sourcesFunction;
+
+        // The proxy configuration used for `requestsFromUrls` requests.
+        this.proxyConfiguration = proxyConfiguration;
     }
 
     /**
@@ -339,7 +359,7 @@ export class RequestList {
         this.isInitialized = true;
         if (this.persistRequestsKey && !this.areRequestsPersisted) await this._persistRequests();
         if (this.persistStateKey) {
-            events.on(ACTOR_EVENT_NAMES_EX.PERSIST_STATE, this.persistState.bind(this));
+            this.events.on(EventType.PERSIST_STATE, this.persistState.bind(this));
         }
     }
 
@@ -653,7 +673,7 @@ export class RequestList {
         // Download remote resource and parse URLs.
         let urlsArr;
         try {
-            urlsArr = await this._downloadListOfUrls({ url: requestsFromUrl, urlRegExp: regex });
+            urlsArr = await this._downloadListOfUrls({ url: requestsFromUrl, urlRegExp: regex, proxyUrl: await this.proxyConfiguration?.newUrl() });
         } catch (err) {
             throw new Error(`Cannot fetch a request list from ${requestsFromUrl}: ${err}`);
         }
@@ -773,7 +793,7 @@ export class RequestList {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Apify.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -825,67 +845,9 @@ export class RequestList {
     /**
      * @internal wraps public utility for mocking purposes
      */
-    private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp }): Promise<string[]> {
+    private async _downloadListOfUrls(options: { url: string; urlRegExp?: RegExp; proxyUrl?: string }): Promise<string[]> {
         return downloadListOfUrls(options);
     }
-}
-
-/**
- * Opens a request list and returns a promise resolving to an instance
- * of the {@link RequestList} class that is already initialized.
- *
- * {@link RequestList} represents a list of URLs to crawl, which is always stored in memory.
- * To enable picking up where left off after a process restart, the request list sources
- * are persisted to the key-value store at initialization of the list. Then, while crawling,
- * a small state object is regularly persisted to keep track of the crawling status.
- *
- * For more details and code examples, see the {@link RequestList} class.
- *
- * **Example usage:**
- *
- * ```javascript
- * const sources = [
- *     'https://www.example.com',
- *     'https://www.google.com',
- *     'https://www.bing.com'
- * ];
- *
- * const requestList = await Apify.openRequestList('my-name', sources);
- * ```
- *
- * @param listName
- *   Name of the request list to be opened. Setting a name enables the `RequestList`'s state to be persisted
- *   in the key-value store. This is useful in case of a restart or migration. Since `RequestList` is only
- *   stored in memory, a restart or migration wipes it clean. Setting a name will enable the `RequestList`'s
- *   state to survive those situations and continue where it left off.
- *
- *   The name will be used as a prefix in key-value store, producing keys such as `NAME-REQUEST_LIST_STATE`
- *   and `NAME-REQUEST_LIST_SOURCES`.
- *
- *   If `null`, the list will not be persisted and will only be stored in memory. Process restart
- *   will then cause the list to be crawled again from the beginning. We suggest always using a name.
- * @param sources
- *  An array of sources of URLs for the {@link RequestList}. It can be either an array of strings,
- *  plain objects that define at least the `url` property, or an array of {@link Request} instances.
- *
- *  **IMPORTANT:** The `sources` array will be consumed (left empty) after {@link RequestList} initializes.
- *  This is a measure to prevent memory leaks in situations when millions of sources are
- *  added.
- *
- *  Additionally, the `requestsFromUrl` property may be used instead of `url`,
- *  which will instruct {@link RequestList} to download the source URLs from a given remote location.
- *  The URLs will be parsed from the received response. In this case you can limit the URLs
- *  using `regex` parameter containing regular expression pattern for URLs to be included.
- *
- *  For details, see the {@link RequestListOptions.sources}
- * @param [options]
- *   The {@link RequestList} options. Note that the `listName` parameter supersedes
- *   the {@link RequestListOptions.persistStateKey} and {@link RequestListOptions.persistRequestsKey}
- *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
- * @deprecated use `RequestList.open()` instead
- */
-export async function openRequestList(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
-    return RequestList.open(listName, sources, options);
 }
 
 /**

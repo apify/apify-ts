@@ -4,13 +4,13 @@ title: Dataset Map and Reduce methods
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import VersionedApiLink from '@site/src/components/VersionedApiLink';
+import ApiLink from '@site/src/components/ApiLink';
 import MapSource from '!!raw-loader!./map.ts';
 import ReduceSource from '!!raw-loader!./reduce.ts';
 
-This example shows an easy use-case of the <VersionedApiLink apiPath="core/class/Dataset">`Dataset`</VersionedApiLink> <VersionedApiLink apiPath="core/class/Dataset#map">`map`</VersionedApiLink>
-and <VersionedApiLink apiPath="core/class/Dataset#reduce">`reduce`</VersionedApiLink> methods. Both methods can be used to simplify
-the dataset results workflow process. Both can be called on the <VersionedApiLink apiPath="core/class/Dataset">dataset</VersionedApiLink> directly.
+This example shows an easy use-case of the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> <ApiLink to="core/class/Dataset#map">`map`</ApiLink>
+and <ApiLink to="core/class/Dataset#reduce">`reduce`</ApiLink> methods. Both methods can be used to simplify
+the dataset results workflow process. Both can be called on the <ApiLink to="core/class/Dataset">dataset</ApiLink> directly.
 
 Important to mention is that both methods return a new result (`map` returns a new array and `reduce` can return any type) - neither method updates
 the dataset in any way.
@@ -19,7 +19,7 @@ Examples for both methods are demonstrated on a simple dataset containing the re
 `h1` - `h3` header elements under the `headingCount` key.
 
 This data structure is stored in the default dataset under `{PROJECT_FOLDER}/apify_storage/datasets/default/`. If you want to simulate the
-functionality, you can use the <VersionedApiLink apiPath="core/class/Dataset#pushData">`dataset.pushData()`</VersionedApiLink>
+functionality, you can use the <ApiLink to="core/class/Dataset#pushData">`dataset.pushData()`</ApiLink>
 method to save the example `JSON array` to your dataset.
 
 ```json
@@ -52,7 +52,7 @@ The `map` method used to check if are there more than 5 header elements on each 
 
 The `moreThan5headers` variable is an array of `headingCount` attributes where the number of headers is greater than 5.
 
-The `map` method's result value saved to the <VersionedApiLink apiPath="core/class/KeyValueStore">`key-value store`</VersionedApiLink> should be:
+The `map` method's result value saved to the <ApiLink to="core/class/KeyValueStore">`key-value store`</ApiLink> should be:
 
 ```javascript
 [11, 8]
@@ -61,7 +61,7 @@ The `map` method's result value saved to the <VersionedApiLink apiPath="core/cla
 ### Reduce
 
 The dataset `reduce` method does not produce a new array of values - it reduces a list of values down to a single value. The method iterates through
-the items in the dataset using the <VersionedApiLink apiPath="core/class/Dataset#reduce">`memo` argument</VersionedApiLink>. After performing the necessary
+the items in the dataset using the <ApiLink to="core/class/Dataset#reduce">`memo` argument</ApiLink>. After performing the necessary
 calculation, the `memo` is sent to the next iteration, while the item just processed is reduced (removed).
 
 Using the `reduce` method to get the total number of headers scraped (all items in the dataset):
@@ -73,7 +73,7 @@ Using the `reduce` method to get the total number of headers scraped (all items 
 The original dataset will be reduced to a single value, `pagesHeadingCount`, which contains the count of all headers for all scraped pages (all
 dataset items).
 
-The `reduce` method's result value saved to the <VersionedApiLink apiPath="core/class/KeyValueStore">`key-value store`</VersionedApiLink> should be:
+The `reduce` method's result value saved to the <ApiLink to="core/class/KeyValueStore">`key-value store`</ApiLink> should be:
 
 ```javascript
 23

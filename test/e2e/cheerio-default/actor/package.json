@@ -1,0 +1,21 @@
+{
+	"name": "test-cheerio-default",
+	"version": "0.0.1",
+	"description": "Cheerio Crawler Test - Default",
+	"dependencies": {
+        "apify": "file:./packages/apify",
+        "@crawlee/core": "file:./packages/core",
+        "@crawlee/basic": "file:./packages/basic-crawler",
+        "@crawlee/cheerio": "file:./packages/cheerio-crawler",
+        "@crawlee/utils": "file:./packages/utils",
+        "@crawlee/browser-pool": "file:./packages/browser-pool",
+        "@crawlee/storage": "file:./packages/storage"
+    },
+	"devDependencies": {
+		"@apify/eslint-config": "^0.3.1",
+		"eslint": "^8.13.0"
+	},
+    "scripts": { "start": "node main.js" },
+	"type": "module",
+	"license": "ISC"
+}

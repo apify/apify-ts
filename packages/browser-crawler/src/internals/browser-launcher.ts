@@ -1,16 +1,30 @@
 import os from 'os';
+import fs from 'fs';
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
 import {
     Dictionary,
     Constructor,
-} from '@crawlers/utils';
+} from '@crawlee/utils';
 import {
     BrowserPlugin,
     BrowserPluginOptions,
-} from 'browser-pool';
+} from '@crawlee/browser-pool';
+
+const DEFAULT_VIEWPORT = {
+    width: 1366,
+    height: 768,
+};
 
 export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
+    /**
+     * URL to a HTTP proxy server. It must define the port number,
+     * and it may also contain proxy username and password.
+     *
+     * Example: `http://bob:pass123@proxy.example.com:1234`.
+     */
+    proxyUrl?: string;
+
     /**
      * If `true` and `executablePath` is not set,
      * the launcher will launch full Google Chrome browser available on the machine
@@ -21,6 +35,28 @@ export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginO
      * @default false
      */
     useChrome?: boolean;
+
+    /**
+    * With this option selected, all pages will be opened in a new incognito browser context.
+    * This means they will not share cookies nor cache and their resources will not be throttled by one another.
+    * @default false
+    */
+    useIncognitoPages?: boolean;
+
+    /**
+    * Sets the [User Data Directory](https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md) path.
+    * The user data directory contains profile data such as history, bookmarks, and cookies, as well as other per-installation local state.
+    * If not specified, a temporary directory is used instead.
+    */
+    userDataDir?: string;
+
+    /**
+     * The `User-Agent` HTTP header used by the browser.
+     * If not provided, the function sets `User-Agent` to a reasonable default
+     * to reduce the chance of detection of the crawler.
+     */
+    userAgent?: string;
+
     launcher?: Launcher;
 }
 
@@ -50,6 +86,7 @@ export abstract class BrowserLauncher<
         useIncognitoPages: ow.optional.boolean,
         userDataDir: ow.optional.string,
         launchOptions: ow.optional.object,
+        userAgent: ow.optional.string,
     };
 
     static requireLauncherOrThrow<T>(launcher: string, apifyImageName: string): T {
@@ -60,15 +97,10 @@ export abstract class BrowserLauncher<
             if (e.code === 'MODULE_NOT_FOUND') {
                 const msg = `Cannot find module '${launcher}'. Did you you install the '${launcher}' package?\n`
                     + `Make sure you have '${launcher}' in your package.json dependencies and in your package-lock.json, if you use it.`;
-                try {
-                    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-                    const apify = require('apify');
-                    // TODO: this might be doable better to know if its used on apify or not...
-                    if (apify.isAtHome()) {
-                        e.message = `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`;
-                    }
-                // eslint-disable-next-line no-empty
-                } catch {}
+                // TODO we should not depend on apify env vars here ideally
+                if (process.env.APIFY_IS_AT_HOME) {
+                    e.message = `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`;
+                }
             }
 
             throw err;
@@ -83,6 +115,7 @@ export abstract class BrowserLauncher<
             launcher,
             proxyUrl,
             useChrome,
+            userAgent,
             launchOptions = {},
             ...otherLaunchContextProps
         } = launchContext;
@@ -93,6 +126,7 @@ export abstract class BrowserLauncher<
         this.launcher = launcher!;
         this.proxyUrl = proxyUrl;
         this.useChrome = useChrome;
+        this.userAgent = userAgent;
         this.launchOptions = launchOptions;
         this.otherLaunchContextProps = otherLaunchContextProps as Dictionary;
     }
@@ -119,10 +153,21 @@ export abstract class BrowserLauncher<
         return plugin.launch(context) as LaunchResult;
     }
 
-    createLaunchOptions(): { args?: string[] } & Dictionary {
-        const launchOptions = {
+    createLaunchOptions(): Dictionary {
+        const launchOptions: { args: string[] } & Dictionary = {
+            args: [],
+            defaultViewport: DEFAULT_VIEWPORT,
             ...this.launchOptions,
         };
+
+        // TODO is this needed? should be controlled via public options preferably
+        if (process.env.APIFY_IS_AT_HOME) {
+            launchOptions.args.push('--no-sandbox');
+        }
+
+        if (this.userAgent) {
+            launchOptions.args.push(`--user-agent=${this.userAgent}`);
+        }
 
         if (launchOptions.headless == null) {
             launchOptions.headless = this._getDefaultHeadlessOption();
@@ -147,11 +192,30 @@ export abstract class BrowserLauncher<
      * Gets a typical path to Chrome executable, depending on the current operating system.
      */
     protected _getTypicalChromeExecutablePath(): string {
+        /**
+         * Return path of Chrome executable by its OS environment variable to deal with non-english language OS.
+         * Taking also in account the old [chrome 380177 issue](https://bugs.chromium.org/p/chromium/issues/detail?id=380177).
+         *
+         * @returns {string}
+         * @ignore
+         */
+        const getWin32Path = () => {
+            let chromeExecutablePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            const path00 = `${process.env.ProgramFiles}\\Google\\Chrome\\Application\\chrome.exe`;
+            const path86 = `${process.env['ProgramFiles(x86)']}\\Google\\Chrome\\Application\\chrome.exe`;
+
+            if (fs.existsSync(path00)) {
+                chromeExecutablePath = path00;
+            } else if (fs.existsSync(path86)) {
+                chromeExecutablePath = path86;
+            }
+            return chromeExecutablePath;
+        };
         switch (os.platform()) {
             case 'darwin':
                 return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
             case 'win32':
-                return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+                return getWin32Path();
             default:
                 return '/usr/bin/google-chrome';
         }

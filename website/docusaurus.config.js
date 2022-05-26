@@ -1,10 +1,9 @@
 const { createHref } = require('./tools/utils/createHref');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
-// const versions = require('./versions.json');
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
-    title: 'Apify SDK',
+    title: 'Crawlee',
     tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js',
     url: 'https://apify.github.io',
     baseUrl: '/apify-ts/',
@@ -17,36 +16,33 @@ module.exports = {
             html: true,
         },
         gaGtag: true,
-        deletedDocs: {
-            '1.0.0': [
-                'api/puppeteer-pool',
-                'typedefs/puppeteer-pool-options',
-                'typedefs/launch-puppeteer-function',
-                'typedefs/launch-puppeteer-options',
-                'typedefs/puppeteer-goto',
-                'typedefs/puppeteer-goto-inputs',
-            ],
-        },
         repoUrl: 'https://github.com/apify/apify-ts',
     },
     onBrokenLinks:
-    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('log'),
+    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('error'),
     onBrokenMarkdownLinks:
-    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('log'),
+    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('error'),
     presets: /** @type {import('@docusaurus/types').PresetConfig[]} */ ([
         [
             '@docusaurus/preset-classic',
             /** @type {import('@docusaurus/preset-classic').Options} */
             ({
                 docs: {
+                    disableVersioning: true,
+                    lastVersion: 'current',
+                    versions: {
+                        current: {
+                            label: '3.0.0',
+                        },
+                    },
                     showLastUpdateAuthor: true,
                     showLastUpdateTime: true,
                     path: '../docs',
-                    sidebarPath: './sidebars.json',
+                    sidebarPath: './sidebars.js',
                     rehypePlugins: [externalLinkProcessor],
                 },
                 theme: {
-                    customCss: '../src/css/customTheme.css',
+                    customCss: '/src/css/customTheme.css',
                 },
             }),
         ],
@@ -56,6 +52,7 @@ module.exports = {
             'docusaurus-plugin-typedoc-api',
             {
                 projectRoot: `${__dirname}/..`,
+                changelogs: true,
                 packages: [
                     {
                         path: 'packages/apify',
@@ -69,9 +66,6 @@ module.exports = {
                     {
                         path: 'packages/storage',
                     },
-                    // {
-                    //     path: 'packages/crawlers',
-                    // },
                     {
                         path: 'packages/basic-crawler',
                     },
@@ -98,6 +92,9 @@ module.exports = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */ ({
         docs: {
             versionPersistence: 'localStorage',
+            sidebar: {
+                hideable: true,
+            },
         },
         navbar: {
             hideOnScroll: true,
@@ -108,17 +105,20 @@ module.exports = {
             },
             items: [
                 {
-                    to: 'docs/',
-                    label: 'Guide',
+                    type: 'docsVersion',
+                    to: 'docs/guides',
+                    label: 'Guides',
                     position: 'left',
                 },
                 {
-                    to: 'docs/examples/crawl-multiple-urls',
+                    type: 'docsVersion',
+                    to: 'docs/examples',
                     label: 'Examples',
                     position: 'left',
                 },
                 {
-                    to: 'api',
+                    type: 'docsVersion',
+                    to: 'api/core',
                     label: 'API reference',
                     position: 'left',
                 },
@@ -131,6 +131,16 @@ module.exports = {
                 {
                     type: 'docsVersionDropdown',
                     position: 'right',
+                    dropdownItemsAfter: [
+                        {
+                            href: 'https://sdk.apify.com/docs/guides/getting-started',
+                            label: '2.2',
+                        },
+                        {
+                            href: 'https://sdk.apify.com/docs/1.3.1/guides/getting-started',
+                            label: '1.3',
+                        },
+                    ],
                 },
                 {
                     href: 'https://github.com/apify/apify-js',
@@ -157,6 +167,7 @@ module.exports = {
             defaultLanguage: 'typescript',
             theme: require('prism-react-renderer/themes/github'),
             darkTheme: require('prism-react-renderer/themes/dracula'),
+            additionalLanguages: ['docker'],
         },
         metadata: [],
         image: 'img/apify_og_SDK.png',
@@ -166,23 +177,22 @@ module.exports = {
                     title: 'Docs',
                     items: [
                         {
-                            label: 'Guide',
-                            to: 'docs/',
+                            label: 'Guides',
+                            to: 'docs/guides',
                         },
                         {
                             label: 'Examples',
-                            to: 'docs/examples/crawl-multiple-urls',
+                            to: 'docs/examples',
                         },
                         {
                             label: 'API reference',
-                            to: 'docs/api/apify',
+                            to: 'api/core',
                         },
                     ],
                 },
                 {
                     title: 'Community',
                     items: [
-                        // { label: "User Showcase", to: "users" }
                         {
                             label: 'Discord',
                             href: 'https://discord.com/invite/jyEM2PRvMU',
@@ -207,7 +217,7 @@ module.exports = {
                         {
                             html: createHref(
                                 'https://apify.com',
-                                'Apify Cloud',
+                                'Apify Platform',
                             ),
                         },
                         {
@@ -244,6 +254,5 @@ module.exports = {
         gaGtag: {
             trackingID: 'UA-67003981-4',
         },
-        hideableSidebar: true,
     }),
 };

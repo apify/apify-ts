@@ -39,9 +39,6 @@
         "url": "https://github.com/apify/apify-js/issues"
     },
     "homepage": "https://sdk.apify.com/",
-    "files": [
-        "dist"
-    ],
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy && npm run fixApifyExport",
         "clean": "rimraf ./dist",
@@ -53,20 +50,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/core": "^3.0.0",
-        "@crawlers/utils": "^3.0.0",
-        "semver": "^7.3.5"
-    },
-    "peerDependencies": {
-        "playwright": "^1.11.0",
-        "puppeteer": "^9.0.0||^10.0.0"
-    },
-    "peerDependenciesMeta": {
-        "playwright": {
-            "optional": true
-        },
-        "puppeteer": {
-            "optional": true
-        }
+        "@crawlee/core": "^3.0.0",
+        "@crawlee/utils": "^3.0.0",
+        "semver": "^7.3.5",
+        "apify-client": "^2.3.1"
     }
 }

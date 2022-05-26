@@ -1,4 +1,4 @@
-import { Request } from '@crawlers/core';
+import { Request } from '@crawlee/core';
 import { tools, constants } from '@apify/scraper-tools';
 
 describe('tools.', () => {

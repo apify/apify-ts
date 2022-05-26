@@ -1,31 +1,29 @@
 import ow from 'ow';
+import { setTimeout } from 'node:timers/promises';
 import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
 import {
-    ActorRunWithOutput,
     Configuration,
     ConfigurationOptions,
     Dataset,
-    initializeEvents,
+    EventManager,
+    EventType,
+    EventTypeName,
     IStorage,
     KeyValueStore,
-    ProxyConfiguration,
-    ProxyConfigurationOptions,
     RecordOptions,
     RequestList,
     RequestListOptions,
     RequestQueue,
     Source,
-    stopEvents,
     StorageManager,
-    StorageManagerOptions,
-} from '@crawlers/core';
-import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlers/utils';
-import {
-    logSystemInfo,
-    printOutdatedSdkWarning,
-} from './utils';
+} from '@crawlee/core';
+import type { StorageClient } from '@crawlee/types';
+import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
+import { logSystemInfo, printOutdatedSdkWarning } from './utils';
+import { PlatformEventManager } from './platform_event_manager';
+import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -48,12 +46,19 @@ export class Actor {
      */
     readonly apifyClient: ApifyClient;
 
+    /**
+     * Default {@link EventManager} instance.
+     * @internal
+     */
+    readonly eventManager: EventManager;
+
     private readonly storageManagers = new Map<Constructor, StorageManager>();
 
     constructor(options: ConfigurationOptions = {}) {
         // use default configuration object if nothing overridden (it fallbacks to env vars)
         this.config = Object.keys(options).length === 0 ? Configuration.getGlobalConfig() : new Configuration(options);
-        this.apifyClient = this.config.getClient();
+        this.apifyClient = this.newClient();
+        this.eventManager = new PlatformEventManager(this.config);
     }
 
     /**
@@ -94,11 +99,11 @@ export class Actor {
      *
      * If the user function returns a promise, it is considered asynchronous:
      * ```javascript
-     * const { requestAsBrowser } = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(() => {
      *   // My asynchronous function that returns a promise
-     *   return request('http://www.example.com').then((html) => {
+     *   return gotScraping('http://www.example.com').then((html) => {
      *     console.log(html);
      *   });
      * });
@@ -107,7 +112,7 @@ export class Actor {
      * To simplify your code, you can take advantage of the `async`/`await` keywords:
      *
      * ```javascript
-     * const request = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(async () => {
      *   // My asynchronous function
@@ -118,44 +123,103 @@ export class Actor {
      *
      * @param userFunc User function to be executed. If it returns a promise,
      * the promise will be awaited. The user function is called with no arguments.
+     * @param options
      * @ignore
      */
-    main(userFunc: UserFunc): void {
+    main<T>(userFunc: UserFunc, options?: MainOptions): Promise<T> {
         if (!userFunc || typeof userFunc !== 'function') {
-            throw new Error(`Actor.main() accepts a single parameter that must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
+            throw new Error(`First parameter for Actor.main() must be a function (was '${userFunc === null ? 'null' : typeof userFunc}').`);
         }
 
-        const run = async () => {
-            this.start();
+        return (async () => {
+            await this.init(options);
+            let ret: T;
 
             try {
-                await userFunc();
-                this.exit({ exitCode: EXIT_CODES.SUCCESS });
+                ret = await Configuration.storage.run(this.config, userFunc) as unknown as T;
+                await this.exit(options);
             } catch (err: any) {
                 log.exception(err, err.message);
-                this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
+                await this.exit({ exitCode: EXIT_CODES.ERROR_USER_FUNCTION_THREW });
             }
-        };
 
-        run().catch((err) => {
-            log.exception(err, err.message);
-            this.exit({ exitCode: EXIT_CODES.ERROR_UNKNOWN });
-        });
+            return ret!;
+        })();
     }
 
     /**
      * @ignore
      */
-    start(): void {
-        // TODO use client as store if at home
+    async init(options: InitOptions = {}): Promise<void> {
         logSystemInfo();
         printOutdatedSdkWarning();
-        initializeEvents();
+
+        // purge the storage by default
+        if (options?.purge ?? true) {
+            await purgeLocalStorage();
+        }
+
+        await this.eventManager.init();
+
+        if (this.isAtHome()) {
+            this.config.set('availableMemoryRatio', 1);
+            this.config.useStorageClient(this.apifyClient);
+            this.config.useEventManager(this.eventManager);
+        } else if (options.storage) {
+            this.config.useStorageClient(options.storage);
+        }
     }
 
-    exit(options: ExitOptions = {}): void {
-        stopEvents();
-        process.exit(options.exitCode ?? EXIT_CODES.SUCCESS);
+    /**
+     * @ignore
+     */
+    async exit(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        options = typeof messageOrOptions === 'string' ? { ...options, statusMessage: messageOrOptions } : { ...messageOrOptions, ...options };
+        options.exit ??= true;
+        options.exitCode ??= EXIT_CODES.SUCCESS;
+        options.timeoutSecs ??= 5;
+        options.statusMessage ??= `Actor finished with exit code ${options.exitCode}`;
+
+        this.eventManager.emit(EventType.EXIT, options);
+        await this.eventManager.close();
+
+        if (options.exitCode > 0) {
+            log.error(options.statusMessage);
+        } else {
+            log.info(options.statusMessage);
+        }
+
+        if (!options.exit) {
+            return;
+        }
+
+        if (options.timeoutSecs > 0) {
+            log.debug(`Waiting for ${options.timeoutSecs} before calling process.exit()`);
+            await setTimeout(options.timeoutSecs! * 1000);
+        }
+
+        process.exit(options.exitCode);
+    }
+
+    /**
+     * @ignore
+     */
+    async fail(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return this.exit(messageOrOptions, { exitCode: 1, ...options });
+    }
+
+    /**
+     * @ignore
+     */
+    on(event: EventTypeName, listener: (...args: any[]) => any): void {
+        this.eventManager.on(event, listener);
+    }
+
+    /**
+     * @ignore
+     */
+    off(event: EventTypeName, listener?: (...args: any[]) => any): void {
+        this.eventManager.off(event, listener);
     }
 
     /**
@@ -194,7 +258,7 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
         const { token, ...rest } = options;
         const client = token ? this.newClient({ token }) : this.apifyClient;
 
@@ -237,7 +301,7 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+    async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ClientActorRun> {
         const { token, ...rest } = options;
         const client = token ? this.newClient({ token }) : this.apifyClient;
 
@@ -273,6 +337,30 @@ export class Actor {
 
         // Wait some time for container to be stopped.
         await sleep(customAfterSleepMillis);
+    }
+
+    /**
+     * Internally reboots this actor. The system stops the current container and starts
+     * a new container with the same run ID.
+     *
+     * @ignore
+     */
+    async reboot(): Promise<void> {
+        if (!this.isAtHome()) {
+            log.warning('Actor.reboot() is only supported when running on the Apify platform.');
+            return;
+        }
+
+        // Waiting for all the listeners to finish, as `.metamorph()` kills the container.
+        await Promise.all([
+            // `persistState` for individual RequestLists, RequestQueue... instances to be persisted
+            ...this.config.getEventManager().listeners(EventType.PERSIST_STATE).map((x) => x()),
+            // `migrating` to pause Apify crawlers
+            ...this.config.getEventManager().listeners(EventType.MIGRATING).map((x) => x()),
+        ]);
+
+        const actorId = this.config.get('actorId')!;
+        await this.metamorph(actorId);
     }
 
     /**
@@ -364,14 +452,14 @@ export class Actor {
      * @ignore
      */
     async openDataset<Data extends Dictionary = Dictionary>(
-        datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
+        datasetIdOrName?: string | null, options: OpenStorageOptions = {},
     ): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager<Dataset<Data>>(Dataset).openStorage(datasetIdOrName, options);
+        return this._openStorage<Dataset<Data>>(Dataset, datasetIdOrName, options);
     }
 
     /**
@@ -446,7 +534,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](core/class/KeyValueStore#getValue).
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -472,7 +560,7 @@ export class Actor {
      *   if the record is missing.
      * @ignore
      */
-    async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
+    async getInput<T = Dictionary | string | Buffer>(): Promise<T | null> {
         return this.getValue<T>(this.config.get('inputKey'));
     }
 
@@ -491,13 +579,13 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
+    async openKeyValueStore(storeIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<KeyValueStore> {
         ow(storeIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(KeyValueStore).openStorage(storeIdOrName, options);
+        return this._openStorage(KeyValueStore, storeIdOrName, options);
     }
 
     /**
@@ -520,7 +608,7 @@ export class Actor {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Actor.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -575,13 +663,13 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
+    async openRequestQueue(queueIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
             forceCloud: ow.optional.boolean,
         }));
 
-        return this._getStorageManager(RequestQueue).openStorage(queueIdOrName, options);
+        return this._openStorage(RequestQueue, queueIdOrName, options);
     }
 
     /**
@@ -602,7 +690,7 @@ export class Actor {
      *     countryCode: 'US'
      * });
      *
-     * const crawler = new Actor.CheerioCrawler({
+     * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
      *   handlePageFunction: ({ proxyInfo }) => {
@@ -678,7 +766,13 @@ export class Actor {
      * @ignore
      */
     newClient(options: ApifyClientOptions = {}): ApifyClient {
-        return this.config.createClient(options);
+        const { storageDir, ...storageClientOptions } = this.config.get('storageClientOptions') as Dictionary;
+        return new ApifyClient({
+            baseUrl: process.env[ENV_VARS.API_BASE_URL] ?? 'https://api.apify.com',
+            token: process.env[ENV_VARS.TOKEN],
+            ...storageClientOptions,
+            ...options, // allow overriding the instance configuration
+        });
     }
 
     /**
@@ -686,7 +780,7 @@ export class Actor {
      * @ignore
      */
     isAtHome(): boolean {
-        return !!this.config.get('isAtHome');
+        return !!process.env[ENV_VARS.IS_AT_HOME];
     }
 
     /**
@@ -727,11 +821,11 @@ export class Actor {
      *
      * If the user function returns a promise, it is considered asynchronous:
      * ```javascript
-     * const { requestAsBrowser } = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(() => {
      *   // My asynchronous function that returns a promise
-     *   return request('http://www.example.com').then((html) => {
+     *   return gotScraping('http://www.example.com').then((html) => {
      *     console.log(html);
      *   });
      * });
@@ -740,20 +834,41 @@ export class Actor {
      * To simplify your code, you can take advantage of the `async`/`await` keywords:
      *
      * ```javascript
-     * const request = require('some-request-library');
+     * const { gotScraping } = require('got-scraping');
      *
      * Actor.main(async () => {
      *   // My asynchronous function
-     *   const html = await request('http://www.example.com');
+     *   const html = await gotScraping('http://www.example.com');
      *   console.log(html);
      * });
      * ```
      *
      * @param userFunc User function to be executed. If it returns a promise,
      * the promise will be awaited. The user function is called with no arguments.
+     * @param options
      */
-    static main(userFunc: UserFunc): void {
-        return Actor.getDefaultInstance().main(userFunc);
+    static main<T>(userFunc: UserFunc<T>, options?: MainOptions): Promise<T> {
+        return Actor.getDefaultInstance().main<T>(userFunc, options);
+    }
+
+    static async init(options: InitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().init(options);
+    }
+
+    static async exit(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().exit(messageOrOptions, options);
+    }
+
+    static async fail(messageOrOptions?: string | ExitOptions, options: ExitOptions = {}): Promise<void> {
+        return Actor.getDefaultInstance().fail(messageOrOptions, options);
+    }
+
+    static on(event: EventTypeName, listener: (...args: any[]) => any): void {
+        Actor.getDefaultInstance().on(event, listener);
+    }
+
+    static off(event: EventTypeName, listener?: (...args: any[]) => any): void {
+        Actor.getDefaultInstance().off(event, listener);
     }
 
     /**
@@ -791,7 +906,7 @@ export class Actor {
      *  Otherwise the `options.contentType` parameter must be provided.
      * @param [options]
      */
-    static async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ActorRunWithOutput> {
+    static async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
         return Actor.getDefaultInstance().call(actId, input, options);
     }
 
@@ -830,7 +945,7 @@ export class Actor {
      *  Provided input will be merged with actor task input.
      * @param [options]
      */
-    static async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ActorRunWithOutput> {
+    static async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ClientActorRun> {
         return Actor.getDefaultInstance().callTask(taskId, input, options);
     }
 
@@ -849,6 +964,14 @@ export class Actor {
      */
     static async metamorph(targetActorId: string, input?: unknown, options: MetamorphOptions = {}): Promise<void> {
         return Actor.getDefaultInstance().metamorph(targetActorId, input, options);
+    }
+
+    /**
+     * Internally reboots this actor run. The system stops the current container and starts
+     * a new container with the same run id.
+     */
+    static async reboot(): Promise<void> {
+        return Actor.getDefaultInstance().reboot();
     }
 
     /**
@@ -908,7 +1031,7 @@ export class Actor {
      * @param [options]
      */
     static async openDataset<Data extends Dictionary = Dictionary>(
-        datasetIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {},
+        datasetIdOrName?: string | null, options: OpenStorageOptions = {},
     ): Promise<Dataset<Data>> {
         return Actor.getDefaultInstance().openDataset(datasetIdOrName, options);
     }
@@ -981,7 +1104,7 @@ export class Actor {
     /**
      * Gets the actor input value from the default {@link KeyValueStore} associated with the current actor run.
      *
-     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](key-value-store#getvalue).
+     * This is just a convenient shortcut for {@link KeyValueStore.getValue | `keyValueStore.getValue('INPUT')`}.
      * For example, calling the following code:
      * ```javascript
      * const input = await Actor.getInput();
@@ -997,8 +1120,7 @@ export class Actor {
      * If you need to use the input multiple times in your actor,
      * it is far more efficient to read it once and store it locally.
      *
-     * For more information, see  {@link Actor.openKeyValueStore}
-     * and {@link KeyValueStore.getValue}.
+     * For more information, see {@link Actor.openKeyValueStore} and {@link KeyValueStore.getValue}.
      *
      * @returns
      *   Returns a promise that resolves to an object, string
@@ -1006,7 +1128,7 @@ export class Actor {
      *   on the MIME content type of the record, or `null`
      *   if the record is missing.
      */
-    static async getInput<T extends Dictionary | string | Buffer>(): Promise<T | null> {
+    static async getInput<T = Dictionary | string | Buffer>(): Promise<T | null> {
         return Actor.getDefaultInstance().getInput();
     }
 
@@ -1024,7 +1146,7 @@ export class Actor {
      *   the function returns the default key-value store associated with the actor run.
      * @param [options]
      */
-    static async openKeyValueStore(storeIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<KeyValueStore> {
+    static async openKeyValueStore(storeIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<KeyValueStore> {
         return Actor.getDefaultInstance().openKeyValueStore(storeIdOrName, options);
     }
 
@@ -1048,7 +1170,7 @@ export class Actor {
      *     'https://www.bing.com'
      * ];
      *
-     * const requestList = await Actor.openRequestList('my-name', sources);
+     * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
      * @param listName
@@ -1101,7 +1223,7 @@ export class Actor {
      *   the function returns the default request queue associated with the actor run.
      * @param [options]
      */
-    static async openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
+    static async openRequestQueue(queueIdOrName?: string | null, options: OpenStorageOptions = {}): Promise<RequestQueue> {
         return Actor.getDefaultInstance().openRequestQueue(queueIdOrName, options);
     }
 
@@ -1123,7 +1245,7 @@ export class Actor {
      *     countryCode: 'US'
      * });
      *
-     * const crawler = new Actor.CheerioCrawler({
+     * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
      *   handlePageFunction: ({ proxyInfo }) => {
@@ -1191,6 +1313,11 @@ export class Actor {
         return this._instance;
     }
 
+    private _openStorage<T extends IStorage>(storageClass: Constructor<T>, id?: string, options: OpenStorageOptions = {}) {
+        const client = options.forceCloud ? this.apifyClient : undefined;
+        return this._getStorageManager<T>(storageClass).openStorage(id, client);
+    }
+
     private _getStorageManager<T extends IStorage>(storageClass: Constructor<T>): StorageManager<T> {
         if (!this.storageManagers.has(storageClass)) {
             const manager = new StorageManager(storageClass, this.config);
@@ -1200,6 +1327,13 @@ export class Actor {
         return this.storageManagers.get(storageClass) as StorageManager<T>;
     }
 }
+
+export interface InitOptions {
+    purge?: boolean;
+    storage?: StorageClient;
+}
+
+export interface MainOptions extends ExitOptions, InitOptions {}
 
 /**
  * Parsed representation of the `APIFY_XXX` environmental variables.
@@ -1262,7 +1396,7 @@ export interface ApifyEnv {
     memoryMbytes: number | null;
 }
 
-export type UserFunc = () => Awaitable<void>;
+export type UserFunc<T = unknown> = () => Awaitable<T>;
 
 export interface CallOptions extends ActorStartOptions {
     /**
@@ -1329,8 +1463,23 @@ export interface MetamorphOptions {
 }
 
 export interface ExitOptions {
+    /** Exit with given status message */
+    statusMessage?: string;
+    /** Wait before calling exit(), defaults to 5s */
+    timeoutSecs?: number;
     /** Exit code, defaults to 0 */
     exitCode?: number;
+    /** Call `process.exit()`? Defaults to true */
+    exit?: boolean;
+}
+
+export interface OpenStorageOptions {
+    /**
+     * If set to `true` then the cloud storage is used even if the `APIFY_LOCAL_STORAGE_DIR`
+     * environment variable is set. This way it is possible to combine local and cloud storage.
+     * @default false
+     */
+    forceCloud?: boolean;
 }
 
 export { ClientActorRun as ActorRun };

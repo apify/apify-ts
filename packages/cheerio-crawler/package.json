@@ -1,5 +1,5 @@
 {
-    "name": "@crawlers/cheerio",
+    "name": "@crawlee/cheerio",
     "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
@@ -39,9 +39,6 @@
         "url": "https://github.com/apify/apify-js/issues"
     },
     "homepage": "https://sdk.apify.com/",
-    "files": [
-        "dist"
-    ],
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
@@ -54,7 +51,7 @@
     "dependencies": {
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.5",
-        "@crawlers/basic": "^3.0.0",
+        "@crawlee/basic": "^3.0.0",
         "content-type": "^1.0.4",
         "cheerio": "1.0.0-rc.10",
         "htmlparser2": "^7.0.0",

@@ -1,6 +1,7 @@
 import ow from 'ow';
-import { weightedAvg } from '@crawlers/utils';
-import { Snapshotter } from './snapshotter'; // eslint-disable-line import/no-duplicates
+import { weightedAvg } from '@crawlee/utils';
+import { Snapshotter } from './snapshotter';
+import { Configuration } from '../configuration';
 
 /**
  * Represents the current status of the system.
@@ -69,12 +70,28 @@ export interface SystemStatusOptions {
      * The `Snapshotter` instance to be queried for `SystemStatus`.
      */
     snapshotter?: Snapshotter;
+
+    /** @internal */
+    config?: Configuration;
 }
 
 export interface ClientInfo {
     isOverloaded: boolean;
     limitRatio: number;
     actualRatio: number;
+}
+
+export interface FinalStatistics {
+    requestsFinished: number;
+    requestsFailed: number;
+    retryHistogram: number[];
+    requestAvgFailedDurationMillis: number;
+    requestAvgFinishedDurationMillis: number;
+    requestsFinishedPerMinute: number;
+    requestsFailedPerMinute: number;
+    requestTotalDurationMillis: number;
+    requestsTotal: number;
+    crawlerRuntimeMillis: number;
 }
 
 /**
@@ -115,6 +132,7 @@ export class SystemStatus {
             maxCpuOverloadedRatio: ow.optional.number,
             maxClientOverloadedRatio: ow.optional.number,
             snapshotter: ow.optional.object,
+            config: ow.optional.object,
         }));
 
         const {
@@ -124,6 +142,7 @@ export class SystemStatus {
             maxCpuOverloadedRatio = 0.4,
             maxClientOverloadedRatio = 0.3,
             snapshotter,
+            config,
         } = options;
 
         this.currentHistorySecs = currentHistorySecs * 1000;
@@ -131,7 +150,7 @@ export class SystemStatus {
         this.maxEventLoopOverloadedRatio = maxEventLoopOverloadedRatio;
         this.maxCpuOverloadedRatio = maxCpuOverloadedRatio;
         this.maxClientOverloadedRatio = maxClientOverloadedRatio;
-        this.snapshotter = snapshotter || new Snapshotter();
+        this.snapshotter = snapshotter || new Snapshotter({ config });
     }
 
     /**

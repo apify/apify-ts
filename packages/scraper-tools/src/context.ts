@@ -6,9 +6,9 @@ import {
     RequestOptions,
     RequestQueue,
     RequestQueueOperationOptions,
-} from '@crawlers/core';
-import { puppeteerUtils } from '@crawlers/puppeteer';
-import { Dictionary } from '@crawlers/utils';
+} from '@crawlee/core';
+import { puppeteerUtils } from '@crawlee/puppeteer';
+import { Dictionary } from '@crawlee/utils';
 import log from '@apify/log';
 import contentTypeParser, { MediaType } from 'content-type';
 import { saveSnapshot, SnapshotOptions } from './browser_tools';

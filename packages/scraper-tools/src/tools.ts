@@ -1,6 +1,6 @@
 import log from '@apify/log';
-import { PuppeteerCookie, Request, Session } from '@crawlers/core';
-import { Dictionary } from '@crawlers/utils';
+import { PuppeteerCookie, Request, Session } from '@crawlee/core';
+import { Dictionary } from '@crawlee/utils';
 import Ajv from 'ajv';
 import { randomBytes as callbackRandomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -16,7 +16,7 @@ const randomBytes = promisify(callbackRandomBytes);
 /**
  * Creates a standardized debug info from request and response. This info is usually added to dataset under the hidden `#debug` field.
  *
- * @param request [Apify.Request](https://sdk.apify.com/docs/api/request) object.
+ * @param request [Request](https://sdk.apify.com/docs/api/request) object.
  * @param [response]
  *   Puppeteer [`Response`](https://pptr.dev/#?product=Puppeteer&version=v1.11.0&show=api-class-response)
  *   or NodeJS [`http.IncomingMessage`](https://nodejs.org/api/http.html#http_class_http_serverresponse).
@@ -167,7 +167,7 @@ export function createDatasetPayload(
         '#debug': createRequestDebugInfo(request, response),
     };
 
-    return result.map<Dictionary & typeof meta>((item) => ({ ...item, ...meta }));
+    return (result as Dictionary[]).map((item) => ({ ...item, ...meta }));
 }
 
 /**

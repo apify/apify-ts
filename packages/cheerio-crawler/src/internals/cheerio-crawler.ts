@@ -4,36 +4,27 @@ import {
     BasicCrawler,
     BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
-} from '@crawlers/basic';
+} from '@crawlee/basic';
 import {
     CrawlerExtension,
     CrawlerHandleFailedRequestInput,
     CrawlingContext,
-    diffCookies,
     enqueueLinks,
     EnqueueLinksOptions,
     mergeCookies,
     ProxyConfiguration,
     ProxyInfo,
-    QueueOperationInfo,
     Request,
     RequestQueue,
+    resolveBaseUrl,
     Session,
-    throwOnBlockedRequest,
     validators,
-} from '@crawlers/core';
-import {
-    Awaitable,
-    CheerioRoot,
-    entries,
-    parseContentTypeFromResponse,
-    requestAsBrowser,
-    RequestAsBrowserOptions,
-    RequestAsBrowserResult,
-} from '@crawlers/utils';
+} from '@crawlee/core';
+import { BatchAddRequestsResult } from '@crawlee/types';
+import { Awaitable, CheerioRoot, Dictionary, entries, parseContentTypeFromResponse } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { Method, TimeoutError } from 'got-scraping';
+import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
@@ -56,13 +47,19 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioHandleFailedRequestInput<JSONData = unknown> extends CrawlerHandleFailedRequestInput, CheerioHandlePageInputs<JSONData> {}
+export interface CheerioFailedRequestHandlerInput<JSONData = Dictionary> extends CrawlerHandleFailedRequestInput, CheerioRequestHandlerInputs<JSONData> {}
 
-export type CheerioHandleFailedRequest<JSONData = unknown> = (inputs: CheerioHandleFailedRequestInput<JSONData>) => Awaitable<void>;
+export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestHandlerInput<JSONData>) => Awaitable<void>;
 
-export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
+export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
     BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
-    'handleRequestFunction' | 'handleFailedRequestFunction'
+    // Overridden with cheerio context
+    | 'requestHandler'
+    | 'handleRequestFunction'
+    // Overridden with cheerio context
+    | 'failedRequestHandler'
+    | 'handleFailedRequestFunction'
+    | 'handleRequestTimeoutSecs'
 > {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
@@ -81,7 +78,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      *   // For other content types it's null.
      *   json: Object,
      *
-     *   // Apify.Request object with details of the requested web page
+     *   // Request object with details of the requested web page
      *   request: Request,
      *
      *   // Parsed Content-Type HTTP header: { type, encoding }
@@ -124,69 +121,71 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    handlePageFunction: CheerioHandlePage<JSONData>;
+    requestHandler: CheerioRequestHandler<JSONData>;
 
     /**
-     * > This option is deprecated, use `preNavigationHooks` instead.
-     *
-     * A function that executes before the HTTP request is made to the target resource.
-     * This function is suitable for setting dynamic properties such as cookies to the {@link Request}.
+     * User-provided function that performs the logic of the crawler. It is called for each page
+     * loaded and parsed by the crawler.
      *
      * The function receives the following object as an argument:
      * ```
      * {
-     *     request: Request,
-     *     session: Session,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: CheerioCrawler,
+     *   // The Cheerio object's function with the parsed HTML.
+     *   $: Cheerio,
+     *
+     *   // The request body of the web page, whose type depends on the content type.
+     *   body: String|Buffer,
+     *
+     *   // The parsed object from JSON for responses with the "application/json" content types.
+     *   // For other content types it's null.
+     *   json: Object,
+     *
+     *   // Request object with details of the requested web page
+     *   request: Request,
+     *
+     *   // Parsed Content-Type HTTP header: { type, encoding }
+     *   contentType: Object,
+     *
+     *   // An instance of Node's http.IncomingMessage object,
+     *   response: Object,
+     *
+     *   // Session object, useful to work around anti-scraping protections
+     *   session: Session
+     *
+     *   // ProxyInfo object with information about currently used proxy
+     *   proxyInfo: ProxyInfo
+     *
+     *   // The running cheerio crawler instance.
+     *   crawler: CheerioCrawler
      * }
      * ```
-     * where the {@link Request} instance corresponds to the initialized request
-     * and the {@link Session} instance corresponds to used session.
      *
-     * The function should modify the properties of the passed {@link Request} instance
-     * in place because there are already earlier references to it. Making a copy and returning it from
-     * this function is therefore not supported, because it would create inconsistencies where
-     * different parts of SDK would have access to a different {@link Request} instance.
+     * Type of `body` depends on the `Content-Type` header of the web page:
+     * - String for `text/html`, `application/xhtml+xml`, `application/xml` MIME content types
+     * - Buffer for others MIME content types
+     *
+     * Parsed `Content-Type` header using
+     * [content-type package](https://www.npmjs.com/package/content-type)
+     * is stored in `contentType`.
+     *
+     * Cheerio is available only for HTML and XML content types.
+     *
+     * With the {@link Request} object representing the URL to crawl.
+     *
+     * If the function returns, the returned promise is awaited by the crawler.
+     *
+     * If the function throws an exception, the crawler will try to re-crawl the
+     * request later, up to `option.maxRequestRetries` times.
+     * If all the retries fail, the crawler calls the function
+     * provided to the `handleFailedRequestFunction` parameter.
+     * To make this work, you should **always**
+     * let your function throw exceptions rather than catch them.
+     * The exceptions are logged to the request using the
+     * {@link Request.pushErrorMessage} function.
+     *
+     * @deprecated `handlePageFunction` has been renamed to `requestHandler` and will be removed in a future version.
      */
-    prepareRequestFunction?: PrepareRequest<JSONData>;
-
-    /**
-     * > This option is deprecated, use `postNavigationHooks` instead.
-     *
-     * A function that executes right after the HTTP request is made to the target resource and response is returned.
-     * This function is suitable for overriding custom properties of response e.g. setting headers because of response parsing.
-     *
-     * **Example usage:**
-     *
-     * ```javascript
-     * const cheerioCrawlerOptions = {
-     *     // ...
-     *     postResponseFunction: ({ request, response }) => {
-     *         if (request.userData.parseAsJSON) {
-     *             response.headers['content-type'] = 'application/json; charset=utf-8';
-     *         }
-     *     }
-     * }
-     * ```
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     response: Object,
-     *     request: Request,
-     *     session: Session,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: CheerioCrawler,
-     * }
-     * ```
-     * The response is an instance of Node's http.IncomingMessage object.
-     */
-    postResponseFunction?: PostResponse<JSONData>;
-
-    /**
-     * Timeout in which the function passed as `handlePageFunction` needs to finish, given in seconds.
-     */
-    handlePageTimeoutSecs?: number;
+    handlePageFunction?: CheerioRequestHandler<JSONData>;
 
     /**
      * Timeout in which the HTTP request to the resource needs to finish, given in seconds.
@@ -228,16 +227,43 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
      * See [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/cheerio_crawler.js#L13)
      * for the default implementation of this function.
      */
-    handleFailedRequestFunction?: CheerioHandleFailedRequest<JSONData>;
+    failedRequestHandler?: CheerioFailedRequestHandler<JSONData>;
+
+    /**
+     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     * The function receives the following object as an argument:
+     * ```
+     * {
+     *     error: Error,
+     *     request: Request,
+     *     session: Session,
+     *     $: Cheerio,
+     *     body: String|Buffer,
+     *     json: Object,
+     *     contentType: Object,
+     *     response: Object,
+     *     proxyInfo: ProxyInfo,
+     *     crawler: CheerioCrawler,
+     * }
+     * ```
+     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * represents the last error thrown during processing of the request.
+     *
+     * See [source code](https://github.com/apify/apify-js/blob/master/src/crawlers/cheerio_crawler.js#L13)
+     * for the default implementation of this function.
+     *
+     * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.
+     */
+    handleFailedRequestFunction?: CheerioFailedRequestHandler<JSONData>;
 
     /**
      * Async functions that are sequentially evaluated before the navigation. Good for setting additional cookies
-     * or browser properties before navigation. The function accepts two parameters, `crawlingContext` and `requestAsBrowserOptions`,
+     * or browser properties before navigation. The function accepts two parameters, `crawlingContext` and `gotOptions`,
      * which are passed to the `requestAsBrowser()` function the crawler calls to navigate.
      * Example:
      * ```
      * preNavigationHooks: [
-     *     async (crawlingContext, requestAsBrowserOptions) => {
+     *     async (crawlingContext, gotOptions) => {
      *         // ...
      *     },
      * ]
@@ -298,7 +324,7 @@ export interface CheerioCrawlerOptions<JSONData = unknown> extends Omit<
     persistCookiesPerSession?: boolean;
 }
 
-export interface PrepareRequestInputs<JSONData = unknown> {
+export interface PrepareRequestInputs<JSONData = Dictionary> {
     /**
      *  Original instance of the {@link Request} object. Must be modified in-place.
      */
@@ -317,13 +343,13 @@ export interface PrepareRequestInputs<JSONData = unknown> {
     crawler?: CheerioCrawler<JSONData>;
 }
 
-export type PrepareRequest<JSONData = unknown> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
-export type CheerioHook<JSONData = unknown> = (
+export type PrepareRequest<JSONData = Dictionary> = (inputs: PrepareRequestInputs<JSONData>) => Awaitable<void>;
+export type CheerioHook<JSONData = Dictionary> = (
     crawlingContext: CheerioCrawlingContext<JSONData>,
-    requestAsBrowserOptions: RequestAsBrowserOptions,
+    gotOptions: OptionsInit,
 ) => Awaitable<void>;
 
-export interface PostResponseInputs<JSONData = unknown> {
+export interface PostResponseInputs<JSONData = Dictionary> {
     /**
      * stream
      */
@@ -347,9 +373,9 @@ export interface PostResponseInputs<JSONData = unknown> {
     crawler: CheerioCrawler<JSONData>;
 }
 
-export type PostResponse<JSONData = unknown> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
+export type PostResponse<JSONData = Dictionary> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
-export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingContext {
+export interface CheerioRequestHandlerInputs<JSONData = Dictionary> extends CrawlingContext {
     /**
      * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
@@ -371,11 +397,11 @@ export interface CheerioHandlePageInputs<JSONData = unknown> extends CrawlingCon
     contentType: { type: string; encoding: string };
     crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
-    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
 }
 
-export type CheerioCrawlingContext<JSONData = unknown> = CheerioHandlePageInputs<JSONData>; // alias for better discoverability
-export type CheerioHandlePage<JSONData = unknown> = (inputs: CheerioHandlePageInputs<JSONData>) => Awaitable<void>;
+export type CheerioCrawlingContext<JSONData = Dictionary> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability
+export type CheerioRequestHandler<JSONData = Dictionary> = (inputs: CheerioRequestHandlerInputs<JSONData>) => Awaitable<void>;
 export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls' | 'requestQueue'>;
 
 /**
@@ -391,7 +417,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *
  * `CheerioCrawler` downloads each URL using a plain HTTP request,
  * parses the HTML content using [Cheerio](https://www.npmjs.com/package/cheerio)
- * and then invokes the user-provided {@link CheerioCrawlerOptions.handlePageFunction} to extract page data
+ * and then invokes the user-provided {@link CheerioCrawlerOptions.requestHandler} to extract page data
  * using a [jQuery](https://jquery.com/)-like interface to the parsed HTML DOM.
  *
  * The source URLs are represented using {@link Request} objects that are fed from
@@ -404,11 +430,11 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *
  * The crawler finishes when there are no more {@link Request} objects to crawl.
  *
- * We can use the `preNavigationHooks` to adjust `requestAsBrowserOptions`:
+ * We can use the `preNavigationHooks` to adjust `gotOptions`:
  *
  * ```
  * preNavigationHooks: [
- *     (crawlingContext, requestAsBrowserOptions) => {
+ *     (crawlingContext, gotOptions) => {
  *         // ...
  *     },
  * ]
@@ -419,7 +445,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * and skips pages with other content types. If you want the crawler to process other content types,
  * use the {@link CheerioCrawlerOptions.additionalMimeTypes} constructor option.
  * Beware that the parsing behavior differs for HTML, XML, JSON and other types of content.
- * For details, see {@link CheerioCrawlerOptions.handlePageFunction}.
+ * For details, see {@link CheerioCrawlerOptions.requestHandler}.
  *
  * New requests are only dispatched when there is enough free CPU and memory available,
  * using the functionality provided by the {@link AutoscaledPool} class.
@@ -431,7 +457,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *
  * ```javascript
  * // Prepare a list of URLs to crawl
- * const requestList = new Apify.RequestList({
+ * const requestList = new RequestList({
  *   sources: [
  *       { url: 'http://www.example.com/page-1' },
  *       { url: 'http://www.example.com/page-2' },
@@ -440,7 +466,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * await requestList.initialize();
  *
  * // Crawl the URLs
- * const crawler = new Apify.CheerioCrawler({
+ * const crawler = new CheerioCrawler({
  *     requestList,
  *     handlePageFunction: async ({ request, response, body, contentType, $ }) => {
  *         const data = [];
@@ -451,7 +477,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *         });
  *
  *         // Save the data to dataset.
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             url: request.url,
  *             html: body,
  *             data,
@@ -463,9 +489,9 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
+export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
     CheerioCrawlingContext<JSONData>,
-    CheerioHandleFailedRequestInput<JSONData>
+    CheerioFailedRequestHandlerInput<JSONData>
 > {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
@@ -473,10 +499,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      */
     public proxyConfiguration?: ProxyConfiguration;
 
-    protected handlePageTimeoutSecs!: number;
-    protected handlePageTimeoutMillis: number;
-    protected navigationTimeoutMillis!: number;
-    protected defaultGotoOptions!: { timeout: number };
+    protected userRequestHandlerTimeoutMillis: number;
     protected preNavigationHooks: CheerioHook<JSONData>[];
     protected postNavigationHooks: CheerioHook<JSONData>[];
     protected persistCookiesPerSession: boolean;
@@ -484,25 +507,18 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     protected ignoreSslErrors: boolean;
     protected suggestResponseEncoding?: string;
     protected forceResponseEncoding?: string;
-    protected prepareRequestFunction?: PrepareRequest<JSONData>;
-    protected postResponseFunction?: PostResponse<JSONData>;
     protected readonly supportedMimeTypes: Set<string>;
 
     protected static override optionsShape = {
         ...BasicCrawler.optionsShape,
-        // TODO temporary until the API is unified in V2
-        handleRequestFunction: ow.undefined as never,
+        handlePageFunction: ow.optional.function,
 
-        handlePageFunction: ow.function,
         requestTimeoutSecs: ow.optional.number,
-        handlePageTimeoutSecs: ow.optional.number,
         ignoreSslErrors: ow.optional.boolean,
         additionalMimeTypes: ow.optional.array.ofType(ow.string),
         suggestResponseEncoding: ow.optional.string,
         forceResponseEncoding: ow.optional.string,
         proxyConfiguration: ow.optional.object.validate(validators.proxyConfiguration),
-        prepareRequestFunction: ow.optional.function,
-        postResponseFunction: ow.optional.function,
         persistCookiesPerSession: ow.optional.boolean,
 
         preNavigationHooks: ow.optional.array,
@@ -516,19 +532,22 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         ow(options, 'CheerioCrawlerOptions', ow.object.exactShape(CheerioCrawler.optionsShape));
 
         const {
+            requestHandler,
             handlePageFunction,
+
+            requestHandlerTimeoutSecs = 60,
             requestTimeoutSecs = 30,
-            handlePageTimeoutSecs = 60,
             ignoreSslErrors = true,
             additionalMimeTypes = [],
             suggestResponseEncoding,
             forceResponseEncoding,
             proxyConfiguration,
-            prepareRequestFunction,
-            postResponseFunction,
             persistCookiesPerSession,
             preNavigationHooks = [],
             postNavigationHooks = [],
+
+            // Ignored
+            handleRequestFunction,
 
             // BasicCrawler
             autoscaledPoolOptions = CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS,
@@ -537,12 +556,20 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
 
         super({
             ...basicCrawlerOptions,
-            // TODO temporary until the API is unified in V2
-            handleRequestFunction: handlePageFunction,
+            // Will be overridden below
+            requestHandler: () => {},
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
-            handleRequestTimeoutSecs: requestTimeoutSecs + handlePageTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+            requestHandlerTimeoutSecs: requestTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+        });
+
+        this._handlePropertyNameChange({
+            newName: 'requestHandler',
+            oldName: 'handlePageFunction',
+            propertyKey: 'requestHandler',
+            newProperty: requestHandler,
+            oldProperty: handlePageFunction,
         });
 
         // Cookies should be persisted per session only if session pool is used
@@ -557,13 +584,11 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
             this.log.warning('Both forceResponseEncoding and suggestResponseEncoding options are set. Using forceResponseEncoding.');
         }
 
-        this.handlePageTimeoutMillis = handlePageTimeoutSecs * 1000;
+        this.userRequestHandlerTimeoutMillis = requestHandlerTimeoutSecs * 1000;
         this.requestTimeoutMillis = requestTimeoutSecs * 1000;
         this.ignoreSslErrors = ignoreSslErrors;
         this.suggestResponseEncoding = suggestResponseEncoding;
         this.forceResponseEncoding = forceResponseEncoding;
-        this.prepareRequestFunction = prepareRequestFunction;
-        this.postResponseFunction = postResponseFunction;
         this.proxyConfiguration = proxyConfiguration;
         this.preNavigationHooks = preNavigationHooks;
         this.postNavigationHooks = [
@@ -587,9 +612,6 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
         ow(extension, ow.object.instanceOf(CrawlerExtension));
 
         const extensionOptions = extension.getCrawlerOptions();
-        // TODO temporary until the API is unified in V2
-        extensionOptions.userProvidedHandler = extensionOptions.handlePageFunction;
-        delete extensionOptions.handlePageFunction;
 
         for (const [key, value] of entries(extensionOptions)) {
             const isConfigurable = this.hasOwnProperty(key); // eslint-disable-line
@@ -617,134 +639,119 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * Wrapper around handlePageFunction that opens and closes pages etc.
      */
-    protected override async _handleRequestFunction(crawlingContext: CheerioCrawlingContext<JSONData>) {
+    protected override async _runRequestHandler(crawlingContext: CheerioCrawlingContext<JSONData>) {
         const { request, session } = crawlingContext;
 
         if (this.proxyConfiguration) {
             const sessionId = session ? session.id : undefined;
-            crawlingContext.proxyInfo = this.proxyConfiguration.newProxyInfo(sessionId);
+            crawlingContext.proxyInfo = await this.proxyConfiguration.newProxyInfo(sessionId);
         }
+        if (!request.skipNavigation) {
+            await this._handleNavigation(crawlingContext);
+            tryCancel();
 
-        await this._handleNavigation(crawlingContext);
-        tryCancel();
+            const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response!);
+            tryCancel();
 
-        const { dom, isXml, body, contentType, response } = await this._parseResponse(request, crawlingContext.response!);
-        tryCancel();
+            if (this.useSessionPool) {
+                this._throwOnBlockedRequest(session!, response.statusCode!);
+            }
 
-        if (this.useSessionPool) {
-            throwOnBlockedRequest(session!, response.statusCode!);
-        }
-
-        if (this.persistCookiesPerSession) {
+            if (this.persistCookiesPerSession) {
             session!.setCookiesFromResponse(response);
-        }
+            }
 
-        request.loadedUrl = response.url;
+            request.loadedUrl = response.url;
 
-        const $ = dom
-            ? cheerio.load(dom as string, {
-                xmlMode: isXml,
-                // Recent versions of cheerio use parse5 as the HTML parser/serializer. It's more strict than htmlparser2
-                // and not good for scraping. It also does not have a great streaming interface.
-                // Here we tell cheerio to use htmlparser2 for serialization, otherwise the conflict produces weird errors.
-                _useHtmlParser2: true,
-            } as CheerioOptions)
-            : null;
+            const $ = dom
+                ? cheerio.load(dom as string, {
+                    xmlMode: isXml,
+                    // Recent versions of cheerio use parse5 as the HTML parser/serializer. It's more strict than htmlparser2
+                    // and not good for scraping. It also does not have a great streaming interface.
+                    // Here we tell cheerio to use htmlparser2 for serialization, otherwise the conflict produces weird errors.
+                    _useHtmlParser2: true,
+                } as CheerioOptions)
+                : null;
 
-        crawlingContext.$ = $!;
-        crawlingContext.contentType = contentType;
-        crawlingContext.response = response;
-        crawlingContext.enqueueLinks = async (enqueueOptions) => {
-            return cheerioCrawlerEnqueueLinks({
-                options: enqueueOptions,
-                $,
-                requestQueue: await this.getRequestQueue(),
-                defaultBaseUrl: new URL(crawlingContext.request.loadedUrl ?? crawlingContext.request.url).origin,
+            crawlingContext.$ = $!;
+            crawlingContext.contentType = contentType;
+            crawlingContext.response = response;
+            crawlingContext.enqueueLinks = async (enqueueOptions) => {
+                return cheerioCrawlerEnqueueLinks({
+                    options: enqueueOptions,
+                    $,
+                    requestQueue: await this.getRequestQueue(),
+                    originalRequestUrl: crawlingContext.request.url,
+                    finalRequestUrl: crawlingContext.request.loadedUrl,
+                });
+            };
+
+            Object.defineProperty(crawlingContext, 'json', {
+                get() {
+                    if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
+                    const jsonString = body!.toString(contentType.encoding);
+                    return JSON.parse(jsonString);
+                },
             });
-        };
 
-        Object.defineProperty(crawlingContext, 'json', {
-            get() {
-                if (contentType.type !== APPLICATION_JSON_MIME_TYPE) return null;
-                const jsonString = body!.toString(contentType.encoding);
-                return JSON.parse(jsonString);
-            },
-        });
-
-        Object.defineProperty(crawlingContext, 'body', {
-            get() {
+            Object.defineProperty(crawlingContext, 'body', {
+                get() {
                 // NOTE: For XML/HTML documents, we don't store the original body and only reconstruct it from Cheerio's DOM.
                 // This is to save memory for high-concurrency crawls. The downside is that changes
                 // made to DOM are reflected in the HTML, but we can live with that...
-                if (dom) {
-                    return isXml ? $!.xml() : $!.html({ decodeEntities: false });
-                }
-                return body;
-            },
-        });
+                    if (dom) {
+                        return isXml ? $!.xml() : $!.html({ decodeEntities: false });
+                    }
+                    return body;
+                },
+            });
+        }
 
         return addTimeoutToPromise(
-            () => Promise.resolve(this.userProvidedHandler(crawlingContext)),
-            this.handlePageTimeoutMillis,
-            `handlePageFunction timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`,
+            () => Promise.resolve(this.requestHandler(crawlingContext)),
+            this.userRequestHandlerTimeoutMillis,
+            `requestHandler timed out after ${this.userRequestHandlerTimeoutMillis / 1000} seconds.`,
         );
     }
 
     protected async _handleNavigation(crawlingContext: CheerioCrawlingContext<JSONData>) {
-        if (this.prepareRequestFunction) {
-            this.log.deprecated('Option "prepareRequestFunction" is deprecated. Use "preNavigationHooks" instead.');
-            await this.prepareRequestFunction(crawlingContext);
-            tryCancel();
-        }
-
-        const requestAsBrowserOptions = {} as RequestAsBrowserOptions;
-
-        if (this.useSessionPool) {
-            this._applySessionCookie(crawlingContext, requestAsBrowserOptions);
-        }
-
+        const gotOptions = {} as OptionsInit;
         const { request, session } = crawlingContext;
-        const cookieSnapshot = request.headers?.Cookie ?? request.headers?.cookie;
-        await this._executeHooks(this.preNavigationHooks, crawlingContext, requestAsBrowserOptions);
+        const preNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
+
+        // Execute pre navigation hooks before applying session pool cookies,
+        // as they may also set cookies in the session
+        await this._executeHooks(this.preNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
+
+        const postNavigationHooksCookies = this._getCookieHeaderFromRequest(request);
+
+        this._applyCookies(crawlingContext, gotOptions, preNavigationHooksCookies, postNavigationHooksCookies);
+
         const proxyUrl = crawlingContext.proxyInfo?.url;
-        this._mergeRequestCookieDiff(request, cookieSnapshot!, requestAsBrowserOptions);
 
         crawlingContext.response = await addTimeoutToPromise(
-            () => this._requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }),
+            () => this._requestFunction({ request, session, proxyUrl, gotOptions }),
             this.requestTimeoutMillis,
             `request timed out after ${this.requestTimeoutMillis / 1000} seconds.`,
         );
         tryCancel();
 
-        await this._executeHooks(this.postNavigationHooks, crawlingContext, requestAsBrowserOptions);
+        await this._executeHooks(this.postNavigationHooks, crawlingContext, gotOptions);
         tryCancel();
-
-        if (this.postResponseFunction) {
-            this.log.deprecated('Option "postResponseFunction" is deprecated. Use "postNavigationHooks" instead.');
-            await this.postResponseFunction(crawlingContext);
-            tryCancel();
-        }
     }
 
     /**
-     * When users change `request.headers.cookie` inside preNavigationHook, the change would be ignored,
-     * as `request.headers` are already merged into the `requestAsBrowserOptions`. This method is using
-     * old `request.headers` snapshot (before hooks are executed), makes a diff with the cookie value
-     * after hooks are executed, and merges any new cookies back to `requestAsBrowserOptions`.
-     *
-     * This way we can still use both `requestAsBrowserOptions` and `context.request` in the hooks (not both).
+     * Sets the cookie header to `gotOptions` based on the provided request and session headers, as well as any changes that occurred due to hooks.
      */
-    private _mergeRequestCookieDiff(request: Request, cookieSnapshot: string, requestAsBrowserOptions: RequestAsBrowserOptions) {
-        const cookieDiff = diffCookies(request.url, cookieSnapshot, request.headers?.Cookie ?? request.headers?.cookie);
+    private _applyCookies({ session, request }: CrawlingContext, gotOptions: OptionsInit, preHookCookies: string, postHookCookies: string) {
+        const sessionCookie = session?.getCookieString(request.url) ?? '';
+        const alteredGotOptionsCookies = (gotOptions.headers?.Cookie ?? gotOptions.headers?.cookie ?? '') as string;
 
-        if (cookieDiff.length > 0) {
-            requestAsBrowserOptions.headers ??= {};
-            requestAsBrowserOptions.headers!.Cookie = mergeCookies(request.url, [
-                requestAsBrowserOptions.headers!.Cookie,
-                cookieDiff,
-            ]);
-        }
+        const mergedCookie = mergeCookies(request.url, [sessionCookie, preHookCookies, alteredGotOptionsCookies, postHookCookies]);
+
+        gotOptions.headers ??= {};
+        gotOptions.headers.Cookie = mergedCookie;
     }
 
     /**
@@ -752,36 +759,18 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      * on the request such as only downloading the request body if the
      * received content type matches text/html, application/xml, application/xhtml+xml.
      */
-    protected async _requestFunction({ request, session, proxyUrl, requestAsBrowserOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
-        const opts = this._getRequestOptions(request, session, proxyUrl, requestAsBrowserOptions);
-        let responseWithStream: IncomingMessage;
+    protected async _requestFunction({ request, session, proxyUrl, gotOptions }: RequestFunctionOptions): Promise<IncomingMessage> {
+        const opts = this._getRequestOptions(request, session, proxyUrl, gotOptions);
 
         try {
-            responseWithStream = await this._requestAsBrowser(opts);
+            return await this._requestAsBrowser(opts);
         } catch (e) {
             if (e instanceof TimeoutError) {
                 this._handleRequestTimeout(session);
-            } else {
-                throw e;
+                return undefined as unknown as IncomingMessage;
             }
-        }
 
-        return responseWithStream!;
-    }
-
-    /**
-     * Sets the cookie header to `requestAsBrowserOptions` based on provided session and request. If some cookies were already set,
-     * the session cookie will be merged with them. User provided cookies on `request` object have precedence.
-     */
-    private _applySessionCookie({ request, session }: CrawlingContext, requestAsBrowserOptions: RequestAsBrowserOptions): void {
-        const userCookie = request.headers?.Cookie ?? request.headers?.cookie;
-        const sessionCookie = session!.getCookieString(request.url);
-        const mergedCookies = mergeCookies(request.url, [sessionCookie, userCookie!]);
-
-        // merge cookies from all possible sources
-        if (mergedCookies) {
-            requestAsBrowserOptions.headers ??= {};
-            requestAsBrowserOptions.headers.Cookie = mergedCookies;
+            throw e;
         }
     }
 
@@ -820,17 +809,17 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * Combines the provided `requestOptions` with mandatory (non-overridable) values.
      */
-    protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, requestAsBrowserOptions?: RequestAsBrowserOptions) {
-        const requestOptions: RequestAsBrowserOptions = {
+    protected _getRequestOptions(request: Request, session?: Session, proxyUrl?: string, gotOptions?: OptionsInit) {
+        const requestOptions: OptionsInit & { isStream: true } = {
             url: request.url,
             method: request.method as Method,
             proxyUrl,
             timeout: { request: this.requestTimeoutMillis },
             sessionToken: session,
-            ...requestAsBrowserOptions,
-            headers: { ...request.headers, ...requestAsBrowserOptions?.headers },
+            ...gotOptions,
+            headers: { ...request.headers, ...gotOptions?.headers },
             https: {
-                ...requestAsBrowserOptions?.https,
+                ...gotOptions?.https,
                 rejectUnauthorized: !this.ignoreSslErrors,
             },
             isStream: true,
@@ -925,7 +914,7 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
      */
     protected _handleRequestTimeout(session?: Session) {
         session?.markBad();
-        throw new Error(`request timed out after ${this.handlePageTimeoutMillis / 1000} seconds.`);
+        throw new Error(`request timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds.`);
     }
 
     private _abortDownloadOfBody(request: Request, response: IncomingMessage) {
@@ -947,29 +936,43 @@ export class CheerioCrawler<JSONData = unknown> extends BasicCrawler<
     /**
      * @internal wraps public utility for mocking purposes
      */
-    private _requestAsBrowser(options: RequestAsBrowserOptions): Promise<RequestAsBrowserResult> {
-        return requestAsBrowser(options);
-    }
+    private _requestAsBrowser = (options: OptionsInit & { isStream: true }) => {
+        return new Promise<IncomingMessage>((resolve, reject) => {
+            const stream = gotScraping(options);
+
+            stream.on('error', reject);
+            stream.on('response', () => {
+                resolve(addResponsePropertiesToStream(stream));
+            });
+        });
+    };
 }
 
 interface EnqueueLinksInternalOptions {
     options?: CheerioCrawlerEnqueueLinksOptions;
     $: CheerioRoot | null;
-    requestQueue?: RequestQueue;
-    defaultBaseUrl?: string;
+    requestQueue: RequestQueue;
+    originalRequestUrl: string;
+    finalRequestUrl?: string;
 }
 
-export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, defaultBaseUrl }: EnqueueLinksInternalOptions) {
+/** @internal */
+export async function cheerioCrawlerEnqueueLinks({ options, $, requestQueue, originalRequestUrl, finalRequestUrl }: EnqueueLinksInternalOptions) {
     if (!$) {
         throw new Error('Cannot enqueue links because the DOM is not available.');
     }
 
-    const baseUrl = options?.baseUrl ?? defaultBaseUrl;
+    const baseUrl = resolveBaseUrl({
+        enqueueStrategy: options?.strategy,
+        finalRequestUrl,
+        originalRequestUrl,
+        userProvidedBaseUrl: options?.baseUrl,
+    });
 
     const urls = extractUrlsFromCheerio($, options?.selector ?? 'a', baseUrl);
 
     return enqueueLinks({
-        requestQueue: requestQueue ?? await RequestQueue.open(),
+        requestQueue,
         urls,
         baseUrl,
         ...options,
@@ -980,12 +983,11 @@ interface RequestFunctionOptions {
     request: Request;
     session?: Session;
     proxyUrl?: string;
-    requestAsBrowserOptions: RequestAsBrowserOptions;
+    gotOptions: OptionsInit;
 }
 
 /**
  * Extracts URLs from a given Cheerio object.
- * @todo how to support cheerio.Selector?
  * @ignore
  */
 function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: string): string[] {
@@ -1004,4 +1006,42 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
                 ? (new URL(href, baseUrl)).href
                 : href;
         });
+}
+
+/**
+ * The stream object returned from got does not have the below properties.
+ * At the same time, you can't read data directly from the response stream,
+ * because they won't get emitted unless you also read from the primary
+ * got stream. To be able to work with only one stream, we move the expected props
+ * from the response stream to the got stream.
+ * @internal
+ */
+function addResponsePropertiesToStream(stream: GotRequest) {
+    const properties = [
+        'statusCode', 'statusMessage', 'headers',
+        'complete', 'httpVersion', 'rawHeaders',
+        'rawTrailers', 'trailers', 'url',
+        'request',
+    ];
+
+    const response = stream.response!;
+
+    response.on('end', () => {
+        // @ts-expect-error
+        Object.assign(stream.rawTrailers, response.rawTrailers);
+        // @ts-expect-error
+        Object.assign(stream.trailers, response.trailers);
+
+        // @ts-expect-error
+        stream.complete = response.complete;
+    });
+
+    for (const prop of properties) {
+        if (!(prop in stream)) {
+            // @ts-expect-error
+            stream[prop] = response[prop as keyof IncomingMessage];
+        }
+    }
+
+    return stream as unknown as IncomingMessage;
 }

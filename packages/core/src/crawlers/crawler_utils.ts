@@ -15,18 +15,6 @@ export function handleRequestTimeout({ session, errorMessage }: { session?: Sess
 }
 
 /**
- * Handles blocked request
- * @internal
- */
-export function throwOnBlockedRequest(session: Session, statusCode: number) {
-    const isBlocked = session.retireOnBlockedStatusCodes(statusCode);
-
-    if (isBlocked) {
-        throw new Error(`Request blocked - received ${statusCode} status code.`);
-    }
-}
-
-/**
  * Merges multiple cookie strings. Keys are compared case-sensitively, warning will be logged
  * if we see two cookies with same keys but different casing.
  * @internal
@@ -36,7 +24,7 @@ export function mergeCookies(url: string, sourceCookies: string[]): string {
 
     // ignore empty cookies
     for (const sourceCookieString of sourceCookies.filter((c) => c)) {
-        const cookies = sourceCookieString.split(/ *; */); // ignore extra spaces
+        const cookies = sourceCookieString.split(/ *; */).filter((c) => c); // ignore extra spaces
 
         for (const cookieString of cookies) {
             const cookie = Cookie.parse(cookieString)!;

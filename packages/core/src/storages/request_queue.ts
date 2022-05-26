@@ -1,16 +1,13 @@
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { ListDictionary, LruCache } from '@apify/datastructures';
-import { storage } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import { ApifyClient, RequestQueue as RequestQueueInfo, RequestQueueClient } from 'apify-client';
 import crypto from 'crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
+import { StorageClient, RequestQueueClient, RequestQueueInfo, BatchAddRequestsResult } from '@crawlee/types';
+import { StorageManager } from './storage_manager';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
-import { entries } from '../typedefs';
-import { StorageManager, StorageManagerOptions } from './storage_manager';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -71,7 +68,7 @@ export function getRequestId(uniqueKey: string) {
 
 /**
  * A helper class that is used to report results from various
- * {@link RequestQueue} functions as well as {@link utils.enqueueLinks}.
+ * {@link RequestQueue} functions as well as {@link enqueueLinks}.
  */
 export interface QueueOperationInfo {
 
@@ -83,6 +80,8 @@ export interface QueueOperationInfo {
 
     /** The ID of the added request */
     requestId: string;
+
+    uniqueKey: string;
 
 }
 
@@ -109,8 +108,7 @@ export interface RequestQueueOperationOptions {
  * To add a single URL multiple times to the queue,
  * corresponding {@link Request} objects will need to have different `uniqueKey` properties.
  *
- * Do not instantiate this class directly, use the
- * {@link Apify.openRequestQueue} function instead.
+ * Do not instantiate this class directly, use the {@link RequestQueue.open} function instead.
  *
  * `RequestQueue` is used by {@link BasicCrawler}, {@link CheerioCrawler}, {@link PuppeteerCrawler}
  * and {@link PlaywrightCrawler} as a source of URLs to crawl.
@@ -126,17 +124,17 @@ export interface RequestQueueOperationOptions {
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` is not, the data is stored in the
  * [Apify Request Queue](https://docs.apify.com/storage/request-queue)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify.openRequestQueue} function,
+ * option to {@link RequestQueue.open} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
  *
  * ```javascript
  * // Open the default request queue associated with the actor run
- * const queue = await Apify.openRequestQueue();
+ * const queue = await RequestQueue.open();
  *
  * // Open a named request queue
- * const queueWithName = await Apify.openRequestQueue('some-name');
+ * const queueWithName = await RequestQueue.open('some-name');
  *
  * // Enqueue few requests
  * await queue.addRequest({ url: 'http://example.com/aaa' });
@@ -149,7 +147,7 @@ export class RequestQueue {
     log = log.child({ prefix: 'RequestQueue' });
     id: string;
     name?: string;
-    isLocal?: boolean;
+    timeoutSecs = 30;
     clientKey = cryptoRandomObjectId();
     client: RequestQueueClient;
 
@@ -164,12 +162,18 @@ export class RequestQueue {
         prevLimit: number;
         queueModifiedAt: Date;
         queryStartedAt: Date;
-        hadMultipleClients: boolean;
+        hadMultipleClients?: boolean;
     }> | null = null;
 
     // A set of all request IDs that are currently being handled,
     // i.e. which were returned by fetchNextRequest() but not markRequestHandled()
     inProgress = new Set();
+
+    // To track whether the queue gets stuck, and we need to reset it
+    // `lastActivity` tracks the time when we either added, processed or reclaimed a request,
+    // or when we add new request to in-progress cache
+    lastActivity = new Date();
+    internalTimeoutMillis = 5 * 60e3; // defaults to 5 minutes, will be overridden by BasicCrawler
 
     // Contains a list of recently handled requests. It is used to avoid inconsistencies
     // caused by delays in the underlying DynamoDB storage.
@@ -183,9 +187,9 @@ export class RequestQueue {
 
     // Caching requests to avoid redundant addRequest() calls.
     // Key is computed using getRequestId() and value is { id, isHandled }.
-    // TODO: We could extend the caching to improve performance
-    //       of other operations such as fetchNextRequest().
-    requestsCache = new LruCache({ maxLength: MAX_CACHED_REQUESTS });
+    requestsCache = new LruCache<
+        Pick<QueueOperationInfo, 'uniqueKey' | 'wasAlreadyHandled'> & { isHandled: boolean; id: string }
+    >({ maxLength: MAX_CACHED_REQUESTS });
 
     /**
      * @internal
@@ -193,9 +197,9 @@ export class RequestQueue {
     constructor(options: RequestQueueOptions) {
         this.id = options.id;
         this.name = options.name;
-        this.isLocal = options.isLocal;
         this.client = options.client.requestQueue(this.id, {
             clientKey: this.clientKey,
+            timeoutSecs: this.timeoutSecs,
         }) as RequestQueueClient;
     }
 
@@ -214,7 +218,7 @@ export class RequestQueue {
      * {@link QueueOperationInfo} object.
      *
      * To add multiple requests to the queue by extracting links from a webpage,
-     * see the {@link utils.enqueueLinks} helper function.
+     * see the {@link enqueueLinks} helper function.
      *
      * @param requestLike {@link Request} object or vanilla object with request data.
      * Note that the function sets the `uniqueKey` and `id` fields to the passed Request.
@@ -229,6 +233,7 @@ export class RequestQueue {
             forefront: ow.optional.boolean,
         }));
 
+        this.lastActivity = new Date();
         const { forefront = false } = options;
 
         const request = requestLike instanceof Request
@@ -248,10 +253,13 @@ export class RequestQueue {
                 // request was already handled is there because just one client should be using one queue.
                 wasAlreadyHandled: cachedInfo.isHandled,
                 requestId: cachedInfo.id,
+                uniqueKey: cachedInfo.uniqueKey,
             };
         }
 
         const queueOperationInfo = await this.client.addRequest(request, { forefront }) as QueueOperationInfo;
+        queueOperationInfo.uniqueKey = request.uniqueKey;
+
         const { requestId, wasAlreadyPresent } = queueOperationInfo;
         this._cacheRequest(cacheKey, queueOperationInfo);
 
@@ -266,6 +274,109 @@ export class RequestQueue {
     }
 
     /**
+     * Adds requests to the queue in batches of 25.
+     *
+     * If a request that is passed in is already present due to its `uniqueKey` property being the same,
+     * it will not be updated. You can find out whether this happened by finding the request in the resulting
+     * {@link BatchAddRequestsResult} object.
+     *
+     * @experimental
+     * @param requestsLike {@link Request} objects or vanilla objects with request data.
+     * Note that the function sets the `uniqueKey` and `id` fields to the passed requests if missing.
+     * @param [options] Request queue operation options.
+     */
+    async addRequests(
+        requestsLike: (Request | RequestOptions)[],
+        options: RequestQueueOperationOptions = {},
+    ): Promise<BatchAddRequestsResult> {
+        ow(requestsLike, ow.array.ofType(ow.object.partialShape({
+            url: ow.string,
+            id: ow.undefined,
+        })));
+        ow(options, ow.object.exactShape({
+            forefront: ow.optional.boolean,
+        }));
+
+        const { forefront = false } = options;
+
+        const uniqueKeyToCacheKey = new Map<string, string>();
+        const getCachedRequestId = (uniqueKey: string) => {
+            const cached = uniqueKeyToCacheKey.get(uniqueKey);
+
+            if (cached) return cached;
+
+            const newCacheKey = getRequestId(uniqueKey);
+            uniqueKeyToCacheKey.set(uniqueKey, newCacheKey);
+
+            return newCacheKey;
+        };
+
+        const results: BatchAddRequestsResult = {
+            processedRequests: [],
+            unprocessedRequests: [],
+        };
+
+        const requests = requestsLike.map((requestLike) => {
+            return requestLike instanceof Request
+                ? requestLike
+                : new Request(requestLike);
+        });
+
+        const requestsToAdd = new Map<string, Request>();
+
+        for (const request of requests) {
+            // TODO we dont need to hash the cache key probably
+            const cacheKey = getCachedRequestId(request.uniqueKey);
+            // const cacheKey = request.uniqueKey;
+            const cachedInfo = this.requestsCache.get(cacheKey);
+
+            if (cachedInfo) {
+                request.id = cachedInfo.id;
+                results.processedRequests.push({
+                    wasAlreadyPresent: true,
+                    // We may assume that if request is in local cache then also the information if the
+                    // request was already handled is there because just one client should be using one queue.
+                    wasAlreadyHandled: cachedInfo.isHandled,
+                    requestId: cachedInfo.id,
+                    uniqueKey: cachedInfo.uniqueKey,
+                });
+            } else if (!requestsToAdd.has(request.uniqueKey)) {
+                requestsToAdd.set(request.uniqueKey, request);
+            }
+        }
+
+        // Early exit if all provided requests were already added
+        if (!requestsToAdd.size) {
+            return results;
+        }
+
+        const apiResults = await this.client.batchAddRequests([...requestsToAdd.values()], { forefront });
+
+        // Report unprocessed requests
+        results.unprocessedRequests = apiResults.unprocessedRequests;
+
+        // Add all new requests to the queue head
+        for (const newRequest of apiResults.processedRequests) {
+            // Add the new request to the processed list
+            results.processedRequests.push(newRequest);
+
+            const cacheKey = getCachedRequestId(newRequest.uniqueKey);
+
+            const { requestId, wasAlreadyPresent } = newRequest;
+            this._cacheRequest(cacheKey, newRequest);
+
+            if (!wasAlreadyPresent && !this.inProgress.has(requestId) && !this.recentlyHandled.get(requestId)) {
+                this.assumedTotalCount++;
+
+                // Performance optimization: add request straight to head if possible
+                this._maybeAddRequestToQueueHead(requestId, forefront);
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * Gets the request from the queue specified by ID.
      *
      * @param id ID of the request.
@@ -274,20 +385,10 @@ export class RequestQueue {
     async getRequest(id: string): Promise<Request | null> {
         ow(id, ow.string);
 
-        // TODO: Could we also use requestsCache here? It would be consistent with addRequest()
-        //   Downside is that it wouldn't reflect changes from outside...
         const requestOptions = await this.client.getRequest(id);
         if (!requestOptions) return null;
 
-        // TODO: compatibility fix for old/broken request queues with null Request props
-        const optionsWithoutNulls = entries(requestOptions).reduce((opts, [key, value]) => {
-            if (value !== null) {
-                opts[key] = value as any;
-            }
-            return opts;
-        }, {} as RequestOptions);
-
-        return new Request(optionsWithoutNulls);
+        return new Request(requestOptions as unknown as RequestOptions);
     }
 
     /**
@@ -326,6 +427,7 @@ export class RequestQueue {
         }
 
         this.inProgress.add(nextRequestId);
+        this.lastActivity = new Date();
 
         let request;
         try {
@@ -371,6 +473,7 @@ export class RequestQueue {
      * Handled requests will never again be returned by the `fetchNextRequest` function.
      */
     async markRequestHandled(request: Request): Promise<QueueOperationInfo | null> {
+        this.lastActivity = new Date();
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -382,9 +485,10 @@ export class RequestQueue {
             return null;
         }
 
-        if (!request.handledAt) request.handledAt = new Date().toISOString();
-
-        const queueOperationInfo = await this.client.updateRequest(request);
+        const handledAt = request.handledAt ?? new Date().toISOString();
+        const queueOperationInfo = await this.client.updateRequest({ ...request, handledAt }) as QueueOperationInfo;
+        request.handledAt = handledAt;
+        queueOperationInfo.uniqueKey = request.uniqueKey;
 
         this.inProgress.delete(request.id);
         this.recentlyHandled.add(request.id, true);
@@ -405,6 +509,7 @@ export class RequestQueue {
      * For example, this lets you store the number of retries or error messages for the request.
      */
     async reclaimRequest(request: Request, options: RequestQueueOperationOptions = {}): Promise<QueueOperationInfo | null> {
+        this.lastActivity = new Date();
         ow(request, ow.object.partialShape({
             id: ow.string,
             uniqueKey: ow.string,
@@ -422,18 +527,13 @@ export class RequestQueue {
 
         // TODO: If request hasn't been changed since the last getRequest(),
         //   we don't need to call updateRequest() and thus improve performance.
-        const queueOperationInfo = await this.client.updateRequest(request, { forefront });
+        const queueOperationInfo = await this.client.updateRequest(request, { forefront }) as QueueOperationInfo;
+        queueOperationInfo.uniqueKey = request.uniqueKey;
         this._cacheRequest(getRequestId(request.uniqueKey), queueOperationInfo);
 
         // Wait a little to increase a chance that the next call to fetchNextRequest() will return the request with updated data.
         // This is to compensate for the limitation of DynamoDB, where writes might not be immediately visible to subsequent reads.
         setTimeout(() => {
-            const signal = storage.getStore()?.cancelTask?.signal;
-
-            if (signal?.aborted) {
-                return;
-            }
-
             if (!this.inProgress.has(request.id)) {
                 this.log.debug('The request is no longer marked as in progress in the queue?!', { requestId: request.id });
                 return;
@@ -466,19 +566,38 @@ export class RequestQueue {
      * but it will never return a false positive.
      */
     async isFinished(): Promise<boolean> {
+        if (this.inProgressCount() > 0 && (Date.now() - +this.lastActivity) > this.internalTimeoutMillis) {
+            const message = `The request queue seems to be stuck for ${this.internalTimeoutMillis / 1e3}s, resetting internal state.`;
+            this.log.warning(message, { inProgress: [...this.inProgress] });
+            this._reset();
+        }
+
         if (this.queueHeadDict.length() > 0 || this.inProgressCount() > 0) return false;
 
         const isHeadConsistent = await this._ensureHeadIsNonEmpty(true);
         return isHeadConsistent && this.queueHeadDict.length() === 0 && this.inProgressCount() === 0;
     }
 
+    private _reset() {
+        this.queueHeadDict.clear();
+        this.queryQueueHeadPromise = null;
+        this.inProgress.clear();
+        this.recentlyHandled.clear();
+        this.assumedTotalCount = 0;
+        this.assumedHandledCount = 0;
+        this.requestsCache.clear();
+        this.lastActivity = new Date();
+    }
+
     /**
      * Caches information about request to beware of unneeded addRequest() calls.
      */
-    protected _cacheRequest(cacheKey: string, queueOperationInfo: QueueOperationInfoOptions): void {
+    protected _cacheRequest(cacheKey: string, queueOperationInfo: QueueOperationInfo): void {
         this.requestsCache.add(cacheKey, {
             id: queueOperationInfo.requestId,
             isHandled: queueOperationInfo.wasAlreadyHandled,
+            uniqueKey: queueOperationInfo.uniqueKey,
+            wasAlreadyHandled: queueOperationInfo.wasAlreadyHandled,
         });
     }
 
@@ -509,10 +628,15 @@ export class RequestQueue {
                 .then(({ items, queueModifiedAt, hadMultipleClients }) => {
                     items.forEach(({ id: requestId, uniqueKey }) => {
                         // Queue head index might be behind the main table, so ensure we don't recycle requests
-                        if (this.inProgress.has(requestId) || this.recentlyHandled.get(requestId)) return;
+                        if (!requestId || !uniqueKey || this.inProgress.has(requestId) || this.recentlyHandled.get(requestId!)) return;
 
                         this.queueHeadDict.add(requestId, requestId, false);
-                        this._cacheRequest(getRequestId(uniqueKey), { requestId, wasAlreadyHandled: false });
+                        this._cacheRequest(getRequestId(uniqueKey), {
+                            requestId,
+                            wasAlreadyHandled: false,
+                            wasAlreadyPresent: true,
+                            uniqueKey,
+                        });
                     });
 
                     // This is needed so that the next call to _ensureHeadIsNonEmpty() will fetch the queue head again.
@@ -607,8 +731,8 @@ export class RequestQueue {
      */
     async handledCount(): Promise<number> {
         // NOTE: We keep this function for compatibility with RequestList.handledCount()
-        const { handledRequestCount } = await this.getInfo();
-        return handledRequestCount;
+        const { handledRequestCount } = await this.getInfo() ?? {};
+        return handledRequestCount ?? 0;
     }
 
     /**
@@ -635,8 +759,8 @@ export class RequestQueue {
      * }
      * ```
      */
-    async getInfo(): Promise<RequestQueueInfo> {
-        return this.client.get() as Promise<RequestQueueInfo>;
+    async getInfo(): Promise<RequestQueueInfo | undefined> {
+        return this.client.get();
     }
 
     /**
@@ -655,42 +779,17 @@ export class RequestQueue {
      *   the function returns the default request queue associated with the actor run.
      * @param [options] Open Request Queue options.
      */
-    static async open(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
+    static async open(queueIdOrName?: string | null): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
-        ow(options, ow.object.exactShape({
-            forceCloud: ow.optional.boolean,
-        }));
         const manager = new StorageManager(RequestQueue);
-        return manager.openStorage(queueIdOrName, options);
+        return manager.openStorage(queueIdOrName);
     }
-}
-
-/**
- * Opens a request queue and returns a promise resolving to an instance
- * of the {@link RequestQueue} class.
- *
- * {@link RequestQueue} represents a queue of URLs to crawl, which is stored either on local filesystem or in the cloud.
- * The queue is used for deep crawling of websites, where you start with several URLs and then
- * recursively follow links to other pages. The data structure supports both breadth-first
- * and depth-first crawling orders.
- *
- * For more details and code examples, see the {@link RequestQueue} class.
- *
- * @param [queueIdOrName]
- *   ID or name of the request queue to be opened. If `null` or `undefined`,
- *   the function returns the default request queue associated with the actor run.
- * @param [options] Open Request Queue options.
- * @deprecated use `RequestQueue.open()` instead
- */
-export async function openRequestQueue(queueIdOrName?: string | null, options: Omit<StorageManagerOptions, 'config'> = {}): Promise<RequestQueue> {
-    return RequestQueue.open(queueIdOrName, options);
 }
 
 export interface RequestQueueOptions {
     id: string;
     name?: string;
-    isLocal?: boolean;
-    client: ApifyClient | ApifyStorageLocal;
+    client: StorageClient;
 }
 
 export interface QueueOperationInfoOptions {

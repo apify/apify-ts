@@ -1,11 +1,12 @@
-import { ENV_VARS } from '@apify/consts';
+import { ENV_VARS, LOCAL_ENV_VARS, LOCAL_STORAGE_SUBDIRS, KEY_VALUE_STORE_KEYS } from '@apify/consts';
 import contentTypeParser from 'content-type';
 import mime from 'mime-types';
 import fs from 'node:fs/promises';
 import type { IncomingMessage } from 'node:http';
 import path from 'node:path';
-import { setTimeout as promisifiedSleep } from 'node:timers/promises';
+import { setTimeout } from 'node:timers/promises';
 import { URL } from 'node:url';
+import { pathExists } from 'fs-extra';
 import ow from 'ow';
 
 /**
@@ -68,7 +69,7 @@ export function weightedAvg(arrValues: number[], arrWeights: number[]): number {
  * **Example usage:**
  *
  * ```
- * const { sleep } = require('@crawlers/utils');
+ * const { sleep } = require('@crawlee/utils');
  *
  * ...
  *
@@ -78,7 +79,7 @@ export function weightedAvg(arrValues: number[], arrWeights: number[]): number {
  * @param millis Period of time to sleep, in milliseconds. If not a positive number, the returned promise resolves immediately.
  */
 export function sleep(millis?: number): Promise<void> {
-    return promisifiedSleep(millis);
+    return setTimeout(millis);
 }
 
 /**
@@ -98,21 +99,43 @@ export function snakeCaseToCamelCase(snakeCaseStr: string): string {
 }
 
 /**
- * Cleans up the local storage folder created when testing locally.
- * This is useful in the event you are debugging your code locally.
- *
- * Be careful as this will remove the folder you provide and everything in it!
+ * Cleans up the default local storage directories before the run starts:
+ *  - local directory containing the default dataset;
+ *  - all records from the default key-value store in the local directory, except for the "INPUT" key;
+ *  - local directory containing the default request queue.
  *
  * @param [folder] The folder to clean up
  */
 export async function purgeLocalStorage(folder?: string): Promise<void> {
     // If the user did not provide a folder, try to get it from the env variables, or the default one
-    if (!folder) {
-        folder = process.env[ENV_VARS.LOCAL_STORAGE_DIR] || 'apify_storage';
-    }
+    if (!folder) folder = process.env[ENV_VARS.LOCAL_STORAGE_DIR] || 'apify_storage';
 
-    // Clear the folder
-    await fs.rm(folder, { recursive: true, force: true });
+    const defaultDatasetPath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.datasets, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_DATASET_ID]);
+    await removeFiles(defaultDatasetPath);
+
+    const defaultKeyValueStorePath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.keyValueStores, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID]);
+    await removeFiles(defaultKeyValueStorePath);
+
+    const defaultRequestQueuePath = path.resolve(folder, LOCAL_STORAGE_SUBDIRS.requestQueues, LOCAL_ENV_VARS[ENV_VARS.DEFAULT_REQUEST_QUEUE_ID]);
+    await removeFiles(defaultRequestQueuePath);
+}
+
+async function removeFiles(folder: string): Promise<void> {
+    const storagePathExists = await pathExists(folder);
+
+    if (storagePathExists) {
+        const direntNames = await fs.readdir(folder);
+
+        const deletePromises = [];
+        for (const direntName of direntNames) {
+            const fileName = path.join(folder, direntName);
+            if (!RegExp(KEY_VALUE_STORE_KEYS.INPUT).test(fileName)) {
+                deletePromises.push(fs.rm(fileName, { recursive: true, force: true }));
+            }
+        }
+
+        await Promise.all(deletePromises);
+    }
 }
 
 /**

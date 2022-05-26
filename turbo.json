@@ -11,7 +11,7 @@
         },
         "copy": {
             "dependsOn": [
-                "^build"
+                "^copy"
             ],
             "outputs": [
                 "dist/**"

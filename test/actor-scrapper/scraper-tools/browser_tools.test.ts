@@ -1,25 +1,24 @@
 import { browserTools } from '@apify/scraper-tools';
-import { launchPuppeteer, KeyValueStore } from '@crawlers/puppeteer';
+import { launchPuppeteer, KeyValueStore } from '@crawlee/puppeteer';
 import log from '@apify/log';
-import fs from 'fs-extra';
-import path from 'path';
-import sinon from 'sinon';
+import { StorageTestCases } from 'test/shared/test-cases';
 
-const LOCAL_STORAGE_DIR = path.join(__dirname, 'tmp');
+describe.each(StorageTestCases)('browserTools. - %s', (Emulator) => {
+    const emulator = new Emulator();
 
-describe('browserTools.', () => {
     let browser: Awaited<ReturnType<typeof launchPuppeteer>>;
 
     beforeEach(async () => {
-        fs.ensureDirSync(LOCAL_STORAGE_DIR);
-        process.env.APIFY_LOCAL_STORAGE_DIR = LOCAL_STORAGE_DIR;
+        await emulator.init();
         browser = await launchPuppeteer({ launchOptions: { headless: true } });
     });
 
     afterEach(async () => {
-        fs.removeSync(LOCAL_STORAGE_DIR);
-        delete process.env.APIFY_LOCAL_STORAGE_DIR;
         await browser.close();
+    });
+
+    afterAll(async () => {
+        await emulator.destroy();
     });
 
     describe('createBrowserHandle()', () => {
@@ -85,16 +84,16 @@ describe('browserTools.', () => {
 
     describe('dumpConsole()', () => {
         afterEach(() => {
-            sinon.restore();
+            jest.restoreAllMocks();
         });
 
         it('should work', async () => {
             let page = await browser.newPage();
 
-            const debug = sinon.spy(log, 'debug');
-            const info = sinon.spy(log, 'info');
-            const warning = sinon.spy(log, 'warning');
-            const error = sinon.spy(log, 'error');
+            const debug = jest.spyOn(log, 'debug');
+            const info = jest.spyOn(log, 'info');
+            const warning = jest.spyOn(log, 'warning');
+            const error = jest.spyOn(log, 'error');
 
             browserTools.dumpConsole(page);
             await page.evaluate(async () => {
@@ -109,10 +108,13 @@ describe('browserTools.', () => {
                 await new Promise((r) => setTimeout(r, 10));
             });
 
-            expect(debug.withArgs('debug').calledOnce).toBe(true);
-            expect(info.withArgs('info').calledThrice).toBe(true);
-            expect(warning.withArgs('warning').calledOnce).toBe(true);
-            expect(error.withArgs('error').called).toBe(false);
+            expect(debug).toBeCalledTimes(1);
+            expect(debug).toBeCalledWith('debug');
+            expect(info).toBeCalledTimes(3);
+            expect(info).toBeCalledWith('info');
+            expect(warning).toBeCalledTimes(1);
+            expect(warning).toBeCalledWith('warning');
+            expect(error).toBeCalledTimes(0);
 
             page = await browser.newPage();
             browserTools.dumpConsole(page, { logErrors: true });
@@ -122,7 +124,8 @@ describe('browserTools.', () => {
                 await new Promise((r) => setTimeout(r, 10));
             });
 
-            expect(error.withArgs('error').calledOnce).toBe(true);
+            expect(error).toBeCalledTimes(1);
+            expect(error).toBeCalledWith('error');
 
             await browser.close();
         });

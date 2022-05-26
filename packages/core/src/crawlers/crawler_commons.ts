@@ -1,3 +1,4 @@
+import { Log } from '../log';
 import { ProxyInfo } from '../proxy_configuration';
 import { Request } from '../request';
 import { Session } from '../session_pool/session';
@@ -15,6 +16,7 @@ export interface CrawlingContext extends Record<PropertyKey, unknown> {
      * and configured by the {@link ProxyConfiguration} class.
      */
     proxyInfo?: ProxyInfo;
+    log: Log;
 }
 
 export interface CrawlerHandleFailedRequestInput extends CrawlingContext {

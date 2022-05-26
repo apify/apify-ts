@@ -1,9 +1,6 @@
-export * from '@crawlers/browser';
+export * from '@crawlee/browser';
 export * from './internals/puppeteer-crawler';
 export * from './internals/puppeteer-launcher';
-
-export * as puppeteerStealth from './internals/stealth';
-export type { StealthOptions } from './internals/stealth';
 
 export * as puppeteerRequestInterception from './internals/utils/puppeteer_request_interception';
 export type { InterceptHandler } from './internals/utils/puppeteer_request_interception';

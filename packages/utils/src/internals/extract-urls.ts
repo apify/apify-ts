@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { requestAsBrowser } from './request';
+import { gotScraping } from 'got-scraping';
 import { URL_NO_COMMAS_REGEX } from './general';
 
 export interface DownloadListOfUrlsOptions {
@@ -17,7 +17,7 @@ export interface DownloadListOfUrlsOptions {
     /**
      * Custom regular expression to identify the URLs in the file to extract.
      * The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
-     * @default Apify.utils.URL_NO_COMMAS_REGEX
+     * @default Actor.utils.URL_NO_COMMAS_REGEX
      */
     urlRegExp?: RegExp;
 }
@@ -31,8 +31,9 @@ export async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Pr
         url: ow.string.url,
         encoding: ow.optional.string,
         urlRegExp: ow.optional.regExp,
+        proxyUrl: ow.optional.string,
     }));
-    const { url, encoding = 'utf8', urlRegExp = URL_NO_COMMAS_REGEX } = options;
+    const { url, encoding = 'utf8', urlRegExp = URL_NO_COMMAS_REGEX, proxyUrl } = options;
 
     // Try to detect wrong urls and fix them. Currently, detects only sharing url instead of csv download one.
     const match = url.match(/^(https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:\w|-)+)\/?/);
@@ -42,7 +43,9 @@ export async function downloadListOfUrls(options: DownloadListOfUrlsOptions): Pr
         fixedUrl = `${match[1]}/gviz/tq?tqx=out:csv`;
     }
 
-    const { body: string } = await requestAsBrowser({ url: fixedUrl, encoding });
+    // @ts-expect-error https://github.com/apify/got-scraping/issues/66
+    const { body: string } = await gotScraping({ url: fixedUrl, encoding, proxyUrl });
+
     return extractUrls({ string, urlRegExp });
 }
 

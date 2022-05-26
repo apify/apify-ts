@@ -5,11 +5,14 @@ import {
     snakeCaseToCamelCase,
     purgeLocalStorage,
     parseContentTypeFromResponse,
-} from '@crawlers/utils';
+} from '@crawlee/utils';
 import { IncomingMessage } from 'node:http';
 import syncFs from 'node:fs';
 import asyncFs from 'node:fs/promises';
-import { ENV_VARS } from '@apify/consts';
+import path from 'node:path';
+import { ensureDir, writeFile } from 'fs-extra';
+import { ENV_VARS, LOCAL_STORAGE_SUBDIRS } from '@apify/consts';
+import { join } from 'path';
 
 describe('isDocker()', () => {
     test('works for dockerenv && cgroup', async () => {
@@ -101,20 +104,67 @@ describe('snakeCaseToCamelCase()', () => {
 });
 
 describe('purgeLocalStorage()', () => {
-    // Create test folders
-    process.env[ENV_VARS.LOCAL_STORAGE_DIR] = `./test_storage_${Date.now().toString(16)}`;
-    const folder = Date.now().toString(16);
-    syncFs.mkdirSync(folder);
-    syncFs.mkdirSync(process.env[ENV_VARS.LOCAL_STORAGE_DIR]);
+    const folders: string[] = [];
+    let customFolder: string;
+
+    beforeAll(async () => {
+        process.env[ENV_VARS.LOCAL_STORAGE_DIR] = path.resolve('test/utils', `./test_storage_${Date.now().toString(16)}`);
+        folders.push(process.env[ENV_VARS.LOCAL_STORAGE_DIR]);
+
+        customFolder = path.resolve('test/utils', Date.now().toString(16));
+        folders.push(customFolder);
+
+        for (const folder of folders) {
+            for (const storage in LOCAL_STORAGE_SUBDIRS) { // eslint-disable-line
+                const subFolder = LOCAL_STORAGE_SUBDIRS[storage as keyof typeof LOCAL_STORAGE_SUBDIRS];
+
+                for (const storageName of ['default', 'non-default']) {
+                    const storagePath = path.resolve(folder, subFolder, storageName);
+                    await ensureDir(storagePath);
+
+                    const fileData = JSON.stringify({ foo: 'bar' });
+                    await writeFile(join(storagePath, '000000001.json'), fileData);
+
+                    if (storage === 'keyValueStores') {
+                        await writeFile(join(storagePath, 'INPUT.json'), fileData);
+                    }
+                }
+            }
+        }
+    });
+
+    afterAll(async () => {
+        for (const folder of folders) {
+            await asyncFs.rm(folder, { recursive: true, force: true });
+        }
+    });
 
     test('should purge local storage by default', async () => {
         await expect(purgeLocalStorage()).resolves.toBeUndefined();
-        expect(syncFs.existsSync(process.env[ENV_VARS.LOCAL_STORAGE_DIR])).toBe(false);
+        const folder = process.env[ENV_VARS.LOCAL_STORAGE_DIR];
+        // default storages should be empty, except INPUT.json file
+        expect(syncFs.readdirSync(path.join(folder, 'datasets', 'default')).length).toBe(0);
+        expect(syncFs.readdirSync(path.join(folder, 'key_value_stores', 'default')).length).toBe(1);
+        expect(syncFs.readdirSync(path.join(folder, 'key_value_stores', 'default'))[0]).toBe('INPUT.json');
+        expect(syncFs.readdirSync(path.join(folder, 'request_queues', 'default')).length).toBe(0);
+        // non-default storages should keep their state and should not be cleared
+        expect(syncFs.readdirSync(path.join(folder, 'datasets', 'non-default')).length).toBe(1);
+        expect(syncFs.readdirSync(path.join(folder, 'key_value_stores', 'non-default')).length).toBe(2);
+        expect(syncFs.readdirSync(path.join(folder, 'request_queues', 'non-default')).length).toBe(1);
     });
 
     test('should purge local storage when passing custom name', async () => {
-        await expect(purgeLocalStorage(folder)).resolves.toBeUndefined();
-        expect(syncFs.existsSync(folder)).toBe(false);
+        await expect(purgeLocalStorage(customFolder)).resolves.toBeUndefined();
+        const folder = customFolder;
+        // default storages should be empty, except INPUT.json file
+        expect(syncFs.readdirSync(path.join(folder, 'datasets', 'default')).length).toBe(0);
+        expect(syncFs.readdirSync(path.join(folder, 'key_value_stores', 'default')).length).toBe(1);
+        expect(syncFs.readdirSync(path.join(folder, 'key_value_stores', 'default'))[0]).toBe('INPUT.json');
+        expect(syncFs.readdirSync(path.join(folder, 'request_queues', 'default')).length).toBe(0);
+        // non-default storages should keep their state and should not be cleared
+        expect(syncFs.readdirSync(path.join(folder, 'datasets', 'non-default')).length).toBe(1);
+        expect(syncFs.readdirSync(path.join(folder, 'key_value_stores', 'non-default')).length).toBe(2);
+        expect(syncFs.readdirSync(path.join(folder, 'request_queues', 'non-default')).length).toBe(1);
     });
 });
 

@@ -6,10 +6,10 @@
  *
  * ```javascript
  * const Apify = require('apify');
- * const { playwright } = Apify.utils;
+ * const { playwright } = Actor.utils;
  *
  * // Navigate to https://www.example.com in Playwright with a POST request
- * const browser = await Apify.launchPlaywright();
+ * const browser = await Actor.launchPlaywright();
  * const page = await browser.newPage();
  * await playwright.gotoExtended(page, {
  *     url: 'https://example.com,
@@ -22,8 +22,9 @@
 import ow from 'ow';
 import { Page, Response, Route } from 'playwright';
 import log_ from '@apify/log';
-import { validators, Request } from '@crawlers/core';
-import { Dictionary } from '@crawlers/utils';
+import { validators, Request } from '@crawlee/core';
+import { Dictionary } from '@crawlee/utils';
+import { PlaywrightCrawlingContext } from '../playwright-crawler';
 
 const log = log_.child({ prefix: 'Playwright Utils' });
 
@@ -53,7 +54,7 @@ export interface DirectNavigationOptions {
 /**
  * Extended version of Playwright's `page.goto()` allowing to perform requests with HTTP method other than GET,
  * with custom headers and POST payload. URL, method, headers and payload are taken from
- * request parameter that must be an instance of Apify.Request class.
+ * request parameter that must be an instance of Request class.
  *
  * *NOTE:* In recent versions of Playwright using requests other than GET, overriding headers and adding payloads disables
  * browser cache which degrades performance.
@@ -105,4 +106,12 @@ export async function gotoExtended(page: Page, request: Request, gotoOptions: Di
     }
 
     return page.goto(url, gotoOptions);
+}
+
+export interface PlaywrightContextUtils {
+    // TODO update when we have some utils
+}
+
+export function registerUtilsToContext(_context: PlaywrightCrawlingContext): void {
+    // TODO register utils to context when we have some (to be backported from apify-js)
 }

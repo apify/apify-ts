@@ -5,23 +5,22 @@ import {
     RequestMetadata,
     tools,
 } from '@apify/scraper-tools';
-import log from '@apify/log';
 import {
     AutoscaledPool,
     CheerioCrawler,
     CheerioCrawlerOptions,
     CheerioCrawlingContext,
-    createProxyConfiguration,
     Dataset,
-    CheerioHandleFailedRequestInput,
+    CheerioFailedRequestHandlerInput,
     KeyValueStore,
-    PrepareRequestInputs,
+    // PrepareRequestInputs,
     ProxyConfiguration,
     Request,
     RequestList,
     RequestQueue,
-} from '@crawlers/cheerio';
-import { Awaitable, Dictionary } from '@crawlers/utils';
+    log,
+} from '@crawlee/cheerio';
+import { Awaitable, Dictionary } from '@crawlee/utils';
 import { Actor, ApifyEnv } from 'apify';
 import cheerio from 'cheerio';
 import { readFile } from 'node:fs/promises';
@@ -148,7 +147,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         this.keyValueStore = await KeyValueStore.open(this.keyValueStoreName);
 
         // Proxy configuration
-        this.proxyConfiguration = await createProxyConfiguration(this.input.proxyConfiguration);
+        this.proxyConfiguration = await Actor.createProxyConfiguration(this.input.proxyConfiguration);
     }
 
     /**
@@ -159,16 +158,16 @@ export class CrawlerSetup implements CrawlerSetupOptions {
 
         const options: CheerioCrawlerOptions = {
             proxyConfiguration: this.proxyConfiguration,
-            handlePageFunction: this._handlePageFunction.bind(this),
+            requestHandler: this._requestHandler.bind(this),
             preNavigationHooks: this.evaledPreNavigationHooks,
             postNavigationHooks: this.evaledPostNavigationHooks,
             requestList: this.requestList,
             requestQueue: this.requestQueue,
-            handlePageTimeoutSecs: this.input.pageFunctionTimeoutSecs,
-            prepareRequestFunction: this._prepareRequestFunction.bind(this),
             requestTimeoutSecs: this.input.pageLoadTimeoutSecs,
+            requestHandlerTimeoutSecs: this.input.pageFunctionTimeoutSecs,
+            // prepareRequestFunction: this._prepareRequestFunction.bind(this),
             ignoreSslErrors: this.input.ignoreSslErrors,
-            handleFailedRequestFunction: this._handleFailedRequestFunction.bind(this),
+            failedRequestHandler: this._failedRequestHandler.bind(this),
             maxRequestRetries: this.input.maxRequestRetries,
             maxRequestsPerCrawl: this.input.maxPagesPerCrawl,
             additionalMimeTypes: this.input.additionalMimeTypes,
@@ -208,28 +207,29 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         return this.crawler;
     }
 
-    private async _prepareRequestFunction({ request, session }: PrepareRequestInputs) {
-        // Normalize headers
-        request.headers = Object
-            .entries(request.headers ?? {})
-            .reduce((newHeaders, [key, value]) => {
-                newHeaders[key.toLowerCase()] = value;
-                return newHeaders;
-            }, {} as Dictionary<string>);
+    // TODO this was always used, we need to convert it to nav hooks, not just comment it out
+    // private async _prepareRequestFunction({ request, session }: PrepareRequestInputs) {
+    //     // Normalize headers
+    //     request.headers = Object
+    //         .entries(request.headers ?? {})
+    //         .reduce((newHeaders, [key, value]) => {
+    //             newHeaders[key.toLowerCase()] = value;
+    //             return newHeaders;
+    //         }, {} as Dictionary<string>);
+    //
+    //     // Add initial cookies, if any.
+    //     if (this.input.initialCookies && this.input.initialCookies.length) {
+    //         const cookiesToSet = session
+    //             ? tools.getMissingCookiesFromSession(session, this.input.initialCookies, request.url)
+    //             : this.input.initialCookies;
+    //         if (cookiesToSet?.length) {
+    //             // setting initial cookies that are not already in the session and page
+    //             session?.setPuppeteerCookies(cookiesToSet, request.url);
+    //         }
+    //     }
+    // }
 
-        // Add initial cookies, if any.
-        if (this.input.initialCookies && this.input.initialCookies.length) {
-            const cookiesToSet = session
-                ? tools.getMissingCookiesFromSession(session, this.input.initialCookies, request.url)
-                : this.input.initialCookies;
-            if (cookiesToSet?.length) {
-                // setting initial cookies that are not already in the session and page
-                session?.setPuppeteerCookies(cookiesToSet, request.url);
-            }
-        }
-    }
-
-    private _handleFailedRequestFunction({ request }: CheerioHandleFailedRequestInput) {
+    private _failedRequestHandler({ request }: CheerioFailedRequestHandlerInput) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);
@@ -246,7 +246,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
      * Finally, it makes decisions based on the current state and post-processes
      * the data returned from the `pageFunction`.
      */
-    private async _handlePageFunction(crawlingContext: CheerioCrawlingContext) {
+    private async _requestHandler(crawlingContext: CheerioCrawlingContext) {
         const { request, response, $, crawler } = crawlingContext;
         const pageFunctionArguments: Dictionary = {};
 
@@ -327,7 +327,6 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         await enqueueLinks({
             selector: this.input.linkSelector,
             pseudoUrls: this.input.pseudoUrls,
-            baseUrl: request.loadedUrl,
             transformRequestFunction: (requestOptions) => {
                 requestOptions.userData ??= {};
                 requestOptions.userData[META_KEY] = {

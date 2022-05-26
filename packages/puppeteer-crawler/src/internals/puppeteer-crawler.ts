@@ -1,97 +1,27 @@
 import {
     BrowserCrawler,
-    BrowserCrawlerHandleFailedRequest,
     BrowserCrawlerHandleRequest,
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserHook,
-} from '@crawlers/browser';
-import {
-    Dictionary,
-} from '@crawlers/utils';
-import { BrowserPoolOptions, PuppeteerPlugin } from 'browser-pool';
+} from '@crawlee/browser';
+import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
-import { applyStealthToBrowser } from './stealth';
-import { DirectNavigationOptions, gotoExtended } from './utils/puppeteer_utils';
+import { DirectNavigationOptions, gotoExtended, PuppeteerContextUtils, registerUtilsToContext } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
-
-export type PuppeteerCrawlContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
-
-export type PuppeteerHook = BrowserHook<PuppeteerCrawlContext, PuppeteerGoToOptions>;
-
-export type PuppeteerHandlePageFunctionParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>
-
-export type PuppeteerHandlePage = BrowserCrawlerHandleRequest<PuppeteerHandlePageFunctionParam>;
-
+export type PuppeteerCrawlingContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> & PuppeteerContextUtils;
+export type PuppeteerHook = BrowserHook<PuppeteerCrawlingContext, PuppeteerGoToOptions>;
+export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>;
+export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerRequestHandlerParam>;
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
 export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
-    PuppeteerCrawlContext,
-    PuppeteerGoToOptions,
+    PuppeteerCrawlingContext,
     { browserPlugins: [PuppeteerPlugin] }
 > {
-    /**
-     * Function that is called to process each request.
-     * It is passed an object with the following fields:
-     *
-     * ```
-     * {
-     *     request: Request,
-     *     response: Response,
-     *     page: Page,
-     *     session: Session,
-     *     browserController: BrowserController,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: PuppeteerCrawler,
-     * }
-     * ```
-     *
-     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * `page` is an instance of the `Puppeteer`
-     * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page)
-     * `browserPool` is an instance of the
-     * [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool),
-     * `browserController` is an instance of the
-     * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * `response` is an instance of the `Puppeteer`
-     * [`Response`](https://pptr.dev/#?product=Puppeteer&show=api-class-response),
-     * which is the main resource response as returned by `page.goto(request.url)`.
-     * The function must return a promise, which is then awaited by the crawler.
-     *
-     * If the function throws an exception, the crawler will try to re-crawl the
-     * request later, up to `option.maxRequestRetries` times.
-     * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
-     * To make this work, you should **always**
-     * let your function throw exceptions rather than catch them.
-     * The exceptions are logged to the request using the
-     * {@link Request.pushErrorMessage} function.
-     */
-    handlePageFunction: BrowserCrawlerOptions<PuppeteerCrawlContext>['handlePageFunction'];
-
-    /**
-     * A function to handle requests that failed more than `option.maxRequestRetries` times.
-     *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     response: Response,
-     *     page: Page,
-     *     session: Session,
-     *     browserController: BrowserController,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: PuppeteerCrawler,
-     * }
-     * ```
-     * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
-     * represents the last error thrown during processing of the request.
-     */
-    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
-
     /**
      * Options used by {@link launchPuppeteer} to start new Puppeteer instances.
      */
@@ -166,13 +96,13 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  * **Example usage:**
  *
  * ```javascript
- * const crawler = new Apify.PuppeteerCrawler({
+ * const crawler = new PuppeteerCrawler({
  *     requestList,
  *     handlePageFunction: async ({ page, request }) => {
  *         // This function is called to extract data from a single web page
  *         // 'page' is an instance of Puppeteer.Page with page.goto(request.url) already called
  *         // 'request' is an instance of Request class with information about the page to load
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             title: await page.title(),
  *             url: request.url,
  *             succeeded: true,
@@ -180,7 +110,7 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  *     },
  *     handleFailedRequestFunction: async ({ request }) => {
  *         // This function is called when the crawling of a request failed too many times
- *         await Apify.pushData({
+ *         await Actor.pushData({
  *             url: request.url,
  *             succeeded: false,
  *             errors: request.errorMessages,
@@ -192,11 +122,10 @@ export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<
  * ```
  * @category Crawlers
  */
-export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlContext> {
+export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [PuppeteerPlugin] }, LaunchOptions, PuppeteerCrawlingContext> {
     protected static override optionsShape = {
         ...BrowserCrawler.optionsShape,
         browserPoolOptions: ow.optional.object,
-        launchContext: ow.optional.object,
     };
 
     /**
@@ -212,8 +141,6 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             ...browserCrawlerOptions
         } = options;
 
-        const { stealth = false } = launchContext;
-
         if (launchContext.proxyUrl) {
             throw new Error('PuppeteerCrawlerOptions.launchContext.proxyUrl is not allowed in PuppeteerCrawler.'
                 + 'Use PuppeteerCrawlerOptions.proxyConfiguration');
@@ -225,26 +152,16 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, proxyConfiguration, browserPoolOptions });
-
-        if (stealth) {
-            this.browserPool.postLaunchHooks.push(async (_pageId, browserController) => {
-                // TODO: We can do this better now. It is not necessary to override the page.
-                //  we can modify the page in the postPageCreateHook
-                const { hideWebDriver, ...newStealthOptions } = puppeteerLauncher.stealthOptions!;
-                applyStealthToBrowser(browserController.browser, newStealthOptions);
-            });
-        }
-
-        this.launchContext = launchContext;
+        super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions });
     }
 
-    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlContext, gotoOptions: DirectNavigationOptions) {
-        if (this.gotoFunction) {
-            this.log.deprecated('PuppeteerCrawlerOptions.gotoFunction is deprecated. Use "preNavigationHooks" and "postNavigationHooks" instead.');
+    protected override async _runRequestHandler(context: PuppeteerCrawlingContext) {
+        registerUtilsToContext(context);
+        // eslint-disable-next-line no-underscore-dangle
+        await super._runRequestHandler(context);
+    }
 
-            return this.gotoFunction(crawlingContext, gotoOptions as Dictionary);
-        }
+    protected override async _navigationHandler(crawlingContext: PuppeteerCrawlingContext, gotoOptions: DirectNavigationOptions) {
         return gotoExtended(crawlingContext.page, crawlingContext.request, gotoOptions);
     }
 }

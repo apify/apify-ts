@@ -1,4 +1,5 @@
 import { Actor } from 'apify';
+import { FinalStatistics } from '@crawlee/core';
 import log from '@apify/log';
 
 export interface CrawlerSetup {
@@ -9,11 +10,11 @@ export interface CrawlerSetup {
 export type CrawlerSetupConstructor = new (input: any) => CrawlerSetup;
 
 export interface CommonCrawler {
-    run(): Promise<void>;
+    run(): Promise<FinalStatistics>;
 }
 
 export function runActor(CrawlerSetup: CrawlerSetupConstructor) {
-    Actor.main(async () => {
+    void Actor.main(async () => {
         log.debug('Reading INPUT.');
         const input = await Actor.getInput();
         if (!input) throw new Error('INPUT cannot be empty!');

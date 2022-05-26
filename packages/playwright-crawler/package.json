@@ -1,5 +1,5 @@
 {
-    "name": "@crawlers/playwright",
+    "name": "@crawlee/playwright",
     "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
     "engines": {
@@ -39,9 +39,6 @@
         "url": "https://github.com/apify/apify-js/issues"
     },
     "homepage": "https://sdk.apify.com/",
-    "files": [
-        "dist"
-    ],
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
@@ -52,7 +49,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@crawlers/browser": "^3.0.0"
+        "@crawlee/browser": "^3.0.0"
     },
     "peerDependencies": {
         "playwright": "^1.11.0"

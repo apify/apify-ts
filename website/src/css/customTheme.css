@@ -139,3 +139,41 @@ aside svg[class*=iconExternalLink] {
 header.hero div[class^=heroButtons] {
     justify-content: inherit;
 }
+
+.docusaurus-highlight-code-line {
+	background-color: rgba(0, 0, 0, 0.1);
+	display: block;
+	margin: 0 calc(-1 * var(--ifm-pre-padding));
+	padding: 0 var(--ifm-pre-padding);
+}
+
+html[data-theme='dark'] .docusaurus-highlight-code-line {
+	background-color: rgba(0, 0, 0, 0.3);
+}
+
+article .card h2 {
+    margin-top: 0;
+}
+
+.tsd-kind-icon,
+.menu__link,
+.table-of-contents__link {
+    text-overflow: ellipsis;
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.menu__caret:before,
+.menu__link--sublist:after {
+    float: right;
+}
+
+.table-of-contents__link {
+    height: 20px;
+}
+
+nav.navbar .dropdown__menu {
+    min-width: 6rem;
+}

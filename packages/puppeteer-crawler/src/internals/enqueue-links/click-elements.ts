@@ -1,18 +1,32 @@
 import {
-    addRequestsToQueueInBatches,
-    constructPseudoUrlInstances,
-    createRequestOptions,
+    constructGlobObjectsFromGlobs,
+    constructRegExpObjectsFromPseudoUrls,
+    constructRegExpObjectsFromRegExps,
     createRequests,
+    createRequestOptions,
+    GlobInput,
     PseudoUrlInput,
-    QueueOperationInfo,
-    RequestQueue,
+    RegExpInput,
     RequestTransform,
-} from '@crawlers/browser';
+    UrlPatternObject,
+    RequestQueue,
+    RequestOptions,
+} from '@crawlee/browser';
 import log_ from '@apify/log';
-import { Dictionary } from '@crawlers/utils';
+import { Dictionary } from '@crawlee/utils';
 import ow from 'ow';
-import { BrowserEmittedEvents, Frame, HTTPRequest as PuppeteerRequest, Page, PageEmittedEvents, Target } from 'puppeteer';
+import {
+    BrowserContextEmittedEvents,
+    BrowserEmittedEvents,
+    ClickOptions,
+    Frame,
+    HTTPRequest as PuppeteerRequest,
+    Page,
+    PageEmittedEvents,
+    Target,
+} from 'puppeteer';
 import { URL } from 'url';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;
@@ -30,21 +44,63 @@ export interface EnqueueLinksByClickingElementsOptions {
     requestQueue: RequestQueue;
 
     /**
-     * A CSS selector matching elements to be clicked on. Unlike in {@link utils.enqueueLinks}, there is no default
+     * A CSS selector matching elements to be clicked on. Unlike in {@link enqueueLinks}, there is no default
      * value. This is to prevent suboptimal use of this function by using it too broadly.
      */
     selector: string;
 
     /**
-     * An array of {@link PseudoUrl}s matching the URLs to be enqueued,
-     * or an array of strings or RegExps or plain Objects from which the {@link PseudoUrl}s can be constructed.
+     * Click options for use in Puppeteer's click handler.
+     */
+    clickOptions?: ClickOptions;
+
+    /**
+     * An array of glob pattern strings or plain objects
+     * containing glob pattern strings matching the URLs to be enqueued.
      *
-     * The plain objects must include at least the `purl` property, which holds the pseudo-URL string or RegExp.
-     * All remaining keys will be used as the `requestTemplate` argument of the {@link PseudoUrl} constructor,
-     * which lets you specify special properties for the enqueued {@link Request} objects.
+     * The plain objects must include at least the `glob` property, which holds the glob pattern string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
-     * If `pseudoUrls` is an empty array, `null` or `undefined`, then the function
-     * enqueues all links found on the page.
+     * The matching is always case-insensitive.
+     * If you need case-sensitive matching, use `regexps` property directly.
+     *
+     * If `globs` is an empty array or `undefined`, then the function
+     * enqueues all the intercepted navigation requests produced by the page
+     * after clicking on elements matching the provided CSS selector.
+     */
+    globs?: GlobInput[];
+
+    /**
+     * An array of regular expressions or plain objects
+     * containing regular expressions matching the URLs to be enqueued.
+     *
+     * The plain objects must include at least the `regexp` property, which holds the regular expression.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
+     *
+     * If `regexps` is an empty array or `undefined`, then the function
+     * enqueues all the intercepted navigation requests produced by the page
+     * after clicking on elements matching the provided CSS selector.
+     */
+    regexps?: RegExpInput[];
+
+    /**
+     * *NOTE:* In future versions of SDK the options will be removed.
+     * Please use `globs` or `regexps` instead.
+     *
+     * An array of {@link PseudoUrl} strings or plain objects
+     * containing {@link PseudoUrl} strings matching the URLs to be enqueued.
+     *
+     * The plain objects must include at least the `purl` property, which holds the pseudo-URL pattern string.
+     * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
+     *
+     * With a pseudo-URL string, the matching is always case-insensitive.
+     * If you need case-sensitive matching, use `regexps` property directly.
+     *
+     * If `pseudoUrls` is an empty array or `undefined`, then the function
+     * enqueues all the intercepted navigation requests produced by the page
+     * after clicking on elements matching the provided CSS selector.
+     *
+     * @deprecated prefer using `globs` or `regexps` instead
      */
     pseudoUrls?: PseudoUrlInput[];
 
@@ -104,7 +160,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  * requests, including their methods, headers and payloads are then enqueued to a provided
  * {@link RequestQueue}. This is useful to crawl JavaScript heavy pages where links are not available
  * in `href` elements, but rather navigations are triggered in click handlers.
- * If you're looking to find URLs in `href` attributes of the page, see {@link utils.enqueueLinks}.
+ * If you're looking to find URLs in `href` attributes of the page, see {@link enqueueLinks}.
  *
  * Optionally, the function allows you to filter the target links' URLs using an array of {@link PseudoUrl} objects
  * and override settings of the enqueued {@link Request} objects.
@@ -125,7 +181,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  * **Example usage**
  *
  * ```javascript
- * await Apify.utils.puppeteer.enqueueLinksByClickingElements({
+ * await Actor.utils.puppeteer.enqueueLinksByClickingElements({
  *   page,
  *   requestQueue,
  *   selector: 'a.product-detail',
@@ -136,15 +192,26 @@ export interface EnqueueLinksByClickingElementsOptions {
  * });
  * ```
  *
- * @returns
- *   Promise that resolves to an array of {@link QueueOperationInfo} objects.
+ * @returns Promise that resolves to {@link BatchAddRequestsResult} object.
  */
-export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<QueueOperationInfo[]> {
+export async function enqueueLinksByClickingElements(options: EnqueueLinksByClickingElementsOptions): Promise<BatchAddRequestsResult> {
     ow(options, ow.object.exactShape({
         page: ow.object.hasKeys('goto', 'evaluate'),
         requestQueue: ow.object.hasKeys('fetchNextRequest', 'addRequest'),
         selector: ow.string,
-        pseudoUrls: ow.optional.array.ofType(ow.any(ow.string, ow.regExp, ow.object.hasKeys('purl'))),
+        clickOptions: ow.optional.object.hasKeys('clickCount', 'delay'),
+        pseudoUrls: ow.optional.array.ofType(ow.any(
+            ow.string,
+            ow.object.hasKeys('purl'),
+        )),
+        globs: ow.optional.array.ofType(ow.any(
+            ow.string,
+            ow.object.hasKeys('glob'),
+        )),
+        regexps: ow.optional.array.ofType(ow.any(
+            ow.regExp,
+            ow.object.hasKeys('regexp'),
+        )),
         transformRequestFunction: ow.optional.function,
         waitForPageIdleSecs: ow.optional.number,
         maxWaitForPageIdleSecs: ow.optional.number,
@@ -154,7 +221,10 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         page,
         requestQueue,
         selector,
+        clickOptions,
         pseudoUrls,
+        globs,
+        regexps,
         transformRequestFunction,
         waitForPageIdleSecs = 1,
         maxWaitForPageIdleSecs = 5,
@@ -163,19 +233,34 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
     const waitForPageIdleMillis = waitForPageIdleSecs * 1000;
     const maxWaitForPageIdleMillis = maxWaitForPageIdleSecs * 1000;
 
-    const pseudoUrlInstances = constructPseudoUrlInstances(pseudoUrls || []);
+    const urlPatternObjects: UrlPatternObject[] = [];
+
+    if (pseudoUrls?.length) {
+        log.deprecated('`pseudoUrls` option is deprecated, use `globs` or `regexps` instead');
+        urlPatternObjects.push(...constructRegExpObjectsFromPseudoUrls(pseudoUrls));
+    }
+
+    if (globs?.length) {
+        urlPatternObjects.push(...constructGlobObjectsFromGlobs(globs));
+    }
+
+    if (regexps?.length) {
+        urlPatternObjects.push(...constructRegExpObjectsFromRegExps(regexps));
+    }
+
     const interceptedRequests = await clickElementsAndInterceptNavigationRequests({
         page,
         selector,
         waitForPageIdleMillis,
         maxWaitForPageIdleMillis,
+        clickOptions,
     });
     let requestOptions = createRequestOptions(interceptedRequests);
     if (transformRequestFunction) {
-        requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r);
+        requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r) as RequestOptions[];
     }
-    const requests = createRequests(requestOptions, pseudoUrlInstances);
-    return addRequestsToQueueInBatches(requests, requestQueue);
+    const requests = createRequests(requestOptions, urlPatternObjects);
+    return requestQueue.addRequests(requests);
 }
 
 interface WaitForPageIdleOptions {
@@ -186,6 +271,7 @@ interface WaitForPageIdleOptions {
 
 interface ClickElementsAndInterceptNavigationRequestsOptions extends WaitForPageIdleOptions {
     selector: string;
+    clickOptions?: ClickOptions;
 }
 
 /**
@@ -200,6 +286,7 @@ export async function clickElementsAndInterceptNavigationRequests(options: Click
         selector,
         waitForPageIdleMillis,
         maxWaitForPageIdleMillis,
+        clickOptions,
     } = options;
 
     const uniqueRequests = new Set<string>();
@@ -215,7 +302,7 @@ export async function clickElementsAndInterceptNavigationRequests(options: Click
 
     await preventHistoryNavigation(page);
 
-    await clickElements(page, selector);
+    await clickElements(page, selector, clickOptions);
     await waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdleMillis });
 
     await restoreHistoryNavigationAndSaveCapturedUrls(page, uniqueRequests);
@@ -243,9 +330,9 @@ function createInterceptRequestHandler(page: Page, requests: Set<string>): (req:
         }));
 
         if (req.redirectChain().length) {
-            req.respond({ body: '' }); // Prevents 301/302 redirect
+            await req.respond({ body: '' }); // Prevents 301/302 redirect
         } else {
-            req.abort('aborted'); // Prevents navigation by js
+            await req.abort('aborted'); // Prevents navigation by js
         }
     };
 }
@@ -342,7 +429,7 @@ async function preventHistoryNavigation(page: Page): Promise<unknown> {
  * for large element sets, this will take considerable amount of time.
  * @ignore
  */
-export async function clickElements(page: Page, selector: string): Promise<void> {
+export async function clickElements(page: Page, selector: string, clickOptions?: ClickOptions): Promise<void> {
     const elementHandles = await page.$$(selector);
     log.debug(`enqueueLinksByClickingElements: There are ${elementHandles.length} elements to click.`);
     let clickedElementsCount = 0;
@@ -351,7 +438,7 @@ export async function clickElements(page: Page, selector: string): Promise<void>
     for (const handle of elementHandles) {
         try {
             await page.evaluate(updateElementCssToEnableMouseClick, handle, zIndex++);
-            await handle.click();
+            await handle.click(clickOptions);
             clickedElementsCount++;
         } catch (err) {
             const e = err as Error;
@@ -401,6 +488,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
     return new Promise<void>((resolve) => {
         let timeout: NodeJS.Timeout;
         let maxTimeout: NodeJS.Timeout;
+        const context = page.browserContext();
 
         function newTabTracker(target: Target) {
             if (isTargetRelevant(page, target)) activityHandler();
@@ -423,7 +511,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         function finish() {
             page.off(PageEmittedEvents.Request, activityHandler);
             page.off(PageEmittedEvents.FrameNavigated, activityHandler);
-            page.off('targetcreated', newTabTracker);
+            context.off(BrowserContextEmittedEvents.TargetCreated, newTabTracker);
             resolve();
         }
 
@@ -431,8 +519,7 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
         activityHandler(); // We call this once manually in case there would be no requests at all.
         page.on(PageEmittedEvents.Request, activityHandler);
         page.on(PageEmittedEvents.FrameNavigated, activityHandler);
-        // @ts-expect-error browser event
-        page.on('targetcreated', newTabTracker);
+        context.on(BrowserContextEmittedEvents.TargetCreated, newTabTracker);
     });
 }
 

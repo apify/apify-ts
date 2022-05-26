@@ -1,8 +1,6 @@
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
-import { ApifyStorageLocal } from '@crawlers/storage';
-import type { PaginatedList } from 'apify-client';
-import { ApifyClient, Dataset as ClientDataset, DatasetClient } from 'apify-client';
 import ow from 'ow';
+import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { log } from '../log';
 import { Awaitable, Dictionary } from '../typedefs';
@@ -167,7 +165,7 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  * Typically it is used to store crawling results.
  *
  * Do not instantiate this class directly, use the
- * {@link Apify.openDataset} function instead.
+ * {@link Dataset.open} function instead.
  *
  * `Dataset` stores its data either on local disk or in the Apify cloud,
  * depending on whether the `APIFY_LOCAL_STORAGE_DIR` or `APIFY_TOKEN` environment variables are set.
@@ -184,17 +182,17 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  * If the `APIFY_TOKEN` environment variable is set but `APIFY_LOCAL_STORAGE_DIR` not, the data is stored in the
  * [Apify Dataset](https://docs.apify.com/storage/dataset)
  * cloud storage. Note that you can force usage of the cloud storage also by passing the `forceCloud`
- * option to {@link Apify.openDataset} function,
+ * option to {@link Dataset.open} function,
  * even if the `APIFY_LOCAL_STORAGE_DIR` variable is set.
  *
  * **Example usage:**
  *
  * ```javascript
  * // Write a single row to the default dataset
- * await Apify.pushData({ col1: 123, col2: 'val2' });
+ * await Actor.pushData({ col1: 123, col2: 'val2' });
  *
  * // Open a named dataset
- * const dataset = await Apify.openDataset('some-name');
+ * const dataset = await Dataset.open('some-name');
  *
  * // Write a single row
  * await dataset.pushData({ foo: 'bar' });
@@ -210,7 +208,6 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
 export class Dataset<Data extends Dictionary = Dictionary> {
     id: string;
     name?: string;
-    isLocal?: boolean;
     client: DatasetClient<Data>;
     log = log.child({ prefix: 'Dataset' });
 
@@ -220,7 +217,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     constructor(options: DatasetOptions) {
         this.id = options.id;
         this.name = options.name;
-        this.isLocal = options.isLocal;
         this.client = options.client.dataset(this.id) as DatasetClient<Data>;
     }
 
@@ -311,7 +307,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * }
      * ```
      */
-    async getInfo(): Promise<ClientDataset | undefined> {
+    async getInfo(): Promise<DatasetInfo | undefined> {
         return this.client.get();
     }
 
@@ -324,7 +320,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      *
      * **Example usage**
      * ```javascript
-     * const dataset = await Apify.openDataset('my-results');
+     * const dataset = await Dataset.open('my-results');
      * await dataset.forEach(async (item, index) => {
      *   console.log(`Item at ${index}: ${JSON.stringify(item)}`);
      * });
@@ -435,63 +431,12 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     static async open<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
-            forceCloud: ow.optional.boolean,
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
         const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
-        return manager.openStorage(datasetIdOrName, options);
+        return manager.openStorage(datasetIdOrName);
     }
-}
-
-/**
- * Opens a dataset and returns a promise resolving to an instance of the {@link Dataset} class.
- *
- * Datasets are used to store structured data where each object stored has the same attributes,
- * such as online store products or real estate offers.
- * The actual data is stored either on the local filesystem or in the cloud.
- *
- * For more details and code examples, see the {@link Dataset} class.
- *
- * @param [datasetIdOrName]
- *   ID or name of the dataset to be opened. If `null` or `undefined`,
- *   the function returns the default dataset associated with the actor run.
- * @param [options] Storage manager options.
- * @deprecated use `Dataset.open()` instead
- */
-export function openDataset<Data extends Dictionary = Dictionary>(
-    datasetIdOrName?: string | null,
-    options: StorageManagerOptions = {},
-): Promise<Dataset<Data>> {
-    return Dataset.open(datasetIdOrName, options);
-}
-
-/**
- * Stores an object or an array of objects to the default {@link Dataset} of the current actor run.
- *
- * This is just a convenient shortcut for {@link Dataset.pushData}.
- * For example, calling the following code:
- * ```javascript
- * await Apify.pushData({ myValue: 123 });
- * ```
- *
- * is equivalent to:
- * ```javascript
- * const dataset = await Apify.openDataset();
- * await dataset.pushData({ myValue: 123 });
- * ```
- *
- * For more information, see {@link Dataset.open} and {@link Dataset.pushData}
- *
- * **IMPORTANT**: Make sure to use the `await` keyword when calling `pushData()`,
- * otherwise the actor process might finish before the data are stored!
- *
- * @param {object} item Object or array of objects containing data to be stored in the default dataset.
- * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
- */
-export async function pushData(item: Dictionary | Dictionary[]): Promise<void> {
-    const dataset = await Dataset.open();
-    return dataset.pushData(item);
 }
 
 /**
@@ -538,8 +483,21 @@ export interface DatasetReducer<T, Data> {
 export interface DatasetOptions {
     id: string;
     name?: string;
-    client: ApifyClient | ApifyStorageLocal;
-    isLocal?: boolean;
+    client: StorageClient;
 }
 
-export interface DatasetContent<T> extends PaginatedList<T> {}
+// FIXME duplicity with `PaginationList` interface?
+export interface DatasetContent<Data> {
+    /** Total count of entries in the dataset. */
+    total: number;
+    /** Count of dataset entries returned in this set. */
+    count: number;
+    /** Position of the first returned entry in the dataset. */
+    offset: number;
+    /** Maximum number of dataset entries requested. */
+    limit: number;
+    /** Should the results be in descending order. */
+    desc: boolean;
+    /** Dataset entries based on chosen format parameter. */
+    items: Data[];
+}
