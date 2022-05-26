@@ -834,7 +834,7 @@ export class BasicCrawler<
             // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
             // Thus, we print the full stack trace only when CRAWLEE_VERBOSE_LOG environment variable is set to true.
             this.log.warning(
-                `Reclaiming failed request back to the list or queue. ${process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack}`,
+                `Reclaiming failed request back to the list or queue. ${!process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack}`,
                 { id, url, retryCount },
             );
             await source.reclaimRequest(request);
@@ -860,7 +860,7 @@ export class BasicCrawler<
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
             this.log.error(
-                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && process.env.CRAWLEE_VERBOSE_LOG
+                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && !process.env.CRAWLEE_VERBOSE_LOG
                     ? crawlingContext.error.message
                     : crawlingContext.error.stack
                 }`,
