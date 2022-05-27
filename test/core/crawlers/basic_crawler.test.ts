@@ -681,7 +681,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
     test('should log stack trace for timeout errors when verbose log is enabled', async () => {
         log.setLevel(log.LEVELS.INFO);
-        process.env.CRAWLEE_VERBOSE_LOG = String(true);
+        process.env.CRAWLEE_VERBOSE_LOG = 'true';
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
 
@@ -725,7 +725,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
     test('should log stack trace for non-timeout errors when verbose log is enabled', async () => {
         log.setLevel(log.LEVELS.INFO);
-        process.env.CRAWLEE_VERBOSE_LOG = String(true);
+        process.env.CRAWLEE_VERBOSE_LOG = 'true';
         const sources = [{ url: `http://${HOSTNAME}:${port}` }];
         const requestList = await RequestList.open(null, sources);
 
