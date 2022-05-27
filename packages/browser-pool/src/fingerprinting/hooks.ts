@@ -2,7 +2,7 @@ import { FingerprintInjector } from 'fingerprint-injector';
 import { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } from '..';
 import { BrowserController } from '../abstract-classes/browser-controller';
 import { LaunchContext } from '../launch-context';
-import { getGeneratorDefaultOptions, mergeArgsToHideWebdriver } from './utils';
+import { getGeneratorDefaultOptions } from './utils';
 
 /**
  * @internal
@@ -34,8 +34,6 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
         }
 
         launchContext.extend({ fingerprint });
-        // hide webdriver with arg.
-        launchOptions.args = mergeArgsToHideWebdriver(launchOptions.args);
 
         if (useIncognitoPages) {
             return;

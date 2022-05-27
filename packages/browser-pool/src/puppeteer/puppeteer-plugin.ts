@@ -1,5 +1,4 @@
 // eslint isn't compatible with `import type`
-/* eslint-disable import/no-duplicates */
 import type Puppeteer from './puppeteer-proxy-per-page';
 import type { Browser, Target, BrowserContext } from './puppeteer-proxy-per-page';
 import { BrowserController } from '../abstract-classes/browser-controller';
@@ -22,6 +21,14 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
         } = launchContext;
 
         launchOptions!.userDataDir = launchOptions!.userDataDir ?? userDataDir;
+
+        if (launchOptions!.headless === false) {
+            if (Array.isArray(launchOptions!.args)) {
+                launchOptions!.args.push('--disable-site-isolation-trials');
+            } else {
+                launchOptions!.args = ['--disable-site-isolation-trials'];
+            }
+        }
 
         let browser: Puppeteer.Browser;
 
@@ -162,5 +169,12 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
             }
         }
         */
+    }
+
+    protected _isChromiumBasedBrowser(launchContext: LaunchContext<typeof Puppeteer>): boolean {
+        const { launchOptions } = launchContext as any;
+        // @ts-expect-error cannot find .product on this.library
+        const browserName = launchOptions.product || this.library.product!;
+        return browserName === 'chrome';
     }
 }

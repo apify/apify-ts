@@ -18,6 +18,7 @@ export class PlaywrightPlugin extends BrowserPlugin<BrowserType, Parameters<Brow
             userDataDir,
             proxyUrl,
         } = launchContext;
+
         let browser: PlaywrightBrowser;
 
         // Required for the `proxy` context option to work.
@@ -91,5 +92,10 @@ export class PlaywrightPlugin extends BrowserPlugin<BrowserType, Parameters<Brow
                 password: decodeURIComponent(url.password),
             };
         }
+    }
+
+    protected _isChromiumBasedBrowser(): boolean {
+        const name = this.library.name();
+        return name === 'chromium';
     }
 }

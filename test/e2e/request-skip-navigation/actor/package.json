@@ -8,13 +8,8 @@
         "@crawlee/basic": "file:./packages/basic-crawler",
         "@crawlee/cheerio": "file:./packages/cheerio-crawler",
         "@crawlee/utils": "file:./packages/utils",
-        "@crawlee/browser-pool": "file:./packages/browser-pool",
-        "@crawlee/storage": "file:./packages/storage"
+        "@crawlee/browser-pool": "file:./packages/browser-pool"
     },
-	"devDependencies": {
-		"@apify/eslint-config": "^0.3.1",
-		"eslint": "^8.13.0"
-	},
 	"scripts": { "start": "node main.js" },
 	"type": "module",
 	"license": "ISC"

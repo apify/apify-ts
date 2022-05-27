@@ -27,7 +27,7 @@ describe.each(StorageTestCases)('SessionPool - testing session pool - %s', (Emul
         expect(sessionPool.sessionOptions).toBeDefined();
         expect(sessionPool.persistStateKey).toBeDefined();
         // @ts-expect-error Accessing private property
-        expect(sessionPool.createSessionFunction).toEqual(sessionPool._defaultCreateSessionFunction); // eslint-disable-line
+        expect(sessionPool.createSessionFunction).toEqual(sessionPool._defaultCreateSessionFunction);
     });
 
     test('should override default values', async () => {
@@ -192,7 +192,7 @@ describe.each(StorageTestCases)('SessionPool - testing session pool - %s', (Emul
 
     test('should create session', async () => {
         // @ts-expect-error Accessing private property
-        await sessionPool._createSession(); // eslint-disable-line
+        await sessionPool._createSession();
         expect(sessionPool.sessions.length).toBe(1);
         expect(sessionPool.sessions[0].id).toBeDefined();
     });

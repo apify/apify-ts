@@ -19,14 +19,98 @@
  * @module playwrightUtils
  */
 
+import { readFile } from 'node:fs/promises';
 import ow from 'ow';
 import { Page, Response, Route } from 'playwright';
+import { LruCache } from '@apify/datastructures';
 import log_ from '@apify/log';
 import { validators, Request } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
 import { PlaywrightCrawlingContext } from '../playwright-crawler';
 
 const log = log_.child({ prefix: 'Playwright Utils' });
+
+const jqueryPath = require.resolve('jquery');
+
+const MAX_INJECT_FILE_CACHE_SIZE = 10;
+
+export interface InjectFileOptions {
+    /**
+     * Enables the injected script to survive page navigations and reloads without need to be re-injected manually.
+     * This does not mean, however, that internal state will be preserved. Just that it will be automatically
+     * re-injected on each navigation before any other scripts get the chance to execute.
+     */
+    surviveNavigations?: boolean;
+}
+
+/**
+ * Cache contents of previously injected files to limit file system access.
+ */
+const injectedFilesCache = new LruCache({ maxLength: MAX_INJECT_FILE_CACHE_SIZE });
+
+/**
+ * Injects a JavaScript file into a Playwright page.
+ * Unlike Playwright's `addScriptTag` function, this function works on pages
+ * with arbitrary Cross-Origin Resource Sharing (CORS) policies.
+ *
+ * File contents are cached for up to 10 files to limit file system access.
+ *
+ * @param page Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
+ * @param filePath File path
+ * @param [options]
+ */
+export async function injectFile(page: Page, filePath: string, options: InjectFileOptions = {}): Promise<unknown> {
+    ow(page, ow.object.validate(validators.browserPage));
+    ow(filePath, ow.string);
+    ow(options, ow.object.exactShape({
+        surviveNavigations: ow.optional.boolean,
+    }));
+
+    let contents = injectedFilesCache.get(filePath);
+    if (!contents) {
+        contents = await readFile(filePath, 'utf8');
+        injectedFilesCache.add(filePath, contents);
+    }
+    const evalP = page.evaluate(contents);
+
+    if (options.surviveNavigations) {
+        page.on('framenavigated',
+            () => page.evaluate(contents)
+                .catch((error) => log.warning('An error occurred during the script injection!', { error })));
+    }
+
+    return evalP;
+}
+
+/**
+ * Injects the [jQuery](https://jquery.com/) library into a Playwright page.
+ * jQuery is often useful for various web scraping and crawling tasks.
+ * For example, it can help extract text from HTML elements using CSS selectors.
+ *
+ * Beware that the injected jQuery object will be set to the `window.$` variable and thus it might cause conflicts with
+ * other libraries included by the page that use the same variable name (e.g. another version of jQuery).
+ * This can affect functionality of page's scripts.
+ *
+ * The injected jQuery will survive page navigations and reloads.
+ *
+ * **Example usage:**
+ * ```javascript
+ * await playwrightUtils.injectJQuery(page);
+ * const title = await page.evaluate(() => {
+ *   return $('head title').text();
+ * });
+ * ```
+ *
+ * Note that `injectJQuery()` does not affect the Playwright
+ * [`page.$()`](https://playwright.dev/docs/api/class-page#page-query-selector)
+ * function in any way.
+ *
+ * @param page Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
+ */
+export function injectJQuery(page: Page): Promise<unknown> {
+    ow(page, ow.object.validate(validators.browserPage));
+    return injectFile(page, jqueryPath, { surviveNavigations: true });
+}
 
 export interface DirectNavigationOptions {
     /**
@@ -59,8 +143,7 @@ export interface DirectNavigationOptions {
  * *NOTE:* In recent versions of Playwright using requests other than GET, overriding headers and adding payloads disables
  * browser cache which degrades performance.
  *
- * @param page
- *   Puppeteer [`Page`](https://playwright.dev/docs/api/class-page) object.
+ * @param page Playwright [`Page`](https://playwright.dev/docs/api/class-page) object.
  * @param request
  * @param [gotoOptions] Custom options for `page.goto()`.
  */

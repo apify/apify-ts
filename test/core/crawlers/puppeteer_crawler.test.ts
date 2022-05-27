@@ -1,7 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import {
-    Configuration,
     ProxyConfiguration,
     PuppeteerCookie,
     PuppeteerCrawler,
@@ -99,10 +98,13 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
             expect(response.status()).toBe(200);
             request.userData.title = await page.title();
             processed.push(request);
+            expect(response.request().headers()['user-agent']).not.toMatch(/headless/i);
+            await expect(page.evaluate(() => window.navigator.webdriver)).resolves.toBeFalsy();
         };
 
         const puppeteerCrawler = new PuppeteerCrawler({
             requestList: requestListLarge,
+            browserPoolOptions: { useFingerprints: false },
             minConcurrency: 1,
             maxConcurrency: 1,
             requestHandler,

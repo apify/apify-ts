@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import os from 'os';
 import log from '@apify/log';
 import { betterClearInterval, betterSetInterval } from '@apify/utilities';

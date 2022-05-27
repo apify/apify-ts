@@ -614,7 +614,7 @@ export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
         const extensionOptions = extension.getCrawlerOptions();
 
         for (const [key, value] of entries(extensionOptions)) {
-            const isConfigurable = this.hasOwnProperty(key); // eslint-disable-line
+            const isConfigurable = this.hasOwnProperty(key);
             const originalType = typeof this[key as keyof this];
             const extensionType = typeof value; // What if we want to null something? It is really needed?
             const isSameType = originalType === extensionType || value == null; // fast track for deleting keys

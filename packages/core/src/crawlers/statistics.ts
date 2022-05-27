@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import ow from 'ow';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
@@ -56,7 +55,7 @@ export class Statistics {
      */
     readonly requestRetryHistogram: number[] = [];
 
-    private keyValueStore: KeyValueStore | null = null;
+    private keyValueStore?: KeyValueStore = undefined;
     private persistStateKey = `SDK_CRAWLER_STATISTICS_${this.id}`;
     private logIntervalMillis: number;
     private logMessage: string;
@@ -74,17 +73,20 @@ export class Statistics {
         ow(options, ow.object.exactShape({
             logIntervalSecs: ow.optional.number,
             logMessage: ow.optional.string,
+            keyValueStore: ow.optional.object,
             config: ow.optional.object,
         }));
 
         const {
             logIntervalSecs = 60,
             logMessage = 'Statistics',
+            keyValueStore,
             config = Configuration.getGlobalConfig(),
         } = options;
 
         this.logIntervalMillis = logIntervalSecs * 1000;
         this.logMessage = logMessage;
+        this.keyValueStore = keyValueStore;
         this.listener = this.persistState.bind(this);
         this.events = config.getEventManager();
 
@@ -188,7 +190,7 @@ export class Statistics {
      * displaying the current state in predefined intervals
      */
     async startCapturing() {
-        this.keyValueStore = await KeyValueStore.open();
+        this.keyValueStore ??= await KeyValueStore.open();
 
         await this._maybeLoadStatistics();
 
@@ -316,6 +318,7 @@ export class Statistics {
 interface StatisticsOptions {
     logIntervalSecs?: number;
     logMessage?: string;
+    keyValueStore?: KeyValueStore;
     config?: Configuration;
 }
 

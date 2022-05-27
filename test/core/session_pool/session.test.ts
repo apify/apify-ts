@@ -35,8 +35,8 @@ describe('Session - testing session behaviour ', () => {
         } catch (e) {
             err = e;
         }
-        expect(err).toBeDefined(); // eslint-disable-line
-        expect((err as Error).message.includes('object `sessionPool` `{}` to be of type `SessionPool`')).toBe(true); // eslint-disable-line
+        expect(err).toBeDefined();
+        expect((err as Error).message.includes('object `sessionPool` `{}` to be of type `SessionPool`')).toBe(true);
     });
 
     test('should mark session markBad', () => {
@@ -128,10 +128,10 @@ describe('Session - testing session behaviour ', () => {
         jest.spyOn(session, '_maybeSelfRetire');
         session.markGood();
         // @ts-expect-error Private property
-        expect(session._maybeSelfRetire).toBeCalledTimes(1); // eslint-disable-line
+        expect(session._maybeSelfRetire).toBeCalledTimes(1);
         session.markBad();
         // @ts-expect-error Private property
-        expect(session._maybeSelfRetire).toBeCalledTimes(2); // eslint-disable-line
+        expect(session._maybeSelfRetire).toBeCalledTimes(2);
     });
 
     test('should get state', () => {

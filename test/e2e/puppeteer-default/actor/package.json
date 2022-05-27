@@ -12,10 +12,6 @@
         "@crawlee/utils": "file:./packages/utils",
         "puppeteer": "*"
     },
-	"devDependencies": {
-		"@apify/eslint-config": "^0.3.1",
-		"eslint": "^8.13.0"
-	},
     "scripts": { "start": "node main.js" },
 	"type": "module",
 	"license": "ISC"

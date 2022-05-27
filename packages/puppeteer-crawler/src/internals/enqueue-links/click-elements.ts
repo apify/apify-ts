@@ -402,7 +402,7 @@ interface ApifyWindow {
 async function preventHistoryNavigation(page: Page): Promise<unknown> {
     /* istanbul ignore next */
     return page.evaluate(() => {
-        (window as unknown as Dictionary).__originalHistory__ = window.history; // eslint-disable-line no-underscore-dangle
+        (window as unknown as Dictionary).__originalHistory__ = window.history;
         delete (window as unknown as Dictionary).history; // Simple override does not work.
         (window as unknown as Dictionary).history = {
             stateHistory: [],
@@ -527,11 +527,10 @@ async function waitForPageIdle({ page, waitForPageIdleMillis, maxWaitForPageIdle
  * @ignore
  */
 async function restoreHistoryNavigationAndSaveCapturedUrls(page: Page, requests: Set<string>): Promise<void> {
-    /* eslint-disable no-shadow */
     /* istanbul ignore next */
     const state = await page.evaluate(() => {
         const { stateHistory } = window.history as unknown as ApifyWindow;
-        (window as unknown as Dictionary).history = (window as unknown as Dictionary).__originalHistory__; // eslint-disable-line no-underscore-dangle
+        (window as unknown as Dictionary).history = (window as unknown as Dictionary).__originalHistory__;
         return stateHistory;
     });
     state.forEach((args) => {

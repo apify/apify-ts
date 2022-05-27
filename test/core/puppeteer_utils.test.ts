@@ -1,7 +1,7 @@
 import path from 'path';
 import express from 'express';
 import log from '@apify/log';
-import { Configuration, KeyValueStore, launchPuppeteer, puppeteerUtils, Request } from '@crawlee/puppeteer';
+import { KeyValueStore, launchPuppeteer, puppeteerUtils, Request } from '@crawlee/puppeteer';
 import { Dictionary } from '@crawlee/utils';
 import { Browser, Page, ResponseForRequest } from 'puppeteer';
 import { Server } from 'http';
@@ -56,10 +56,8 @@ describe.each(StorageTestCases)('Apify.puppeteerUtils - %s', (Emulator) => {
 
     describe.each([
         [launchPuppeteer, { launchOptions: { headless: true } }],
-        // [launchPlaywright, { launchOptions: { headless: true } }],
     ] as const)('with %s', (method, launchContext) => {
         test('injectFile()', async () => {
-        /* eslint-disable no-shadow */
             const browser2 = await method(launchContext);
             const survive = async (browser: Browser) => {
                 // Survive navigations
@@ -83,19 +81,19 @@ describe.each(StorageTestCases)('Apify.puppeteerUtils - %s', (Emulator) => {
             const remove = async (browser: Browser) => {
                 // Remove with navigations
                 const page = await browser.newPage();
-                // @ts-ignore
+                // @ts-expect-error
                 let result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await page.goto('about:chrome');
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
                 await puppeteerUtils.injectFile(page, path.join(__dirname, '..', 'shared', 'data', 'inject_file.txt'));
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable);
                 expect(result).toBe(42);
                 await page.goto('https://www.example.com');
-                // @ts-ignore
+                // @ts-expect-error
                 result = await page.evaluate(() => window.injectedVariable === 42);
                 expect(result).toBe(false);
             };
@@ -117,7 +115,7 @@ describe.each(StorageTestCases)('Apify.puppeteerUtils - %s', (Emulator) => {
                 // (https://developers.google.com/web/tools/chrome-devtools/console/command-line-reference#queryselector)
                 const result1 = await page.evaluate(() => {
                     return {
-                        // @ts-ignore
+                        // @ts-expect-error
                         isDefined: window.jQuery !== undefined,
                     };
                 });
@@ -129,13 +127,28 @@ describe.each(StorageTestCases)('Apify.puppeteerUtils - %s', (Emulator) => {
                 const result2 = await page.evaluate(() => {
                 /* global $ */
                     return {
-                        // @ts-ignore
+                        // @ts-expect-error
                         isDefined: window.jQuery === window.$,
-                        // @ts-ignore
+                        // @ts-expect-error
                         text: $('h1').text(),
                     };
                 });
                 expect(result2).toEqual({
+                    isDefined: true,
+                    text: '',
+                });
+
+                await page.reload();
+
+                const result3 = await page.evaluate(() => {
+                    return {
+                        // @ts-expect-error
+                        isDefined: window.jQuery === window.$,
+                        // @ts-expect-error
+                        text: $('h1').text(),
+                    };
+                });
+                expect(result3).toEqual({
                     isDefined: true,
                     text: '',
                 });

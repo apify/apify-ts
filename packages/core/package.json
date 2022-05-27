@@ -49,22 +49,19 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/consts": "^1.4.2",
+        "@apify/consts": "^1.7.0",
         "@apify/datastructures": "^1.0.1",
         "@apify/log": "^1.2.0",
         "@apify/pseudo_url": "^1.1.0",
         "@apify/timeout": "^0.2.1",
-        "@apify/utilities": "^1.2.5",
         "@crawlee/browser-pool": "^3.0.0",
-        "@crawlee/utils": "^3.0.0",
         "@crawlee/memory-storage": "^3.0.0",
-        "got-scraping": "^3.2.7",
         "iconv-lite": "^0.6.3",
         "minimatch": "^5.0.1",
-        "ow": "^0.28.0",
-        "stream-json": "^1.7.3",
+        "ow": "^0.28.1",
+        "stream-json": "^1.7.4",
         "tldts": "^5.7.69",
         "tough-cookie": "^4.0.0",
-        "ws": "^7.5.3"
+        "ws": "^7.5.7"
     }
 }

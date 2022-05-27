@@ -5,6 +5,16 @@ import { throwImplementationNeeded } from './utils';
 import { UnwrapPromise } from '../utils';
 
 /**
+ * The default User Agent used by `PlaywrightCrawler`, `launchPlaywright`, 'PuppeteerCrawler' and 'launchPuppeteer'
+ * when Chromium/Chrome browser is launched:
+ *  - in headless mode,
+ *  - without using a fingerprint,
+ *  - without specifying a user agent.
+ * Last updated on 2022-05-05.
+ */
+export const DEFAULT_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36';
+
+/**
  * Each plugin expects an instance of the object with the `.launch()` property.
  * For Puppeteer, it is the `puppeteer` module itself, whereas for Playwright
  * it is one of the browser types, such as `puppeteer.chromium`.
@@ -140,29 +150,62 @@ export abstract class BrowserPlugin<
     async launch(
         launchContext: LaunchContext<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult> = this.createLaunchContext(),
     ): Promise<LaunchResult> {
-        const { proxyUrl } = launchContext;
+        const { proxyUrl, launchOptions }: { proxyUrl?: string; launchOptions: Record<string, any> } = launchContext;
 
         if (proxyUrl) {
             await this._addProxyToLaunchOptions(launchContext);
         }
 
+        if (this._isChromiumBasedBrowser(launchContext)) {
+            // This will set the args for chromium based browsers to hide the webdriver.
+            launchOptions.args = this._mergeArgsToHideWebdriver(launchOptions.args);
+            // When User-Agent is not set, and we're using Chromium in headless mode,
+            // it is better to use DEFAULT_USER_AGENT to reduce chance of detection,
+            // as otherwise 'HeadlessChrome' is present in User-Agent string.
+            const userAgent = launchOptions.args.find((arg: string) => arg.startsWith('--user-agent'));
+            if (launchOptions.headless && !launchContext.fingerprint && !userAgent) {
+                launchOptions.args.push(`--user-agent=${DEFAULT_USER_AGENT}`);
+            }
+        }
+
         return this._launch(launchContext);
     }
+
+    private _mergeArgsToHideWebdriver(originalArgs: string[]): string[] {
+        if (!originalArgs?.length) {
+            return ['--disable-blink-features=AutomationControlled'];
+        }
+
+        const argumentIndex = originalArgs.findIndex((arg: string) => arg.startsWith('--disable-blink-features='));
+
+        if (argumentIndex !== -1) {
+            originalArgs[argumentIndex] += ',AutomationControlled';
+        } else {
+            originalArgs.push('--disable-blink-features=AutomationControlled');
+        }
+
+        return originalArgs;
+    };
 
     /**
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars, max-len
+    // eslint-disable-next-line max-len
     protected abstract _addProxyToLaunchOptions(launchContext: LaunchContext<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>): Promise<void> {
         throwImplementationNeeded('_addProxyToLaunchOptions');
     }
 
+    // @ts-expect-error Give runtime error as well as compile time
+    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars, max-len
+    protected abstract _isChromiumBasedBrowser(launchContext: LaunchContext<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>): boolean {
+        throwImplementationNeeded('_isChromiumBasedBrowser');
+    }
+
     /**
      * @private
      */
     // @ts-expect-error Give runtime error as well as compile time
-    // eslint-disable-next-line space-before-function-paren, @typescript-eslint/no-unused-vars, max-len
     protected abstract _launch(launchContext: LaunchContext<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>): Promise<LaunchResult> {
         throwImplementationNeeded('_launch');
     }

@@ -23,6 +23,25 @@
 - removed compatibility fix for old/broken request queues with null Request props
 - `Actor.main/init` purges the storage by default
 
+2.3.3 / TBA
+====================
+- fix: update `purgeLocalStorage` utility method to mimic `purge` param of `apify run`
+
+2.3.2 / 2022/05/05
+====================
+- fix: use default user agent for playwright with chrome instead of the default "headless UA"
+- fix: always hide webdriver of chrome browsers
+
+2.3.1 / 2022/05/03
+====================
+- fix: `utils.apifyClient` early instantiation (#1330)
+- feat: `utils.playwright.injectJQuery()` (#1337)
+- feat: add `keyValueStore` option to `Statistics` class (#1345)
+- fix: ensure failed req count is correct when using `RequestList` (#1347)
+- fix: random puppeteer crawler (running in headful mode) failure (#1348)
+  > This should help with the `We either navigate top level or have old version of the navigated frame` bug in puppeteer.
+- fix: allow returning falsy values in `RequestTransform`'s return type
+
 2.3.0 / 2022/04/07
 ====================
 - feat: accept more social media patterns (#1286)
@@ -31,6 +50,12 @@
 - feat: requestList accepts proxyConfiguration for requestsFromUrls (#1317)
 - feat: update `playwright` to v1.20.2
 - feat: update `puppeteer` to v13.5.2
+  > We noticed that with this version of puppeteer actor run could crash with
+  > `We either navigate top level or have old version of the navigated frame` error
+  > (puppeteer issue [here](https://github.com/puppeteer/puppeteer/issues/7050)).
+  > It should not happen while running the browser in headless mode.
+  > In case you need to run the browser in headful mode (`headless: false`),
+  > we recommend pinning puppeteer version to `10.4.0` in actor `package.json` file.
 - feat: stealth deprecation (#1314)
 - feat: allow passing a stream to KeyValueStore.setRecord (#1325)
 - fix: use correct apify-client instance for snapshotting (#1308)
@@ -62,7 +87,6 @@ stuck requests in the `inProgress` cache.
 - fix: ensure `request.headers` is set
 - fix: lower `RequestQueue` API timeout to 30 seconds
 - improve logging for fetching next request and timeouts
-
 
 2.2.1 / 2022/01/03
 ====================
