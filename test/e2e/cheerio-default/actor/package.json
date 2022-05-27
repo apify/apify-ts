@@ -4,9 +4,12 @@
 	"description": "Cheerio Crawler Test - Default",
 	"dependencies": {
         "apify": "file:./packages/apify",
+        "@apify/storage-local": "^2.0.3-beta.5",
         "@crawlee/core": "file:./packages/core",
         "@crawlee/basic": "file:./packages/basic-crawler",
         "@crawlee/cheerio": "file:./packages/cheerio-crawler",
+        "@crawlee/memory-storage": "file:./packages/memory-storage",
+        "@crawlee/types": "file:./packages/types",
         "@crawlee/utils": "file:./packages/utils",
         "@crawlee/browser-pool": "file:./packages/browser-pool"
     },
