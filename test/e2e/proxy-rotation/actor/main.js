@@ -1,5 +1,11 @@
 import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
+import { ApifyStorageLocal } from '@apify/storage-local';
+
+const mainOptions = {
+    exit: Actor.isAtHome(),
+    storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined,
+};
 
 await Actor.main(async () => {
     const crawler = new PuppeteerCrawler({
@@ -25,4 +31,4 @@ await Actor.main(async () => {
         (_, i) => ({ url: 'https://api.apify.com/v2/browser-info', uniqueKey: `${i}` }),
     ));
     await crawler.run();
-}, { exit: false });
+}, mainOptions);

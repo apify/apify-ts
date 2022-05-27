@@ -2,7 +2,7 @@ import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
 import { ApifyStorageLocal } from '@apify/storage-local';
 
-const mainOpts = {
+const mainOptions = {
     exit: Actor.isAtHome(),
     storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined,
 };
@@ -22,4 +22,4 @@ await Actor.main(async () => {
 
     await crawler.addRequests(['https://apify.com']);
     await crawler.run();
-}, mainOpts);
+}, mainOptions);

@@ -4,11 +4,14 @@
 	"description": "Request Queue Test - Zero Concurrency",
 	"dependencies": {
         "apify": "file:./packages/apify",
-        "@crawlee/core": "file:./packages/core",
+        "@apify/storage-local": "^2.0.3-beta.5",
         "@crawlee/basic": "file:./packages/basic-crawler",
+        "@crawlee/browser-pool": "file:./packages/browser-pool",
         "@crawlee/cheerio": "file:./packages/cheerio-crawler",
-        "@crawlee/utils": "file:./packages/utils",
-        "@crawlee/browser-pool": "file:./packages/browser-pool"
+        "@crawlee/core": "file:./packages/core",
+        "@crawlee/memory-storage": "file:./packages/memory-storage",
+        "@crawlee/types": "file:./packages/types",
+        "@crawlee/utils": "file:./packages/utils"
     },
     "scripts": { "start": "node main.js" },
 	"type": "module",
