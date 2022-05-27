@@ -11,13 +11,31 @@ import {
     KeyValueStore,
     EventType,
 } from '@crawlee/basic';
+import express from 'express';
+import { Server } from 'http';
+import { AddressInfo } from 'net';
 import { Dictionary, sleep } from '@crawlee/utils';
 import { SingleStorageCase } from '../../shared/test-cases';
+import { startExpressAppPromise } from '../../shared/_helper';
 
 describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
     let logLevel: number;
     const localStorageEmulator = new Emulator();
     const events = Configuration.getGlobalConfig().getEventManager();
+
+    const HOSTNAME = '127.0.0.1';
+    let port: number;
+    let server: Server;
+    beforeAll(async () => {
+        const app = express();
+
+        app.get('/', (req, res) => {
+            res.send(`<html><head><title>Example Domain</title></head></html>`);
+        });
+
+        server = await startExpressAppPromise(app, 0);
+        port = (server.address() as AddressInfo).port;
+    });
 
     beforeAll(async () => {
         logLevel = log.getLevel();
@@ -25,12 +43,17 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
     });
 
     beforeEach(async () => {
+        jest.clearAllMocks();
         await localStorageEmulator.init();
     });
 
     afterAll(async () => {
         await localStorageEmulator.destroy();
         log.setLevel(logLevel);
+    });
+
+    afterAll(() => {
+        server.close();
     });
 
     test('should run in parallel thru all the requests', async () => {
@@ -553,7 +576,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         await crawler.run();
         expect(results).toHaveLength(1);
         expect(results[0].url).toEqual(url);
-        results[0].errorMessages.forEach((msg) => expect(msg).toMatch('handleRequestFunction timed out'));
+        results[0].errorMessages.forEach((msg) => expect(msg).toMatch('requestHandler timed out'));
     });
 
     test('limits handleRequestTimeoutSecs to a valid value', async () => {
@@ -575,6 +598,174 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         const maxSignedInteger = 2 ** 31 - 1;
         // @ts-expect-error Accessing private prop
         expect(crawler.requestHandlerTimeoutMillis).toBe(maxSignedInteger);
+    });
+
+    test('should not log stack trace for timeout errors by default', async () => {
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const crawler = new BasicCrawler({
+            requestList,
+            requestHandlerTimeoutSecs: 0.1,
+            maxRequestRetries: 3,
+            requestHandler: () => sleep(1e3),
+        });
+
+        // @ts-expect-error Overriding protected method
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
+        // @ts-expect-error Overriding protected method
+        const errorSpy = jest.spyOn(crawler.log, 'error');
+
+        await crawler.run();
+
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
+            expect(args[1]).toBeDefined();
+        }
+
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(false);
+            expect(args[1]).toBeDefined();
+        }
+    });
+
+    test('should log stack trace for non-timeout errors only when request will no longer be retried by default', async () => {
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const crawler = new BasicCrawler({
+            requestList,
+            maxRequestRetries: 3,
+            requestHandler: () => {
+                throw new Error('Other non-timeout error');
+            },
+        });
+
+        // @ts-expect-error Overriding protected method
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
+        // @ts-expect-error Overriding protected method
+        const errorSpy = jest.spyOn(crawler.log, 'error');
+
+        await crawler.run();
+
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.requestHandler/.test(args[0])).toBe(false);
+            expect(args[1]).toBeDefined();
+        }
+
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.requestHandler/.test(args[0])).toBe(true);
+            expect(args[1]).toBeDefined();
+        }
+    });
+
+    test('should log stack trace for timeout errors when verbose log is enabled', async () => {
+        log.setLevel(log.LEVELS.INFO);
+        process.env.CRAWLEE_VERBOSE_LOG = 'true';
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const crawler = new BasicCrawler({
+            requestList,
+            requestHandlerTimeoutSecs: 0.1,
+            maxRequestRetries: 3,
+            requestHandler: () => sleep(1e3),
+        });
+
+        // @ts-expect-error Overriding protected method
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
+        // @ts-expect-error Overriding protected method
+        const errorSpy = jest.spyOn(crawler.log, 'error');
+
+        await crawler.run();
+
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
+            expect(args[1]).toBeDefined();
+        }
+
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
+            expect(/requestHandler timed out after/.test(args[0])).toBe(true);
+            expect(/at Timeout\._onTimeout/.test(args[0])).toBe(true);
+            expect(args[1]).toBeDefined();
+        }
+
+        log.setLevel(log.LEVELS.OFF);
+        process.env.CRAWLEE_VERBOSE_LOG = undefined;
+    });
+
+    test('should log stack trace for non-timeout errors when verbose log is enabled', async () => {
+        log.setLevel(log.LEVELS.INFO);
+        process.env.CRAWLEE_VERBOSE_LOG = 'true';
+        const sources = [{ url: `http://${HOSTNAME}:${port}` }];
+        const requestList = await RequestList.open(null, sources);
+
+        const crawler = new BasicCrawler({
+            requestList,
+            maxRequestRetries: 3,
+            requestHandler: () => {
+                throw new Error('Other non-timeout error');
+            },
+        });
+
+        // @ts-expect-error Overriding protected method
+        const warningSpy = jest.spyOn(crawler.log, 'warning');
+        // @ts-expect-error Overriding protected method
+        const errorSpy = jest.spyOn(crawler.log, 'error');
+
+        await crawler.run();
+
+        expect(warningSpy.mock.calls.length).toBe(3);
+        for (const args of warningSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Reclaiming failed request back to the list or queue/.test(args[0])).toBe(true);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.requestHandler/.test(args[0])).toBe(true);
+            expect(args[1]).toBeDefined();
+        }
+
+        expect(errorSpy.mock.calls.length).toBe(1);
+        for (const args of errorSpy.mock.calls) {
+            expect(args.length).toBe(2);
+            expect(typeof args[0]).toBe('string');
+            expect(/Request failed and reached maximum retries/.test(args[0])).toBe(true);
+            expect(/Other non-timeout error/.test(args[0])).toBe(true);
+            expect(/at BasicCrawler\.requestHandler/.test(args[0])).toBe(true);
+            expect(args[1]).toBeDefined();
+        }
+
+        log.setLevel(log.LEVELS.OFF);
+        process.env.CRAWLEE_VERBOSE_LOG = undefined;
     });
 
     describe('Uses SessionPool', () => {

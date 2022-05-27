@@ -852,21 +852,16 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                         failed.push(request);
                     },
                 });
-                // @ts-expect-error accessing private method
-                const oldCall = crawler._throwOnBlockedRequest.bind(crawler);
-                // @ts-expect-error Overriding private method
-                crawler._throwOnBlockedRequest = (session, statusCode) => {
-                    sessions.push(session);
-                    return oldCall(session, statusCode);
-                };
                 await crawler.run();
 
+                expect(crawler.sessionPool.sessions.length).toBe(4);
                 // eslint-disable-next-line no-loop-func
-                sessions.forEach((session) => {
+                crawler.sessionPool.sessions.forEach((session) => {
                     // @ts-expect-error Accessing private prop
                     expect(session.errorScore).toBeGreaterThanOrEqual(session.maxErrorScore);
                 });
 
+                expect(failed.length).toBe(4);
                 // eslint-disable-next-line no-loop-func
                 failed.forEach((request) => {
                     expect(request.errorMessages[0].includes(`Request blocked - received ${code} status code`)).toBeTruthy();

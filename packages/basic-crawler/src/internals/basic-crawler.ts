@@ -1,5 +1,5 @@
 import defaultLog, { Log } from '@apify/log';
-import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
+import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import {
     AutoscaledPool,
@@ -219,7 +219,7 @@ export interface BasicCrawlerOptions<
 
     /**
      * Basic crawler will initialize the  {@link SessionPool} with the corresponding `sessionPoolOptions`.
-     * The session instance will be than available in the `handleRequestFunction`.
+     * The session instance will be than available in the `requestHandler`.
      */
     useSessionPool?: boolean;
 
@@ -277,7 +277,7 @@ export interface BasicCrawlerOptions<
  * // Crawl the URLs
  * const crawler = new BasicCrawler({
  *     requestList,
- *     handleRequestFunction: async ({ request }) => {
+ *     async requestHandler({ request }) {
  *         // 'request' contains an instance of the Request class
  *         // Here we simply fetch the HTML of the page and store it to a dataset
  *         const { body } = await gotScraping({
@@ -640,7 +640,7 @@ export class BasicCrawler<
                                 + 'invalid config. Make sure to use either RequestList.open() or the "stateKeyPrefix" option of RequestList '
                                 + 'constructor to ensure your crawling state is persisted through host migrations and restarts.');
                         } else {
-                            this.log.exception(err, 'An unexpected error occured when the crawler '
+                            this.log.exception(err, 'An unexpected error occurred when the crawler '
                                 + 'attempted to persist its request list\'s state.');
                         }
                     });
@@ -738,7 +738,7 @@ export class BasicCrawler<
             await addTimeoutToPromise(
                 () => this._runRequestHandler(crawlingContext),
                 this.requestHandlerTimeoutMillis,
-                `handleRequestFunction timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds (${request.id}).`,
+                `requestHandler timed out after ${this.requestHandlerTimeoutMillis / 1000} seconds (${request.id}).`,
             );
 
             await this._timeoutAndRetry(
@@ -817,7 +817,7 @@ export class BasicCrawler<
     }
 
     /**
-     * Handles errors thrown by user provided handleRequestFunction()
+     * Handles errors thrown by user provided requestHandler()
      */
     protected async _requestFunctionErrorHandler(
         error: Error,
@@ -831,10 +831,11 @@ export class BasicCrawler<
         if (shouldRetryRequest) {
             request.retryCount++;
             const { url, retryCount, id } = request;
-            this.log.exception(
-                error,
-                'handleRequestFunction failed, reclaiming failed request back to the list or queue',
-                { url, retryCount, id },
+            // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
+            // Thus, we print the full stack trace only when CRAWLEE_VERBOSE_LOG environment variable is set to true.
+            this.log.warning(
+                `Reclaiming failed request back to the list or queue. ${!process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack}`,
+                { id, url, retryCount },
             );
             await source.reclaimRequest(request);
         } else {
@@ -858,9 +859,11 @@ export class BasicCrawler<
             await this.failedRequestHandler(crawlingContext);
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
-            this.log.exception(
-                crawlingContext.error,
-                'Request failed and reached maximum retries',
+            this.log.error(
+                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && !process.env.CRAWLEE_VERBOSE_LOG
+                    ? crawlingContext.error.message
+                    : crawlingContext.error.stack
+                }`,
                 { id, url, method, uniqueKey },
             );
         }

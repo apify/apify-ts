@@ -91,13 +91,13 @@ const crawler = new PuppeteerCrawler({
 
  const crawler = new BasicCrawler({
     requestQueue,
-    // Allows access to proxyInfo object in handleRequestFunction
+    // Allows access to proxyInfo object in requestHandler
     proxyConfiguration,
     useSessionPool: true,
     sessionPoolOptions: {
         maxPoolSize: 100
     },
-    handleRequestFunction: async ({request, session, proxyInfo }) => {
+    async requestHandler({ request, session, proxyInfo }) {
         // To use the proxy IP session rotation logic, you must turn the proxy usage on.
         const proxyUrl = proxyInfo.url;
         const requestOptions = {
