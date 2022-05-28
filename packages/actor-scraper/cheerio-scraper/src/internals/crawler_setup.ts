@@ -301,7 +301,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // Enqueue more links if Pseudo URLs, a link selector and cheerio instance are available,
         // unless the user invoked the `skipLinks()` context function
         // or maxCrawlingDepth would be exceeded.
-        if (!state.skipLinks && $) await this._handleLinks(crawlingContext);
+        if (!state.skipLinks && !!$) await this._handleLinks(crawlingContext);
 
         // Save the `pageFunction`s result to the default dataset.
         await this._handleResult(request, response, pageFunctionResult as Dictionary);

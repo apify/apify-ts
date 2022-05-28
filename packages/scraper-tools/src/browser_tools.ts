@@ -48,7 +48,7 @@ export function getPropertyDescriptor(target: object, key: PropertyKey): Propert
  *
  * @param getters as TS will build all module methods as getters, we need to whitelist what are actual getters here
  */
-export async function createBrowserHandlesForObject<Instance extends object, Keys extends keyof Instance = keyof Instance>(
+export async function createBrowserHandlesForObject<Instance extends object, Keys extends keyof Instance & string = keyof Instance & string>(
     page: Page,
     instance: Instance, properties: readonly Keys[], getters: readonly PropertyKey[] = [],
 ) {
