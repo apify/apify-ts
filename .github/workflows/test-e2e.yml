@@ -1,4 +1,4 @@
-name: E2E tests (local)
+name: E2E tests
 
 on:
     workflow_dispatch:
@@ -11,6 +11,11 @@ jobs:
     build_and_test:
         name: Build & Test
         runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix:
+                storage: [ LOCAL, MEMORY, PLATFORM ]
 
         steps:
             -   name: Cancel Workflow Action
@@ -48,5 +53,7 @@ jobs:
             -   name: Build
                 run: npm run ci:build
 
-            -   name: Tests
+            -   name: Test with storage ${{ matrix.storage }}
                 run: npm run test:e2e
+                env:
+                    STORAGE_IMPLEMENTATION: ${{ matrix.storage }}

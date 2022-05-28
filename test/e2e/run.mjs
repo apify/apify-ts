@@ -26,6 +26,12 @@ process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
 process.env.STORAGE_IMPLEMENTATION ??= 'MEMORY';
 
 async function run() {
+    if (!['LOCAL', 'MEMORY', 'PLATFORM'].includes(process.env.STORAGE_IMPLEMENTATION)) {
+        throw new Error(`Unknown storage provided: '${process.env.STORAGE_IMPLEMENTATION}'`);
+    }
+
+    console.log(`Running E2E tests with storage implementation '${process.env.STORAGE_IMPLEMENTATION}'`);
+
     const paths = await readdir(basePath, { withFileTypes: true });
     const dirs = paths.filter((dirent) => dirent.isDirectory());
 
@@ -72,12 +78,11 @@ async function run() {
             }
 
             const took = (Date.now() - now) / 1000;
-            console.log(code === 0
-                ? `${colors.yellow(`[${dir.name}]`)} ${colors.green(`Test finished with status: success`)} ${colors.grey(`[took ${took}s]`)}`
-                : `${colors.yellow(`[${dir.name}]`)} ${colors.red(`Test finished with status: failure`)} ${colors.grey(`[took ${took}s]`)}`,
-            );
+            const status = code === 0 ? 'success' : 'failure';
+            const color = code === 0 ? 'green' : 'red';
+            console.log(`${colors.yellow(`[${dir.name}]`)} ${colors[color](`Test finished with status: ${status}`)} ${colors.grey(`[took ${took}s]`)}`);
 
-            if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY' || process.env.STORAGE_IMPLEMENTATION === 'LOCAL') {
+            if (['MEMORY', 'LOCAL'].includes(process.env.STORAGE_IMPLEMENTATION)) {
                 await clearStorage(`${basePath}/${dir.name}`);
             }
 
