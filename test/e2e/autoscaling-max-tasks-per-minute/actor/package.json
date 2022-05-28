@@ -4,9 +4,12 @@
 	"description": "Autoscaling Pool Test - Max Tasks per Minute",
 	"dependencies": {
         "apify": "file:./packages/apify",
+        "@apify/storage-local": "^2.0.3-beta.5",
         "@crawlee/basic": "file:./packages/basic-crawler",
         "@crawlee/browser-pool": "file:./packages/browser-pool",
         "@crawlee/core": "file:./packages/core",
+        "@crawlee/memory-storage": "file:./packages/memory-storage",
+        "@crawlee/types": "file:./packages/types",
         "@crawlee/utils": "file:./packages/utils"
     },
     "scripts": { "start": "node main.js" },

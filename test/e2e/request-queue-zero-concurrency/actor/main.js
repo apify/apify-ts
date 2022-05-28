@@ -1,9 +1,15 @@
 import { Actor } from 'apify';
 import { CheerioCrawler, log } from '@crawlee/cheerio';
+import { ApifyStorageLocal } from '@apify/storage-local';
 
 log.setLevel(log.LEVELS.DEBUG);
 
 process.env.CRAWLEE_INTERNAL_TIMEOUT = '30000';
+
+const mainOptions = {
+    exit: Actor.isAtHome(),
+    storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined,
+};
 
 // RequestQueue auto-reset when stuck with requests in progress
 await Actor.main(async () => {
@@ -22,4 +28,4 @@ await Actor.main(async () => {
     });
 
     await crawler.run();
-}, { exit: false });
+}, mainOptions);

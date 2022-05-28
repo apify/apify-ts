@@ -1,5 +1,6 @@
 import { Actor } from 'apify';
 import { CheerioCrawler, log, Request } from '@crawlee/cheerio';
+import { ApifyStorageLocal } from '@apify/storage-local';
 
 log.setLevel(log.LEVELS.DEBUG);
 
@@ -18,6 +19,11 @@ r2.userData = { xyz: { kjl: 'mno' } };
 const r3 = new Request({
     url: 'https://example.com/?q=3',
 });
+
+const mainOptions = {
+    exit: Actor.isAtHome(),
+    storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined,
+};
 
 // Persisting internal settings of `Request`.
 await Actor.main(async () => {
@@ -40,4 +46,4 @@ await Actor.main(async () => {
     await crawler.run();
 
     await Actor.pushData({ requestCounter, navigationCounter });
-}, { exit: false });
+}, mainOptions);

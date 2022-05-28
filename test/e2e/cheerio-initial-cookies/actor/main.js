@@ -1,5 +1,6 @@
 import { Actor } from 'apify';
 import { CheerioCrawler } from '@crawlee/cheerio';
+import { ApifyStorageLocal } from '@apify/storage-local';
 
 const initialCookies = [
     {
@@ -15,6 +16,11 @@ const initialCookies = [
         value: 'value market place',
     },
 ];
+
+const mainOptions = {
+    exit: Actor.isAtHome(),
+    storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined,
+};
 
 await Actor.main(async () => {
     const crawler = new CheerioCrawler({
@@ -44,4 +50,4 @@ await Actor.main(async () => {
 
     await crawler.addRequests(['https://api.apify.com/v2/browser-info']);
     await crawler.run();
-}, { exit: false });
+}, mainOptions);

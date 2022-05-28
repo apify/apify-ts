@@ -26,7 +26,10 @@ export const colors = {
  * @param {string} dirName
  */
 export function getStorage(dirName) {
-    return join(dirName, 'apify_storage');
+    let folderName;
+    if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') folderName = 'apify_storage';
+    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') folderName = 'memory_storage';
+    return join(dirName, folderName);
 }
 
 /**
@@ -60,14 +63,12 @@ export async function runActor(dirName, memory = 4096) {
     let stats;
     let datasetItems;
 
-    if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') {
+    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY' || process.env.STORAGE_IMPLEMENTATION === 'LOCAL') {
         await import(join(dirName, 'main.js'));
         await setTimeout(10);
         stats = await getStats(dirName);
         datasetItems = await getDatasetItems(dirName);
     }
-
-    // if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') {}
 
     if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') {
         await copyPackages(dirName);
@@ -116,6 +117,7 @@ async function copyPackages(dirName) {
     // Thus, test actors dependencies should be updated respectively.
 
     // We don't need to copy the following packages
+    delete dependencies['@apify/storage-local'];
     delete dependencies['deep-equal'];
     delete dependencies.puppeteer;
     delete dependencies.playwright;
@@ -143,7 +145,10 @@ export async function clearPackages(dirName) {
  * @param {string} dirName
  */
 export async function clearStorage(dirName) {
-    const destPackagesDir = join(dirName, 'actor', 'apify_storage');
+    let folderName;
+    if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') folderName = 'apify_storage';
+    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') folderName = 'memory_storage';
+    const destPackagesDir = join(dirName, 'actor', folderName);
     await fs.remove(destPackagesDir);
 }
 
@@ -191,15 +196,15 @@ export async function getDatasetItems(dirName) {
  * @param {string} dirName
  */
 export async function initialize(dirName) {
-    process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(dirName);
-    process.env.CRAWLEE_STORAGE_DIR = getStorage(dirName);
-    process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
-    process.env.APIFY_TOKEN ??= await getApifyToken();
-    process.env.APIFY_CONTAINER_URL ??= 'http://127.0.0.1';
-    process.env.APIFY_CONTAINER_PORT ??= '8000';
-
-    process.env.STORAGE_IMPLEMENTATION ??= 'LOCAL';
-
+    process.env.STORAGE_IMPLEMENTATION ??= 'MEMORY';
+    if (process.env.STORAGE_IMPLEMENTATION !== 'PLATFORM') {
+        process.env.APIFY_LOCAL_STORAGE_DIR = getStorage(dirName);
+        process.env.CRAWLEE_STORAGE_DIR = getStorage(dirName);
+        process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
+        process.env.APIFY_TOKEN ??= await getApifyToken();
+        process.env.APIFY_CONTAINER_URL ??= 'http://127.0.0.1';
+        process.env.APIFY_CONTAINER_PORT ??= '8000';
+    }
     console.log('[init] Storage directory:', process.env.APIFY_LOCAL_STORAGE_DIR);
 }
 
