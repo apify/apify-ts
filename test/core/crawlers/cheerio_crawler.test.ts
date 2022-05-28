@@ -37,7 +37,7 @@ const responseSamples = {
         + '<items>\n'
         + '<item>\n'
         + '    <url>https://apify.com</url>\n'
-        + '    <title>Web Scraping, Data Extraction and Automation &#xB7; Apify</title>\n'
+        + '    <title>Web Scraping, Data Extraction and Automation &#xb7; Apify</title>\n'
         + '</item>\n'
         + '</items>',
     image: fs.readFileSync(path.join(__dirname, 'data/apify.png')),
