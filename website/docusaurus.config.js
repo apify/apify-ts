@@ -64,9 +64,6 @@ module.exports = {
                         path: 'packages/utils',
                     },
                     {
-                        path: 'packages/storage',
-                    },
-                    {
                         path: 'packages/basic-crawler',
                     },
                     {
@@ -100,8 +97,8 @@ module.exports = {
             hideOnScroll: true,
             title: 'Apify',
             logo: {
-                src: 'img/apify_sdk.svg',
-                srcDark: 'img/apify_sdk_white.svg',
+                src: 'img/crawlee-light.svg',
+                srcDark: 'img/crawlee-dark.svg',
             },
             items: [
                 {
