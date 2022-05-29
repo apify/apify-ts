@@ -182,6 +182,10 @@ nav.navbar .dropdown__menu {
     height: 3rem;
 }
 
+h1#change-log {
+    display: none;
+}
+
 @media (min-width: 996px) and (max-width: 1250px) {
     .navbar__items--right a.icon {
         display: none;

@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [3.0.0](https://github.com/apify/apify-js/compare/v2.3.2...v3.0.0) (TBA)
+## [3.0.0](https://github.com/apify/apify-ts/compare/v2.3.2...master) (TBA)
 
 ### Features
 
@@ -35,12 +35,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * removed compatibility fix for old/broken request queues with null Request props
 * `Actor.main/init` purges the storage by default
 
-## [2.3.2](https://github.com/apify/apify-js/compare/v2.3.1...v2.3.2) (2022-05-05)
+## [2.3.2](https://github.com/apify/apify-ts/compare/v2.3.1...v2.3.2) (2022-05-05)
 
 * fix: use default user agent for playwright with chrome instead of the default "headless UA"
 * fix: always hide webdriver of chrome browsers
 
-## [2.3.1](https://github.com/apify/apify-js/compare/v2.3.0...v2.3.1) (2022-05-03)
+## [2.3.1](https://github.com/apify/apify-ts/compare/v2.3.0...v2.3.1) (2022-05-03)
 
 * fix: `utils.apifyClient` early instantiation (#1330)
 * feat: `utils.playwright.injectJQuery()` (#1337)
@@ -50,7 +50,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   > This should help with the `We either navigate top level or have old version of the navigated frame` bug in puppeteer.
 * fix: allow returning falsy values in `RequestTransform`'s return type
 
-## [2.3.0](https://github.com/apify/apify-js/compare/v2.2.2...v2.3.0) (2022-04-07)
+## [2.3.0](https://github.com/apify/apify-ts/compare/v2.2.2...v2.3.0) (2022-04-07)
 
 * feat: accept more social media patterns (#1286)
 * feat: add multiple click support to `enqueueLinksByClickingElements` (#1295)
@@ -91,13 +91,13 @@ this limit via `CRAWLEE_INTERNAL_TIMEOUT` env var.
 This should finally resolve the 0 concurrency bug, as it was always about
 stuck requests in the `inProgress` cache.
 
-## [2.2.2](https://github.com/apify/apify-js/compare/v2.2.1...v2.2.2) (2022-02-14)
+## [2.2.2](https://github.com/apify/apify-ts/compare/v2.2.1...v2.2.2) (2022-02-14)
 
 * fix: ensure `request.headers` is set
 * fix: lower `RequestQueue` API timeout to 30 seconds
 * improve logging for fetching next request and timeouts
 
-## [2.2.1](https://github.com/apify/apify-js/compare/v2.2.0...v2.2.1) (2022-01-03)
+## [2.2.1](https://github.com/apify/apify-ts/compare/v2.2.0...v2.2.1) (2022-01-03)
 
 * fix: ignore requests that are no longer in progress (#1258)
 * fix: do not use `tryCancel()` from inside sync callback (#1265)
@@ -105,7 +105,7 @@ stuck requests in the `inProgress` cache.
 * fix: wait when `body` is not available in `infiniteScroll()` from Puppeteer utils (#1238)
 * fix: expose logger classes on the `utils.log` instance (#1278)
 
-## [2.2.0](https://github.com/apify/apify-js/compare/v2.1.0...v2.2.0) (2021-12-17)
+## [2.2.0](https://github.com/apify/apify-ts/compare/v2.1.0...v2.2.0) (2021-12-17)
 
 ### Proxy per page
 
@@ -153,7 +153,7 @@ are now executed with a timeout with 3 additional retries before the task fails.
 * add timeouts with retries to `runTaskFunction()` (#1250)
 * automatically convert google spreadsheet URLs to CSV exports (#1255)
 
-## [2.1.0](https://github.com/apify/apify-js/compare/v2.0.7...v2.1.0) (2021-10-07)
+## [2.1.0](https://github.com/apify/apify-ts/compare/v2.0.7...v2.1.0) (2021-10-07)
 
 * automatically convert google docs share urls to csv download ones in request list (#1174)
 * use puppeteer emulating scrolls instead of `window.scrollBy` (#1170)
@@ -169,7 +169,7 @@ are now executed with a timeout with 3 additional retries before the task fails.
 * merge cookies from session with user provided ones (#1201), closes #1197
 * use `ApifyClient` v2 (full rewrite to TS)
 
-## [2.0.7](https://github.com/apify/apify-js/compare/v2.0.6...v2.0.7) (2021-09-08)
+## [2.0.7](https://github.com/apify/apify-ts/compare/v2.0.6...v2.0.7) (2021-09-08)
 
 * Fix casting of int/bool environment variables (e.g. `APIFY_LOCAL_STORAGE_ENABLE_WAL_MODE`), closes #956
 * Fix incognito pages and user data dir (#1145)
@@ -177,20 +177,20 @@ are now executed with a timeout with 3 additional retries before the task fails.
 * Use config instance in `sdk.openSessionPool()` (#1154)
 * Add a breaking callback to `infiniteScroll` (#1140)
 
-## [2.0.6](https://github.com/apify/apify-js/compare/v2.0.5...v2.0.6) (2021-08-27)
+## [2.0.6](https://github.com/apify/apify-ts/compare/v2.0.5...v2.0.6) (2021-08-27)
 
 * Fix deprecation messages logged from `ProxyConfiguration` and `CheerioCrawler`.
 * Update `got-scraping` to receive multiple improvements.
 
-## [2.0.5](https://github.com/apify/apify-js/compare/v2.0.4...v2.0.5) (2021-08-24)
+## [2.0.5](https://github.com/apify/apify-ts/compare/v2.0.4...v2.0.5) (2021-08-24)
 
 * Fix error handling in puppeteer crawler
 
-## [2.0.4](https://github.com/apify/apify-js/compare/v2.0.3...v2.0.4) (2021-08-23)
+## [2.0.4](https://github.com/apify/apify-ts/compare/v2.0.3...v2.0.4) (2021-08-23)
 
 * Use `sessionToken` with `got-scraping`
 
-## [2.0.3](https://github.com/apify/apify-js/compare/v2.0.2...v2.0.3) (2021-08-20)
+## [2.0.3](https://github.com/apify/apify-ts/compare/v2.0.2...v2.0.3) (2021-08-20)
 
 * **BREAKING IN EDGE CASES** * We removed `forceUrlEncoding` in `requestAsBrowser` because we found out that recent versions of the underlying HTTP client `got` already encode URLs
   and `forceUrlEncoding` could lead to weird behavior. We think of this as fixing a bug, so we're not bumping the major version.
@@ -199,15 +199,15 @@ are now executed with a timeout with 3 additional retries before the task fails.
 * Disable SSL validation on MITM proxie
 * Limit `handleRequestTimeoutMillis` to max valid value
 
-## [2.0.2](https://github.com/apify/apify-js/compare/v2.0.1...v2.0.2) (2021-08-12)
+## [2.0.2](https://github.com/apify/apify-ts/compare/v2.0.1...v2.0.2) (2021-08-12)
 
 * Fix serialization issues in `CheerioCrawler` caused by parser conflicts in recent versions of `cheerio`.
 
-## [2.0.1](https://github.com/apify/apify-js/compare/v2.0.0...v2.0.1) (2021-08-06)
+## [2.0.1](https://github.com/apify/apify-ts/compare/v2.0.0...v2.0.1) (2021-08-06)
 
 * Use `got-scraping` 2.0.1 until fully compatible.
 
-## [2.0.0](https://github.com/apify/apify-js/compare/v1.3.4...v2.0.0) (2021-08-05)
+## [2.0.0](https://github.com/apify/apify-ts/compare/v1.3.4...v2.0.0) (2021-08-05)
 
 * **BREAKING**: Require Node.js >=15.10.0 because HTTP2 support on lower Node.js versions is very buggy.
 * **BREAKING**: Bump `cheerio` to `1.0.0-rc.10` from `rc.3`. There were breaking changes in `cheerio` between the versions so this bump might be breaking for you as well.
