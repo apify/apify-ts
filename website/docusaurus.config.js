@@ -118,9 +118,10 @@ module.exports = {
                     to: 'api/core',
                     label: 'API reference',
                     position: 'left',
+                    activeBaseRegex: 'api/(?!core/changelog)',
                 },
                 {
-                    href: 'https://github.com/apify/apify-js/blob/master/CHANGELOG.md',
+                    to: 'api/core/changelog',
                     label: 'Changelog',
                     position: 'left',
                     className: 'changelog',
