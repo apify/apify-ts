@@ -27,10 +27,10 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
         if (proxyUrl && fingerprintCache?.has(proxyUrl)) {
             fingerprint = fingerprintCache.get(proxyUrl);
         } else if (proxyUrl) {
-            fingerprint = fingerprintGenerator.getFingerprint(fingerprintGeneratorFinalOptions).fingerprint;
+            fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions).fingerprint;
             fingerprintCache?.set(proxyUrl, fingerprint);
         } else {
-            fingerprint = fingerprintGenerator.getFingerprint(fingerprintGeneratorFinalOptions).fingerprint;
+            fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions).fingerprint;
         }
 
         launchContext.extend({ fingerprint });
@@ -38,7 +38,7 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
         if (useIncognitoPages) {
             return;
         }
-        const { userAgent, screen } = fingerprint;
+        const { userAgent, screen } = fingerprint!;
 
         launchOptions.userAgent = userAgent;
 

@@ -49,6 +49,8 @@
         "@apify/timeout": "^0.2.1",
         "@apify/log": "^1.2.0",
         "@crawlee/core": "^3.0.0",
+        "@crawlee/types": "^3.0.0",
+        "@crawlee/utils": "^3.0.0",
         "ow": "^0.28.1"
     }
 }

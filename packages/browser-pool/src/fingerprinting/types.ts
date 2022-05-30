@@ -13,7 +13,6 @@ export type FingerprintGeneratorOptions = {
     operatingSystems?: OperatingSystemsName[];
     devices?: DeviceCategory[];
     locales?: string[];
-
 }
 
 export const enum BrowserName {

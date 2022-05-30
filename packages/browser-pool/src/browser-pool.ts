@@ -4,8 +4,6 @@ import ow from 'ow';
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { Fingerprint, FingerprintInjector } from 'fingerprint-injector';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error no types for this package yet
 import FingerprintGenerator from 'fingerprint-generator';
 import QuickLRU from 'quick-lru';
 import { BrowserController } from './abstract-classes/browser-controller';

@@ -27,6 +27,7 @@ import {
     FinalStatistics,
 } from '@crawlee/core';
 import { Awaitable } from '@crawlee/utils';
+import { BatchAddRequestsResult } from '@crawlee/types';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
@@ -570,7 +571,7 @@ export class BasicCrawler<
      * @param requests The requests to add
      * @param options Options for the request queue
      */
-    async addRequests(requests: (string | Request | RequestOptions)[], options: RequestQueueOperationOptions = {}) {
+    async addRequests(requests: (string | Request | RequestOptions)[], options: RequestQueueOperationOptions = {}): Promise<BatchAddRequestsResult> {
         ow(requests, ow.array.ofType(ow.any(ow.string, ow.object.partialShape({
             url: ow.string,
             id: ow.undefined,
