@@ -20,9 +20,7 @@ const requestShape = s.object({
     handledAt: s.union(s.string, s.date.valid).optional,
 }).passthrough;
 
-const requestShapeWithoutId = requestShape.extend({
-    id: s.undefined,
-});
+const requestShapeWithoutId = requestShape.omit(['id']);
 
 const batchRequestShapeWithoutId = requestShapeWithoutId.array;
 
@@ -355,6 +353,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             entityType: 'requestQueues',
             entityDirectory: this.requestQueueDirectory,
             id: this.name ?? this.id,
+            writeMetadata: this.client.writeMetadata,
         });
     }
 
@@ -365,6 +364,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             entityType: 'requestQueues',
             entityDirectory: this.requestQueueDirectory,
             id: this.name ?? this.id,
+            writeMetadata: this.client.writeMetadata,
         });
     }
 

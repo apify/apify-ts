@@ -56,6 +56,7 @@ export class DatasetCollectionClient implements storage.DatasetCollectionClient 
             entityDirectory: newStore.datasetDirectory,
             id: datasetInfo.name ?? datasetInfo.id,
             data: datasetInfo,
+            writeMetadata: this.client.writeMetadata,
         });
 
         return datasetInfo;

@@ -56,6 +56,7 @@ export class RequestQueueCollectionClient implements storage.RequestQueueCollect
             entityDirectory: newStore.requestQueueDirectory,
             id: queueInfo.name ?? queueInfo.id,
             data: queueInfo,
+            writeMetadata: this.client.writeMetadata,
         });
 
         return queueInfo;

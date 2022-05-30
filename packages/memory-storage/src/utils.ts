@@ -87,6 +87,7 @@ interface MetadataUpdate<Type extends EntityType, DataType> {
     action: 'update-metadata';
     entityDirectory: string;
     data: DataType;
+    writeMetadata: boolean;
 }
 
 interface EntriesUpdate<Type extends EntityType, DataType> {
@@ -95,6 +96,7 @@ interface EntriesUpdate<Type extends EntityType, DataType> {
     action: 'update-entries';
     entityDirectory: string;
     data: DataType;
+    writeMetadata: boolean;
 }
 
 interface KeyValueStoreItemData {

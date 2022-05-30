@@ -56,6 +56,7 @@ export class KeyValueStoreCollectionClient implements storage.KeyValueStoreColle
             entityDirectory: newStore.keyValueStoreDirectory,
             id: kvStoreInfo.name ?? kvStoreInfo.id,
             data: kvStoreInfo,
+            writeMetadata: this.client.writeMetadata,
         });
 
         return kvStoreInfo;

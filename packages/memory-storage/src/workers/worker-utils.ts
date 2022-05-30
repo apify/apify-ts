@@ -26,6 +26,11 @@ async function updateMetadata(message: WorkerUpdateMetadataMessage) {
     const dir = message.entityDirectory;
     await ensureDir(dir);
 
+    // Skip writing the actual metadata file. This is done after ensuring the directory exists so we have the directory present
+    if (!message.writeMetadata) {
+        return;
+    }
+
     // Write the metadata to the file
     const filePath = resolve(dir, '__metadata__.json');
     await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
@@ -59,28 +64,33 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
             const { action, record } = message.data;
 
             const itemPath = resolve(dir, `${record.key}.${record.extension}`);
+            const itemMetadataPath = resolve(dir, `${record.key}.__metadata__.json`);
 
             switch (action) {
                 case 'delete':
-                    await rm(itemPath, { force: true, recursive: true });
+                    await rm(itemPath, { force: true });
+                    await rm(itemMetadataPath, { force: true });
                     break;
                 case 'set': {
-                    await rm(itemPath, { force: true, recursive: true });
+                    await rm(itemPath, { force: true });
+                    await rm(itemMetadataPath, { force: true });
 
-                    const metadataPath = resolve(dir, `${record.key}.__metadata__.json`);
+                    if (message.writeMetadata) {
+                        const metadataPath = itemMetadataPath;
 
-                    await writeFile(
-                        metadataPath,
-                        JSON.stringify(
-                            {
-                                key: record.key,
-                                contentType: record.contentType ?? 'unknown/no content type',
-                                extension: record.extension,
-                            },
-                            null,
-                            '\t',
-                        ),
-                    );
+                        await writeFile(
+                            metadataPath,
+                            JSON.stringify(
+                                {
+                                    key: record.key,
+                                    contentType: record.contentType ?? 'unknown/no content type',
+                                    extension: record.extension,
+                                },
+                                null,
+                                '\t',
+                            ),
+                        );
+                    }
 
                     await writeFile(itemPath, record.value);
 

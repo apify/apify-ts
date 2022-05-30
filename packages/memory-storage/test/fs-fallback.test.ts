@@ -30,7 +30,7 @@ describe('fallback to fs for reading', () => {
     });
 
     afterAll(async () => {
-        await rm(resolve(tmpLocation, '../'), { force: true, recursive: true });
+        await rm(tmpLocation, { force: true, recursive: true });
     });
 
     // POST INIT //
