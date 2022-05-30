@@ -275,6 +275,7 @@ export class KeyValueStoreClient extends BaseClient {
             entityType: 'keyValueStores',
             entityDirectory: existingStoreById.keyValueStoreDirectory,
             id: existingStoreById.name ?? existingStoreById.id,
+            writeMetadata: this.client.writeMetadata,
         });
     }
 
@@ -302,6 +303,7 @@ export class KeyValueStoreClient extends BaseClient {
                 entityType: 'keyValueStores',
                 entityDirectory: existingStoreById.keyValueStoreDirectory,
                 id: existingStoreById.name ?? existingStoreById.id,
+                writeMetadata: this.client.writeMetadata,
             });
         }
     }
@@ -331,6 +333,7 @@ export class KeyValueStoreClient extends BaseClient {
             entityType: 'keyValueStores',
             entityDirectory: this.keyValueStoreDirectory,
             id: this.name ?? this.id,
+            writeMetadata: this.client.writeMetadata,
         });
     }
 }

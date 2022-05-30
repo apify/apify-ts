@@ -121,7 +121,7 @@ export interface KeyValueStoreStats {
  */
 export interface KeyValueStoreCollectionClient {
     list(): Promise<PaginatedList<KeyValueStoreInfo>>;
-    getOrCreate(name: string): Promise<KeyValueStoreInfo>;
+    getOrCreate(name?: string): Promise<KeyValueStoreInfo>;
 }
 
 export interface KeyValueStoreRecord {

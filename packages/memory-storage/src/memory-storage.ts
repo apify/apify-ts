@@ -16,6 +16,11 @@ export interface MemoryStorageOptions {
      * @default process.env.CRAWLEE_STORAGE_DIR ?? './memory_storage'
      */
     localDataDirectory?: string;
+    /**
+     * Whether to also write optional metadata files when storing to disk.
+     * @default process.env.DEBUG?.includes('*') ?? process.env.DEBUG?.includes('crawlee:memory-storage') ?? false
+     */
+    writeMetadata?: boolean;
 }
 
 export class MemoryStorage implements storage.StorageClient {
@@ -23,6 +28,7 @@ export class MemoryStorage implements storage.StorageClient {
     readonly datasetsDirectory: string;
     readonly keyValueStoresDirectory: string;
     readonly requestQueuesDirectory: string;
+    readonly writeMetadata: boolean;
 
     readonly keyValueStoresHandled: KeyValueStoreClient[] = [];
     readonly datasetClientsHandled: DatasetClient[] = [];
@@ -31,12 +37,14 @@ export class MemoryStorage implements storage.StorageClient {
     constructor(options: MemoryStorageOptions = {}) {
         s.object({
             localDataDirectory: s.string.optional,
+            writeMetadata: s.boolean.optional,
         }).parse(options);
 
         this.localDataDirectory = options.localDataDirectory ?? process.env.CRAWLEE_STORAGE_DIR ?? './memory_storage';
         this.datasetsDirectory = resolve(this.localDataDirectory, 'datasets');
         this.keyValueStoresDirectory = resolve(this.localDataDirectory, 'key_value_stores');
         this.requestQueuesDirectory = resolve(this.localDataDirectory, 'request_queues');
+        this.writeMetadata = options.writeMetadata ?? process.env.DEBUG?.includes('*') ?? process.env.DEBUG?.includes('crawlee:memory-storage') ?? false;
 
         initWorkerIfNeeded();
     }

@@ -186,6 +186,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             entityType: 'datasets',
             entityDirectory: existingStoreById.datasetDirectory,
             id: existingStoreById.name ?? existingStoreById.id,
+            writeMetadata: this.client.writeMetadata,
         });
     }
 
@@ -257,6 +258,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             entityType: 'datasets',
             entityDirectory: this.datasetDirectory,
             id: this.name ?? this.id,
+            writeMetadata: this.client.writeMetadata,
         });
     }
 }
