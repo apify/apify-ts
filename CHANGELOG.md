@@ -10,10 +10,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * TS rewrite
 * monorepo split...
 
-### Bug Fixes
-
-* fix: update `purgeLocalStorage` utility method to mimic `purge` param of `apify run`
-
 ### BREAKING CHANGES
 
 * `Apify.call()` is now just a shortcut for running `ApifyClient.actor(actorId).call(input, options)`, while also taking the token inside env vars into account
@@ -34,6 +30,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `gotoFunction` and `gotoTimeoutSecs` are removed
 * removed compatibility fix for old/broken request queues with null Request props
 * `Actor.main/init` purges the storage by default
+* remove `purgeLocalStorage` helper, move purging to the storage class directly
+  * `StorageClient` interface now has optional `purge` method
+  * purging happens automatically via `Actor.init()` (you can opt out via `purge: false` in the options of `init/main` methods)
 
 ## [2.3.2](https://github.com/apify/apify-ts/compare/v2.3.1...v2.3.2) (2022-05-05)
 

@@ -20,7 +20,7 @@ import {
     StorageManager,
 } from '@crawlee/core';
 import type { StorageClient } from '@crawlee/types';
-import { Awaitable, Constructor, Dictionary, purgeLocalStorage, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
+import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
@@ -154,11 +154,6 @@ export class Actor {
         logSystemInfo();
         printOutdatedSdkWarning();
 
-        // purge the storage by default
-        if (options?.purge ?? true) {
-            await purgeLocalStorage();
-        }
-
         await this.eventManager.init();
 
         if (this.isAtHome()) {
@@ -167,6 +162,11 @@ export class Actor {
             this.config.useEventManager(this.eventManager);
         } else if (options.storage) {
             this.config.useStorageClient(options.storage);
+        }
+
+        // purge the storage by default
+        if (options?.purge ?? true) {
+            await this.config.getStorageClient().purge?.();
         }
     }
 
