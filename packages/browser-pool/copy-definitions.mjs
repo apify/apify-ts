@@ -3,7 +3,6 @@ import { join } from 'path';
 
 const files = [
     'puppeteer/puppeteer-proxy-per-page.d.ts',
-    'types.d.ts',
 ];
 
 for (const file of files) {
