@@ -55,6 +55,7 @@
         "@crawlee/browser-pool": "^3.0.0",
         "@crawlee/core": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
+        "jquery": "^3.6.0",
         "ow": "^0.28.1",
         "tough-cookie": "^4.0.0"
     },
