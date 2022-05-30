@@ -19,7 +19,7 @@ describe('writeMetadata option', () => {
 
         test('creating a data store should not write __metadata__.json file', async () => {
             const keyValueStore = await storage.keyValueStores().getOrCreate();
-            await setTimeout(10);
+            await setTimeout(50);
 
             const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStore.id}`));
 
@@ -31,7 +31,7 @@ describe('writeMetadata option', () => {
 
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
             await keyValueStore.setRecord({ key: 'owo', value: 'test' });
-            await setTimeout(10);
+            await setTimeout(50);
 
             const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`));
 
@@ -48,7 +48,7 @@ describe('writeMetadata option', () => {
 
         test('creating a data store should write __metadata__.json file', async () => {
             const keyValueStore = await storage.keyValueStores().getOrCreate();
-            await setTimeout(10);
+            await setTimeout(50);
 
             const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStore.id}`));
 
@@ -60,7 +60,7 @@ describe('writeMetadata option', () => {
 
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
             await keyValueStore.setRecord({ key: 'owo', value: 'test' });
-            await setTimeout(10);
+            await setTimeout(50);
 
             const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`));
 
