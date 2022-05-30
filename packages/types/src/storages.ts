@@ -300,5 +300,6 @@ export interface StorageClient {
     keyValueStore(id: string): KeyValueStoreClient;
     requestQueues(): RequestQueueCollectionClient;
     requestQueue(id: string, options?: RequestQueueOptions): RequestQueueClient;
+    purge?(): Promise<void>;
     stats?: { rateLimitErrors: number[] };
 }

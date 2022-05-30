@@ -1,7 +1,9 @@
 import type * as storage from '@crawlee/types';
 import { Dictionary } from '@crawlee/utils';
 import { s } from '@sapphire/shapeshift';
-import { resolve } from 'node:path';
+import { pathExists } from 'fs-extra';
+import { readdir, rm } from 'fs/promises';
+import { join, resolve } from 'path';
 import { DatasetClient } from './resource-clients/dataset';
 import { DatasetCollectionClient } from './resource-clients/dataset-collection';
 import { KeyValueStoreClient } from './resource-clients/key-value-store';
@@ -82,5 +84,41 @@ export class MemoryStorage implements storage.StorageClient {
         }).parse(options);
 
         return new RequestQueueClient({ id, baseStorageDirectory: this.requestQueuesDirectory, client: this, ...options });
+    }
+
+    /**
+     * Cleans up the default storage directories before the run starts:
+     *  - local directory containing the default dataset;
+     *  - all records from the default key-value store in the local directory, except for the "INPUT" key;
+     *  - local directory containing the default request queue.
+     */
+    async purge(): Promise<void> {
+        const defaultDatasetPath = resolve(this.datasetsDirectory, 'default');
+        await this.removeFiles(defaultDatasetPath);
+
+        const defaultKeyValueStorePath = resolve(this.keyValueStoresDirectory, 'default');
+        await this.removeFiles(defaultKeyValueStorePath);
+
+        const defaultRequestQueuePath = resolve(this.requestQueuesDirectory, 'default');
+        await this.removeFiles(defaultRequestQueuePath);
+    }
+
+    private async removeFiles(folder: string): Promise<void> {
+        const storagePathExists = await pathExists(folder);
+
+        if (storagePathExists) {
+            const direntNames = await readdir(folder);
+            const deletePromises = [];
+
+            for (const direntName of direntNames) {
+                const fileName = join(folder, direntName);
+
+                if (!fileName.match(/INPUT/)) {
+                    deletePromises.push(rm(fileName, { recursive: true, force: true }));
+                }
+            }
+
+            await Promise.all(deletePromises);
+        }
     }
 }
