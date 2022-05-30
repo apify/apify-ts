@@ -64,18 +64,19 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
             const { action, record } = message.data;
 
             const itemPath = resolve(dir, `${record.key}.${record.extension}`);
+            const itemMetadataPath = resolve(dir, `${record.key}.__metadata__.json`);
 
             switch (action) {
                 case 'delete':
                     await rm(itemPath, { force: true });
-                    await rm(resolve(dir, `${record.key}.__metadata__.json`), { force: true });
+                    await rm(itemMetadataPath, { force: true });
                     break;
                 case 'set': {
                     await rm(itemPath, { force: true });
-                    await rm(resolve(dir, `${record.key}.__metadata__.json`), { force: true });
+                    await rm(itemMetadataPath, { force: true });
 
                     if (message.writeMetadata) {
-                        const metadataPath = resolve(dir, `${record.key}.__metadata__.json`);
+                        const metadataPath = itemMetadataPath;
 
                         await writeFile(
                             metadataPath,
