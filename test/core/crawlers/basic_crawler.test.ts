@@ -926,8 +926,8 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
             const crawler = new BasicCrawler({
                 requestList,
-                async requestHandler(crawlingContext) {
-                    const response = await crawlingContext.sendRequest() as Response<string>;
+                async requestHandler({ sendRequest, request }) {
+                    const response = await sendRequest(request);
 
                     expect(response.statusCode).toBe(200);
                     expect(response.body.includes('Hello, world!')).toBe(true);
