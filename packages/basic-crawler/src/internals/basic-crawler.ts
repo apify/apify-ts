@@ -34,7 +34,7 @@ import ow, { ArgumentError } from 'ow';
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
     crawler: BasicCrawler;
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
-    sendRequest: (request: Request) => Promise<GotResponse<string>>;
+    sendRequest: (request?: Request) => Promise<GotResponse<string>>;
 }
 
 export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
@@ -733,7 +733,8 @@ export class BasicCrawler<
                     requestQueue: await this.getRequestQueue(),
                 });
             },
-            sendRequest: async (req: Request) => {
+            sendRequest: async (req?: Request) => {
+                req ??= request!;
                 return gotScraping({
                     url: req.url,
                     method: req.method,
