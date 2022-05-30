@@ -52,6 +52,7 @@
         "@apify/timeout": "^0.2.1",
         "@apify/utilities": "^1.2.8",
         "@crawlee/basic": "^3.0.0",
+        "@types/content-type": "^1.1.5",
         "content-type": "^1.0.4",
         "cheerio": "1.0.0-rc.11",
         "htmlparser2": "^8.0.1",
