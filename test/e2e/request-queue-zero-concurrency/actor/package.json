@@ -4,7 +4,7 @@
 	"description": "Request Queue Test - Zero Concurrency",
 	"dependencies": {
         "apify": "file:./packages/apify",
-        "@apify/storage-local": "^2.1.0-beta.0",
+        "@apify/storage-local": "^2.1.0",
         "@crawlee/basic": "file:./packages/basic-crawler",
         "@crawlee/browser-pool": "file:./packages/browser-pool",
         "@crawlee/cheerio": "file:./packages/cheerio-crawler",
