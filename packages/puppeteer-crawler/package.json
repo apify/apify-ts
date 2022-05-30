@@ -49,9 +49,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/log": "^1.2.0",
+        "@apify/log": "^1.2.3",
         "@crawlee/browser": "^3.0.0",
-        "jquery": "^3.6.0"
+        "@crawlee/types": "^3.0.0",
+        "@crawlee/utils": "^3.0.0",
+        "jquery": "^3.6.0",
+        "ow": "^0.28.1"
     },
     "peerDependencies": {
         "puppeteer": ">= 9.x <= 13.x"

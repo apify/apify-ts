@@ -1,4 +1,4 @@
-import os from 'os';
+import os from 'node:os';
 import log from '@apify/log';
 import { betterClearInterval, betterSetInterval } from '@apify/utilities';
 import { getMemoryInfo } from '@crawlee/utils';

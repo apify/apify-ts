@@ -49,14 +49,14 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/log": "^1.2.0",
-        "@crawlee/browser": "^3.0.0",
+        "@apify/log": "^1.2.3",
         "@apify/datastructures": "^1.0.1",
+        "@crawlee/browser": "^3.0.0",
         "@crawlee/browser-pool": "^3.0.0",
         "@crawlee/core": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
-        "tough-cookie": "^4.0.0",
-        "ow": "^0.28.1"
+        "ow": "^0.28.1",
+        "tough-cookie": "^4.0.0"
     },
     "peerDependencies": {
         "playwright": "^1.21.1"

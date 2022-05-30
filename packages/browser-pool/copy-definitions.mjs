@@ -1,5 +1,5 @@
-import { copyFileSync } from 'fs';
-import { join } from 'path';
+import { copyFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const files = [
     'puppeteer/puppeteer-proxy-per-page.d.ts',

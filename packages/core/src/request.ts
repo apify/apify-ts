@@ -1,7 +1,7 @@
 import { normalizeUrl } from '@apify/utilities';
-import crypto, { BinaryLike } from 'crypto';
+import crypto, { BinaryLike } from 'node:crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
-import util from 'util';
+import util from 'node:util';
 import { log as defaultLog } from './log';
 import { AllowedHttpMethods, keys } from './typedefs';
 

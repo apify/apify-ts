@@ -2,8 +2,8 @@ import ow from 'ow';
 import { pipeline as streamPipeline, Readable, Writable } from 'stream';
 import Chain from 'stream-chain';
 import StreamArray from 'stream-json/streamers/StreamArray';
-import util from 'util';
-import zlib from 'zlib';
+import util from 'node:util';
+import zlib from 'node:zlib';
 
 const pipeline = util.promisify(streamPipeline);
 

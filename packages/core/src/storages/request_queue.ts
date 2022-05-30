@@ -1,7 +1,7 @@
 import { REQUEST_QUEUE_HEAD_MAX_LIMIT } from '@apify/consts';
 import { ListDictionary, LruCache } from '@apify/datastructures';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
 import { StorageClient, RequestQueueClient, RequestQueueInfo, BatchAddRequestsResult } from '@crawlee/types';

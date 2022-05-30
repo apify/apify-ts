@@ -1,5 +1,5 @@
 import { Log } from '@apify/log';
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import ow from 'ow';
 import { Configuration } from '../configuration';
 import { log as defaultLog } from '../log';
