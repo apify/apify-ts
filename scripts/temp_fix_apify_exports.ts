@@ -1,4 +1,4 @@
-import { copyFileSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const target = resolve(process.cwd(), 'dist', 'index.d.ts');
