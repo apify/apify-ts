@@ -898,7 +898,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
     });
 
     describe('sendRequest', () => {
-        const server = http.createServer((request, response) => {
+        const httpServer = http.createServer((request, response) => {
             response.setHeader('content-type', 'text/html');
             response.end(`<!DOCTYPE html><html><head><title>foobar</title></head><body><p>Hello, world!</p></body></html>`);
         });
@@ -906,15 +906,15 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         let url: string;
 
         beforeAll((callback) => {
-            server.listen(0, () => {
-                url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`;
+            httpServer.listen(0, () => {
+                url = `http://127.0.0.1:${(httpServer.address() as AddressInfo).port}/`;
 
                 callback();
             });
         });
 
         afterAll((callback) => {
-            server.close(callback);
+            httpServer.close(callback);
         });
 
         test('works', async () => {
