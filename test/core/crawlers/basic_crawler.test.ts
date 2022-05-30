@@ -1,4 +1,4 @@
-import http from 'http';
+import http, { Server } from 'http';
 import { AddressInfo } from 'net';
 import log from '@apify/log';
 import {
@@ -14,8 +14,6 @@ import {
     EventType,
 } from '@crawlee/basic';
 import express from 'express';
-import { Server } from 'http';
-import { AddressInfo } from 'net';
 import { Dictionary, sleep } from '@crawlee/utils';
 import { Response } from 'got-scraping';
 import { SingleStorageCase } from '../../shared/test-cases';
