@@ -1,5 +1,5 @@
-import os from 'os';
-import fs from 'fs';
+import os from 'node:os';
+import fs from 'node:fs';
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
 import {

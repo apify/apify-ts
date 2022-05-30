@@ -48,7 +48,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@apify/log": "^1.2.0",
+		"@apify/log": "^1.2.3",
 		"@crawlee/types": "^3.0.0",
 		"@crawlee/utils": "^3.0.0",
 		"@sapphire/shapeshift": "^3.0.0",

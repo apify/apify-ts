@@ -1,4 +1,4 @@
-import { IncomingMessage } from 'http';
+import { IncomingMessage } from 'node:http';
 import { HTTPResponse } from 'puppeteer';
 import { Cookie } from 'tough-cookie';
 import { Dictionary } from '../typedefs';

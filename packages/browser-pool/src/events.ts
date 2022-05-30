@@ -9,4 +9,4 @@ export const enum BROWSER_POOL_EVENTS {
 
 export const enum BROWSER_CONTROLLER_EVENTS {
     BROWSER_CLOSED = 'browserClosed',
-};
+}
