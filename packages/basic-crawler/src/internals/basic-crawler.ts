@@ -745,6 +745,10 @@ export class BasicCrawler<
                     proxyUrl: crawlingContext.proxyInfo?.url,
                     sessionToken: session,
                     responseType: 'text',
+                    cookieJar: {
+                        getCookieString: (url: string) => session!.getCookieString(url),
+                        setCookie: (rawCookie: string, url: string) => session!.setCookie(rawCookie, url),
+                    },
                 } as OptionsOfTextResponseBody);
             },
         };

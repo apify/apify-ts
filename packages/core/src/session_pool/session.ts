@@ -336,6 +336,15 @@ export class Session {
     }
 
     /**
+     * Sets a cookie within this session for the specific URL.
+     * @param rawCookie
+     * @param url
+     */
+    setCookie(rawCookie: string, url: string): void {
+        this.cookieJar.setCookieSync(rawCookie, url);
+    }
+
+    /**
      * Transforms puppeteer cookie to tough-cookie.
      * @param puppeteerCookie Cookie from puppeteer `page.cookies` method.
      */
