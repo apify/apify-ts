@@ -28,11 +28,13 @@ import {
 } from '@crawlee/core';
 import { Awaitable } from '@crawlee/utils';
 import { BatchAddRequestsResult } from '@crawlee/types';
+import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
     crawler: BasicCrawler;
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    sendRequest: (request?: Request) => Promise<GotResponse<string>>;
 }
 
 export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
@@ -730,6 +732,25 @@ export class BasicCrawler<
                     ...enqueueOptions,
                     requestQueue: await this.getRequestQueue(),
                 });
+            },
+            sendRequest: async (req?: Request) => {
+                req ??= request!;
+                return gotScraping({
+                    url: req.url,
+                    method: req.method,
+                    body: req.payload,
+                    headers: req.headers,
+                    retry: {
+                        limit: 0,
+                    },
+                    proxyUrl: crawlingContext.proxyInfo?.url,
+                    sessionToken: session,
+                    responseType: 'text',
+                    cookieJar: {
+                        getCookieString: (url: string) => session!.getCookieString(url),
+                        setCookie: (rawCookie: string, url: string) => session!.setCookie(rawCookie, url),
+                    },
+                } as OptionsOfTextResponseBody);
             },
         };
 
