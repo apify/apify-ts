@@ -24,7 +24,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * some `AutoscaledPool` options are no longer available:
     * `cpuSnapshotIntervalSecs` and `memorySnapshotIntervalSecs` has been replaced with top level `systemInfoIntervalMillis` configuration
     * `maxUsedCpuRatio` has been moved to the top level configuration
-    * `ProxyConfiguration.newUrlFunction` can be async. `.newUrl()` and `.newProxyInfo()` now return promises.
+* `ProxyConfiguration.newUrlFunction` can be async. `.newUrl()` and `.newProxyInfo()` now return promises.
 * stealth mode has been removed in favour of fingerprints and fingerprints are now enabled by default
 * `prepareRequestFunction` and `postResponseFunction` options are removed, use navigation hooks instead
 * `gotoFunction` and `gotoTimeoutSecs` are removed
