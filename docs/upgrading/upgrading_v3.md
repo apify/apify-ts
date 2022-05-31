@@ -3,7 +3,7 @@ id: upgrading-to-v3
 title: Upgrading to v3
 ---
 
-This page summarizes the breaking changes between Crawlee (v3) and Apify SDK (v2). Crawlee is the spiritual successor to Apify SDK, so we decided to keep the versioning and release Crawlee as v3.
+This page summarizes most of the breaking changes between Crawlee (v3) and Apify SDK (v2). Crawlee is the spiritual successor to Apify SDK, so we decided to keep the versioning and release Crawlee as v3.
 
 ## Crawlee vs Apify SDK
 
@@ -64,7 +64,7 @@ Both Crawlee and Actor SDK are full TypeScript rewrite, so they include up-to-da
 }
 ```
 
-### Docker
+### Docker build
 
 For `Dockerfile` we recommend using multi-stage build so you don't install the dev dependencies like TypeScript in your final image:
 
@@ -104,6 +104,16 @@ CMD npm run start:prod
 
 Previously we had a magical `stealth` option in the puppeteer crawler that enabled several tricks aiming to mimic the real users as much as possible. While this worked to a certain degree, we decided to replace it with generated browser fingerprints.
 
+In case we don't want to have dynamic fingerprints, we can disable this behaviour via `useFingerprints` in `browserPoolOptions`:
+
+ ```ts
+const crawler = new PlaywrightCrawler({
+    browserPoolOptions: {
+        useFingerprints: false,
+    },
+});
+ ```
+
 ## Memory storage
 
 When we store some data or intermediate state (like the one `RequestQueue` holds), we now use `@crawlee/memory-storage` by default. It is an alternative to the `@apify/storage-local`, that stores the state inside memory (as opposed to SQLite database used by `@apify/storage-local`). While the state is stored in memory, it also dumps it to the file system so we can observe it, as well as respects the existing data stored in KeyValueStore (e.g. the `INPUT.json` file).
@@ -118,7 +128,7 @@ We can still use the `@apify/storage-local`, to do it, first install it pass it 
 import { Actor } from 'apify';
 import { ApifyStorageLocal } from '@apify/storage-local';
 
-const storage = new ApifyStorageLocal();
+const storage = new ApifyStorageLocal(/* options like `enableWalMode` belong here */);
 await Actor.init({ storage });
 ```
 
@@ -148,17 +158,38 @@ Some utilities previously available under `Apify.utils` namespace are now moved 
 
 ### Enqueuing links
 
-One common helper that received more attention is the `enqueueLinks`. It now offers 3 enqueuing strategies:
+One common helper that received more attention is the `enqueueLinks`. As mentioned above, it is context aware - we no longer need pass in the `requestQueue` or `page` arguments (or the cheerio handle `$`). In addition to that, it now offers 3 enqueuing strategies:
 
 * `EnqueueStrategy.All` (`'all'`): Matches any URLs found
-* `EnqueueStrategy.SameSubdomain` (`'same-subdomain'`) Matches any URLs that have the same subdomain as the base URL
+* `EnqueueStrategy.SameSubdomain` (`'same-subdomain'`) Matches any URLs that have the same subdomain as the base URL (default)
 * `EnqueueStrategy.SameHostname` (`'same-hostname'`) Matches any URLs that have the same hostname. For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of `https://example.com`.
+
+This means we can even call `enqueueLinks()` without any parameters. By default, it will go through all the links found on current page and filter only those targeting the same subdomain.
+
+Moreover, we can specify patterns the URL should match via globs:
+
+```ts
+const crawler = new PlaywrightCrawler({
+    async requestHandler({ enqueueLinks }) {
+        await enqueueLinks({
+            globs: ['https://apify.com/*/*'],
+            // we can also use `regexps` and `pseudoUrls` keys here
+        });
+    },
+});
+```
 
 ## `crawler.addRequests()`
 
-We can now add multiple requests in batches. The newly added `addRequests` method will handle everything for us. It enqueues the first 1000 requests and resolves, while continuing with the rest in the background. This means the crawling will start almost immediately (within few seconds at most), something previously possible only with a combination of `RequestQueue` and `RequestList`.
+We can now add multiple requests in batches. The newly added `addRequests` method will handle everything for us. It enqueues the first 1000 requests and resolves, while continuing with the rest in the background, again in a smaller 1000 items batches, so we don't fall into any API rate limits. This means the crawling will start almost immediately (within few seconds at most), something previously possible only with a combination of `RequestQueue` and `RequestList`.
 
-> **TODO** describe more in detail once we have it refactored to support batching of the API calls
+```ts
+// will resolve right after the initial batch of 1000 requests is added
+const result = await crawler.addRequests([/* many requests, can be even millions */]);
+
+// if we want to wait for all the requests to be added, we can await the `waitForAllRequestsToBeAdded` promise
+await result.waitForAllRequestsToBeAdded;
+```
 
 ## Handling requests outside of browser
 
@@ -168,35 +199,33 @@ One small feature worth mentioning is the ability to handle requests with browse
 
 ## Actor SDK
 
-> **TODO** describe more in detail
-
 The Apify platform helpers can be now found in the Actor SDK (`apify` NPM package). It exports the `Actor` class that offers following static helpers:
 
-* `Actor.addWebhook()`
-* `Actor.call()`
-* `Actor.callTask()`
-* `Actor.createProxyConfiguration()`
-* `Actor.exit()`
-* `Actor.fail()`
-* `Actor.getEnv()`
-* `Actor.getInput()`
-* `Actor.getValue()`
-* `Actor.init()`
-* `Actor.isAtHome()`
-* `Actor.main()`
-* `Actor.metamorph()`
-* `Actor.newClient()`
-* `Actor.off()`
-* `Actor.on()`
-* `Actor.openDataset()`
-* `Actor.openKeyValueStore()`
-* `Actor.openRequestList()`
-* `Actor.openRequestQueue()`
-* `Actor.pushData()`
-* `Actor.reboot()`
-* `Actor.setValue()`
+* `ApifyClient` shortcuts: `addWebhook()`, `call()`, `callTask()`, `metamorph()`
+* helpers for running on Apify platform: `init()`, `exit()`, `fail()`, `main()`, `isAtHome()`, `createProxyConfiguration()`
+* storage support: `getInput()`, `getValue()`, `openDataset()`, `openKeyValueStore()`, `openRequestList()`, `openRequestQueue()`, `pushData()`, `setValue()`
+* events support: `on()`, `off()`
+* other utilities: `getEnv()`, `newClient()`, `reboot()`
 
-`Actor.main` is now just a syntax sugar around calling `Actor.init()` at the beginning and `Actor.exit()` at the end. All those methods are async and should be awaited - with node 16 we can use the top level await for that.
+`Actor.main` is now just a syntax sugar around calling `Actor.init()` at the beginning and `Actor.exit()` at the end (plus wrapping the user function in try/catch block). All those methods are async and should be awaited - with node 16 we can use the top level await for that. In other words, following is equivalent:
+
+```ts
+import { Actor } from 'apify';
+
+await Actor.init();
+// your code
+await Actor.exit('Crawling finished!');
+```
+
+```ts
+import { Actor } from 'apify';
+
+await Actor.main(async () => {
+    // your code
+}, { statusMessage: 'Crawling finished!' });
+```
+
+`Actor.init()` will conditionally set the storage implementation of Crawlee to the `ApifyClient` when running on the Apify platform, or keep the default (memory storage) implementation otherwise. It will also subscribe to the websocket events (or mimic them locally). `Actor.exit()` will handle the tear down and calls `process.exit()` to ensure our process won't hang indefinitely for some reason.
 
 ### Smaller/internal breaking changes
 
