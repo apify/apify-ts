@@ -25,6 +25,10 @@ process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
  */
 process.env.STORAGE_IMPLEMENTATION ??= 'MEMORY';
 
+// If any of the tests failed - we want to exit with a non-zero code
+// so that the CI knows that e2e test suite has failed
+let failure = false;
+
 async function run() {
     if (!['LOCAL', 'MEMORY', 'PLATFORM'].includes(process.env.STORAGE_IMPLEMENTATION)) {
         throw new Error(`Unknown storage provided: '${process.env.STORAGE_IMPLEMENTATION}'`);
@@ -34,8 +38,6 @@ async function run() {
 
     const paths = await readdir(basePath, { withFileTypes: true });
     const dirs = paths.filter((dirent) => dirent.isDirectory());
-
-    let failure = false;
 
     for (const dir of dirs) {
         if (process.argv.length === 3 && dir.name !== process.argv[2]) {
@@ -96,12 +98,12 @@ async function run() {
         });
         await once(worker, 'exit');
     }
-    // We want to exit with non-zero code if any of the tests failed
-    if (failure) process.exit(1)
 }
 
 if (isMainThread) {
     await run();
+    // We want to exit with non-zero code if any of the tests failed
+    if (failure) process.exit(1)
 } else {
     await import(`${basePath}/${workerData}/test.mjs`);
 }
