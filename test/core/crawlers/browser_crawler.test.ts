@@ -7,7 +7,8 @@ import {
     BrowserCrawler,
     BrowserCrawlerHandleFailedRequestInput,
     BrowserCrawlingContext,
-    Configuration, ProxyConfiguration, ProxyInfo,
+    ProxyConfiguration,
+    ProxyInfo,
     PuppeteerCrawlingContext,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
@@ -575,7 +576,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             // @ts-expect-error FIXME
             const stub = gotScrapingSpy.mockImplementation(fakeCall);
             const proxyConfiguration = await Actor.createProxyConfiguration();
-            const generatedProxyUrl = new URL(await proxyConfiguration.newUrl()).href;
+            const generatedProxyUrl = new URL(await proxyConfiguration.newUrl()).href.slice(0, -1);
             let browserProxy;
 
             const browserCrawler = new BrowserCrawlerTest({
@@ -677,7 +678,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             // @ts-expect-error Accessing private property
             const proxiesToUse = proxyConfiguration.proxyUrls;
             for (const proxyUrl of proxiesToUse) {
-                expect(browserProxies.includes(new URL(proxyUrl).href)).toBeTruthy();
+                expect(browserProxies.includes(new URL(proxyUrl).href.slice(0, -1))).toBeTruthy();
             }
 
             delete process.env[ENV_VARS.PROXY_PASSWORD];
