@@ -3,7 +3,7 @@ import { initialize, getActorTestDir, runActor, expect } from '../tools.mjs';
 const testActorDirname = getActorTestDir(import.meta.url);
 await initialize(testActorDirname);
 
-const { stats, datasetItems } = await runActor(testActorDirname, 8192);
+const { stats, datasetItems } = await runActor(testActorDirname, 16384);
 
 await expect(stats.requestsFinished === 1, 'All requests finished');
 await expect(datasetItems[0].numberOfMatchingCookies === 3, 'Number of page cookies');
