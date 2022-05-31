@@ -1,4 +1,5 @@
 export * from './internals/cheerio';
+export * from './internals/chunk';
 export * from './internals/extract-urls';
 export * from './internals/general';
 export * from './internals/memory-info';

@@ -26,9 +26,9 @@ import {
     EventType,
     FinalStatistics,
 } from '@crawlee/core';
-import { Awaitable } from '@crawlee/utils';
-import { BatchAddRequestsResult } from '@crawlee/types';
 import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
+import { ProcessedRequest } from '@crawlee/types';
+import { Awaitable, sleep, chunk } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlerCrawlingContext extends CrawlingContext {
@@ -573,20 +573,71 @@ export class BasicCrawler<
      * @param requests The requests to add
      * @param options Options for the request queue
      */
-    async addRequests(requests: (string | Request | RequestOptions)[], options: RequestQueueOperationOptions = {}): Promise<BatchAddRequestsResult> {
+    async addRequests(requests: (string | Request | RequestOptions)[], options: CrawlerAddRequestsOptions = {}): Promise<CrawlerAddRequestsResult> {
         ow(requests, ow.array.ofType(ow.any(ow.string, ow.object.partialShape({
             url: ow.string,
             id: ow.undefined,
         }))));
         ow(options, ow.object.exactShape({
             forefront: ow.optional.boolean,
+            waitForAllRequestsToBeAdded: ow.optional.boolean,
         }));
 
         const requestQueue = await this.getRequestQueue();
-
         const builtRequests = createRequests(requests);
 
-        return requestQueue.addRequests(builtRequests);
+        const attemptToAddToQueueAndAddAnyUnprocessed = async (providedRequests: Request[]) => {
+            const resultsToReturn: ProcessedRequest[] = [];
+            const apiResult = await requestQueue.addRequests(providedRequests, { forefront: options.forefront });
+            resultsToReturn.push(...apiResult.processedRequests);
+
+            if (apiResult.unprocessedRequests.length) {
+                await sleep(1000);
+
+                resultsToReturn.push(...await attemptToAddToQueueAndAddAnyUnprocessed(
+                    providedRequests.filter((r) => !apiResult.processedRequests.some((pr) => pr.uniqueKey === r.uniqueKey)),
+                ));
+            }
+
+            return resultsToReturn;
+        };
+
+        const initialChunk = builtRequests.splice(0, 1000);
+
+        // Add initial batch of 1000 to process them right away
+        const addedRequests = await attemptToAddToQueueAndAddAnyUnprocessed(initialChunk);
+
+        // If we have no more requests to add, return early
+        if (!builtRequests.length) {
+            return {
+                addedRequests,
+                waitForAllRequestsToBeAdded: Promise.resolve([]),
+            };
+        }
+
+        // eslint-disable-next-line no-async-promise-executor
+        const promise = new Promise<ProcessedRequest[]>(async (resolve) => {
+            const chunks = chunk(builtRequests, 1000);
+            const finalAddedRequests: ProcessedRequest[] = [];
+
+            for (const requestChunk of chunks) {
+                finalAddedRequests.push(...await attemptToAddToQueueAndAddAnyUnprocessed(requestChunk));
+
+                await sleep(1000);
+            }
+
+            resolve(finalAddedRequests);
+        });
+
+        // If the user wants to wait for all the requests to be added, we wait for the promise to resolve for them
+        if (options.waitForAllRequestsToBeAdded) {
+            addedRequests.push(...await promise);
+        }
+
+        return {
+            addedRequests,
+            waitForAllRequestsToBeAdded: promise,
+        };
     }
 
     protected async _init(): Promise<void> {
@@ -967,6 +1018,33 @@ export interface CreateContextOptions {
     request: Request;
     session?: Session;
     proxyInfo?: ProxyInfo;
+}
+
+export interface CrawlerAddRequestsOptions extends RequestQueueOperationOptions {
+    /**
+     * Whether to wait for all the provided requests to be added, instead of waiting just for the initial batch of up to 1000.
+     *
+     * By default, this is set to `false`.
+     */
+    waitForAllRequestsToBeAdded?: boolean;
+}
+
+export interface CrawlerAddRequestsResult {
+    addedRequests: ProcessedRequest[];
+    /**
+     * A promise which will resolve with the rest of the requests that were added to the queue.
+     *
+     * @example
+     * ```ts
+     * // Assuming `requests` is a list of requests.
+     * const result = await crawler.addRequests(requests);
+     *
+     * // If you want to wait for the rest of the requests to be added with a condition, you can do so:
+     * // Alternatively, consider setting `waitForAllRequestsToBeAdded` to `true` in the options for `addRequests`.
+     * await result.waitForAllRequestsToBeAdded;
+     * ```
+     */
+    waitForAllRequestsToBeAdded: Promise<ProcessedRequest[]>;
 }
 
 interface HandlePropertyNameChangeData<New, Old> {
