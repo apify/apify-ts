@@ -2,10 +2,10 @@
 
 <!-- Mirror this part to src/index.js -->
 
-[![npm version](https://badge.fury.io/js/apify.svg)](https://www.npmjs.com/package/apify)
-[![Downloads](https://img.shields.io/npm/dm/apify.svg)](https://www.npmjs.com/package/apify)
+[![NPM dev version](https://img.shields.io/npm/v/@crawlee/core/next.svg)](https://www.npmjs.com/package/@crawlee/core)
+[![Downloads](https://img.shields.io/npm/dm/@crawlee/core.svg)](https://www.npmjs.com/package/@crawlee/core)
 [![Chat on discord](https://img.shields.io/discord/801163717915574323?label=discord)](https://discord.gg/jyEM2PRvMU)
-[![Build Status](https://github.com/apify/apify-js/actions/workflows/test-and-release.yml/badge.svg?branch=master)](https://github.com/apify/apify-js/actions/workflows/test-and-release.yml)
+[![Build Status](https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml/badge.svg?branch=master)](https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml)
 
 Apify SDK simplifies the development of web crawlers, scrapers, data extractors and web automation jobs.
 It provides tools to manage and automatically scale a pool of headless browsers,
