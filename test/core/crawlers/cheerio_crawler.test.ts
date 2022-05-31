@@ -8,7 +8,6 @@ import {
     CheerioFailedRequestHandlerInput,
     CheerioRequestHandler,
     CheerioRequestHandlerInputs,
-    Configuration,
     CrawlerExtension,
     mergeCookies,
     PrepareRequestInputs,
