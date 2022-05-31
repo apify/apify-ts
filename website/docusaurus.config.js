@@ -1,3 +1,4 @@
+/* eslint-disable global-require,import/no-extraneous-dependencies */
 const { createHref } = require('./tools/utils/createHref');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
 
@@ -95,7 +96,7 @@ module.exports = {
         },
         navbar: {
             hideOnScroll: true,
-            title: 'Apify',
+            title: 'Crawlee',
             logo: {
                 src: 'img/crawlee-light.svg',
                 srcDark: 'img/crawlee-dark.svg',
