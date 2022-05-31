@@ -35,6 +35,8 @@ async function run() {
     const paths = await readdir(basePath, { withFileTypes: true });
     const dirs = paths.filter((dirent) => dirent.isDirectory());
 
+    let failure = false;
+
     for (const dir of dirs) {
         if (process.argv.length === 3 && dir.name !== process.argv[2]) {
             continue;
@@ -89,9 +91,13 @@ async function run() {
             if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') {
                 await clearPackages(`${basePath}/${dir.name}`);
             }
+
+            if (status === 'failure') failure = true;
         });
         await once(worker, 'exit');
     }
+    // We want to exit with non-zero code if any of the tests failed
+    if (failure) process.exit(1)
 }
 
 if (isMainThread) {
