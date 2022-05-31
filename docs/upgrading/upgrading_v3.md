@@ -212,6 +212,18 @@ One small feature worth mentioning is the ability to handle requests with browse
 
 > **TODO** add example and link it from here
 
+## Logging
+
+Crawlee exports the default `log` instance directly as a named export. We also have a scoped `log` instance provided in the crawling context - this one will log messages prefixed with the crawler name and should be preferred for logging inside the request handler.
+
+```ts
+const crawler = new CheerioCrawler({
+    async requestHandler({ log, request }) {
+        log.info(`Opened ${request.loadedUrl}`);
+    },
+});
+```
+
 ## Actor SDK
 
 The Apify platform helpers can be now found in the Actor SDK (`apify` NPM package). It exports the `Actor` class that offers following static helpers:
