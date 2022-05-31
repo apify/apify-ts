@@ -9,7 +9,6 @@ const mainOptions = {
 
 await Actor.main(async () => {
     const crawler = new CheerioCrawler({
-        maxRequestsPerCrawl: 500,
         async requestHandler({ $, request }) {
             const { url, userData: { label } } = request;
 
@@ -41,9 +40,6 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests([
-        { url: 'https://apify.com/apify', userData: { label: 'START' } },
-        { url: 'https://apify.com/mshopik', userData: { label: 'START' } },
-    ]);
+    await crawler.addRequests([{ url: 'https://apify.com/apify', userData: { label: 'START' } }]);
     await crawler.run();
 }, mainOptions);
