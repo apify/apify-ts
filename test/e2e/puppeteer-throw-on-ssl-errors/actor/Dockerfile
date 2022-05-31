@@ -1,6 +1,7 @@
 FROM node:16 AS builder
 
-COPY . ./
+COPY /packages ./packages
+COPY /package*.json ./
 RUN npm --quiet set progress=false \
     && npm install --only=prod --no-optional
 
@@ -10,8 +11,8 @@ RUN rm -r node_modules
 COPY --from=builder /node_modules ./node_modules
 COPY --from=builder /packages ./packages
 COPY --from=builder /package*.json ./
-COPY --from=builder /apify.json ./
-COPY --from=builder /main.js ./
+COPY /apify.json ./
+COPY /main.js ./
 
 RUN echo "Installed NPM packages:" \
     && (npm list --only=prod --no-optional --all || true) \
