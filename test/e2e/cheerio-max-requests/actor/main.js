@@ -9,6 +9,7 @@ const mainOptions = {
 
 await Actor.main(async () => {
     const crawler = new CheerioCrawler({
+        maxRequestsPerCrawl: 10,
         async requestHandler({ $, request }) {
             const { url, userData: { label } } = request;
 

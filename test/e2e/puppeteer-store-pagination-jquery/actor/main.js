@@ -9,6 +9,7 @@ const mainOptions = {
 
 await Actor.main(async () => {
     const crawler = new PuppeteerCrawler({
+        maxRequestsPerCrawl: 10,
         preNavigationHooks: [({ session, request }, goToOptions) => {
             session?.setPuppeteerCookies([{ name: 'OptanonAlertBoxClosed', value: new Date().toISOString() }], request.url);
             goToOptions.waitUntil = ['networkidle2'];
