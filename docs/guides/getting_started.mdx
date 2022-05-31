@@ -3,7 +3,6 @@ id: getting-started
 title: Getting Started
 ---
 
-
 import ApiLink from '@site/src/components/ApiLink';
 
 Without the right tools, crawling and scraping the web can be difficult. At the very least, you need an HTTP client to make the necessary
@@ -28,7 +27,7 @@ environment and let's get into it.
 
 To run Crawlee on your own computer, you need to meet the following pre-requisites first:
 
-1. Have Node.js version 15.10 or higher installed.
+1. Have Node.js version 16.0 or higher installed.
  - Visit [Node.js website](https://nodejs.org/en/download/) to download or use
 [fnm](https://github.com/Schniz/fnm)
 2. Have NPM installed.
@@ -147,14 +146,14 @@ A representation of the pre-existing list is an instance of the <ApiLink to="cor
 
 `RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Requests` = "pages to crawl" to the crawlers. At least one of them always needs to be provided while setting up. You can also use both at the same time, if you wish.
 
-### The What - `handlePageFunction`
+### The What - `requestHandler`
 
-The `handlePageFunction` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
+The `requestHandler` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
 
-The `handlePageFunction` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
+The `requestHandler` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
 
-```js
-// The object received as a single argument by the handlePageFunction
+```ts
+// The object received as a single argument by the requestHandler
 {
     request: Request,
     autoscaledPool: AutoscaledPool
@@ -163,36 +162,39 @@ The `handlePageFunction` is provided by you, the user, and invoked automatically
 
 ### Putting it all together
 
-Enough theory! Let's put some of those hard-learned facts into practice. We learned above that we need `Requests` and a `handlePageFunction` to setup a crawler. We will also use the <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function. It's not mandatory, but it makes our life easier. We'll learn about it in detail later on.
+Enough theory! Let's put some of those hard-learned facts into practice. We learned above that we need `Requests` and a `requestHandler` to setup a crawler. We will also use the <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function. It's not mandatory, but it makes our life easier. We'll learn about it in detail later on.
 
 Let's start with something super easy. Visit a page, get its title and close. First of all we need to require Apify, to make all of its features available to us:
 
-```js
+```ts
 import { Actor } from 'apify';
 ```
 
 Easy, right? It really doesn't get much more difficult than that. For the purposes of this tutorial, we'll be scraping our own webpage [https://apify.com](https://apify.com). Now, to get there, we need a `Request` with the page's URL in one of our sources, `RequestList` or `RequestQueue`. Let's go with `RequestQueue` for now.
 
-```js
+```ts
 import { Actor } from 'apify';
+import { RequestQueue } from '@crawlee/cheerio';
 
 // This is how you use the Actor.main() function.
-Actor.main(async () => {
+await Actor.main(async () => {
     // First we create the request queue instance.
     const requestQueue = await RequestQueue.open();
     // And then we add a request to it.
-    await requestQueue.addRequest({ url: 'https://apify.com' });
+    await requestQueue.addRequests(['https://apify.com']);
 });
 ```
 
 > If you're not familiar with the `async` and `await` keywords used in the example, you should know that these are native syntax in modern JavaScript. You can
 > [learn more about them here](https://nikgrozev.com/2017/10/01/async-await/).
 
-The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `handlePageFunction`.
+The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `requestHandler`.
 
-```js
+```ts
+import { CheerioCrawlingContext } from '@crawlee/cheerio';
+
 // We'll define the function separately so it's more obvious.
-const handlePageFunction = async ({ request, $ }) => {
+const requestHandler: CheerioCrawlingContext = async ({ request, $ }) => {
     // This should look familiar if you ever worked with jQuery.
     // We're just getting the text content of the <title> HTML element.
     const title = $('title').text();
@@ -201,27 +203,47 @@ const handlePageFunction = async ({ request, $ }) => {
 };
 ```
 
-Wait, where did the `$` come from? Remember what we learned about the `handlePageFunction` earlier. It expects a plain `Object` as an argument that will always have a `request` property, but it will also have other properties, depending on the chosen crawler class. Well, `$` is a property provided by the `CheerioCrawler` class, which we'll set up right now.
+Wait, where did the `$` come from? Remember what we learned about the `requestHandler` earlier. It expects a plain `Object` as an argument that will always have a `request` property, but it will also have other properties, depending on the chosen crawler class. Well, `$` is a property provided by the `CheerioCrawler` class, which we'll set up right now.
 
-```js
+```ts
 import { Actor } from 'apify';
+import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
 
-Actor.main(async () => {
+await Actor.main(async () => {
     const requestQueue = await RequestQueue.open();
-    await requestQueue.addRequest({ url: 'https://apify.com' });
+    await requestQueue.addRequests(['https://apify.com']);
 
-    const handlePageFunction = async ({ request, $ }) => {
+    const requestHandler: CheerioCrawlingContext = async ({ request, $ }) => {
         const title = $('title').text();
-
         console.log(`The title of "${request.url}" is: ${title}.`);
     };
 
     // Set up the crawler, passing a single options object as an argument.
     const crawler = new CheerioCrawler({
         requestQueue,
-        handlePageFunction,
+        requestHandler,
     });
 
+    await crawler.run();
+});
+```
+
+That starts to look almost good. Almost? Yes, we can do even better! Since v3, the crawler has an implicit `RequestQueue` instance, so we can save ourselves from all the `RequestQueue` related code and just use `crawler.addRequests()` method. We can also move the `requestHandler` method definition directly to the crawler options, this way we get type inference for free:
+
+```ts
+import { Actor } from 'apify';
+import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
+
+await Actor.main(async () => {
+    // Set up the crawler, passing a single options object as an argument.
+    const crawler = new CheerioCrawler({
+        async requestHandler({ request, $ }) {
+            const title = $('title').text();
+            console.log(`The title of "${request.url}" is: ${title}.`);
+        },
+    });
+
+    await crawler.addRequests(['https://apify.com']);
     await crawler.run();
 });
 ```
@@ -250,7 +272,7 @@ manipulation of the page's HTML, but in scraping, we will mostly use it to find 
 
 Example use of Cheerio and its `$` function in comparison to browser JavaScript:
 
-```js
+```ts
 // Return the text content of the <title> element.
 document.querySelector('title').textContent; // plain JS
 $('title').text(); // Cheerio
@@ -299,25 +321,20 @@ letting it truly crawl the page, finding new links as it goes, enqueuing them in
 Just to refresh your memory, in the previous section we built a very simple crawler that downloads the HTML of a single page, reads its title and prints
 it to the console. This is the original source code:
 
-```js
+```ts
 import { Actor } from 'apify';
+import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
 
-Actor.main(async () => {
-    const requestQueue = await RequestQueue.open();
-    await requestQueue.addRequest({ url: 'https://apify.com' });
-
-    const handlePageFunction = async ({ request, $ }) => {
-        const title = $('title').text();
-
-        console.log(`The title of "${request.url}" is: ${title}.`);
-    };
-
+await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
     const crawler = new CheerioCrawler({
-        requestQueue,
-        handlePageFunction,
+        async requestHandler({ request, $ }) {
+            const title = $('title').text();
+            console.log(`The title of "${request.url}" is: ${title}.`);
+        },
     });
 
+    await crawler.addRequests(['https://apify.com']);
     await crawler.run();
 });
 ```
@@ -337,7 +354,7 @@ There are numerous approaches to finding links to follow when crawling the web. 
 the `href` attribute. For example `<a href="https://apify.com/store">This is a link to Apify Store</a>`. To do this, we need to update our Cheerio
 function.
 
-```js
+```ts
 const links = $('a[href]')
     .map((i, el) => $(el).attr('href'))
     .get();
@@ -348,7 +365,7 @@ we will use one of Node.js' standard libraries to do this.
 
 Apify exposes two URL properties: <ApiLink to="core/class/Request#url">`request.url`</ApiLink> and <ApiLink to="core/class/Request#loadedUrl">`request.loadedUrl`</ApiLink>. What's the difference? Well, `request.url` is the URL of the first request. In case of redirects, the URL changes. The final one is stored as `request.loadedUrl`.
 
-```js
+```ts
 // At the top of the file:
 import { URL } from 'url';
 
@@ -366,7 +383,7 @@ keep the ones that lead to the same domain.
 
 > Don't worry, we'll learn how to do this with a single function call using Apify in a few moments.
 
-```js
+```ts
 // At the top of the file:
 import { URL } from 'url';
 
@@ -386,7 +403,7 @@ const sameDomainLinks = absoluteUrls.filter(url => url.hostname.endsWith(hostnam
 
 This includes subdomains. In order to filter the same origin, simply compare the `url.origin` property instead:
 
-```js
+```ts
 const { origin } = new URL(request.loadedUrl);
 const absoluteUrls = links.map(link => new URL(link, request.loadedUrl));
 
@@ -400,7 +417,7 @@ const sameDomainLinks = absoluteUrls.filter(url => url.origin === origin);
 This should be easy, because we already did that [earlier](#putting-it-all-together), remember? Just call `requestQueue.addRequest()` for all the new
 links. This will add them to the end of the queue for processing.
 
-```js
+```ts
 // At the top of the file:
 import { URL } from 'url';
 
@@ -428,8 +445,8 @@ for (const url of sameDomainLinks) {
 #### Scrape the newly enqueued links
 
 And we're approching the finishing line. All we need to do now is integrate the new code into our original crawler. It will be easy, because
-almost everything needs to go into the `handlePageFunction`. But just before we do that, let's introduce the first crawler configuration option that
-is not a `handlePageFunction` or `requestQueue`. It's called `maxRequestsPerCrawl`.
+almost everything needs to go into the `requestHandler`. But just before we do that, let's introduce the first crawler configuration option that
+is not a `requestHandler` or `requestQueue`. It's called `maxRequestsPerCrawl`.
 
 ##### The `maxRequestsPerCrawl` limit
 
@@ -437,11 +454,10 @@ This configuration option is available in all crawler classes and you can use it
 very useful when you're just testing your code or when your crawler could potentially crawl millions of pages and you want to save resources. You can
 add it to the crawler options like this:
 
-```js
+```ts
 const crawler = new CheerioCrawler({
     maxRequestsPerCrawl: 20,
-    requestQueue,
-    handlePageFunction,
+    requestHandler,
 });
 ```
 
@@ -451,40 +467,35 @@ will be allowed to finish too.
 
 #### Putting it all together
 
-```js
+```ts
 import { URL } from 'url'; // <------ This is new.
 import { Actor } from 'apify';
+import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
 
-Actor.main(async () => {
-    const requestQueue = await RequestQueue.open();
-    await requestQueue.addRequest({ url: 'https://apify.com' });
-
-    const handlePageFunction = async ({ request, $ }) => {
-        const title = $('title').text();
-        console.log(`The title of "${request.url}" is: ${title}.`);
-
-        // Here starts the new part of handlePageFunction.
-        const links = $('a[href]')
-            .map((i, el) => $(el).attr('href'))
-            .get();
-
-        const { origin } = new URL(request.loadedUrl);
-        const absoluteUrls = links.map(link => new URL(link, request.loadedUrl));
-
-        const sameDomainLinks = absoluteUrls.filter(url => url.origin === origin);
-
-        console.log(`Enqueueing ${sameDomainLinks.length} URLs.`);
-        for (const url of sameDomainLinks) {
-            await requestQueue.addRequest({ url: url.href });
-        }
-    };
-
+await Actor.main(async () => {
+    // Set up the crawler, passing a single options object as an argument.
     const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 20, // <------ This is new too.
-        requestQueue,
-        handlePageFunction,
+        async requestHandler({ request, $ }) {
+            const title = $('title').text();
+            console.log(`The title of "${request.url}" is: ${title}.`);
+
+            // Here starts the new part of requestHandler.
+            const links = $('a[href]')
+                .map((i, el) => $(el).attr('href'))
+                .get();
+
+            const { origin } = new URL(request.loadedUrl);
+            const absoluteUrls = links.map(link => new URL(link, request.loadedUrl));
+
+            const sameDomainLinks = absoluteUrls.filter(url => url.origin === origin).map(url => ({ url: url.href} ));
+
+            console.log(`Enqueueing ${sameDomainLinks.length} URLs.`);
+            await crawler.addRequests();
+        },
     });
 
+    await crawler.addRequests(['https://apify.com']);
     await crawler.run();
 });
 ```
@@ -520,7 +531,7 @@ Since enqueuing new links to crawl is such an integral part of web crawling, we 
 
 We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of the `utils` object, so you don't have to type `Actor.utils` all the time.
 
-```js
+```ts
 import { Actor } from 'apify';
 const {
     utils: { enqueueLinks },
@@ -543,9 +554,9 @@ We found that the crawler needed to do these 4 things to crawl `apify.com`:
 3. Enqueue them to the `RequestQueue`
 4. Scrape the newly enqueued links
 
-Using `enqueueLinks()` we can squash the first 3 into a single function call, if we set the options correctly. For now, let's just stick to the basics. At the very least, we need a source where to find the links and the queue to enqueue them to. The `$` Cheerio object is one of the sources the function accepts, and we already know how to work with it in the `handlePageFunction`. We also know how to get a `requestQueue` instance.
+Using `enqueueLinks()` we can squash the first 3 into a single function call, if we set the options correctly. For now, let's just stick to the basics. At the very least, we need a source where to find the links and the queue to enqueue them to. The `$` Cheerio object is one of the sources the function accepts, and we already know how to work with it in the `requestHandler`. We also know how to get a `requestQueue` instance.
 
-```js
+```ts
 // Assuming previous existence of the '$' and 'requestQueue' variables.
 await enqueueLinks({ $, requestQueue });
 ```
@@ -633,7 +644,7 @@ That's been quite a lot of theory and examples. We might as well put it to pract
 
 The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. <ApiLink to="utils#enqueueLinks">See the reference</ApiLink> for all of them. Since we just need to filter out same domain links, we'll keep it simple and use a pseudo-URL `string`.
 
-```js
+```ts
 // Assuming previous existence of the '$' and 'requestQueue' variables.
 const options = {
     $,
@@ -670,7 +681,7 @@ Browsers handle this automatically, but since we're only using plain HTTP reques
 relative links to the absolute ones, so we can use them for scraping. This is where the `request.loadedUrl` comes into play, because it returns the
 correct URL to use as `baseUrl`.
 
-```js
+```ts
 // Assuming previous existence of the '$', 'requestQueue' and 'request' variables.
 const options = {
     $,
@@ -690,19 +701,17 @@ await enqueueLinks(options);
 That was fairly easy, wasn't it. That ticks number 2 off our list and we're done! Let's take a look at the original crawler code, where we
 enqueued all the links manually.
 
-```js
+```ts
 import { URL } from 'url'; // <------ This is new.
 import { Actor } from 'apify';
+import { CheerioCrawler } from '@crawlee/cheerio';
 
-Actor.main(async () => {
-    const requestQueue = await RequestQueue.open();
-    await requestQueue.addRequest({ url: 'https://apify.com' });
-
-    const handlePageFunction = async ({ request, $ }) => {
+await Actor.main(async () => {
+    const requestHandler = async ({ request, $ }) => {
         const title = $('title').text();
         console.log(`The title of "${request.url}" is: ${title}.`);
 
-        // Here starts the new part of handlePageFunction.
+        // Here starts the new part of requestHandler.
         const links = $('a[href]')
             .map((i, el) => $(el).attr('href'))
             .get();
@@ -720,8 +729,7 @@ Actor.main(async () => {
 
     const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 20, // <------ This is new too.
-        requestQueue,
-        handlePageFunction,
+        requestHandler,
     });
 
     await crawler.run();
@@ -730,36 +738,27 @@ Actor.main(async () => {
 
 Since we've already prepared the `enqueueLinks()` options, we can just replace all the above enqueuing logic with a single function call, as promised.
 
-```js
+```ts
 import { Actor } from 'apify';
-const {
-    utils: { enqueueLinks },
-} = Apify;
+import { CheerioCrawler, CheerioCrawlingContext } from '@crawlee/cheerio';
 
-Actor.main(async () => {
-    const requestQueue = await RequestQueue.open();
-    await requestQueue.addRequest({ url: 'https://apify.com' });
-
-    const handlePageFunction = async ({ request, $ }) => {
+await Actor.main(async () => {
+    const requestHandler: CheerioCrawlingContext = async ({ request, $, enqueueLinks }) => {
         const title = $('title').text();
         console.log(`The title of "${request.url}" is: ${title}.`);
 
         // Enqueue links
         const enqueued = await enqueueLinks({
-            $,
-            requestQueue,
             pseudoUrls: ['http[s?]://apify.com[.*]'],
-            baseUrl: request.loadedUrl,
         });
         console.log(`Enqueued ${enqueued.length} URLs.`);
     };
 
     const crawler = new CheerioCrawler({
         maxRequestsPerCrawl: 20,
-        requestQueue,
-        handlePageFunction,
+        requestHandler,
     });
-
+    await crawler.addRequests(['https://apify.com']);
     await crawler.run();
 });
 ```
@@ -881,7 +880,7 @@ should be fairly easy. Nevertheless, there are two more tricks that we'd like to
 `RequestList` is a perfect tool for scraping a pre-existing list of URLs and if you think about our start URLs, this is exactly what we have! A list
 of links to the different categories of the store. Let's see how we'd get them into a `RequestList`.
 
-```js
+```ts
 const sources = [
     'https://apify.com/store?category=TRAVEL',
     'https://apify.com/store?category=ECOMMERCE',
@@ -908,11 +907,11 @@ The answer to the first one is a definitive no. `RequestList` is immutable and o
 answer to the second one is simple. `RequestList` and `RequestQueue` are made to work together out of the box in crawlers, so all you need to do is
 use them both and the crawlers will do the rest.
 
-```js
+```ts
 const crawler = new CheerioCrawler({
     requestList,
     requestQueue,
-    handlePageFunction,
+    requestHandler,
 });
 ```
 
@@ -930,10 +929,10 @@ Let's use our newly acquired `RequestList` knowledge and everything we know from
 the category URLs we selected and print the text content of all the actors in the category. Try running the code below in your selected environment.
 You should see, albeit very badly formatted, the text of the individual actor cards that are displayed in the selected categories.
 
-```js
+```ts
 import { Actor } from 'apify';
 
-Actor.main(async () => {
+await Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
@@ -944,7 +943,7 @@ Actor.main(async () => {
 
     const crawler = new CheerioCrawler({
         requestList,
-        handlePageFunction: async ({ $, request }) => {
+        requestHandler: async ({ $, request }) => {
             // Select all the actor cards.
             $('.item').each((i, el) => {
                 const text = $(el).text();
@@ -995,7 +994,7 @@ those just happen to be the actor cards only.
 
 It's always a good idea to double check that though, so go into the DevTools Console and run
 
-```js
+```ts
 document.querySelectorAll('.item');
 ```
 
@@ -1005,7 +1004,7 @@ You will see that only the actor cards will be returned, and nothing else.
 
 In the previous chapter, we used the `Actor.utils.enqueueLinks()` function like this:
 
-```js
+```ts
 await enqueueLinks({
     $,
     requestQueue,
@@ -1018,8 +1017,8 @@ While very useful in that scenario, we need something different now. Instead of 
 need to find only the specific ones that will take us to the actor detail pages. Otherwise, we'd be visiting a lot of other pages that we're not
 interested in. Using the power of DevTools and yet another `enqueueLinks()` parameter, this becomes fairly easy.
 
-```js
-const handlePageFunction = async ({ $, request }) => {
+```ts
+const requestHandler = async ({ $, request }) => {
     console.log(`Processing ${request.url}`);
 
     // Only enqueue new links from the category pages.
@@ -1038,7 +1037,7 @@ const handlePageFunction = async ({ $, request }) => {
 };
 ```
 
-The code should look pretty familiar to you. It's a very simple `handlePageFunction` where we log the currently processed URL to the console and
+The code should look pretty familiar to you. It's a very simple `requestHandler` where we log the currently processed URL to the console and
 enqueue more links. But there are also a few new, interesting additions. Let's break it down.
 
 ##### The `selector` parameter of `enqueueLinks()`
@@ -1070,10 +1069,10 @@ It's always good to work step by step. We have this new enqueueing logic in plac
 with a `RequestList`, because we were not enqueueing anything, don't forget to add back the `RequestQueue` and `maxRequestsPerCrawl` limit. Let's
 test it out!
 
-```js
+```ts
 import { Actor } from 'apify';
 
-Actor.main(async () => {
+await Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
@@ -1087,7 +1086,7 @@ Actor.main(async () => {
         maxRequestsPerCrawl: 50, // <----------------------------------------
         requestList,
         requestQueue, // <---------------------------------------------------
-        handlePageFunction: async ({ $, request }) => {
+        requestHandler: async ({ $, request }) => {
             console.log(`Processing ${request.url}`);
 
             // Only enqueue new links from the category pages.
@@ -1110,7 +1109,7 @@ Actor.main(async () => {
 });
 ```
 
-We've added the `handlePageFunction()` with the `enqueueLinks()` logic from the previous section to the code we wrote earlier. As always, try
+We've added the `requestHandler()` with the `enqueueLinks()` logic from the previous section to the code we wrote earlier. As always, try
 running it in the environment of your choice. You should see the crawler output a number of links to the console, as it crawls the category pages first
 and then all the links to the actor detail pages it found.
 
@@ -1138,7 +1137,7 @@ Some information is lying right there in front of us without even having to touc
 `request.url`. And by looking at it carefully, we realize that it already includes the `owner` and the `unique identifier` too. We can just split the
 `string` and be on our way then!
 
-```js
+```ts
 // request.url = https://apify.com/apify/web-scraper
 
 const urlArr = request.url.split('/').slice(-2); // ['apify', 'web-scraper']
@@ -1172,7 +1171,7 @@ element that we can use to select only the heading we're interested in.
 To get the title we just need to find it using `Cheerio` and a `header h1` selector, which selects all `<h1>` elements that have a `<header>` ancestor.
 And as we already know, there's only one.
 
-```js
+```ts
 return {
     title: $('header h1').text(),
 };
@@ -1186,7 +1185,7 @@ the `<header>` element too, same as the title. Moreover, the actual description 
 
 ![actor description selector](/img/getting-started/description.jpg 'Finding actor description in DevTools.')
 
-```js
+```ts
 return {
     title: $('header h1').text(),
     description: $('header span.actor-description').text(),
@@ -1199,7 +1198,7 @@ The DevTools tell us that the `modifiedDate` can be found in the `<time>` elemen
 
 ![actor last modification date selector](/img/getting-started/modified-date.jpg 'Finding actor last modification date in DevTools.')
 
-```js
+```ts
 return {
     title: $('header h1').text(),
     description: $('header span.actor-description').text(),
@@ -1223,7 +1222,7 @@ Phew!
 And so we're finishing up with the `runCount`. There's no specific element like `<time>`, so we need to create a complex selector and then do a
 transformation on the result.
 
-```js
+```ts
 return {
     title: $('header h1').text(),
     description: $('header span.actor-description').text(),
@@ -1253,7 +1252,7 @@ using a regular expression, but its type is still a `string`, so we finally conv
 And there we have it! All the data we needed in a single object. For the sake of completeness, let's add the properties we parsed from the URL earlier
 and we're good to go.
 
-```js
+```ts
 const urlArr = request.url.split('/').slice(-2);
 
 const results = {
@@ -1280,12 +1279,12 @@ console.log('RESULTS: ', results);
 
 #### Trying it out (sanity check #3)
 
-We have everything we need so just grab our newly created scraping logic, dump it into our original `handlePageFunction()` and see the magic happen!
+We have everything we need so just grab our newly created scraping logic, dump it into our original `requestHandler()` and see the magic happen!
 
-```js
+```ts
 import { Actor } from 'apify';
 
-Actor.main(async () => {
+await Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
@@ -1299,7 +1298,7 @@ Actor.main(async () => {
         maxRequestsPerCrawl: 50,
         requestList,
         requestQueue,
-        handlePageFunction: async ({ $, request }) => {
+        requestHandler: async ({ $, request }) => {
             console.log(`Processing ${request.url}`);
 
             // This is our new scraping logic.
@@ -1359,16 +1358,16 @@ this chapter so make sure to pay attention very carefully!
 
 First, replace the `console.log('RESULTS', results)` call with
 
-```js
+```ts
 await Actor.pushData(results);
 ```
 
 and that's it. Unlike in the previous paragraph, I'm being serious now. That's it, we're done. The final code therefore looks exactly like this:
 
-```js
+```ts
 import { Actor } from 'apify';
 
-Actor.main(async () => {
+await Actor.main(async () => {
     const sources = [
         'https://apify.com/store?category=TRAVEL',
         'https://apify.com/store?category=ECOMMERCE',
@@ -1382,7 +1381,7 @@ Actor.main(async () => {
         maxRequestsPerCrawl: 50,
         requestList,
         requestQueue,
-        handlePageFunction: async ({ $, request }) => {
+        requestHandler: async ({ $, request }) => {
             console.log(`Processing ${request.url}`);
 
             // This is our new scraping logic.
@@ -1480,7 +1479,7 @@ than a key in the default <ApiLink to="core/class/KeyValueStore">`KeyValueStore`
 
 We will not go into `KeyValueStore` details here, but for the sake of `INPUT` you need to remember that there is a function that helps you get it.
 
-```js
+```ts
 const input = await Actor.getInput();
 ```
 
@@ -1502,7 +1501,7 @@ different categories without changing the source code. Let's get to it!
 First, we set up our `INPUT`, either in the `INPUT` form of the actor on the Apify platform, or by creating an `INPUT.json` in our default key-value store
 locally.
 
-```json
+```tson
 ["TRAVEL", "ECOMMERCE", "ENTERTAINMENT"]
 ```
 
@@ -1510,7 +1509,7 @@ Once we have that, we can load it in the actor and populate the crawler's source
 input to construct the category URLs and we're also passing custom `userData` to the sources. This means that the `Requests` that get created will
 automatically contain this `userData`.
 
-```js
+```ts
 // ...
 const input = await Actor.getInput();
 
@@ -1526,9 +1525,9 @@ const requestList = await RequestList.open('categories', sources);
 ```
 
 The `userData.label` is also a convention that we've been using for quite some time to label different `Requests`. We know that this is a category URL
-so we `label` it `CATEGORY`. This way, we can easily make decisions in the `handlePageFunction` without having to inspect the URL itself.
+so we `label` it `CATEGORY`. This way, we can easily make decisions in the `requestHandler` without having to inspect the URL itself.
 
-We can then refactor the `if` clauses in the `handlePageFunction` to use the `label` for decision-making. This does not make much sense for a crawler
+We can then refactor the `if` clauses in the `requestHandler` to use the `label` for decision-making. This does not make much sense for a crawler
 with only two different pages, because a simple `boolean` would suffice, but for pages with multiple different views, it becomes very useful.
 
 #### Structuring the code better
@@ -1548,13 +1547,13 @@ In the following code we've made several changes.
 
 In our `main.js` file, we place the general structure of the crawler:
 
-```js
+```ts
 // main.js
 import { Actor } from 'apify';
 import { CheerioCrawler, log } from '@crawlee/cheerio';
 import * as tools from './tools';
 
-Actor.main(async () => {
+await Actor.main(async () => {
     log.info('Starting actor.');
     const requestList = await RequestList.open('categories', await tools.getSources());
     const requestQueue = await RequestQueue.open();
@@ -1564,7 +1563,7 @@ Actor.main(async () => {
     const crawler = new CheerioCrawler({
         requestList,
         requestQueue,
-        handlePageFunction: async context => {
+        requestHandler: async context => {
             const { request } = context;
             log.info(`Processing ${request.url}`);
             await router(request.userData.label, context);
@@ -1579,7 +1578,7 @@ Actor.main(async () => {
 
 Then in a separate `tools.js`, we add our helper functions:
 
-```js
+```ts
 // tools.js
 import { Actor } from 'apify';
 import { log } from '@crawlee/core';
@@ -1608,7 +1607,7 @@ export async function createRouter(globalContext) {
 
 And finally our routes in a separate `routes.js` file:
 
-```js
+```ts
 // routes.js
 import { Actor } from 'apify';
 import { log } from '@crawlee/core';
@@ -1679,7 +1678,7 @@ becomes far less impressive when working with more than two different pages and 
 spans tens or hundreds of lines of code.
 
 It's good practice in any programming to split your logic into bite-sized chunks that are easy to read and reason about. Scrolling through a
-thousand line long `handlePageFunction()` where everything interacts with everything and variables can be used everywhere is not a beautiful thing to
+thousand line long `requestHandler()` where everything interacts with everything and variables can be used everywhere is not a beautiful thing to
 do and a pain to debug. That's why we prefer the separation of routes into a special file and with large routes, we would even suggest having one file
 per route.
 

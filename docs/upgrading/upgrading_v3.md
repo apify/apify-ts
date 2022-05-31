@@ -31,13 +31,13 @@ Moreover, the Crawlee library is published as several packages under `@crawlee` 
 
 Most of the Crawlee packages are extending and reexporting each other, so it's enough to install just the one you plan on using, e.g. `@crawlee/playwright` if you plan on using `playwright` - it already contains everything from the `@crawlee/browser` package, which includes everything from `@crawlee/basic`, which includes everything from `@crawlee/core`.
 
-```sh
+```bash
 npm install @crawlee/cheerio@next
 ```
 
 When using `playwright` or `puppeteer`, we still need to install those dependencies explicitly - this allows the users to be in control of which version will be used.
 
-```sh
+```bash
 npm install @crawlee/playwright@next playwright
 ```
 
@@ -178,6 +178,12 @@ const crawler = new PlaywrightCrawler({
     },
 });
 ```
+
+## Implicit `RequestQueue` instance
+
+All crawlers now have the `RequestQueue` instance automatically available via `crawler.getRequestQueue()` method. It will create the instance for you if it does not exist yet. This mean we no longer need to create the `RequestQueue` instance manually, and we can just use `crawler.addRequests()` method described underneath.
+
+> We can still create the `RequestQueue` explicitly, the `crawler.getRequestQueue()` method will respect that and return the instance provided via crawler options.
 
 ## `crawler.addRequests()`
 
