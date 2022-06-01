@@ -226,7 +226,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * It has no result, but throws on invalid args or other errors.
      *
      * **IMPORTANT**: Make sure to use the `await` keyword when calling `pushData()`,
-     * otherwise the actor process might finish before the data is stored!
+     * otherwise the crawler process might finish before the data is stored!
      *
      * The size of the data is limited by the receiving API and therefore `pushData()` will only
      * allow objects whose JSON representation is smaller than 9MB. When an array is passed,
@@ -425,7 +425,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      *
      * @param [datasetIdOrName]
      *   ID or name of the dataset to be opened. If `null` or `undefined`,
-     *   the function returns the default dataset associated with the actor run.
+     *   the function returns the default dataset associated with the crawler run.
      * @param [options] Storage manager options.
      */
     static async open<Data extends Dictionary = Dictionary>(datasetIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<Dataset<Data>> {
@@ -436,6 +436,35 @@ export class Dataset<Data extends Dictionary = Dictionary> {
 
         const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
         return manager.openStorage(datasetIdOrName);
+    }
+
+    /**
+     * Stores an object or an array of objects to the default {@link Dataset} of the current crawler run.
+     *
+     * This is just a convenient shortcut for {@link Dataset.pushData}.
+     * For example, calling the following code:
+     * ```javascript
+     * await Dataset.pushData({ myValue: 123 });
+     * ```
+     *
+     * is equivalent to:
+     * ```javascript
+     * const dataset = await Dataset.open();
+     * await dataset.pushData({ myValue: 123 });
+     * ```
+     *
+     * For more information, see {@link Dataset.open} and {@link Dataset.pushData}
+     *
+     * **IMPORTANT**: Make sure to use the `await` keyword when calling `pushData()`,
+     * otherwise the crawler process might finish before the data are stored!
+     *
+     * @param item Object or array of objects containing data to be stored in the default dataset.
+     * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
+     * @ignore
+     */
+    static async pushData(item: Dictionary): Promise<void> {
+        const dataset = await this.open();
+        return dataset.pushData(item);
     }
 }
 

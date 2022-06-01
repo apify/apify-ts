@@ -365,7 +365,7 @@ export class AutoscaledPool {
 
         // This is here because if we scale down to let's say 1, then after each promise is finished
         // this._maybeRunTask() doesn't trigger another one. So if that 1 instance gets stuck it results
-        // in the actor getting stuck and even after scaling up it never triggers another promise.
+        // in the crawler getting stuck and even after scaling up it never triggers another promise.
         this.maybeRunInterval = betterSetInterval(this._maybeRunTask, this.maybeRunIntervalMillis);
 
         if (this.maxTasksPerMinute !== Infinity) {

@@ -1,30 +1,20 @@
 import { ENV_VARS } from '@apify/consts';
-import { KeyValueStore, StorageManager, maybeStringify, Configuration } from '@crawlee/core';
+import { KeyValueStore, maybeStringify, Configuration } from '@crawlee/core';
 import { Dictionary } from '@crawlee/utils';
 import { PassThrough } from 'stream';
 
 // TODO this does not make sense here
-describe('KeyValueStore remote', () => {
-    const apifyClient = Configuration.getStorageClient();
+describe('KeyValueStore', () => {
+    const client = Configuration.getStorageClient();
 
     beforeEach(async () => {
         jest.clearAllMocks();
     });
 
-    test('openKeyValueStore should open storage', async () => {
-        // const storeName = 'abc';
-        // const options = { forceCloud: true };
-        // const mockOpenStorage = jest.spyOn(StorageManager.prototype, 'openStorage');
-        // mockOpenStorage.mockResolvedValueOnce(jest.fn());
-        // await KeyValueStore.open(storeName, options);
-        // expect(mockOpenStorage).toBeCalledTimes(1);
-        // expect(mockOpenStorage).toBeCalledWith(storeName, options);
-    });
-
     test('should work', async () => {
         const store = new KeyValueStore({
             id: 'some-id-1',
-            client: apifyClient,
+            client,
         });
 
         // Record definition
@@ -89,7 +79,7 @@ describe('KeyValueStore remote', () => {
         test('throws on invalid args', async () => {
             const store = new KeyValueStore({
                 id: 'some-id-1',
-                client: apifyClient,
+                client,
             });
 
             // @ts-expect-error JS-side validation
@@ -99,13 +89,23 @@ describe('KeyValueStore remote', () => {
             await expect(store.getValue(null)).rejects.toThrow('Expected argument to be of type `string` but received type `null`');
             await expect(store.getValue('')).rejects.toThrow('Expected string to not be empty');
         });
+
+        test('KeyValueStore.getValue()', async () => {
+            const getValueSpy = jest.spyOn(KeyValueStore.prototype, 'getValue');
+            getValueSpy.mockImplementationOnce(async () => 123);
+
+            const val = await KeyValueStore.getValue('key-1');
+            expect(getValueSpy).toBeCalledTimes(1);
+            expect(getValueSpy).toBeCalledWith('key-1');
+            expect(val).toBe(123);
+        });
     });
 
     describe('setValue', () => {
         test('throws on invalid args', async () => {
             const store = new KeyValueStore({
                 id: 'some-id-1',
-                client: apifyClient,
+                client,
             });
 
             // @ts-expect-error JS-side validation
@@ -168,7 +168,7 @@ describe('KeyValueStore remote', () => {
         test('throws on invalid key', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id',
-                client: apifyClient,
+                client,
             });
 
             const INVALID_CHARACTERS = '?|\\/"*<>%:';
@@ -197,7 +197,7 @@ describe('KeyValueStore remote', () => {
         test('correctly adds charset to content type', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             const mockSetRecord = jest
@@ -218,7 +218,7 @@ describe('KeyValueStore remote', () => {
         test('correctly passes object values as JSON', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             const record = { foo: 'bar' };
@@ -242,7 +242,7 @@ describe('KeyValueStore remote', () => {
         test('correctly passes raw string values', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             const mockSetRecord = jest
@@ -263,7 +263,7 @@ describe('KeyValueStore remote', () => {
         test('correctly passes raw Buffer values', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             const mockSetRecord = jest
@@ -285,7 +285,7 @@ describe('KeyValueStore remote', () => {
         test('correctly passes a stream', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             const mockSetRecord = jest
@@ -314,7 +314,7 @@ describe('KeyValueStore remote', () => {
             const publicUrl = 'https://api.apify.com/v2/key-value-stores';
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             expect(store.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
@@ -367,7 +367,7 @@ describe('KeyValueStore remote', () => {
         test('should work remotely', async () => {
             const store = new KeyValueStore({
                 id: 'my-store-id-1',
-                client: apifyClient,
+                client,
             });
 
             // @ts-expect-error Accessing private property
