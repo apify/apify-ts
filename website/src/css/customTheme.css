@@ -182,6 +182,10 @@ nav.navbar .dropdown__menu {
     height: 3rem;
 }
 
+.main-wrapper a[class*='sidebarLogo'] img {
+    height: 3rem;
+}
+
 h1#change-log {
     display: none;
 }
