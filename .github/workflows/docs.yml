@@ -21,12 +21,6 @@ jobs:
                     git config --global user.name "Martin Adámek"
                     git config --global user.email "martin@apify.com"
 
-            #    - name: Cache node_modules
-            #      uses: actions/cache@v2
-            #      with:
-            #        path: '**/node_modules'
-            #        key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/yarn.lock') }}
-
             -   name: Build & deploy docs
                 run: |
                     # install project deps
@@ -37,6 +31,32 @@ jobs:
                     npm install --force
                     # build and deploy the docs
                     npm run deploy
+                env:
+                    GIT_USER: "B4nan:${{ secrets.GH_TOKEN }}"
+                    GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    squash:
+        runs-on: ubuntu-latest
+        needs: [ build ]
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    ref: 'gh-pages'
+                    fetch-depth: 0
+
+            -   name: Set git identity
+                run: |
+                    git config --global user.name "Martin Adámek"
+                    git config --global user.email "martin@apify.com"
+
+            -   name: Squash all commits to reduce repository size
+                run: |
+                    TOTAL_COMMITS="$(($(git rev-list --count HEAD)-1))"
+                    echo "squashing $TOTAL_COMMITS commits"
+                    git reset HEAD~$TOTAL_COMMITS
+                    git add .
+                    git commit --amend -m 'crawlee.dev docs'
+                    git push --force origin gh-pages
                 env:
                     GIT_USER: "B4nan:${{ secrets.GH_TOKEN }}"
                     GH_TOKEN: ${{ secrets.GH_TOKEN }}
