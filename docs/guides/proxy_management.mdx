@@ -46,8 +46,8 @@ const proxyUrl = await proxyConfiguration.newUrl();
 
 ## Proxy Configuration
 
-All your proxy needs are managed by the <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> class. You create an instance based on the provided options. See the <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink> for all the possible constructor options.
-If you're using Apify Proxy you create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function.
+All your proxy needs are managed by the <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> class. You create an instance using the ProxyConfiguration <ApiLink to="core/class/ProxyConfiguration#constructor">`constructor`</ApiLink> function based on the provided options. See the <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink> for all the possible constructor options.
+If you're using Apify Proxy you should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function instead.
 
 ### Crawler integration
 
@@ -118,8 +118,8 @@ that allows connection through millions of different IP addresses. So the class
 essentially has two modes: Apify Proxy or Your proxy.
 
 The difference is easy to remember.
-If you have access to Apify Proxy and create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function - <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of your custom proxy URLs, whereas all the other options are there to configure Apify Proxy. Visit the [Apify Proxy docs](https://docs.apify.com/proxy) for more info on how these parameters work.
-If you're not using Apify Proxy - you don't need to use the <ApiLink to="apify/class/Actor">`Actor`</ApiLink> class. Instead - you should create an instance with the <ApiLink to="core/class/ProxyConfiguration#constructor">`ProxyConfiguration`</ApiLink> constructor function based on the provided <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink>.
+- If you're using your own proxies - you should create an instance with the ProxyConfiguration <ApiLink to="core/class/ProxyConfiguration#constructor">`constructor`</ApiLink> function based on the provided <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink>.
+- If you are planning to use Apify Proxy - you should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function - <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of your custom proxy URLs, whereas all the other options are there to configure Apify Proxy. Visit the [Apify Proxy docs](https://docs.apify.com/proxy) for more info on how these parameters work.
 
 ## Apify Proxy Configuration
 
