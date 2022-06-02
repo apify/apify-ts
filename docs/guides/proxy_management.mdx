@@ -28,25 +28,26 @@ them immediately in only a few lines of code.
 
 ```javascript
 const proxyConfiguration = await Actor.createProxyConfiguration();
-const proxyUrl = proxyConfiguration.newUrl();
+const proxyUrl = await proxyConfiguration.newUrl();
 ```
 
 <!-- Your own proxies -->
 ```javascript
-const proxyConfiguration = await Actor.createProxyConfiguration({
+const proxyConfiguration = new ProxyConfiguration({
     proxyUrls: [
         'http://proxy-1.com',
         'http://proxy-2.com',
     ]
 });
-const proxyUrl = proxyConfiguration.newUrl();
+const proxyUrl = await proxyConfiguration.newUrl();
 ```
 
 <!--END_DOCUSAURUS_CODE_TABS-->
 
 ## Proxy Configuration
 
-All your proxy needs are managed by the <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> class. You create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function. See the <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink> for all the possible constructor options.
+All your proxy needs are managed by the <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> class. You create an instance based on the provided options. See the <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink> for all the possible constructor options.
+If you're using Apify Proxy you create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function.
 
 ### Crawler integration
 
@@ -57,7 +58,7 @@ All your proxy needs are managed by the <ApiLink to="core/class/ProxyConfigurati
 <!-- CheerioCrawler -->
 
 ```javascript
-const proxyConfiguration = await Actor.createProxyConfiguration({ /* your proxy opts */ });
+const proxyConfiguration = new ProxyConfiguration({ /* your proxy opts */ });
 const crawler = new CheerioCrawler({
     proxyConfiguration,
     // ...
@@ -66,7 +67,7 @@ const crawler = new CheerioCrawler({
 
 <!-- PuppeteerCrawler -->
 ```javascript
-const proxyConfiguration = await Actor.createProxyConfiguration({ /* your proxy opts */ });
+const proxyConfiguration = new ProxyConfiguration({ /* your proxy opts */ });
 const crawler = new PuppeteerCrawler({
     proxyConfiguration,
     // ...
@@ -88,15 +89,15 @@ When no `sessionId` is provided, your proxy URLs are rotated round-robin, wherea
 <!-- Standalone -->
 
 ```javascript
-const proxyConfiguration = await Actor.createProxyConfiguration({ /* opts */ });
+const proxyConfiguration = new ProxyConfiguration({ /* opts */ });
 const sessionPool = await SessionPool.open({ /* opts */ });
 const session = await sessionPool.getSession();
-const proxyUrl = proxyConfiguration.newUrl(session.id);
+const proxyUrl = await proxyConfiguration.newUrl(session.id);
 ```
 
 <!-- Crawlers -->
 ```javascript
-const proxyConfiguration = await Actor.createProxyConfiguration({ /* opts */ });
+const proxyConfiguration = new ProxyConfiguration({ /* opts */ });
 const crawler = new PuppeteerCrawler({
     useSessionPool: true,
     persistCookiesPerSession: true,
@@ -116,7 +117,9 @@ one would call a super-proxy. It's not a single proxy server, but an API endpoin
 that allows connection through millions of different IP addresses. So the class
 essentially has two modes: Apify Proxy or Your proxy.
 
-The difference is easy to remember. <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of your custom proxy URLs, whereas all the other options are there to configure Apify Proxy. Visit the [Apify Proxy docs](https://docs.apify.com/proxy) for more info on how these parameters work.
+The difference is easy to remember.
+If you have access to Apify Proxy and create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function - <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of your custom proxy URLs, whereas all the other options are there to configure Apify Proxy. Visit the [Apify Proxy docs](https://docs.apify.com/proxy) for more info on how these parameters work.
+If you're not using Apify Proxy - you don't need to use the <ApiLink to="apify/class/Actor">`Actor`</ApiLink> class. Instead - you should create an instance with the <ApiLink to="core/class/ProxyConfiguration#constructor">`ProxyConfiguration`</ApiLink> constructor function based on the provided <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink>.
 
 ## Apify Proxy Configuration
 
@@ -128,7 +131,7 @@ const proxyConfiguration = await Actor.createProxyConfiguration({
     groups: ['RESIDENTIAL'],
     countryCode: 'US',
 });
-const proxyUrl = proxyConfiguration.newUrl();
+const proxyUrl = await proxyConfiguration.newUrl();
 ```
 
 Now your crawlers will use only Residential proxies from the US. Note that you must first get access
@@ -138,6 +141,6 @@ in the [proxy dashboard](https://console.apify.com/proxy).
 ## Inspecting current proxy in Crawlers
 
 `CheerioCrawler` and `PuppeteerCrawler` grant access to information about the currently used proxy
-in their `handlePageFunction` using a <ApiLink to="core/interface/ProxyInfo">`proxyInfo`</ApiLink> object.
+in their `requestHandler` using a <ApiLink to="core/interface/ProxyInfo">`proxyInfo`</ApiLink> object.
 With the  object, you can easily access the proxy URL. If you're using Apify Proxy, the other
 configuration parameters will also be available in the `proxyInfo` object.
