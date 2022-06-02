@@ -29,7 +29,7 @@ const crawler = new CheerioCrawler({
     // It accepts a single parameter, which is an object with options as:
     // https://sdk.apify.com/docs/typedefs/cheerio-crawler-options#handlepagefunction
     // We use for demonstration only 2 of them:
-    // - request: an instance of the Request class with information such as URL and HTTP method
+    // - request: an instance of the Request class with information such as the URL that is being crawled and HTTP method
     // - $: the cheerio object containing parsed HTML
     async requestHandler({ request, $ }) {
         log.debug(`Processing ${request.url}...`);
@@ -44,7 +44,7 @@ const crawler = new CheerioCrawler({
         });
 
         // Store the results to the dataset. In local configuration,
-        // the data will be stored as JSON files in ./apify_storage/datasets/default
+        // the data will be stored as JSON files in ./crawlee_storage/datasets/default
         await dataset.pushData({
             url: request.url,
             title,
@@ -52,7 +52,7 @@ const crawler = new CheerioCrawler({
         });
     },
 
-    // This function is called if the page processing failed more than maxRequestRetries+1 times.
+    // This function is called if the page processing failed more than maxRequestRetries + 1 times.
     failedRequestHandler({ request }) {
         log.debug(`Request ${request.url} failed twice.`);
     },

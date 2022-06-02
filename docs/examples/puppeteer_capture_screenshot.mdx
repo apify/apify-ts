@@ -6,11 +6,14 @@ title: Capture a screenshot using Puppeteer
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@site/src/components/ApiLink';
 
 import PuppeteerPageScreenshotSource from '!!raw-loader!./puppeteer_page_screenshot.ts';
 import PuppeteerCrawlerUtilsSnapshotSource from '!!raw-loader!./puppeteer_crawler_utils_snapshot.ts';
 import PuppeteerCrawlerPageScreenshotSource from '!!raw-loader!./puppeteer_crawler_page_screenshot.ts';
 import PuppeteerCrawlerCrawlerUtilsSnapshotSource from '!!raw-loader!./puppeteer_crawler_crawler_utils_snapshot.ts';
+
+## Using Puppeteer directly
 
 :::tip
 
@@ -42,6 +45,8 @@ Using `puppeteerUtils.saveSnapshot()`:
 </TabItem>
 </Tabs>
 
+## Using the `PuppeteerCrawler`
+
 This example captures a screenshot of multiple web pages when using `PuppeteerCrawler`:
 
 <Tabs groupId="puppeteer-capture-screenshot">
@@ -57,7 +62,7 @@ Using `page.screenshot()`:
 
 <TabItem value="crawlerutilsscreenshot" label="Crawler Utils Screenshot" default>
 
-Using `puppeteerUtils.saveSnapshot()`:
+Using the context-aware <ApiLink to="puppeteer-crawler/namespace/puppeteerUtils#saveSnapshot">`saveSnapshot()`</ApiLink> utility:
 
 <CodeBlock className="language-js">
 	{PuppeteerCrawlerCrawlerUtilsSnapshotSource}

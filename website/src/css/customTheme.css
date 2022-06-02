@@ -12,6 +12,8 @@ html[data-theme='dark'] {
     --ifm-footer-background-color: #242736;
     --ifm-color-primary: #5d9df1;
     --ifm-link-color: #5d9df1;
+
+    --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.1);
 }
 
 :root {
@@ -45,6 +47,8 @@ html[data-theme='dark'] {
     --ifm-footer-title-color: #f2f3fb;
     --ifm-footer-link-color: #f2f3fb;
     --max-layout-width: 1680px;
+
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 .footer__title {
@@ -138,17 +142,6 @@ aside svg[class*=iconExternalLink] {
 
 header.hero div[class^=heroButtons] {
     justify-content: inherit;
-}
-
-.docusaurus-highlight-code-line {
-	background-color: rgba(0, 0, 0, 0.1);
-	display: block;
-	margin: 0 calc(-1 * var(--ifm-pre-padding));
-	padding: 0 var(--ifm-pre-padding);
-}
-
-html[data-theme='dark'] .docusaurus-highlight-code-line {
-	background-color: rgba(0, 0, 0, 0.3);
 }
 
 article .card h2 {

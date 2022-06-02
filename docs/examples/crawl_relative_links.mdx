@@ -18,12 +18,12 @@ automatically find links and add them to the crawler's <ApiLink to="core/class/R
 
 We provide 3 different strategies for crawling relative links:
 
-- <ApiLink to="core/enum/EnqueueStrategy#All"><inlineCode>All</inlineCode></ApiLink> which will enqueue all links found, regardless of
-the domain they point to.
-- <ApiLink to="core/enum/EnqueueStrategy#SameHostname"><inlineCode>SameHostname</inlineCode></ApiLink> which will enqueue all links
-found for the same hostname (regardless of any subdomains present).
-- <ApiLink to="core/enum/EnqueueStrategy#SameSubdomain"><inlineCode>SameSubdomain</inlineCode></ApiLink> which will enqueue all links
-found that have the same subdomain and hostname. This is the default strategy.
+- <ApiLink to="core/enum/EnqueueStrategy#All"><inlineCode>All</inlineCode> (or the string <inlineCode>"all"</inlineCode>)</ApiLink> which will
+enqueue all links found, regardless of the domain they point to.
+- <ApiLink to="core/enum/EnqueueStrategy#SameHostname"><inlineCode>SameHostname</inlineCode> (or the string <inlineCode>"same-hostname"</inlineCode>)</ApiLink> which
+will enqueue all links found for the same hostname (regardless of any subdomains present).
+- <ApiLink to="core/enum/EnqueueStrategy#SameSubdomain"><inlineCode>SameSubdomain</inlineCode> (or the string <inlineCode>"same-subdomain"</inlineCode>)</ApiLink> which
+will enqueue all links found that have the same subdomain and hostname. This is the default strategy.
 
 :::note
 
@@ -82,7 +82,7 @@ For a url of `https://subdomain.example.com`, `enqueueLinks()` will only match r
 full domain.
 
 For instance, hyperlinks like `https://subdomain.example.com/some/path`, `/absolute/example` or `./relative/example`
-will all be matched by this strategy, while `https://other-subdomain.example.com` or `https://otherexample.com` will not.
+will all be matched by this strategy, while `https://other-subdomain.example.com` or `https://example.com` will not.
 
 :::
 
