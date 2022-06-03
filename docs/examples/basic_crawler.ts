@@ -12,7 +12,9 @@ const crawler = new BasicCrawler({
         console.log(`Processing ${url}...`);
 
         // Fetch the page HTML via the crawlee sendRequest utility method
-        const { body } = await sendRequest(request);
+        // By default, the method will use the current request that is being handled, so you don't have to
+        // provide it yourself. You can also provide a custom request if you want.
+        const { body } = await sendRequest();
 
         // Store the HTML and URL to the default dataset.
         await dataset.pushData({
