@@ -232,7 +232,7 @@ That starts to look almost good. Almost? Yes, we can do even better! Since v3, t
 
 ```ts
 import { Actor } from 'apify';
-import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 
 await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
@@ -250,7 +250,7 @@ await Actor.main(async () => {
 
 And we're done! You just created your first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element, get its text content and print it to console. Good job!
 
-To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.js` file in the `my-new-project` we created earlier and run `apify run` from that project's directory.
+To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.mjs` file in the `my-new-project` we created earlier and run `apify run` from that project's directory.
 
 To run the code on Apify Platform, just replace the original example with your new code and hit Run.
 
@@ -323,7 +323,7 @@ it to the console. This is the original source code:
 
 ```ts
 import { Actor } from 'apify';
-import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 
 await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
@@ -470,7 +470,7 @@ will be allowed to finish too.
 ```ts
 import { URL } from 'url'; // <------ This is new.
 import { Actor } from 'apify';
-import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
+import { CheerioCrawler } from '@crawlee/cheerio';
 
 await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
@@ -535,7 +535,7 @@ We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of 
 import { Actor } from 'apify';
 const {
     utils: { enqueueLinks },
-} = Apify;
+} = Actor;
 
 // Now you can use enqueueLinks like this:
 await enqueueLinks({
@@ -1431,7 +1431,7 @@ await Actor.main(async () => {
 
 #### What's `Actor.pushData()`
 
-<ApiLink to="core/class/Dataset#pushData">`Actor.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Actor.pushData()` a new row in the table is created, with the property names serving as column titles.
+&#8203;<ApiLink to="core/class/Dataset#pushData">`Actor.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Actor.pushData()` a new row in the table is created, with the property names serving as column titles.
 
 > Each actor run has one default `Dataset` so no need to initialize it or create an instance first. It just gets done automatically for you. You can
 > also create named datasets at will.
@@ -1452,7 +1452,7 @@ Unless you changed the environment variables that Crawlee uses locally, which wo
 this tutorial anyway, you'll find your data in your local Apify Storage.
 
 ```
-{PROJECT_FOLDER}/apify_storage/datasets/default/
+{PROJECT_FOLDER}/crawlee_storage/datasets/default/
 ```
 
 The above folder will hold all your saved data in numbered files, as they were pushed into the dataset. Each file represents one invocation of
@@ -1489,7 +1489,7 @@ and by calling <ApiLink to="apify/class/Actor#getvalue">`Actor.getInput()`</ApiL
 Running locally, you need to place an `INPUT.json` file in your default key value store for this to work.
 
 ```
-{PROJECT_FOLDER}/apify_storage/key_value_stores/default/INPUT.json
+{PROJECT_FOLDER}/crawlee_storage/key_value_stores/default/INPUT.json
 ```
 
 #### Use `INPUT` to seed our actor with categories
@@ -1545,10 +1545,10 @@ In the following code we've made several changes.
 
 > To create a multi-file actor on the Apify Platform, select **Multiple source files** in the **Type** dropdown on the **Source** screen.
 
-In our `main.js` file, we place the general structure of the crawler:
+In our `main.mjs` file, we place the general structure of the crawler:
 
 ```ts
-// main.js
+// main.mjs
 import { Actor } from 'apify';
 import { CheerioCrawler, log } from '@crawlee/cheerio';
 import * as tools from './tools';
@@ -1576,10 +1576,10 @@ await Actor.main(async () => {
 });
 ```
 
-Then in a separate `tools.js`, we add our helper functions:
+Then in a separate `tools.mjs`, we add our helper functions:
 
 ```ts
-// tools.js
+// tools.mjs
 import { Actor } from 'apify';
 import { log } from '@crawlee/core';
 import * as routes from './routes';
@@ -1605,10 +1605,10 @@ export async function createRouter(globalContext) {
 };
 ```
 
-And finally our routes in a separate `routes.js` file:
+And finally our routes in a separate `routes.mjs` file:
 
 ```ts
-// routes.js
+// routes.mjs
 import { Actor } from 'apify';
 import { log } from '@crawlee/core';
 

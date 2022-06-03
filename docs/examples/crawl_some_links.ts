@@ -9,7 +9,7 @@ const crawler = new CheerioCrawler({
         console.log(request.url);
         // Add some links from page to the crawler's RequestQueue
         await enqueueLinks({
-            pseudoUrls: ['http[s?]://apify.com/[.+]/[.+]'],
+            globs: ['http?(s)://apify.com/*/*'],
         });
     },
 });

@@ -8,7 +8,9 @@ const FeatureList = [
         Svg: require('../../static/img/js_file.svg').default,
         description: (
             <>
-                JavaScript is the language of the web. Apify SDK builds on popular tools like <a href="https://www.npmjs.com/package/playwright">Playwright</a>, <a href="https://www.npmjs.com/package/puppeteer">Puppeteer</a> and <a href={'https://www.npmjs.com/package/cheerio'}>cheerio</a>, to deliver large-scale high-performance web scraping and crawling of any website.
+                JavaScript is the language of the web. Crawlee builds on popular tools like <a href="https://www.npmjs.com/package/playwright">Playwright</a>, {' '}
+                <a href="https://www.npmjs.com/package/puppeteer">Puppeteer</a> and <a href='https://www.npmjs.com/package/cheerio'>cheerio</a>,
+                to deliver large-scale high-performance web scraping and crawling of any website.
             </>
         ),
     },
@@ -17,7 +19,8 @@ const FeatureList = [
         Svg: require('../../static/img/workflow.svg').default,
         description: (
             <>
-                Run headless Chrome, Firefox, WebKit or other browsers, manage lists and queues of URLs to crawl, run crawlers in parallel at maximum system capacity. Handle storage and export of results and rotate proxies.
+                Run headless Chrome, Firefox, WebKit or other browsers, manage lists and queues of URLs to crawl, run crawlers in parallel at maximum
+                system capacity. Handle storage and export of results and rotate proxies.
             </>
         ),
     },
@@ -26,7 +29,8 @@ const FeatureList = [
         Svg: require('../../static/img/system.svg').default,
         description: (
             <>
-                Apify SDK can be used stand-alone on your own systems or it can run as a serverless microservice on the <a href="https://console.apify.com/actors">Apify Platform</a>.
+                Crawlee can be used stand-alone on your own systems or it can run as a serverless microservice on the {' '}
+                <a href="https://console.apify.com/actors">Apify Platform</a>.
             </>
         ),
     },

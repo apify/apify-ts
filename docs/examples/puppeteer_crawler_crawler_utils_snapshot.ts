@@ -1,12 +1,12 @@
-import { PuppeteerCrawler, puppeteerUtils } from '@crawlee/puppeteer';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
 
 // Create a PuppeteerCrawler
 const crawler = new PuppeteerCrawler({
-    async requestHandler({ request, page }) {
+    async requestHandler({ request, saveSnapshot }) {
         // Convert the URL into a valid key
         const key = request.url.replace(/[:/]/g, '_');
         // Capture the screenshot
-        await puppeteerUtils.saveSnapshot(page, { key, saveHtml: false });
+        await saveSnapshot({ key, saveHtml: false });
     },
 });
 

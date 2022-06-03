@@ -18,7 +18,7 @@ import { RequestQueue } from '../storages/request_queue';
 import { RequestOptions } from '../request';
 
 export interface EnqueueLinksOptions {
-    /** Limit the count of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
+    /** Limit the amount of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */
     limit?: number;
 
     /** An array of URLs to enqueue. */
@@ -46,7 +46,7 @@ export interface EnqueueLinksOptions {
      * The matching is always case-insensitive.
      * If you need case-sensitive matching, use `regexps` property directly.
      *
-     * If `globs` is an empty array or `undefined`, then the function
+     * If `globs` is an empty array or `undefined`, and `regexps` are also not defined, then the function
      * enqueues the links with the same subdomain.
      */
     globs?: GlobInput[];
@@ -58,7 +58,7 @@ export interface EnqueueLinksOptions {
      * The plain objects must include at least the `regexp` property, which holds the regular expression.
      * All remaining keys will be used as request options for the corresponding enqueued {@link Request} objects.
      *
-     * If `regexps` is an empty array or `undefined`, then the function
+     * If `regexps` is an empty array or `undefined`, and `globs` are also not defined, then the function
      * enqueues the links with the same subdomain.
      */
     regexps?: RegExpInput[];
@@ -122,7 +122,9 @@ export enum EnqueueStrategy {
      */
     All = 'all',
     /**
-     * Matches any URLs that have the same subdomain as the base URL
+     * Matches any URLs that have the same subdomain as the base URL.
+     * For example, `https://wow.example.com/hello` will be matched for a base url of `https://example.com/`, but
+     * `https://example.com/hello` will not be matched.
      */
     SameSubdomain = 'same-subdomain',
     /**
@@ -134,26 +136,22 @@ export enum EnqueueStrategy {
 }
 
 /**
- * The function finds elements matching a specific CSS selector (HTML anchor (`<a>`) by default)
- * either in a Puppeteer/Playwright page, or in a Cheerio object (parsed HTML),
- * and enqueues the URLs in their `href` attributes to the provided {@link RequestQueue}.
- * If you're looking to find URLs in JavaScript heavy pages where links are not available
- * in `href` elements, but rather navigations are triggered in click handlers
- * see {@link puppeteerUtils.enqueueLinksByClickingElements}.
+ * This function enqueues the urls provided to the {@link RequestQueue} provided. If you want to automatically find and enqueue links,
+ * you should use the context-aware `enqueueLinks` function provided on the crawler contexts.
  *
- * Optionally, the function allows you to filter the target links' URLs using an array of {@link PseudoUrl} objects
+ * Optionally, the function allows you to filter the target links' URLs using an array of globs or regular expressions
  * and override settings of the enqueued {@link Request} objects.
  *
  * **Example usage**
  *
  * ```javascript
  * await enqueueLinks({
- *   page,
+ *   urls: aListOfFoundUrls,
  *   requestQueue,
  *   selector: 'a.product-detail',
- *   pseudoUrls: [
- *       'https://www.example.com/handbags/[.*]',
- *       'https://www.example.com/purses/[.*]'
+ *   globs: [
+ *       'https://www.example.com/handbags/*',
+ *       'https://www.example.com/purses/*'
  *   ],
  * });
  * ```

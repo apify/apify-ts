@@ -45,14 +45,22 @@ function Features() {
                 </div>
                 <div className="col col--4">
                     <h2>Easy crawling</h2>
-                    <p>There are three main classes that you can use to start crawling the web in no time. Need to crawl plain HTML? Use the blazing fast CheerioCrawler. For complex websites that use React, Vue or other front-end javascript libraries and require JavaScript execution, spawn a headless browser with PlaywrightCrawler or PuppeteerCrawler.</p>
+                    <p>
+                        There are three main classes that you can use to start crawling the web in no time. Need to crawl plain HTML?
+                        Use the blazing fast CheerioCrawler. For complex websites that use React, Vue or other front-end javascript libraries and require
+                        JavaScript execution, spawn a headless browser with PlaywrightCrawler or PuppeteerCrawler.
+                    </p>
                 </div>
                 <div className="col col--2"></div>
             </div>
             <div className="row">
                 <div className="col col--4">
                     <h2>Powerful tools</h2>
-                    <p>All the crawlers are automatically scaled based on available system resources using the AutoscaledPool class. When you run your code on the Apify Platform, you can also take advantage of a pool of proxies to avoid detection. For data storage, you can use the Dataset, KeyValueStore and RequestQueue classes.</p>
+                    <p>
+                        All the crawlers are automatically scaled based on available system resources using the AutoscaledPool class.
+                        When you run your code on the Apify Platform, you can also take advantage of a pool of proxies to avoid detection.
+                        For data storage, you can use the Dataset, KeyValueStore and RequestQueue classes.
+                    </p>
                 </div>
                 <div className="col col--2"></div>
                 <div className="col col--6">
@@ -68,7 +76,7 @@ const example = `import { PuppeteerCrawler } from '@crawlee/puppeteer';
 const crawler = new PuppeteerCrawler({
     async requestHandler({ request, page, enqueueLinks }) {
         const title = await page.title();
-        ${'console.log(`Title of ${request.url}`: ${title});'}
+        console.log(\`Title of $\{request.url}: $\{title}\`);
         await enqueueLinks();
     },
 });
@@ -81,7 +89,7 @@ function ActorExample() {
     return (
         <section id="try" className="container">
             <h2>Try it out</h2>
-            <p>Install Apify SDK into a Node.js project. You must have Node.js 16 or higher installed.</p>
+            <p>Install Crawlee into a Node.js project. You must have Node.js 16 or higher installed.</p>
             <CodeBlock className="language-bash">
                 npm install @crawlee/puppeteer puppeteer
             </CodeBlock>

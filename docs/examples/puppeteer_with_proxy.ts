@@ -1,7 +1,7 @@
-import { PuppeteerCrawler, createProxyConfiguration } from '@crawlee/puppeteer';
+import { PuppeteerCrawler, ProxyConfiguration } from '@crawlee/puppeteer';
 
 // Proxy connection is automatically established in the Crawler
-const proxyConfiguration = await createProxyConfiguration();
+const proxyConfiguration = new ProxyConfiguration();
 
 const crawler = new PuppeteerCrawler({
     proxyConfiguration,

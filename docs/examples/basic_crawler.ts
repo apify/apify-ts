@@ -1,5 +1,4 @@
 import { BasicCrawler, Dataset } from '@crawlee/basic';
-import { gotScraping } from 'got-scraping';
 
 // Create a dataset where we will store the results.
 const dataset = await Dataset.open();
@@ -8,16 +7,18 @@ const dataset = await Dataset.open();
 // users to implement the crawling logic themselves.
 const crawler = new BasicCrawler({
     // This function will be called for each URL to crawl.
-    async requestHandler({ request }) {
+    async requestHandler({ request, sendRequest }) {
         const { url } = request;
         console.log(`Processing ${url}...`);
 
-        // Fetch the page HTML via Apify utils gotScraping
-        const { body } = await gotScraping({ url });
+        // Fetch the page HTML via the crawlee sendRequest utility method
+        // By default, the method will use the current request that is being handled, so you don't have to
+        // provide it yourself. You can also provide a custom request if you want.
+        const { body } = await sendRequest();
 
         // Store the HTML and URL to the default dataset.
         await dataset.pushData({
-            url: request.url,
+            url,
             html: body,
         });
     },
