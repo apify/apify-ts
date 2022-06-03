@@ -5,6 +5,13 @@ title: Running in Docker
 
 import ApiLink from '@site/src/components/ApiLink';
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import jsDockerSource from '!!raw-loader!./docker_images_js';
+import tsDockerSource from '!!raw-loader!./docker_images_ts';
+
 Running headless browsers in Docker requires a lot of setup to do it right. But you don't need to worry about that, because we already did it for you and created base images that you can freely use. We use them every day on the [Apify Platform](../guides/apify_platform.mdx).
 
 All images can be found in their [GitHub repo](https://github.com/apify/apify-actor-docker) and in our [DockerHub](https://hub.docker.com/orgs/apify).
@@ -24,42 +31,18 @@ Browsers are pretty big, so we try to provide a wide variety of images to suit y
 
 To use our images, you need a [`Dockerfile`](https://docs.docker.com/engine/reference/builder/). You can either use this example, or bootstrap your projects with the [Apify CLI](./getting_started.mdx#creating-a-new-project) which automatically copies the correct Dockerfile into your project folder.
 
-```dockerfile
-# First, specify the base Docker image. You can read more about
-# the available images at https://sdk.apify.com/docs/guides/docker-images
-# You can also use any other image from Docker Hub.
-# The 16 represents the version of Node.js you want to use.
-FROM apify/actor-node:16
-
-# Second, copy just package.json and package-lock.json since it should be
-# the only file that affects "npm install" in the next step, to speed up the build
-COPY package*.json ./
-
-# Install NPM packages, skip optional and development dependencies to
-# keep the image small. Avoid logging too much and print the dependency
-# tree for debugging
-RUN npm --quiet set progress=false \
- && npm install --only=prod --no-optional \
- && echo "Installed NPM packages:" \
- && (npm list || true) \
- && echo "Node.js version:" \
- && node --version \
- && echo "NPM version:" \
- && npm --version
-
-# Next, copy the remaining files and directories with the source code.
-# Since we do this after NPM install, quick build will be really fast
-# for most source file changes.
-COPY . ./
-
-# Optionally, specify how to launch the source code of your actor.
-# By default, Apify's base Docker images define the CMD instruction
-# that runs the Node.js source code using the command specified
-# in the "scripts.start" section of the package.json file.
-# In short, the instruction looks something like this:
-#
-# CMD npm start
-```
+<Tabs>
+    <TabItem value="js" label="For JavaScript Projects">
+        <CodeBlock language="dockerfile">
+            {jsDockerSource}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="ts" label="For TypeScript Projects">
+        <CodeBlock language="dockerfile">
+            {tsDockerSource}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
 
 ## Versioning
 
@@ -74,15 +57,18 @@ Our images are built with multiple Node.js versions to ensure backwards compatib
 ```dockerfile
 # Use Node.js 14
 FROM apify/actor-node:14
+```
+
+```dockerfile
 # Use Node.js 16
 FROM apify/actor-node-playwright:16
 ```
 
 ### Automation library versioning
 
-Images that include a pre-installed automation library, which means all images that include `puppeteer` or `playwright` in their name,  are also tagged with the pre-installed version of the library. For example, `apify/actor-node-puppeteer-chrome:16-8.0.0` comes with Node.js 16 and Puppeteer v8.0.0. If you try to install a different version of Puppeteer into this image, you may run into compatibility issues, because the Chromium version bundled with `puppeteer` will not match the version of Chrome we pre-installed.
+Images that include a pre-installed automation library, which means all images that include `puppeteer` or `playwright` in their name,  are also tagged with the pre-installed version of the library. For example, `apify/actor-node-puppeteer-chrome:16-13.7.0` comes with Node.js 16 and Puppeteer v13.7.0. If you try to install a different version of Puppeteer into this image, you may run into compatibility issues, because the Chromium version bundled with `puppeteer` will not match the version of Chrome we pre-installed.
 
-Similarly `apify/actor-node-playwright-firefox:14-1.10.0` runs on Node.js 14 and is pre-installed with the Firefox version that comes with v1.10.0.
+Similarly `apify/actor-node-playwright-firefox:14-1.21.1` runs on Node.js 14 and is pre-installed with the Firefox version that comes with v1.21.1.
 
 Installing `apify/actor-node-puppeteer-chrome` (without a tag) will install the latest available version of Node.js and `puppeteer`.
 
@@ -93,6 +79,9 @@ We also build pre-release versions of the images to test the changes we make. Th
 ```dockerfile
 # Without library version.
 FROM apify/actor-node:16-beta
+```
+
+```dockerfile
 # With library version.
 FROM apify/actor-node-playwright-chrome:16-1.10.0-beta
 ```
@@ -112,7 +101,8 @@ FROM apify/actor-node-playwright-chrome:16
 ```json
 {
     "dependencies": {
-        "apify": "^1.2.0",
+        "apify": "^3.0.0",
+        "@crawlee/playwright": "^3.0.0",
         "playwright": "*"
     }
 }
