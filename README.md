@@ -1,7 +1,9 @@
 <h1 align="center">
     <a href="https://apify.github.io/apify-ts/">
-        <img src="https://raw.githubusercontent.com/apify/apify-ts/master/website/static/img/crawlee-light.svg?sanitize=true" alt="Crawlee" width="500" />
-        <span style="display: none">Crawlee</span>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/apify/apify-ts/master/website/static/img/crawlee-dark.svg?sanitize=true">
+          <img alt="Crawlee" src="https://raw.githubusercontent.com/apify/apify-ts/master/website/static/img/crawlee-light.svg?sanitize=true" width="500">
+        </picture>
     </a>
     <br>
     <small>The scalable web crawling and scraping library for JavaScript</small>
