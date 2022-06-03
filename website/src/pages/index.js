@@ -89,7 +89,7 @@ function ActorExample() {
     return (
         <section id="try" className="container">
             <h2>Try it out</h2>
-            <p>Install the Crawlee SDK into a Node.js project. You must have Node.js 16 or higher installed.</p>
+            <p>Install Crawlee into a Node.js project. You must have Node.js 16 or higher installed.</p>
             <CodeBlock className="language-bash">
                 npm install @crawlee/puppeteer puppeteer
             </CodeBlock>
