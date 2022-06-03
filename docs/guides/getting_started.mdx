@@ -130,8 +130,7 @@ introduce all Crawlee classes necessary to make it happen.
 
 ### The general idea
 
-There are 4 crawler classes available for use in Crawlee. <ApiLink to="basic-crawler/class/BasicCrawler">`BasicCrawler`</ApiLink>, <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>, <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> and <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>.
-We'll talk about their differences later. Now, let's talk about what they have in common.
+There are 4 crawler classes available for use in Crawlee. <ApiLink to="basic-crawler/class/BasicCrawler">`BasicCrawler`</ApiLink>, <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>, <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> and <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>. We'll talk about their differences later. Now, let's talk about what they have in common.
 
 The general idea of each crawler is to go to a web page, open it, do some stuff there, save some results and continue to the next page, until it's done
 its job. So the crawler always needs to find answers to two questions: **Where should I go?** and **What should I do there?** Answering those two
@@ -139,32 +138,19 @@ questions is the only setup mandatory for running the crawlers.
 
 ### The Where - `Request`, `RequestList` and `RequestQueue`
 
-All crawlers use instances of the <ApiLink to="core/class/Request">`Request`</ApiLink> class to determine where they need to go. Each request may hold a lot
-of information, but at the very least, it must hold a URL - a web page to open. But having only one URL would not make sense for crawling. We need to either
-have a pre-existing list of our own URLs that we wish to visit, perhaps a thousand, or a million, or we need to build this list dynamically as we crawl,
-adding more and more URLs to the list as we progress.
+All crawlers use instances of the <ApiLink to="core/class/Request">`Request`</ApiLink> class to determine where they need to go. Each request may hold a lot of information, but at the very least, it must hold a URL - a web page to open. But having only one URL would not make sense for crawling. We need to either have a pre-existing list of our own URLs that we wish to visit, perhaps a thousand, or a million, or we need to build this list dynamically as we crawl, adding more and more URLs to the list as we progress.
 
-A representation of the pre-existing list is an instance of the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class. It is a static, immutable
-list of URLs and other metadata (see the <ApiLink to="core/class/Request">`Request`</ApiLink> object) that the crawler will visit, one by one, retrying whenever
-an error occurs, until there are no more `Requests` to process.
+A representation of the pre-existing list is an instance of the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> class. It is a static, immutable list of URLs and other metadata (see the <ApiLink to="core/class/Request">`Request`</ApiLink> object) that the crawler will visit, one by one, retrying whenever an error occurs, until there are no more `Requests` to process.
 
-&#8203;<ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> on the other hand, represents a dynamic queue of `Requests`. One that can be updated
-at runtime by adding more pages - `Requests` to process. This allows the crawler to open one page, extract interesting URLs, such as links to other pages on
-the same domain, add them to the queue (called _enqueuing_) and repeat this process to build a queue of tens of thousands or more URLs while knowing only a
-single one at the beginning.
+&#8203;<ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> on the other hand, represents a dynamic queue of `Requests`. One that can be updated at runtime by adding more pages - `Requests` to process. This allows the crawler to open one page, extract interesting URLs, such as links to other pages on the same domain, add them to the queue (called _enqueuing_) and repeat this process to build a queue of tens of thousands or more URLs while knowing only a single one at the beginning.
 
-`RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Requests` = "pages to crawl" to the crawlers.
-At least one of them always needs to be provided while setting up. You can also use both at the same time, if you wish.
+`RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Requests` = "pages to crawl" to the crawlers. At least one of them always needs to be provided while setting up. You can also use both at the same time, if you wish.
 
 ### The What - `requestHandler`
 
-The `requestHandler` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from
-the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
+The `requestHandler` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
 
-The `requestHandler` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`.
-It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the
-`request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool`
-property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
+The `requestHandler` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
 
 ```ts
 // The object received as a single argument by the requestHandler
@@ -176,9 +162,7 @@ property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`A
 
 ### Putting it all together
 
-Enough theory! Let's put some of those hard-learned facts into practice. We learned above that we need `Requests` and a `requestHandler` to setup a crawler.
-We will also use the <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function. It's not mandatory, but it makes our life easier. We'll learn about
-it in detail later on.
+Enough theory! Let's put some of those hard-learned facts into practice. We learned above that we need `Requests` and a `requestHandler` to setup a crawler. We will also use the <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function. It's not mandatory, but it makes our life easier. We'll learn about it in detail later on.
 
 Let's start with something super easy. Visit a page, get its title and close. First of all we need to require Apify, to make all of its features available to us:
 
@@ -186,8 +170,7 @@ Let's start with something super easy. Visit a page, get its title and close. Fi
 import { Actor } from 'apify';
 ```
 
-Easy, right? It really doesn't get much more difficult than that. For the purposes of this tutorial, we'll be scraping our own webpage [https://apify.com](https://apify.com).
-Now, to get there, we need a `Request` with the page's URL in one of our sources, `RequestList` or `RequestQueue`. Let's go with `RequestQueue` for now.
+Easy, right? It really doesn't get much more difficult than that. For the purposes of this tutorial, we'll be scraping our own webpage [https://apify.com](https://apify.com). Now, to get there, we need a `Request` with the page's URL in one of our sources, `RequestList` or `RequestQueue`. Let's go with `RequestQueue` for now.
 
 ```ts
 import { Actor } from 'apify';
@@ -205,8 +188,7 @@ await Actor.main(async () => {
 > If you're not familiar with the `async` and `await` keywords used in the example, you should know that these are native syntax in modern JavaScript. You can
 > [learn more about them here](https://nikgrozev.com/2017/10/01/async-await/).
 
-The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it
-to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `requestHandler`.
+The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `requestHandler`.
 
 ```ts
 import { CheerioCrawlingContext } from '@crawlee/cheerio';
@@ -221,9 +203,7 @@ const requestHandler: CheerioCrawlingContext = async ({ request, $ }) => {
 };
 ```
 
-Wait, where did the `$` come from? Remember what we learned about the `requestHandler` earlier. It expects a plain `Object` as an argument that will always
-have a `request` property, but it will also have other properties, depending on the chosen crawler class. Well, `$` is a property provided by the `CheerioCrawler`
-class, which we'll set up right now.
+Wait, where did the `$` come from? Remember what we learned about the `requestHandler` earlier. It expects a plain `Object` as an argument that will always have a `request` property, but it will also have other properties, depending on the chosen crawler class. Well, `$` is a property provided by the `CheerioCrawler` class, which we'll set up right now.
 
 ```ts
 import { Actor } from 'apify';
@@ -248,9 +228,7 @@ await Actor.main(async () => {
 });
 ```
 
-That starts to look almost good. Almost? Yes, we can do even better! Since v3, the crawler has an implicit `RequestQueue` instance, so we can save ourselves
-from all the `RequestQueue` related code and just use `crawler.addRequests()` method. We can also move the `requestHandler` method definition directly to the
-crawler options, this way we get type inference for free:
+That starts to look almost good. Almost? Yes, we can do even better! Since v3, the crawler has an implicit `RequestQueue` instance, so we can save ourselves from all the `RequestQueue` related code and just use `crawler.addRequests()` method. We can also move the `requestHandler` method definition directly to the crawler options, this way we get type inference for free:
 
 ```ts
 import { Actor } from 'apify';
@@ -270,38 +248,25 @@ await Actor.main(async () => {
 });
 ```
 
-And we're done! You just created your first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element,
-get its text content and print it to console. Good job!
+And we're done! You just created your first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element, get its text content and print it to console. Good job!
 
-To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.mjs` file in the `my-new-project` we created
-earlier and run `apify run` from that project's directory.
+To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.mjs` file in the `my-new-project` we created earlier and run `apify run` from that project's directory.
 
 To run the code on Apify Platform, just replace the original example with your new code and hit Run.
 
-Whichever environment you choose, you should see the message `The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.`
-printed to the screen. If you do, congratulations and let's move onto some bigger challenges! And if you feel like you don't really know what just happened there,
-no worries, it will all become clear when you learn more about `CheerioCrawler`.
+Whichever environment you choose, you should see the message `The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.` printed to the screen. If you do, congratulations and let's move onto some bigger challenges! And if you feel like you don't really know what just happened there, no worries, it will all become clear when you learn more about `CheerioCrawler`.
 
 ## CheerioCrawler aka jQuery crawler
 
-This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If you're familiar with `jQuery`,
-you'll understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is
-essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. You can use it, as you would `jQuery`, for manipulating the DOM
-of an HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in. But `jQuery` runs
-in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
+This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If you're familiar with `jQuery`, you'll understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. You can use it, as you would `jQuery`, for manipulating the DOM of an HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in. But `jQuery` runs in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
 
 ### Overview
 
-&#8203;<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As you remember
-from the previous section, the URLs are fed to the crawler using either the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> or the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>.
-The HTTP responses it gets back are HTML pages, the same pages you would get in your browser when you first load a URL.
+&#8203;<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As you remember from the previous section, the URLs are fed to the crawler using either the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> or the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>. The HTTP responses it gets back are HTML pages, the same pages you would get in your browser when you first load a URL.
 
-> Note, however, that modern web pages often do not serve all of their content in the first HTML response, but rather the first HTML contains links to other
-> resources such as CSS and JavaScript that get downloaded afterwards and together they create the final page. See our <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to crawl those.
+> Note, however, that modern web pages often do not serve all of their content in the first HTML response, but rather the first HTML contains links to other resources such as CSS and JavaScript that get downloaded afterwards and together they create the final page. See our <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to crawl those.
 
-Once the page's HTML is retrieved, the crawler will pass it to [Cheerio](https://www.npmjs.com/package/cheerio) for
-parsing. The result is the typical `$` function, which should be familiar to `jQuery` users. You can use this `$` to do all sorts of lookups and
-manipulation of the page's HTML, but in scraping, we will mostly use it to find specific HTML elements and extract their data.
+Once the page's HTML is retrieved, the crawler will pass it to [Cheerio](https://www.npmjs.com/package/cheerio) for parsing. The result is the typical `$` function, which should be familiar to `jQuery` users. You can use this `$` to do all sorts of lookups and manipulation of the page's HTML, but in scraping, we will mostly use it to find specific HTML elements and extract their data.
 
 Example use of Cheerio and its `$` function in comparison to browser JavaScript:
 
@@ -394,12 +359,10 @@ const links = $('a[href]')
     .get();
 ```
 
-Our new function finds all the `<a>` elements that contain the `href` attribute and extracts the attributes into an array of strings. But there's a problem.
-There could be relative links in the list and those can't be used on their own. We need to resolve them using our domain as base URL and
+Our new function finds all the `<a>` elements that contain the `href` attribute and extracts the attributes into an array of strings. But there's a problem. There could be relative links in the list and those can't be used on their own. We need to resolve them using our domain as base URL and
 we will use one of Node.js' standard libraries to do this.
 
-Apify exposes two URL properties: <ApiLink to="core/class/Request#url">`request.url`</ApiLink> and <ApiLink to="core/class/Request#loadedUrl">`request.loadedUrl`</ApiLink>.
-What's the difference? Well, `request.url` is the URL of the first request. In case of redirects, the URL changes. The final one is stored as `request.loadedUrl`.
+Apify exposes two URL properties: <ApiLink to="core/class/Request#url">`request.url`</ApiLink> and <ApiLink to="core/class/Request#loadedUrl">`request.loadedUrl`</ApiLink>. What's the difference? Well, `request.url` is the URL of the first request. In case of redirects, the URL changes. The final one is stored as `request.loadedUrl`.
 
 ```ts
 // At the top of the file:
@@ -561,12 +524,9 @@ some extra functionality.
 
 ### Introduction to `Actor.utils.enqueueLinks()`
 
-Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as possible.
-With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`. It also allows you
-to modify the resulting `Requests` to match your crawling needs.
+Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as possible. With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`. It also allows you to modify the resulting `Requests` to match your crawling needs.
 
-`enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because you don't have to
-remember their order! But also because we can easily extend its API and add new features. You can <ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
+`enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because you don't have to remember their order! But also because we can easily extend its API and add new features. You can <ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
 
 We suggest using ES6 destructuring to grab the `enqueueLinks()` function off of the `utils` object, so you don't have to type `Actor.utils` all the time.
 
@@ -584,8 +544,7 @@ await enqueueLinks({
 
 ### Basic use of `enqueueLinks()` with `CheerioCrawler`
 
-We already implemented logic that takes care of enqueueing new links to a `RequestQueue` in the previous chapter on `CheerioCrawler`. Let's look at that
-logic and implement the same functionality using `enqueueLinks()`.
+We already implemented logic that takes care of enqueueing new links to a `RequestQueue` in the previous chapter on `CheerioCrawler`. Let's look at that logic and implement the same functionality using `enqueueLinks()`.
 
 We found that the crawler needed to do these 4 things to crawl `apify.com`:
 
@@ -594,17 +553,14 @@ We found that the crawler needed to do these 4 things to crawl `apify.com`:
 3. Enqueue them to the `RequestQueue`
 4. Scrape the newly enqueued links
 
-Using `enqueueLinks()` we can squash the first 3 into a single function call, if we set the options correctly. For now, let's just stick to the basics.
-At the very least, we need a source where to find the links and the queue to enqueue them to. The `$` Cheerio object is one of the sources the function accepts,
-and we already know how to work with it in the `requestHandler`. We also know how to get a `requestQueue` instance.
+Using `enqueueLinks()` we can squash the first 3 into a single function call, if we set the options correctly. For now, let's just stick to the basics. At the very least, we need a source where to find the links and the queue to enqueue them to. The `$` Cheerio object is one of the sources the function accepts, and we already know how to work with it in the `requestHandler`. We also know how to get a `requestQueue` instance.
 
 ```ts
 // Assuming previous existence of the '$' and 'requestQueue' variables.
 await enqueueLinks({ $, requestQueue });
 ```
 
-That's all we need to do to enqueue all `<a href="...">` links from the given page to the given queue. Easy, right? Scratch number 1 and 3 off the list.
-Only number 2 remains and to tackle this one, we need to talk about yet another new concept, the pseudo-URL.
+That's all we need to do to enqueue all `<a href="...">` links from the given page to the given queue. Easy, right? Scratch number 1 and 3 off the list. Only number 2 remains and to tackle this one, we need to talk about yet another new concept, the pseudo-URL.
 
 #### Introduction to pseudo-URLs
 
@@ -683,12 +639,9 @@ www.online-store.org/items/7003
 
 #### Using `enqueueLinks()` to filter links
 
-That's been quite a lot of theory and examples. We might as well put it to practice. Going back to our `CheerioCrawler` exercise, we still have number 2
-left to cross off the list - filter links pointing to `apify.com`. We've already shown that at the very least, the `enqueueLinks()` function needs two arguments.
-The source, in our case the `$` object, and the destination - the `requestQueue`. To filter links, we need to add a third argument: `pseudoUrls`.
+That's been quite a lot of theory and examples. We might as well put it to practice. Going back to our `CheerioCrawler` exercise, we still have number 2 left to cross off the list - filter links pointing to `apify.com`. We've already shown that at the very least, the `enqueueLinks()` function needs two arguments. The source, in our case the `$` object, and the destination - the `requestQueue`. To filter links, we need to add a third argument: `pseudoUrls`.
 
-The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. <ApiLink to="utils#enqueueLinks">See the reference</ApiLink> for all of them.
-Since we just need to filter out same domain links, we'll keep it simple and use a pseudo-URL `string`.
+The `options.pseudoUrls` argument is always an `Array`, but its contents can take on many forms. <ApiLink to="utils#enqueueLinks">See the reference</ApiLink> for all of them. Since we just need to filter out same domain links, we'll keep it simple and use a pseudo-URL `string`.
 
 ```ts
 // Assuming previous existence of the '$' and 'requestQueue' variables.
@@ -833,8 +786,7 @@ can find ready-made solutions for crawling [Google Places](https://apify.com/dro
 [Google Search](https://apify.com/apify/google-search-scraper),
 [Booking](https://apify.com/dtrungtin/booking-scraper),
 [Instagram](https://apify.com/jaroslavhejlek/instagram-scraper),
-[Tripadvisor](https://apify.com/maxcopell/tripadvisor) and many other websites. Feel free to check them out! It's also a great place to practice our Jedi
-scraping skills since it has categories, lists and details. That's almost like our imaginary `online-store.com` from the previous chapter.
+[Tripadvisor](https://apify.com/maxcopell/tripadvisor) and many other websites. Feel free to check them out! It's also a great place to practice our Jedi scraping skills since it has categories, lists and details. That's almost like our imaginary `online-store.com` from the previous chapter.
 
 ### The importance of having a plan
 
@@ -861,8 +813,7 @@ scrape all actors (see the `Show` dropdown) in all categories (which can be foun
 6.  Last modification date
 7.  Number of runs
 
-We can see that some of the information is available directly on the list page, but for details such as "Last modification date" or "Number of runs" we'll
-also need
+We can see that some of the information is available directly on the list page, but for details such as "Last modification date" or "Number of runs" we'll also need
 to open the actor detail pages.
 
 ![data to scrape](/img/getting-started/scraping-practice.jpg 'Overview of data to be scraped.')
@@ -1287,8 +1238,8 @@ return {
 };
 ```
 
-The `ul.ActorHeader-stats > li:nth-of-type(3)` looks complicated, but it only reads that we're looking for a `<ul class="ActorHeader-stats ...">` element
-and within that element we're looking for the third `<li>` element. We grab its text, but we're only interested in the number of runs. So we parse the number out
+The `ul.ActorHeader-stats > li:nth-of-type(3)` looks complicated, but it only reads that we're looking for a `<ul class="ActorHeader-stats ...">` element and within that
+element we're looking for the third `<li>` element. We grab its text, but we're only interested in the number of runs. So we parse the number out
 using a regular expression, but its type is still a `string`, so we finally convert the result to a `number` by wrapping it with a `Number()` call.
 
 > The numbers are formatted with commas as thousands separators (e.g. `'1,234,567'`), so to extract it, we
@@ -1708,8 +1659,8 @@ your logic separate. Less code in a single file means less code you need to thin
 
 #### Using `Actor.utils.log` instead of `console.log`
 
-We wont go to great lengths here to talk about `utils.log`, because you can read <ApiLink to="core/class/Log">it all in the documentation</ApiLink>, but
-there's just one thing that we need to stress: **log levels**.
+We wont go to great lengths here to talk about `utils.log`, because you can read <ApiLink to="core/class/Log">it all in the documentation</ApiLink>, but there's just
+one thing that we need to stress: **log levels**.
 
 `utils.log` enables you to use different log levels, such as `log.debug`, `log.info` or `log.warning`. It not only makes your log more readable, but
 it also allows selective turning off of some levels by either calling the `utils.log.setLevel()` function or by setting an `APIFY_LOG_LEVEL` variable.
