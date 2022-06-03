@@ -255,7 +255,7 @@ export class Statistics {
         if (!savedState) return;
 
         // We saw a run where the requestRetryHistogram was not iterable and crashed
-        // the actor. Adding some logging to monitor this problem in the future.
+        // the crawler. Adding some logging to monitor this problem in the future.
         if (!Array.isArray(savedState.requestRetryHistogram)) {
             this.log.warning('Received invalid state from Key-value store.', {
                 persistStateKey: this.persistStateKey,

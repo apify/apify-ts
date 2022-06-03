@@ -41,19 +41,19 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  * The `KeyValueStore` class represents a key-value store, a simple data storage that is used
  * for saving and reading data records or files. Each data record is
  * represented by a unique key and associated with a MIME content type. Key-value stores are ideal
- * for saving screenshots, actor inputs and outputs, web pages, PDFs or to persist the state of crawlers.
+ * for saving screenshots, crawler inputs and outputs, web pages, PDFs or to persist the state of crawlers.
  *
  * Do not instantiate this class directly, use the
  * {@link KeyValueStore.open} function instead.
  *
- * Each actor run is associated with a default key-value store, which is created exclusively
- * for the run. By convention, the actor input and output are stored into the
+ * Each crawler run is associated with a default key-value store, which is created exclusively
+ * for the run. By convention, the crawler input and output are stored into the
  * default key-value store under the `INPUT` and `OUTPUT` key, respectively.
  * Typically, input and output are JSON files, although it can be any other format.
  * To access the default key-value store directly, you can use the
- * {@link Actor.getValue} and {@link Actor.setValue} convenience functions.
+ * {@link KeyValueStore.getValue} and {@link KeyValueStore.setValue} convenience functions.
  *
- * To access the input, you can also use the {@link Actor.getInput} convenience function.
+ * To access the input, you can also use the {@link KeyValueStore.getInput} convenience function.
  *
  * `KeyValueStore` stores its data either on local disk or in the Apify cloud,
  * depending on whether the [`APIFY_IS_AT_HOME`](/docs/guides/environment-variables#apify_is_at_home)
@@ -78,13 +78,13 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
  * **Example usage:**
  *
  * ```javascript
- * // Get actor input from the default key-value store.
- * const input = await Actor.getInput();
+ * // Get crawler input from the default key-value store.
+ * const input = await KeyValueStore.getInput();
  * // Get some value from the default key-value store.
- * const otherValue = await Actor.getValue('my-key');
+ * const otherValue = await KeyValueStore.getValue('my-key');
  *
- * // Write actor output to the default key-value store.
- * await Actor.setValue('OUTPUT', { myResult: 123 });
+ * // Write crawler output to the default key-value store.
+ * await KeyValueStore.setValue('OUTPUT', { myResult: 123 });
  *
  * // Open a named key-value store
  * const store = await KeyValueStore.open('some-name');
@@ -183,7 +183,7 @@ export class KeyValueStore {
      * {@link KeyValueStore.getValue} function.
      *
      * **IMPORTANT:** Always make sure to use the `await` keyword when calling `setValue()`,
-     * otherwise the actor process might finish before the value is stored!
+     * otherwise the crawler process might finish before the value is stored!
      *
      * @param key
      *   Unique key of the record. It can be at most 256 characters long and only consist
@@ -297,7 +297,7 @@ export class KeyValueStore {
      *
      * @param [storeIdOrName]
      *   ID or name of the key-value store to be opened. If `null` or `undefined`,
-     *   the function returns the default key-value store associated with the actor run.
+     *   the function returns the default key-value store associated with the crawler run.
      * @param [options] Storage manager options.
      */
     static async open(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
@@ -308,6 +308,109 @@ export class KeyValueStore {
 
         const manager = new StorageManager(KeyValueStore, options.config);
         return manager.openStorage(storeIdOrName);
+    }
+
+    /**
+     * Gets a value from the default {@link KeyValueStore} associated with the current crawler run.
+     *
+     * This is just a convenient shortcut for {@link KeyValueStore.getValue}.
+     * For example, calling the following code:
+     * ```javascript
+     * const value = await KeyValueStore.getValue('my-key');
+     * ```
+     *
+     * is equivalent to:
+     * ```javascript
+     * const store = await KeyValueStore.open();
+     * const value = await store.getValue('my-key');
+     * ```
+     *
+     * To store the value to the default key-value store, you can use the {@link KeyValueStore.setValue} function.
+     *
+     * For more information, see  {@link KeyValueStore.open}
+     * and  {@link KeyValueStore.getValue}.
+     *
+     * @param key Unique record key.
+     * @returns
+     *   Returns a promise that resolves to an object, string
+     *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
+     *   on the MIME content type of the record, or `null`
+     *   if the record is missing.
+     * @ignore
+     */
+    static async getValue<T = unknown>(key: string): Promise<T | null> {
+        const store = await this.open();
+        return store.getValue<T>(key);
+    }
+
+    /**
+     * Stores or deletes a value in the default {@link KeyValueStore} associated with the current crawler run.
+     *
+     * This is just a convenient shortcut for  {@link KeyValueStore.setValue}.
+     * For example, calling the following code:
+     * ```javascript
+     * await KeyValueStore.setValue('OUTPUT', { foo: "bar" });
+     * ```
+     *
+     * is equivalent to:
+     * ```javascript
+     * const store = await KeyValueStore.open();
+     * await store.setValue('OUTPUT', { foo: "bar" });
+     * ```
+     *
+     * To get a value from the default key-value store, you can use the  {@link KeyValueStore.getValue} function.
+     *
+     * For more information, see  {@link KeyValueStore.open}
+     * and  {@link KeyValueStore.getValue}.
+     *
+     * @param key
+     *   Unique record key.
+     * @param value
+     *   Record data, which can be one of the following values:
+     *    - If `null`, the record in the key-value store is deleted.
+     *    - If no `options.contentType` is specified, `value` can be any JavaScript object, and it will be stringified to JSON.
+     *    - If `options.contentType` is set, `value` is taken as is, and it must be a `String` or [`Buffer`](https://nodejs.org/api/buffer.html).
+     *   For any other value an error will be thrown.
+     * @param [options]
+     * @ignore
+     */
+    static async setValue<T>(key: string, value: T | null, options: RecordOptions = {}): Promise<void> {
+        const store = await this.open();
+        return store.setValue(key, value, options);
+    }
+
+    /**
+     * Gets the crawler input value from the default {@link KeyValueStore} associated with the current crawler run.
+     *
+     * This is just a convenient shortcut for [`keyValueStore.getValue('INPUT')`](core/class/KeyValueStore#getValue).
+     * For example, calling the following code:
+     * ```javascript
+     * const input = await KeyValueStore.getInput();
+     * ```
+     *
+     * is equivalent to:
+     * ```javascript
+     * const store = await KeyValueStore.open();
+     * await store.getValue('INPUT');
+     * ```
+     *
+     * Note that the `getInput()` function does not cache the value read from the key-value store.
+     * If you need to use the input multiple times in your crawler,
+     * it is far more efficient to read it once and store it locally.
+     *
+     * For more information, see  {@link KeyValueStore.open}
+     * and {@link KeyValueStore.getValue}.
+     *
+     * @returns
+     *   Returns a promise that resolves to an object, string
+     *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
+     *   on the MIME content type of the record, or `null`
+     *   if the record is missing.
+     * @ignore
+     */
+    static async getInput<T = Dictionary | string | Buffer>(): Promise<T | null> {
+        const store = await this.open();
+        return store.getValue<T>(store.config.get('inputKey'));
     }
 }
 

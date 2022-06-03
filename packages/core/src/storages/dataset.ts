@@ -189,7 +189,7 @@ export interface DatasetIteratorOptions extends Omit<DatasetDataOptions, 'offset
  *
  * ```javascript
  * // Write a single row to the default dataset
- * await Actor.pushData({ col1: 123, col2: 'val2' });
+ * await Dataset.pushData({ col1: 123, col2: 'val2' });
  *
  * // Open a named dataset
  * const dataset = await Dataset.open('some-name');
