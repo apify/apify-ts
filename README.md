@@ -156,8 +156,8 @@ cd my-hello-world
 apify run
 ```
 
-By default, the crawling data will be stored in a local directory at `./apify_storage`. For example, the input JSON file for the actor is expected to
-be in the default key-value store in `./apify_storage/key_value_stores/default/INPUT.json`.
+By default, the crawling data will be stored in a local directory at `./crawlee_storage`. For example, the input JSON file for the actor is expected to
+be in the default key-value store in `./crawlee_storage/key_value_stores/default/INPUT.json`.
 
 Now you can easily deploy your code to the Apify platform by running:
 
