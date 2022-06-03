@@ -28,7 +28,7 @@ export const colors = {
 export function getStorage(dirName) {
     let folderName;
     if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') folderName = 'apify_storage';
-    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') folderName = 'memory_storage';
+    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') folderName = 'crawlee_storage';
     return join(dirName, folderName);
 }
 
@@ -147,7 +147,7 @@ export async function clearPackages(dirName) {
 export async function clearStorage(dirName) {
     let folderName;
     if (process.env.STORAGE_IMPLEMENTATION === 'LOCAL') folderName = 'apify_storage';
-    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') folderName = 'memory_storage';
+    if (process.env.STORAGE_IMPLEMENTATION === 'MEMORY') folderName = 'crawlee_storage';
     const destPackagesDir = join(dirName, 'actor', folderName);
     await fs.remove(destPackagesDir);
 }

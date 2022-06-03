@@ -129,7 +129,7 @@ When you run the example, you should see Crawlee automating a Chrome browser.
 
 ![Chrome Scrape](https://apify.github.io/apify-ts/img/chrome_scrape.gif)
 
-By default, Crawlee stores data to `./memory_storage` in the current working directory. You can override this directory via `CRAWLEE_STORAGE_DIR` env var. For details, see [Environment variables](https://apify.github.io/apify-ts/docs/guides/environment-variables), [Request storage](https://apify.github.io/apify-ts/docs/guides/request-storage) and [Result storage](https://apify.github.io/apify-ts/docs/guides/result-storage).
+By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this directory via `CRAWLEE_STORAGE_DIR` env var. For details, see [Environment variables](https://apify.github.io/apify-ts/docs/guides/environment-variables), [Request storage](https://apify.github.io/apify-ts/docs/guides/request-storage) and [Result storage](https://apify.github.io/apify-ts/docs/guides/result-storage).
 
 ### Local usage with Apify command-line interface (CLI)
 
