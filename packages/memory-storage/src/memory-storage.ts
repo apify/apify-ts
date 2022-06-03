@@ -15,7 +15,7 @@ import { initWorkerIfNeeded } from './workers/instance';
 export interface MemoryStorageOptions {
     /**
      * Path to directory where the data will also be saved.
-     * @default process.env.CRAWLEE_STORAGE_DIR ?? './memory_storage'
+     * @default process.env.CRAWLEE_STORAGE_DIR ?? './crawlee_storage'
      */
     localDataDirectory?: string;
     /**
@@ -42,7 +42,7 @@ export class MemoryStorage implements storage.StorageClient {
             writeMetadata: s.boolean.optional,
         }).parse(options);
 
-        this.localDataDirectory = options.localDataDirectory ?? process.env.CRAWLEE_STORAGE_DIR ?? './memory_storage';
+        this.localDataDirectory = options.localDataDirectory ?? process.env.CRAWLEE_STORAGE_DIR ?? './crawlee_storage';
         this.datasetsDirectory = resolve(this.localDataDirectory, 'datasets');
         this.keyValueStoresDirectory = resolve(this.localDataDirectory, 'key_value_stores');
         this.requestQueuesDirectory = resolve(this.localDataDirectory, 'request_queues');
