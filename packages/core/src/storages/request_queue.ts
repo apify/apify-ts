@@ -130,7 +130,7 @@ export interface RequestQueueOperationOptions {
  * **Example usage:**
  *
  * ```javascript
- * // Open the default request queue associated with the actor run
+ * // Open the default request queue associated with the crawler run
  * const queue = await RequestQueue.open();
  *
  * // Open a named request queue
@@ -776,7 +776,7 @@ export class RequestQueue {
      *
      * @param [queueIdOrName]
      *   ID or name of the request queue to be opened. If `null` or `undefined`,
-     *   the function returns the default request queue associated with the actor run.
+     *   the function returns the default request queue associated with the crawler run.
      * @param [options] Open Request Queue options.
      */
     static async open(queueIdOrName?: string | null): Promise<RequestQueue> {

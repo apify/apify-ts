@@ -9,8 +9,7 @@ export class LocalEventManager extends EventManager {
     private previousTicks = { idle: 0, total: 0 };
 
     /**
-     * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
-     * This is an internal function that is automatically called by `Actor.main()`.
+     * Initializes the EventManager and sets up periodic `systemInfo` and `persistState` events.
      */
     override async init() {
         if (this.initialized) {

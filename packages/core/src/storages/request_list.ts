@@ -61,7 +61,7 @@ export interface RequestListOptions {
      * This is very useful in a scenario when getting the sources is a resource intensive or time consuming
      * task, such as fetching URLs from multiple sitemaps or parsing URLs from large datasets. Using the
      * `sourcesFunction` in combination with `persistStateKey` and `persistRequestsKey` will allow you to
-     * fetch and parse those URLs only once, saving valuable time when your actor migrates or restarts.
+     * fetch and parse those URLs only once, saving valuable time when your crawler migrates or restarts.
      *
      * If both {@link RequestListOptions.sources} and {@link RequestListOptions.sourcesFunction} are provided,
      * the sources returned by the function will be added after the `sources`.
@@ -79,7 +79,7 @@ export interface RequestListOptions {
      *
      * // Sitemaps can change in real-time, so it's important to persist
      * // the URLs we collected. Otherwise we might lose our scraping
-     * // state in case of an actor migration / failure / time-out.
+     * // state in case of an crawler migration / failure / time-out.
      * const requestList = new RequestList({
      *     sourcesFunction,
      *     persistStateKey: 'state-key',
@@ -105,7 +105,7 @@ export interface RequestListOptions {
     /**
      * Identifies the key in the default key-value store under which `RequestList` periodically stores its
      * state (i.e. which URLs were crawled and which not).
-     * If the actor is restarted, `RequestList` will read the state
+     * If the crawler is restarted, `RequestList` will read the state
      * and continue where it left off.
      *
      * If `persistStateKey` is not set, `RequestList` will always start from the beginning,
@@ -193,9 +193,9 @@ export interface RequestListOptions {
  * which are in progress and which were reclaimed. The state may be automatically persisted to the default
  * {@link KeyValueStore} by setting the `persistStateKey` option so that if the Node.js process is restarted,
  * the crawling can continue where it left off. The automated persisting is launched upon receiving the `persistState`
- * event that is periodically emitted by {@link events|Actor.events}.
+ * event that is periodically emitted by {@link EventManager}.
  *
- * The internal state is closely tied to the provided sources (URLs). If the sources change on actor restart, the state will become corrupted and
+ * The internal state is closely tied to the provided sources (URLs). If the sources change on crawler restart, the state will become corrupted and
  * `RequestList` will raise an exception. This typically happens when the sources is a list of URLs downloaded from the web.
  * In such case, use the `persistRequestsKey` option in conjunction with `persistStateKey`,
  * to make the `RequestList` store the initial sources to the default key-value store and load them after restart,
