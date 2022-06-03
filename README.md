@@ -1,11 +1,20 @@
-# Crawlee: The scalable web crawling and scraping library for JavaScript
+<h1 align="center">
+    <a href="https://apify.github.io/apify-ts/">
+        <img src="https://raw.githubusercontent.com/apify/apify-ts/master/website/static/img/crawlee-light.svg?sanitize=true" alt="Crawlee" width="500" />
+        <span style="display: none">Crawlee</span>
+    </a>
+    <br>
+    <small>The scalable web crawling and scraping library for JavaScript</small>
+</h1>
 
-<!-- Mirror this part to src/index.js -->
+<p align=center>
 
 [![NPM dev version](https://img.shields.io/npm/v/@crawlee/core/next.svg)](https://www.npmjs.com/package/@crawlee/core)
 [![Downloads](https://img.shields.io/npm/dm/@crawlee/core.svg)](https://www.npmjs.com/package/@crawlee/core)
 [![Chat on discord](https://img.shields.io/discord/801163717915574323?label=discord)](https://discord.gg/jyEM2PRvMU)
 [![Build Status](https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml/badge.svg?branch=master)](https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml)
+
+</p>
 
 Crawlee simplifies the development of web crawlers, scrapers, data extractors and web automation jobs.
 It provides tools to manage and automatically scale a pool of headless browsers,
