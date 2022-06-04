@@ -6,6 +6,7 @@ import { Server as ProxyChainServer } from 'proxy-chain';
 import puppeteer, { Page } from 'puppeteer';
 import playwright from 'playwright';
 import { addTimeoutToPromise } from '@apify/timeout';
+import { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
 import { BrowserPool, PrePageCreateHook } from '../../packages/browser-pool/src/browser-pool';
 import { PuppeteerPlugin } from '../../packages/browser-pool/src/puppeteer/puppeteer-plugin';
 import { PlaywrightPlugin } from '../../packages/browser-pool/src/playwright/playwright-plugin';
@@ -699,10 +700,10 @@ describe('BrowserPool', () => {
                             };
                         });
                         // @ts-expect-error mistypings
-                        const { fingerprint } = browserController!.launchContext!;
+                        const { fingerprint } = browserController!.launchContext!.fingerprint as BrowserFingerprintWithHeaders;
 
                         expect(data.hardwareConcurrency).toBe(fingerprint?.navigator.hardwareConcurrency);
-                        expect(data.userAgent).toBe(fingerprint?.userAgent);
+                        expect(data.userAgent).toBe(fingerprint?.navigator.userAgent);
                     });
 
                     test('should hide webdriver', async () => {
