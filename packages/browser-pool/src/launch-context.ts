@@ -1,4 +1,4 @@
-import { Fingerprint } from 'fingerprint-injector';
+import { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
 import type { BrowserPlugin, CommonBrowser, CommonLibrary } from './abstract-classes/browser-plugin';
 import { UnwrapPromise } from './utils';
 
@@ -65,7 +65,7 @@ export class LaunchContext<
 
     private readonly _reservedFieldNames = [...Reflect.ownKeys(this), 'extend'];
 
-    fingerprint?: Fingerprint;
+    fingerprint?: BrowserFingerprintWithHeaders;
 
     // TODO: change this to PropertyKey when TypeScript 4.4 releases
     [K: string]: unknown;

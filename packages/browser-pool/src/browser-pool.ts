@@ -3,7 +3,8 @@ import { nanoid } from 'nanoid';
 import ow from 'ow';
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
-import { Fingerprint, FingerprintInjector } from 'fingerprint-injector';
+import { FingerprintInjector } from 'fingerprint-injector';
+import { BrowserFingerprintWithHeaders, FingerprintGenerator } from 'fingerprint-generator';
 import QuickLRU from 'quick-lru';
 import { BrowserController } from './abstract-classes/browser-controller';
 import { BrowserPlugin } from './abstract-classes/browser-plugin';
@@ -12,7 +13,6 @@ import { LaunchContext } from './launch-context';
 import { log } from './logger';
 import { InferBrowserPluginArray, UnwrapPromise } from './utils';
 import { createFingerprintPreLaunchHook, createPrePageCreateHook, createPostPageCreateHook } from './fingerprinting/hooks';
-import { FingerprintGeneratorOptions } from './fingerprinting/types';
 
 const PAGE_CLOSE_KILL_TIMEOUT_MILLIS = 1000;
 const BROWSER_KILLER_INTERVAL_MILLIS = 10 * 1000;
@@ -25,7 +25,7 @@ export interface BrowserPoolEvents<BC extends BrowserController, Page> {
 }
 
 export interface FingerprintsOptions{
-    fingerprintGeneratorOptions?: FingerprintGeneratorOptions;
+    fingerprintGeneratorOptions?: ConstructorParameters<typeof FingerprintGenerator>[0];
     /**
      * @default true
      */
@@ -281,7 +281,7 @@ export class BrowserPool<
     fingerprintInjector?: FingerprintInjector;
     // fingerprintGenerator?: FingerprintGenerator; // FIXME revert once we migrate to the new fingerprint suite
     fingerprintGenerator?: any;
-    fingerprintCache?: QuickLRU<string, Fingerprint>;
+    fingerprintCache?: QuickLRU<string, BrowserFingerprintWithHeaders>;
 
     private browserKillerInterval? = setInterval(
         () => this._closeInactiveRetiredBrowsers(),
@@ -739,8 +739,6 @@ export class BrowserPool<
 
     private _initializeFingerprinting(): void {
         const { useFingerprintPerProxyCache = true, fingerprintPerProxyCacheSize = 10_000 } = this.fingerprintsOptions;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires,global-require
-        const FingerprintGenerator = require('fingerprint-generator');
         this.fingerprintGenerator = new FingerprintGenerator(this.fingerprintsOptions.fingerprintGeneratorOptions);
         this.fingerprintInjector = new FingerprintInjector();
 

@@ -1,3 +1,4 @@
+import { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
 import { FingerprintInjector } from 'fingerprint-injector';
 import { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } from '..';
 import { BrowserController } from '../abstract-classes/browser-controller';
@@ -22,15 +23,15 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
         const { launchOptions }: { launchOptions: any } = launchContext;
         // If no options are passed we try to pass best default options as possible to match browser and OS.
         const fingerprintGeneratorFinalOptions = fingerprintGeneratorOptions || getGeneratorDefaultOptions(launchContext);
-        let fingerprint;
+        let fingerprint : BrowserFingerprintWithHeaders;
 
         if (proxyUrl && fingerprintCache?.has(proxyUrl)) {
-            fingerprint = fingerprintCache.get(proxyUrl);
+            fingerprint = fingerprintCache.get(proxyUrl)!;
         } else if (proxyUrl) {
-            fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions).fingerprint;
+            fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions);
             fingerprintCache?.set(proxyUrl, fingerprint);
         } else {
-            fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions).fingerprint;
+            fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions);
         }
 
         launchContext.extend({ fingerprint });
@@ -38,7 +39,7 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
         if (useIncognitoPages) {
             return;
         }
-        const { userAgent, screen } = fingerprint!;
+        const { navigator: { userAgent }, screen } = fingerprint.fingerprint!;
 
         launchOptions.userAgent = userAgent;
 
@@ -55,10 +56,10 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
 export function createPrePageCreateHook() {
     return (_pageId: string, browserController: BrowserController, pageOptions: any): void => {
         const { launchContext, browserPlugin } = browserController;
-        const fingerprint = launchContext.fingerprint!;
+        const { fingerprint } = launchContext.fingerprint!;
 
         if (launchContext.useIncognitoPages && browserPlugin instanceof PlaywrightPlugin && pageOptions) {
-            pageOptions.userAgent = fingerprint.userAgent;
+            pageOptions.userAgent = fingerprint.navigator.userAgent;
             pageOptions.viewport = {
                 width: fingerprint.screen.width,
                 height: fingerprint.screen.height,
