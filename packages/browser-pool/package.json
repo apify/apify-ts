@@ -36,8 +36,8 @@
 	"dependencies": {
 		"@apify/log": "^1.2.3",
 		"@apify/timeout": "^0.2.1",
-		"fingerprint-generator": "^2.0.0-dev.2",
-		"fingerprint-injector": "^2.0.0-dev.2",
+		"fingerprint-generator": "^2.0.0-dev.3",
+		"fingerprint-injector": "^2.0.0-dev.3",
 		"lodash.merge": "^4.6.2",
 		"nanoid": "^3.3.4",
 		"ow": "^0.28.1",
