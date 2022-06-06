@@ -19,7 +19,7 @@ describe('Router', () => {
             logs.push(`default handled with url ${ctx.request.loadedUrl}`);
         });
 
-        const log = { info: jest.fn(), warn: jest.fn() };
+        const log = { info: jest.fn(), warn: jest.fn(), debug: jest.fn() };
         await router({ request: { loadedUrl: 'https://example.com/A', label: 'A' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/A', label: 'A' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
@@ -53,7 +53,7 @@ describe('Router', () => {
         const router = Router.create();
         router.addHandler('A', async (ctx) => {});
         expect(() => router.addHandler('A', async (ctx) => {})).toThrow();
-        const log = { info: jest.fn(), warn: jest.fn() };
+        const log = { info: jest.fn(), warn: jest.fn(), debug: jest.fn() };
         expect(() => router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any)).toThrow(MissingRouteError);
         router.addDefaultHandler(async (ctx) => {});
         expect(() => router.addDefaultHandler(async (ctx) => {})).toThrow();

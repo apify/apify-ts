@@ -1108,7 +1108,7 @@ interface HandlePropertyNameChangeData<New, Old> {
  * > Serves as a shortcut for using `Router.create<BasicCrawlingContext>()`.
  *
  * ```ts
- * import { BasicCrawler, createBasicRouter } from '@crawlee/basic';
+ * import { BasicCrawler, createBasicRouter } from 'crawlee';
  *
  * const router = createBasicRouter();
  * router.addHandler('label-a', async (ctx) => {

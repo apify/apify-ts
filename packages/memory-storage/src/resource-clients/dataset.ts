@@ -158,7 +158,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             s.string,
             s.object<Data>({} as Data).passthrough,
             s.array(s.union(s.string, s.object<Data>({} as Data).passthrough)),
-        ).parse(items);
+        ).parse(items) as Data[];
 
         // Check by id
         const existingStoreById = await findOrCacheDatasetByPossibleId(this.client, this.name ?? this.id);

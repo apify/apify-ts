@@ -1,3 +1,4 @@
+import type { StorageManagerOptions } from '@crawlee/core';
 import { KeyValueStore as CoreKeyValueStore } from '@crawlee/core';
 
 /**
@@ -10,6 +11,13 @@ export class KeyValueStore extends CoreKeyValueStore {
      */
     getPublicUrl(key: string): string {
         return `https://api.apify.com/v2/key-value-stores/${this.id}/records/${key}`;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    static override async open(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
+        return super.open(storeIdOrName, options) as unknown as KeyValueStore;
     }
 }
 

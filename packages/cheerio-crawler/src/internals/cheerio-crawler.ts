@@ -1075,7 +1075,7 @@ function addResponsePropertiesToStream(stream: GotRequest) {
  * > Serves as a shortcut for using `Router.create<CheerioCrawlingContext>()`.
  *
  * ```ts
- * import { CheerioCrawler, createCheerioRouter } from '@crawlee/cheerio';
+ * import { CheerioCrawler, createCheerioRouter } from 'crawlee';
  *
  * const router = createCheerioRouter();
  * router.addHandler('label-a', async (ctx) => {

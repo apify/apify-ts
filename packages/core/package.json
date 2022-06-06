@@ -63,14 +63,12 @@
         "@crawlee/types": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
         "@types/tough-cookie": "^4.0.2",
-        "iconv-lite": "^0.6.3",
         "minimatch": "^5.1.0",
         "ow": "^0.28.1",
         "stream-chain": "^2.2.5",
         "stream-json": "^1.7.4",
         "tldts": "^5.7.80",
-        "tough-cookie": "^4.0.0",
-        "ws": "^8.7.0"
+        "tough-cookie": "^4.0.0"
     },
     "peerDependencies": {
         "puppeteer": ">= 9.x <= 14.x"

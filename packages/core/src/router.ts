@@ -12,12 +12,12 @@ export interface RouterHandler<Context extends CrawlingContext = CrawlingContext
  * Simple router that works based on request labels. This instance can then serve as a `requestHandler` of your crawler.
  *
  * ```ts
- * import { Router, CheerioCrawler, CheerioCrawlingContext } from '@crawlee/cheerio';
+ * import { Router, CheerioCrawler, CheerioCrawlingContext } from 'crawlee';
  *
  * const router = Router.create<CheerioCrawlingContext>();
  *
  * // we can also use factory methods for specific crawling contexts, the above equals to:
- * // import { createCheerioRouter } from '@crawlee/cheerio';
+ * // import { createCheerioRouter } from 'crawlee';
  * // const router = createCheerioRouter();
  *
  * router.addHandler('label-a', async (ctx) => {
@@ -36,7 +36,7 @@ export interface RouterHandler<Context extends CrawlingContext = CrawlingContext
  * Alternatively we can use the default router instance from crawler object:
  *
  * ```ts
- * import { CheerioCrawler } from '@crawlee/cheerio';
+ * import { CheerioCrawler } from 'crawlee';
  *
  * const crawler = new CheerioCrawler();
  *
@@ -110,7 +110,7 @@ export class Router<Context extends CrawlingContext> {
      * Creates new router instance. This instance can then serve as a `requestHandler` of your crawler.
      *
      * ```ts
-     * import { Router, CheerioCrawler, CheerioCrawlingContext } from '@crawlee/cheerio';
+     * import { Router, CheerioCrawler, CheerioCrawlingContext } from 'crawlee';
      *
      * const router = Router.create<CheerioCrawlingContext>();
      * router.addHandler('label-a', async (ctx) => {
@@ -136,7 +136,7 @@ export class Router<Context extends CrawlingContext> {
 
         const func = function (context: Context) {
             const { url, loadedUrl, label } = context.request;
-            context.log.info('Page opened.', { label, url: loadedUrl ?? url });
+            context.log.debug('Page opened.', { label, url: loadedUrl ?? url });
             return router.getHandler(label)(context);
         };
 

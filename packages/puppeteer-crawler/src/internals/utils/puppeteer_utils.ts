@@ -5,7 +5,7 @@
  * **Example usage:**
  *
  * ```javascript
- * import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
+ * import { launchPuppeteer, puppeteerUtils } from 'crawlee';
  *
  * // Open https://www.example.com in Puppeteer
  * const browser = await launchPuppeteer();
@@ -188,7 +188,7 @@ export function injectJQuery(page: Page): Promise<unknown> {
  *
  * **Example usage**
  * ```javascript
- * import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
+ * import { launchPuppeteer, puppeteerUtils } from 'crawlee';
  *
  * const browser = await launchPuppeteer();
  * const page = await browser.newPage();

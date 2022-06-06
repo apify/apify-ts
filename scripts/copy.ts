@@ -83,5 +83,7 @@ if (options.canary) {
 copy('README.md', root, target);
 copy('LICENSE.md', root, target);
 copy('package.json', process.cwd(), target);
-rewrite(resolve(target, 'package.json'), (pkg) => pkg.replace(/dist\//g, ''));
+rewrite(resolve(target, 'package.json'), (pkg) => {
+    return pkg.replace(/dist\//g, '').replace(/src\/(.*)\.ts/g, '$1.js');
+});
 rewrite(resolve(target, 'utils.js'), (pkg) => pkg.replace('../package.json', './package.json'));

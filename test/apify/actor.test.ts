@@ -605,7 +605,7 @@ describe.each(StorageTestCases)('Actor - %s', (Emulator) => {
                 const options = { forceCloud: true };
                 const mockOpenStorage = jest.spyOn(StorageManager.prototype, 'openStorage');
                 mockOpenStorage.mockResolvedValueOnce(jest.fn());
-                await sdk.openDataset(datasetName, options);
+                const ds = await sdk.openDataset(datasetName, options);
                 expect(mockOpenStorage).toBeCalledTimes(1);
                 expect(mockOpenStorage).toBeCalledWith(datasetName, sdk.apifyClient);
             });
