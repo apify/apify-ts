@@ -2,7 +2,7 @@ import { browserTools, constants as scraperToolsConstants, CrawlerSetupOptions, 
 import { Actor, ApifyEnv } from 'apify';
 import {
     AutoscaledPool,
-    BrowserCrawlerHandleFailedRequestInput,
+    BrowserFailedRequestContext,
     Dataset,
     KeyValueStore,
     PuppeteerCrawlingContext,
@@ -339,7 +339,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         });
     }
 
-    private _failedRequestHandler({ request }: BrowserCrawlerHandleFailedRequestInput) {
+    private _failedRequestHandler({ request }: BrowserFailedRequestContext) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);

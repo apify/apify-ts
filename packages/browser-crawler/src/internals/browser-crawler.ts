@@ -1,7 +1,7 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import {
     EnqueueLinksOptions,
-    CrawlerHandleFailedRequestInput,
+    FailedRequestContext,
     CrawlingContext,
     enqueueLinks,
     EVENT_SESSION_RETIRED,
@@ -52,11 +52,9 @@ export interface BrowserCrawlingContext<
     sendRequest: (request?: Request) => Promise<GotResponse<string>>;
 }
 
-export interface BrowserCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
-    crawler: BrowserCrawler;
-}
+export interface BrowserFailedRequestContext extends FailedRequestContext<BrowserCrawler> {}
 
-export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserCrawlerHandleFailedRequestInput) => Awaitable<void>;
+export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserFailedRequestContext) => Awaitable<void>;
 
 export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
 

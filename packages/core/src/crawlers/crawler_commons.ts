@@ -4,7 +4,7 @@ import { Request } from '../request';
 import { Session } from '../session_pool/session';
 import { Dictionary } from '../typedefs';
 
-export interface CrawlingContext<UserData extends Dictionary<any> = Dictionary<any>> extends Record<PropertyKey, unknown> {
+export interface CrawlingContext<UserData extends Dictionary = Dictionary> extends Record<PropertyKey, unknown> {
     id: string;
     /**
      * The original {@link Request} object.
@@ -20,9 +20,14 @@ export interface CrawlingContext<UserData extends Dictionary<any> = Dictionary<a
     log: Log;
 }
 
-export interface CrawlerHandleFailedRequestInput extends CrawlingContext {
+export interface FailedRequestContext<Crawler = unknown, UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
     /**
      * The Error thrown by `requestHandler`.
      */
     error: Error;
+
+    /**
+     * Current crawler instance.
+     */
+    crawler: Crawler;
 }

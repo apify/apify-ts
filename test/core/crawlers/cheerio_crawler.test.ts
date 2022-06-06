@@ -5,9 +5,9 @@ import bodyParser from 'body-parser';
 import {
     AutoscaledPool,
     CheerioCrawler,
-    CheerioFailedRequestHandlerInput,
+    CheerioFailedRequestContext,
     CheerioRequestHandler,
-    CheerioRequestHandlerInputs,
+    CheerioCrawlingContext,
     CrawlerExtension,
     mergeCookies,
     PrepareRequestInputs,
@@ -591,7 +591,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
     });
 
     describe('should work with all content types from options.additionalMimeTypes', () => {
-        let handlePageInvocationParams: CheerioRequestHandlerInputs;
+        let handlePageInvocationParams: CheerioCrawlingContext;
         let handleFailedInvoked = false;
         const runCrawler = async (url: string) => {
             const sources = [url];
@@ -727,7 +727,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
 
             const proxies: ProxyInfo[] = [];
             const sessions: Session[] = [];
-            const requestHandler = ({ session, proxyInfo }: CheerioRequestHandlerInputs) => {
+            const requestHandler = ({ session, proxyInfo }: CheerioCrawlingContext) => {
                 proxies.push(proxyInfo);
                 sessions.push(session);
             };
@@ -1098,7 +1098,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 expect(crawlingContext.session).toBeInstanceOf(Session);
             };
 
-            const requestHandler = (crawlingContext: CheerioRequestHandlerInputs) => {
+            const requestHandler = (crawlingContext: CheerioCrawlingContext) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -1110,7 +1110,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 throw new Error('some error');
             };
 
-            const failedRequestHandler = (crawlingContext: CheerioFailedRequestHandlerInput) => {
+            const failedRequestHandler = (crawlingContext: CheerioFailedRequestContext) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);

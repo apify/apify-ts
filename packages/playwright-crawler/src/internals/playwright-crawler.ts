@@ -8,12 +8,14 @@ import {
     BrowserCrawlerHandleRequest,
     BrowserHook,
 } from '@crawlee/browser';
+import { Dictionary } from '@crawlee/types';
 import { Cookie } from 'tough-cookie';
 import { PlaywrightLauncher, PlaywrightLaunchContext } from './playwright-launcher';
 import { DirectNavigationOptions, gotoExtended, PlaywrightContextUtils, registerUtilsToContext } from './utils/playwright-utils';
 
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
-export type PlaywrightCrawlingContext = BrowserCrawlingContext<Page, Response, PlaywrightController> & PlaywrightContextUtils;
+export type PlaywrightCrawlingContext<UserData extends Dictionary = Dictionary> =
+    BrowserCrawlingContext<Page, Response, PlaywrightController, UserData> & PlaywrightContextUtils;
 export type PlaywrightHook = BrowserHook<PlaywrightCrawlingContext, PlaywrightGotoOptions>;
 export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightCrawlingContext>;
 export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];

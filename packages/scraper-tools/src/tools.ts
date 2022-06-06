@@ -194,7 +194,7 @@ export function isPlainObject(item: unknown): item is Record<string, unknown> {
  * Attempts to load Page Function from disk if it's not available
  * on INPUT.
  */
-export function maybeLoadPageFunctionFromDisk(input: Dictionary<any>, root: string) {
+export function maybeLoadPageFunctionFromDisk(input: Dictionary, root: string) {
     if (input.pageFunction) return;
 
     const pageFunctionPath = join(root, PAGE_FUNCTION_FILENAME);

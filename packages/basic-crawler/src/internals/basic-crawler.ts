@@ -5,7 +5,7 @@ import {
     AutoscaledPool,
     AutoscaledPoolOptions,
     EnqueueLinksOptions,
-    CrawlerHandleFailedRequestInput,
+    FailedRequestContext,
     enqueueLinks,
     ProxyInfo,
     QueueOperationInfo,
@@ -37,9 +37,7 @@ export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> 
     sendRequest: (request?: Request) => Promise<GotResponse<string>>;
 }
 
-export interface BasicCrawlerHandleFailedRequestInput extends CrawlerHandleFailedRequestInput {
-    crawler: BasicCrawler;
-}
+export interface BasicFailedRequestContext<UserData extends Dictionary = Dictionary> extends FailedRequestContext<BasicCrawler, UserData> {}
 
 /** @internal */
 export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue'>
@@ -57,11 +55,11 @@ const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
 export type RequestHandler<Context extends CrawlingContext = BasicCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
-export type FailedRequestHandler<Inputs extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput> = (inputs: Inputs) => Awaitable<void>;
+export type FailedRequestHandler<Inputs extends FailedRequestContext = BasicFailedRequestContext> = (inputs: Inputs) => Awaitable<void>;
 
 export interface BasicCrawlerOptions<
     Context extends CrawlingContext = BasicCrawlingContext,
-    ErrorContext extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput
+    ErrorContext extends FailedRequestContext = BasicFailedRequestContext
 > {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
@@ -303,7 +301,7 @@ export interface BasicCrawlerOptions<
  */
 export class BasicCrawler<
     Context extends CrawlingContext = BasicCrawlingContext,
-    ErrorContext extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput,
+    ErrorContext extends FailedRequestContext = BasicFailedRequestContext,
 > {
     /**
      * Static list of URLs to be processed.

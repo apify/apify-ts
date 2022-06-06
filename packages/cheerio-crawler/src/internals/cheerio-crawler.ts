@@ -7,7 +7,7 @@ import {
 } from '@crawlee/basic';
 import {
     CrawlerExtension,
-    CrawlerHandleFailedRequestInput,
+    FailedRequestContext,
     CrawlingContext,
     enqueueLinks,
     EnqueueLinksOptions,
@@ -47,9 +47,10 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioFailedRequestHandlerInput<JSONData = Dictionary> extends CrawlerHandleFailedRequestInput, CheerioRequestHandlerInputs<JSONData> {}
+export interface CheerioFailedRequestContext<UserData extends Dictionary = Dictionary, JSONData = Dictionary>
+    extends FailedRequestContext<CheerioCrawler<JSONData, UserData>, UserData>, CheerioCrawlingContext<UserData, JSONData> {}
 
-export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestHandlerInput<JSONData>) => Awaitable<void>;
+export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestContext<JSONData>) => Awaitable<void>;
 
 export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
     BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
@@ -375,7 +376,7 @@ export interface PostResponseInputs<JSONData = Dictionary> {
 
 export type PostResponse<JSONData = Dictionary> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
-export interface CheerioRequestHandlerInputs<JSONData = Dictionary> extends CrawlingContext {
+export interface CheerioCrawlingContext<UserData extends Dictionary = Dictionary, JSONData = Dictionary> extends CrawlingContext<UserData> {
     /**
      * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
@@ -395,13 +396,12 @@ export interface CheerioRequestHandlerInputs<JSONData = Dictionary> extends Craw
      * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
-    crawler: CheerioCrawler<JSONData>;
+    crawler: CheerioCrawler<JSONData, UserData>;
     response: IncomingMessage;
     enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
 }
 
-export type CheerioCrawlingContext<JSONData = Dictionary> = CheerioRequestHandlerInputs<JSONData>; // alias for better discoverability
-export type CheerioRequestHandler<JSONData = Dictionary> = (inputs: CheerioRequestHandlerInputs<JSONData>) => Awaitable<void>;
+export type CheerioRequestHandler<JSONData = Dictionary> = (inputs: CheerioCrawlingContext<JSONData>) => Awaitable<void>;
 export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls' | 'requestQueue'>;
 
 /**
@@ -489,9 +489,9 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<
+export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary = Dictionary> extends BasicCrawler<
     CheerioCrawlingContext<JSONData>,
-    CheerioFailedRequestHandlerInput<JSONData>
+    CheerioFailedRequestContext<UserData, JSONData>
 > {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.

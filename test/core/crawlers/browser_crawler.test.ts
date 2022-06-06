@@ -5,7 +5,7 @@ import log from '@apify/log';
 import {
     AutoscaledPool,
     BrowserCrawler,
-    BrowserCrawlerHandleFailedRequestInput,
+    BrowserFailedRequestContext,
     BrowserCrawlingContext,
     ProxyConfiguration,
     ProxyInfo,
@@ -721,7 +721,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
                 throw new Error('some error');
             };
 
-            const failedRequestHandler = async (crawlingContext: BrowserCrawlerHandleFailedRequestInput) => {
+            const failedRequestHandler = async (crawlingContext: BrowserFailedRequestContext) => {
                 expect(crawlingContext).toBe(prepareCrawlingContext);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);

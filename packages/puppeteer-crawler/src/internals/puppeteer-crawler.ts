@@ -6,13 +6,15 @@ import {
     BrowserHook,
 } from '@crawlee/browser';
 import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
+import { Dictionary } from '@crawlee/types';
 import ow from 'ow';
 import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
 import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
 import { DirectNavigationOptions, gotoExtended, PuppeteerContextUtils, registerUtilsToContext } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
-export type PuppeteerCrawlingContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> & PuppeteerContextUtils;
+export type PuppeteerCrawlingContext<UserData extends Dictionary = Dictionary> =
+    BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController, UserData> & PuppeteerContextUtils;
 export type PuppeteerHook = BrowserHook<PuppeteerCrawlingContext, PuppeteerGoToOptions>;
 export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerCrawlingContext>;
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];

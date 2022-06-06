@@ -383,7 +383,7 @@ export class RequestQueue {
      * @param id ID of the request.
      * @returns Returns the request object, or `null` if it was not found.
      */
-    async getRequest<T extends Dictionary<any> = Dictionary<any>>(id: string): Promise<Request<T> | null> {
+    async getRequest<T extends Dictionary = Dictionary>(id: string): Promise<Request<T> | null> {
         ow(id, ow.string);
 
         const requestOptions = await this.client.getRequest(id);
@@ -409,7 +409,7 @@ export class RequestQueue {
      * @returns
      *   Returns the request object or `null` if there are no more pending requests.
      */
-    async fetchNextRequest<T extends Dictionary<any> = Dictionary<any>>(): Promise<Request<T> | null> {
+    async fetchNextRequest<T extends Dictionary = Dictionary>(): Promise<Request<T> | null> {
         await this._ensureHeadIsNonEmpty();
 
         const nextRequestId = this.queueHeadDict.removeFirst();

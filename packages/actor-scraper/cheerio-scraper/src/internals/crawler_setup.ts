@@ -11,7 +11,7 @@ import {
     CheerioCrawlerOptions,
     CheerioCrawlingContext,
     Dataset,
-    CheerioFailedRequestHandlerInput,
+    CheerioFailedRequestContext,
     KeyValueStore,
     // PrepareRequestInputs,
     ProxyConfiguration,
@@ -229,7 +229,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
     //     }
     // }
 
-    private _failedRequestHandler({ request }: CheerioFailedRequestHandlerInput) {
+    private _failedRequestHandler({ request }: CheerioFailedRequestContext) {
         const lastError = request.errorMessages[request.errorMessages.length - 1];
         const errorMessage = lastError ? lastError.split('\n')[0] : 'no error';
         log.error(`Request ${request.url} failed and will not be retried anymore. Marking as failed.\nLast Error Message: ${errorMessage}`);

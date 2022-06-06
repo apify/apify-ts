@@ -53,7 +53,7 @@ const requestOptionalPredicates = {
  * ```
  * @category Sources
  */
-export class Request<UserData extends Dictionary<any> = Dictionary<any>> {
+export class Request<UserData extends Dictionary = Dictionary> {
     /** Request ID */
     id?: string;
 
@@ -307,7 +307,7 @@ export class Request<UserData extends Dictionary<any> = Dictionary<any>> {
 /**
  * Specifies required and optional fields for constructing a {@link Request}.
  */
-export interface RequestOptions<T extends Dictionary<any> = Dictionary<any>> {
+export interface RequestOptions<UserData extends Dictionary = Dictionary> {
 
     /** URL of the web page to crawl. It must be a non-empty string. */
     url: string;
@@ -352,7 +352,7 @@ export interface RequestOptions<T extends Dictionary<any> = Dictionary<any>> {
      * Custom user data assigned to the request. Use this to save any request related data to the
      * request's scope, keeping them accessible on retries, failures etc.
      */
-    userData?: T;
+    userData?: UserData;
 
     /**
      * If `false` then the hash part of a URL is removed when computing the `uniqueKey` property.
