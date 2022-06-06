@@ -68,6 +68,13 @@ async function run() {
                 return;
             }
 
+            if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM' && (str.startsWith('[build]') || str.startsWith('[run]'))) {
+                const platformStatsMessage = str.match(/\[(?:run|build)] (.*)/);
+                if (platformStatsMessage) {
+                    console.log(`${colors.yellow(`[${dir.name}]`)} ${colors.grey(platformStatsMessage[1])}`);
+                }
+            }
+
             const match = str.match(/\[assertion] (passed|failed): (.*)/);
 
             if (match) {

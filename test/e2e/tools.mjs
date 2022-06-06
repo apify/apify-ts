@@ -79,7 +79,23 @@ export async function runActor(dirName, memory = 4096) {
         const { items: actors } = await client.actors().list();
         const { id } = actors.find((actor) => actor.name === actorName);
 
-        const { defaultKeyValueStoreId, defaultDatasetId } = await client.actor(id).call(null, { memory });
+        const {
+            defaultKeyValueStoreId,
+            defaultDatasetId,
+            startedAt: runStartedAt,
+            finishedAt: runFinishedAt,
+            id: runId,
+            buildId,
+        } = await client.actor(id).call(null, { memory });
+        const {
+            startedAt: buildStartedAt,
+            finishedAt: buildFinishedAt,
+        } = await client.build(buildId).get();
+        const buildTook = (buildFinishedAt.getTime() - buildStartedAt.getTime()) / 1000;
+        console.log(`[build] View build log: https://api.apify.com/v2/logs/${buildId} [build took ${buildTook}s]`);
+        const runTook = (runFinishedAt.getTime() - runStartedAt.getTime()) / 1000;
+        console.log(`[run] View run: https://console.apify.com/view/runs/${runId} [run took ${runTook}s]`);
+
         const { value } = await client.keyValueStore(defaultKeyValueStoreId).getRecord('SDK_CRAWLER_STATISTICS_0');
         stats = value;
         const { items } = await client.dataset(defaultDatasetId).listItems();
