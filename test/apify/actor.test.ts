@@ -539,7 +539,10 @@ describe.each(StorageTestCases)('Actor - %s', (Emulator) => {
                     apifyProxyCountry: 'US',
                 };
 
+                const initializeSpy = jest.spyOn(ProxyConfiguration.prototype, 'initialize');
+                initializeSpy.mockImplementationOnce(async () => {});
                 await expect(Actor.createProxyConfiguration(proxyConfiguration)).resolves.toBeInstanceOf(ProxyConfiguration);
+                expect(initializeSpy).toBeCalledTimes(1);
             });
 
             test('createProxyConfiguration should create ProxyConfiguration', async () => {
