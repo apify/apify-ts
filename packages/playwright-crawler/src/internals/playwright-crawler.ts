@@ -15,8 +15,7 @@ import { DirectNavigationOptions, gotoExtended, PlaywrightContextUtils, register
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
 export type PlaywrightCrawlingContext = BrowserCrawlingContext<Page, Response, PlaywrightController> & PlaywrightContextUtils;
 export type PlaywrightHook = BrowserHook<PlaywrightCrawlingContext, PlaywrightGotoOptions>;
-export type PlaywrightRequestHandlerParam = BrowserCrawlingContext<Page, Response, PlaywrightController>
-export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightRequestHandlerParam>;
+export type PlaywrightRequestHandler = BrowserCrawlerHandleRequest<PlaywrightCrawlingContext>;
 export type PlaywrightGotoOptions = Parameters<Page['goto']>[1];
 export type PlaywrightCookie = Parameters<ReturnType<Page['context']>['addCookies']>[0][0];
 

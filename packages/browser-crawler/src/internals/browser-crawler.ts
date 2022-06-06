@@ -42,7 +42,8 @@ export interface BrowserCrawlingContext<
     Page extends CommonPage = CommonPage,
     Response = Dictionary,
     ProvidedController = BrowserController,
-> extends CrawlingContext {
+    UserData extends Dictionary = Dictionary,
+> extends CrawlingContext<UserData> {
     browserController: ProvidedController;
     page: Page;
     response?: Response;

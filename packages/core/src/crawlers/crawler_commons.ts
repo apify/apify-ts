@@ -2,13 +2,14 @@ import { Log } from '../log';
 import { ProxyInfo } from '../proxy_configuration';
 import { Request } from '../request';
 import { Session } from '../session_pool/session';
+import { Dictionary } from '../typedefs';
 
-export interface CrawlingContext extends Record<PropertyKey, unknown> {
+export interface CrawlingContext<UserData extends Dictionary<any> = Dictionary<any>> extends Record<PropertyKey, unknown> {
     id: string;
     /**
      * The original {@link Request} object.
      */
-    request: Request;
+    request: Request<UserData>;
     session?: Session;
 
     /**

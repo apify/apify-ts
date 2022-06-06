@@ -3,7 +3,7 @@ import crypto, { BinaryLike } from 'node:crypto';
 import ow, { ArgumentError, BasePredicate } from 'ow';
 import util from 'node:util';
 import { log as defaultLog } from './log';
-import { AllowedHttpMethods, keys } from './typedefs';
+import { AllowedHttpMethods, Dictionary, keys } from './typedefs';
 
 // new properties on the Request object breaks serialization
 const log = defaultLog.child({ prefix: 'Request' });
@@ -53,7 +53,7 @@ const requestOptionalPredicates = {
  * ```
  * @category Sources
  */
-export class Request {
+export class Request<UserData extends Dictionary<any> = Dictionary<any>> {
     /** Request ID */
     id?: string;
 
@@ -98,7 +98,7 @@ export class Request {
     private _userData: Record<string, any> = {};
 
     /** Custom user data assigned to the request. */
-    userData: Record<string, any> = {};
+    userData: UserData = {} as UserData;
 
     /**
      * ISO datetime string that indicates the time when the request has been processed.
@@ -218,7 +218,7 @@ export class Request {
 
     set skipNavigation(value: boolean) {
         // eslint-disable-next-line no-underscore-dangle
-        if (!this.userData.__crawlee) this.userData.__crawlee = { skipNavigation: value };
+        if (!this.userData.__crawlee) (this.userData as Dictionary).__crawlee = { skipNavigation: value };
         // eslint-disable-next-line no-underscore-dangle
         else this.userData.__crawlee.skipNavigation = value;
     }
@@ -230,7 +230,7 @@ export class Request {
 
     /** shortcut for setting `request.userData.label` */
     set label(value: string | undefined) {
-        this.userData.label = value;
+        (this.userData as Dictionary).label = value;
     }
 
     /**
@@ -307,7 +307,7 @@ export class Request {
 /**
  * Specifies required and optional fields for constructing a {@link Request}.
  */
-export interface RequestOptions {
+export interface RequestOptions<T extends Dictionary<any> = Dictionary<any>> {
 
     /** URL of the web page to crawl. It must be a non-empty string. */
     url: string;
@@ -352,7 +352,7 @@ export interface RequestOptions {
      * Custom user data assigned to the request. Use this to save any request related data to the
      * request's scope, keeping them accessible on retries, failures etc.
      */
-    userData?: Record<string, any>;
+    userData?: T;
 
     /**
      * If `false` then the hash part of a URL is removed when computing the `uniqueKey` property.

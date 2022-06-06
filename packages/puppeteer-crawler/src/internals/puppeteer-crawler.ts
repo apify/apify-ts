@@ -14,8 +14,7 @@ import { DirectNavigationOptions, gotoExtended, PuppeteerContextUtils, registerU
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
 export type PuppeteerCrawlingContext = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController> & PuppeteerContextUtils;
 export type PuppeteerHook = BrowserHook<PuppeteerCrawlingContext, PuppeteerGoToOptions>;
-export type PuppeteerRequestHandlerParam = BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController>;
-export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerRequestHandlerParam>;
+export type PuppeteerRequestHandler = BrowserCrawlerHandleRequest<PuppeteerCrawlingContext>;
 export type PuppeteerGoToOptions = Parameters<Page['goto']>[1];
 
 export interface PuppeteerCrawlerOptions extends BrowserCrawlerOptions<

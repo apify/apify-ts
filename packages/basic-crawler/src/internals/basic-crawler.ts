@@ -28,10 +28,10 @@ import {
 } from '@crawlee/core';
 import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
 import { ProcessedRequest } from '@crawlee/types';
-import { Awaitable, sleep, chunk } from '@crawlee/utils';
+import { Awaitable, Dictionary, sleep, chunk } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
-export interface BasicCrawlingContext extends CrawlingContext {
+export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
     crawler: BasicCrawler;
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
     sendRequest: (request?: Request) => Promise<GotResponse<string>>;

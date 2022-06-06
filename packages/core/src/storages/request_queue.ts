@@ -8,6 +8,7 @@ import { StorageClient, RequestQueueClient, RequestQueueInfo, BatchAddRequestsRe
 import { StorageManager } from './storage_manager';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
+import { Dictionary } from '../typedefs';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -382,7 +383,7 @@ export class RequestQueue {
      * @param id ID of the request.
      * @returns Returns the request object, or `null` if it was not found.
      */
-    async getRequest(id: string): Promise<Request | null> {
+    async getRequest<T extends Dictionary<any> = Dictionary<any>>(id: string): Promise<Request<T> | null> {
         ow(id, ow.string);
 
         const requestOptions = await this.client.getRequest(id);
@@ -408,7 +409,7 @@ export class RequestQueue {
      * @returns
      *   Returns the request object or `null` if there are no more pending requests.
      */
-    async fetchNextRequest(): Promise<Request | null> {
+    async fetchNextRequest<T extends Dictionary<any> = Dictionary<any>>(): Promise<Request<T> | null> {
         await this._ensureHeadIsNonEmpty();
 
         const nextRequestId = this.queueHeadDict.removeFirst();
