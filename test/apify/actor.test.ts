@@ -530,6 +530,18 @@ describe.each(StorageTestCases)('Actor - %s', (Emulator) => {
                 delete process.env[ENV_VARS.IS_AT_HOME];
             });
 
+            test('Actor.createProxyConfiguration() allows useApifyProxy option', async () => {
+                const proxyConfiguration = {
+                    useApifyProxy: true,
+                    apifyProxyGroups: [
+                        'RESIDENTIAL',
+                    ],
+                    apifyProxyCountry: 'US',
+                };
+
+                await expect(Actor.createProxyConfiguration(proxyConfiguration)).resolves.toBeInstanceOf(ProxyConfiguration);
+            });
+
             test('createProxyConfiguration should create ProxyConfiguration', async () => {
                 const sdk = new Actor();
                 const initializeSpy = jest.spyOn(ProxyConfiguration.prototype, 'initialize');

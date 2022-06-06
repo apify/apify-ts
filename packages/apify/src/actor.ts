@@ -713,14 +713,15 @@ export class Actor {
     ): Promise<ProxyConfiguration | undefined> {
         // Compatibility fix for Input UI where proxy: None returns { useApifyProxy: false }
         // Without this, it would cause proxy to use the zero config / auto mode.
-        const dontUseApifyProxy = proxyConfigurationOptions.useApifyProxy === false;
+        const { useApifyProxy, ...options } = proxyConfigurationOptions;
+        const dontUseApifyProxy = useApifyProxy === false;
         const dontUseCustomProxies = !proxyConfigurationOptions.proxyUrls;
 
         if (dontUseApifyProxy && dontUseCustomProxies) {
             return undefined;
         }
 
-        const proxyConfiguration = new ProxyConfiguration(proxyConfigurationOptions, this.config);
+        const proxyConfiguration = new ProxyConfiguration(options, this.config);
         await proxyConfiguration.initialize();
 
         return proxyConfiguration;
