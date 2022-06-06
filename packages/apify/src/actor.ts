@@ -194,7 +194,7 @@ export class Actor {
         }
 
         if (options.timeoutSecs > 0) {
-            log.debug(`Waiting for ${options.timeoutSecs} before calling process.exit()`);
+            log.debug(`Waiting for ${options.timeoutSecs} seconds before calling process.exit()`);
             await setTimeout(options.timeoutSecs! * 1000);
         }
 
