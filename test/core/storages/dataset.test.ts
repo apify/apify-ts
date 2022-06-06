@@ -418,7 +418,6 @@ describe('dataset', () => {
             await expect(dataset.pushData(true)).rejects.toThrow('Expected `data` to be of type `object` but received type `boolean`');
             // @ts-expect-error JS-side validation
             await expect(dataset.pushData(false)).rejects.toThrow('Expected `data` to be of type `object` but received type `boolean`');
-            // @ts-expect-error JS-side validation
             await expect(dataset.pushData(() => {})).rejects.toThrow('Data item is not an object. You can push only objects into a dataset.');
 
             const circularObj = {} as Dictionary;
