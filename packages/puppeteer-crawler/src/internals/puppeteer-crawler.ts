@@ -177,7 +177,7 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
  * > Serves as a shortcut for using `Router.create<PuppeteerCrawlingContext>()`.
  *
  * ```ts
- * import { PuppeteerCrawler, createPuppeteerRouter } from '@crawlee/puppeteer';
+ * import { PuppeteerCrawler, createPuppeteerRouter } from 'crawlee';
  *
  * const router = createPuppeteerRouter();
  * router.addHandler('label-a', async (ctx) => {

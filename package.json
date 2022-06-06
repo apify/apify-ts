@@ -1,5 +1,5 @@
 {
-    "name": "apify",
+    "name": "crawlee",
     "private": true,
     "version": "3.0.0",
     "description": "The scalable web crawling and scraping library for JavaScript/Node.js. Enables development of data extraction and web automation jobs (not only) with headless Chrome and Puppeteer.",
@@ -61,6 +61,7 @@
         "@types/domhandler": "^2.4.2",
         "@types/express": "^4.17.13",
         "@types/fs-extra": "^9.0.13",
+        "@types/inquirer": "^8.2.1",
         "@types/htmlparser2": "^3.10.3",
         "@types/jest": "^28.1.1",
         "@types/lodash.merge": "^4.6.7",

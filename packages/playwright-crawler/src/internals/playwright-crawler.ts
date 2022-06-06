@@ -271,7 +271,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
  * > Serves as a shortcut for using `Router.create<PlaywrightCrawlingContext>()`.
  *
  * ```ts
- * import { PlaywrightCrawler, createPlaywrightRouter } from '@crawlee/playwright';
+ * import { PlaywrightCrawler, createPlaywrightRouter } from 'crawlee';
  *
  * const router = createPlaywrightRouter();
  * router.addHandler('label-a', async (ctx) => {
