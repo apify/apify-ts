@@ -31,7 +31,7 @@ import { ProcessedRequest } from '@crawlee/types';
 import { Awaitable, sleep, chunk } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
-export interface BasicCrawlerCrawlingContext extends CrawlingContext {
+export interface BasicCrawlingContext extends CrawlingContext {
     crawler: BasicCrawler;
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
     sendRequest: (request?: Request) => Promise<GotResponse<string>>;
@@ -55,12 +55,12 @@ export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'request
  */
 const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
-export type RequestHandler<Context extends CrawlingContext = BasicCrawlerCrawlingContext> = (inputs: Context) => Awaitable<void>;
+export type RequestHandler<Context extends CrawlingContext = BasicCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
 export type FailedRequestHandler<Inputs extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput> = (inputs: Inputs) => Awaitable<void>;
 
 export interface BasicCrawlerOptions<
-    Context extends CrawlingContext = BasicCrawlerCrawlingContext,
+    Context extends CrawlingContext = BasicCrawlingContext,
     ErrorContext extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput
 > {
     /**
@@ -302,7 +302,7 @@ export interface BasicCrawlerOptions<
  * @category Crawlers
  */
 export class BasicCrawler<
-    Context extends CrawlingContext = BasicCrawlerCrawlingContext,
+    Context extends CrawlingContext = BasicCrawlingContext,
     ErrorContext extends CrawlerHandleFailedRequestInput = BasicCrawlerHandleFailedRequestInput,
 > {
     /**
