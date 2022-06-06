@@ -71,7 +71,7 @@ async function run() {
             if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM' && (str.startsWith('[build]') || str.startsWith('[run]'))) {
                 const platformStatsMessage = str.match(/\[(?:run|build)] (.*)/);
                 if (platformStatsMessage) {
-                    console.log(`${colors.yellow(`[${dir.name}]`)} ${colors.grey(platformStatsMessage[1])}`);
+                    console.log(`${colors.yellow(`[${dir.name}]`)}\x20${colors.grey(platformStatsMessage[1])}`);
                 }
             }
 
@@ -79,7 +79,7 @@ async function run() {
 
             if (match) {
                 const c = match[1] === 'passed' ? colors.green : colors.red;
-                console.log(`${colors.yellow(`[${dir.name}]`)} ${match[2]}: ${c(match[1])}`);
+                console.log(`${colors.yellow(`[${dir.name}]`)}\x20${match[2]}:\x20${c(match[1])}`);
             }
         });
         worker.on('exit', async (code) => {
@@ -91,7 +91,7 @@ async function run() {
             const took = (Date.now() - now) / 1000;
             const status = code === 0 ? 'success' : 'failure';
             const color = code === 0 ? 'green' : 'red';
-            console.log(`${colors.yellow(`[${dir.name}]`)} ${colors[color](`Test finished with status: ${status}`)} ${colors.grey(`[took ${took}s]`)}`);
+            console.log(`${colors.yellow(`[${dir.name}]`)}\x20${colors[color](`Test finished with status: ${status}`)}\x20${colors.grey(`[took ${took}s]`)}`);
 
             if (['MEMORY', 'LOCAL'].includes(process.env.STORAGE_IMPLEMENTATION)) {
                 await clearStorage(`${basePath}/${dir.name}`);
