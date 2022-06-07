@@ -1,8 +1,8 @@
+import { Dictionary } from '@crawlee/types';
 import { Log } from '../log';
 import { ProxyInfo } from '../proxy_configuration';
 import { Request } from '../request';
 import { Session } from '../session_pool/session';
-import { Dictionary } from '../typedefs';
 
 export interface CrawlingContext<UserData extends Dictionary = Dictionary> extends Record<PropertyKey, unknown> {
     id: string;

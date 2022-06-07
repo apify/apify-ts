@@ -1,4 +1,5 @@
 import { downloadListOfUrls } from '@crawlee/utils';
+import { Dictionary } from '@crawlee/types';
 import ow, { ArgumentError } from 'ow';
 import { EventManager, EventType } from '../events';
 import { Configuration } from '../configuration';
@@ -6,7 +7,6 @@ import { log } from '../log';
 import { Request, RequestOptions } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
 import { KeyValueStore } from '../storages/key_value_store';
-import { Dictionary } from '../typedefs';
 import { ProxyConfiguration } from '../proxy_configuration';
 
 /** @internal */

@@ -1,9 +1,9 @@
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import ow from 'ow';
-import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient } from '@crawlee/types';
+import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient, Dictionary } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { log } from '../log';
-import { Awaitable, Dictionary } from '../typedefs';
+import { Awaitable } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 
 /** @internal */

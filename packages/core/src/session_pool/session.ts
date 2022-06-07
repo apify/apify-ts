@@ -1,13 +1,13 @@
 import { Log } from '@apify/log';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import { Cookie as BrowserPoolCookie } from '@crawlee/browser-pool';
+import { Dictionary } from '@crawlee/types';
 import { IncomingMessage } from 'node:http';
 import ow from 'ow';
 import { HTTPResponse, Protocol } from 'puppeteer';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { STATUS_CODES_BLOCKED } from '../constants';
 import { log as defaultLog } from '../log';
-import { Dictionary } from '../typedefs';
 import { EVENT_SESSION_RETIRED } from './events';
 import { SessionPool } from './session_pool';
 import { getCookiesFromResponse } from './session_utils';

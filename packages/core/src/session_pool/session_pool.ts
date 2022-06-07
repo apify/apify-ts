@@ -1,10 +1,10 @@
 import { Log } from '@apify/log';
 import { EventEmitter } from 'node:events';
+import { Dictionary } from '@crawlee/types';
 import ow from 'ow';
 import { Configuration } from '../configuration';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
-import { Dictionary } from '../typedefs';
 import { Session, SessionOptions } from './session';
 import { EventManager, EventType } from '../events/event_manager';
 

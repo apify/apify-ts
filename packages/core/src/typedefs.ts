@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 /** @ignore */
-export type Dictionary<T = any> = Record<PropertyKey, T>;
-
-/** @ignore */
 export type Constructor<T = unknown> = new (...args: any[]) => T;
 
 /** @ignore */
