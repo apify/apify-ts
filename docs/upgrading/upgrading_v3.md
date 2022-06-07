@@ -197,6 +197,10 @@ const result = await crawler.addRequests([/* many requests, can be even millions
 await result.waitForAllRequestsToBeAdded;
 ```
 
+## Less verbose error logging
+
+Previously an error throw from inside request handler resulted in full error object being logger. With crawlee, we log only the error message as a warning as long as we know the request will be retried. If you want to enable verbose logging as in v2, use `CRAWLEE_VERBOSE_LOG` env var.
+
 ## Removal of `requestAsBrowser`
 
 In v1 we replaced the underlying implementation of `requestAsBrowser` to be just a proxy over calling [`got-scraping`](https://github.com/apify/got-scraping) - our custom extension to `got` that tries to mimic the real browsers as much as possible. With v3, we are removing the `requestAsBrowser`, encouraging the use of [`got-scraping`](https://github.com/apify/got-scraping) directly.
