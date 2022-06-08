@@ -3,6 +3,7 @@ import { access, opendir, readFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 import mimeTypes from 'mime-types';
 import type { MemoryStorage } from './memory-storage';
+import { memoryStorageLog } from './utils';
 
 const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
@@ -313,4 +314,4 @@ export async function findRequestQueueByPossibleId(client: MemoryStorage, entryN
 /* eslint-disable import/first -- Fixing circulars */
 import { DatasetClient } from './resource-clients/dataset';
 import { InternalKeyRecord, KeyValueStoreClient } from './resource-clients/key-value-store';
-import { InternalRequest, RequestQueueClient } from './resource-clients/request-queue'; import { memoryStorageLog } from './utils';
+import { InternalRequest, RequestQueueClient } from './resource-clients/request-queue';
