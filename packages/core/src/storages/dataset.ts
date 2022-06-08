@@ -462,7 +462,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      * @ignore
      */
-    static async pushData(item: Dictionary): Promise<void> {
+    static async pushData<Data extends Dictionary = Dictionary>(item: Data | Data[]): Promise<void> {
         const dataset = await this.open();
         return dataset.pushData(item);
     }

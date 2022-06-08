@@ -431,7 +431,7 @@ export class Actor {
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      * @ignore
      */
-    async pushData(item: Dictionary): Promise<void> {
+    async pushData<Data extends Dictionary = Dictionary>(item: Data | Data[]): Promise<void> {
         const dataset = await this.openDataset();
         return dataset.pushData(item);
     }
@@ -1013,7 +1013,7 @@ export class Actor {
      * @param item Object or array of objects containing data to be stored in the default dataset.
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
-    static async pushData(item: Dictionary): Promise<void> {
+    static async pushData<Data extends Dictionary = Dictionary>(item: Data | Data[]): Promise<void> {
         return Actor.getDefaultInstance().pushData(item);
     }
 
