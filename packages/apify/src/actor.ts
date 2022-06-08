@@ -30,7 +30,7 @@ import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configura
  * that will be used on the instance methods. Environment variables will have precedence over this configuration.
  * See {@link Configuration} for details about what can be configured and what are the default values.
  */
-export class Actor {
+export class Actor<Data extends Dictionary = Dictionary> {
     /** @internal */
     static _instance: Actor;
 
@@ -431,7 +431,7 @@ export class Actor {
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      * @ignore
      */
-    async pushData<Data extends Dictionary = Dictionary>(item: Data | Data[]): Promise<void> {
+    async pushData(item: Data | Data[]): Promise<void> {
         const dataset = await this.openDataset();
         return dataset.pushData(item);
     }
@@ -451,8 +451,9 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async openDataset<Data extends Dictionary = Dictionary>(
-        datasetIdOrName?: string | null, options: OpenStorageOptions = {},
+    async openDataset(
+        datasetIdOrName?: string | null,
+        options: OpenStorageOptions = {},
     ): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
