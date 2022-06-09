@@ -120,7 +120,7 @@ export interface BrowserCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: BrowserCrawlerHandleRequest<Context>;
+    requestHandler?: BrowserCrawlerHandleRequest<Context>;
 
     /**
      * Function that is called to process each request.

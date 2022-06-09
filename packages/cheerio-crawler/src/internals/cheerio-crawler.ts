@@ -123,7 +123,7 @@ export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: CheerioRequestHandler<JSONData>;
+    requestHandler?: CheerioRequestHandler<JSONData>;
 
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page

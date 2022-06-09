@@ -87,7 +87,7 @@ export interface BasicCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: RequestHandler<Context>;
+    requestHandler?: RequestHandler<Context>;
 
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
