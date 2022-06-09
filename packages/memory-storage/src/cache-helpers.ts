@@ -166,7 +166,18 @@ export async function findOrCacheKeyValueStoreByPossibleId(client: MemoryStorage
                     'If you want to have correct interpretation of the file, you should add a file extension to the entry.',
                 ].join('\n'));
                 finalFileContent = fileContent.toString('utf8');
-            } else if (contentType.includes('application/json') || contentType.includes('text/plain')) {
+            } else if (contentType.includes('application/json')) {
+                const stringifiedJson = fileContent.toString('utf8');
+                try {
+                    // Try parsing the JSON ahead of time (not ideal but solves invalid files being loaded into stores)
+                    JSON.parse(stringifiedJson);
+                } catch {
+                    memoryStorageLog.warning(
+                        `Key-value entry "${entry.name}" for store ${entryNameOrId} has invalid JSON content and will be ignored from the store.`,
+                    );
+                    continue;
+                }
+            } else if (contentType.includes('text/plain')) {
                 finalFileContent = fileContent.toString('utf8');
             }
 
