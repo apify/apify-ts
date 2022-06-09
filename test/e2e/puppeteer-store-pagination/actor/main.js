@@ -1,15 +1,16 @@
 import { Actor } from 'apify';
-import { createPuppeteerRouter, PuppeteerCrawler } from '@crawlee/puppeteer';
+import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import { ApifyStorageLocal } from '@apify/storage-local';
 
-const mainOptions = {
-    exit: Actor.isAtHome(),
-    storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined,
-};
+const crawler = new PuppeteerCrawler({
+    maxRequestsPerCrawl: 10,
+    preNavigationHooks: [({ session, request }, goToOptions) => {
+        session?.setPuppeteerCookies([{ name: 'OptanonAlertBoxClosed', value: new Date().toISOString() }], request.url);
+        goToOptions.waitUntil = ['networkidle2'];
+    }],
+});
 
-const router = createPuppeteerRouter();
-
-router.addHandler('START', async ({ log, enqueueLinks, page }) => {
+crawler.router.addHandler('START', async ({ log, enqueueLinks, page }) => {
     log.info('Store opened');
     const nextButtonSelector = '[data-test="pagination-button-next"]:not([disabled])';
     // enqueue actor details from the first three pages of the store
@@ -27,7 +28,7 @@ router.addHandler('START', async ({ log, enqueueLinks, page }) => {
     }
 });
 
-router.addHandler('DETAIL', async ({ log, page, request: { url } }) => {
+crawler.router.addHandler('DETAIL', async ({ log, page, request: { url } }) => {
     log.info(`Scraping ${url}`);
 
     const uniqueIdentifier = url.split('/').slice(-2).join('/');
@@ -52,16 +53,7 @@ router.addHandler('DETAIL', async ({ log, page, request: { url } }) => {
     await Actor.pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
 });
 
-await Actor.main(async () => {
-    const crawler = new PuppeteerCrawler({
-        maxRequestsPerCrawl: 10,
-        preNavigationHooks: [({ session, request }, goToOptions) => {
-            session?.setPuppeteerCookies([{ name: 'OptanonAlertBoxClosed', value: new Date().toISOString() }], request.url);
-            goToOptions.waitUntil = ['networkidle2'];
-        }],
-        requestHandler: router,
-    });
-
-    await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
-    await crawler.run();
-}, mainOptions);
+await Actor.init({ storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined });
+await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
+await crawler.run();
+await Actor.exit({ exit: Actor.isAtHome() });

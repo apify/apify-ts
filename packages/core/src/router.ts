@@ -3,7 +3,9 @@ import { Awaitable } from './typedefs';
 
 const defaultRoute = Symbol('default-route');
 
-type RouterHandler<Context extends CrawlingContext = CrawlingContext> = ((context: Context) => Awaitable<void>) & Router<Context>;
+export interface RouterHandler<Context extends CrawlingContext = CrawlingContext> extends Router<Context> {
+    (ctx: Context): Awaitable<void>;
+}
 
 /**
  * Simple router that works based on request labels. This instance can then serve as a `requestHandler` of your crawler.
@@ -27,6 +29,23 @@ type RouterHandler<Context extends CrawlingContext = CrawlingContext> = ((contex
  * const crawler = new CheerioCrawler({
  *     requestHandler: router,
  * });
+ * await crawler.run();
+ * ```
+ *
+ * Alternatively we can use the default router instance from crawler object:
+ *
+ * ```ts
+ * import { CheerioCrawler } from '@crawlee/cheerio';
+ *
+ * const crawler = new CheerioCrawler();
+ *
+ * crawler.router.addHandler('label-a', async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ * crawler.router.addDefaultHandler(async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ *
  * await crawler.run();
  * ```
  */
