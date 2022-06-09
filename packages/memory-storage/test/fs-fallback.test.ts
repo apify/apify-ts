@@ -27,6 +27,9 @@ describe('fallback to fs for reading', () => {
 
         await ensureDir(resolve(storage.keyValueStoresDirectory, 'other'));
         await writeFile(resolve(storage.keyValueStoresDirectory, 'other/INPUT.json'), JSON.stringify({ foo: 'bar but from fs' }));
+
+        await ensureDir(resolve(storage.keyValueStoresDirectory, 'no-ext'));
+        await writeFile(resolve(storage.keyValueStoresDirectory, 'no-ext/INPUT'), JSON.stringify({ foo: 'bar but from fs' }));
     });
 
     afterAll(async () => {
@@ -66,5 +69,16 @@ describe('fallback to fs for reading', () => {
 
     test('attempting to read non-existent "default_2" key value store should return undefined', async () => {
         await expect(storage.keyValueStore('default_2').get()).resolves.toBeUndefined();
+    });
+
+    test('attempting to read "no-ext" key value store should load the missing extension file correctly', async () => {
+        const noExtStore = storage.keyValueStore('no-ext');
+
+        const input = await noExtStore.getRecord('INPUT');
+        expect(input).toStrictEqual<KeyValueStoreRecord>({
+            key: 'INPUT',
+            value: JSON.stringify({ foo: 'bar but from fs' }),
+            contentType: 'text/plain',
+        });
     });
 });

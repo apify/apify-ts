@@ -1,8 +1,9 @@
 import type * as storage from '@crawlee/types';
 import { access, opendir, readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { extname, resolve } from 'node:path';
 import mimeTypes from 'mime-types';
 import type { MemoryStorage } from './memory-storage';
+import { memoryStorageLog } from './utils';
 
 const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
@@ -153,17 +154,27 @@ export async function findOrCacheKeyValueStoreByPossibleId(client: MemoryStorage
             }
 
             const fileContent = await readFile(resolve(keyValueStoreDir, entry.name));
-            const contentType = mimeTypes.contentType(entry.name) as string;
+            const fileExtension = extname(entry.name);
+            const contentType = mimeTypes.contentType(entry.name) || 'text/plain';
             const extension = mimeTypes.extension(contentType) as string;
 
             let finalFileContent: Buffer | string = fileContent;
 
-            if (contentType.includes('application/json') || contentType.includes('text/plain')) {
+            if (!fileExtension) {
+                memoryStorageLog.warning([
+                    `Key-value entry "${entry.name}" for store ${entryNameOrId} does not have a file extension, assuming it as text.`,
+                    'If you want to have correct interpretation of the file, you should add a file extension to the entry.',
+                ].join('\n'));
+                finalFileContent = fileContent.toString('utf8');
+            } else if (contentType.includes('application/json') || contentType.includes('text/plain')) {
                 finalFileContent = fileContent.toString('utf8');
             }
 
             const nameSplit = entry.name.split('.');
-            nameSplit.pop();
+
+            if (fileExtension) {
+                nameSplit.pop();
+            }
 
             const key = nameSplit.join('.');
 
