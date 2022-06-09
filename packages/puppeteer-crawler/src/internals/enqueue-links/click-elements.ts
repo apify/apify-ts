@@ -49,6 +49,12 @@ export interface EnqueueLinksByClickingElementsOptions {
      */
     selector: string;
 
+    /** Sets {@link Request.userData} for newly enqueued requests. */
+    userData?: Dictionary;
+
+    /** Sets {@link Request.label} for newly enqueued requests. */
+    label?: string;
+
     /**
      * Click options for use in Puppeteer's click handler.
      */
@@ -255,7 +261,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         maxWaitForPageIdleMillis,
         clickOptions,
     });
-    let requestOptions = createRequestOptions(interceptedRequests);
+    let requestOptions = createRequestOptions(interceptedRequests, options);
     if (transformRequestFunction) {
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r) as RequestOptions[];
     }

@@ -1,7 +1,7 @@
 import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
-import { BatchAddRequestsResult } from '@crawlee/types';
+import { BatchAddRequestsResult, Dictionary } from '@crawlee/types';
 import {
     constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
@@ -29,6 +29,12 @@ export interface EnqueueLinksOptions {
 
     /** A CSS selector matching links to be enqueued. */
     selector?: string;
+
+    /** Sets {@link Request.userData} for newly enqueued requests. */
+    userData?: Dictionary;
+
+    /** Sets {@link Request.label} for newly enqueued requests. */
+    label?: string;
 
     /**
      * A base URL that will be used to resolve relative URLs when using Cheerio. Ignored when using Puppeteer,
@@ -166,6 +172,8 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
         limit: ow.optional.number,
         selector: ow.optional.string,
         baseUrl: ow.optional.string,
+        userData: ow.optional.object,
+        label: ow.optional.string,
         pseudoUrls: ow.optional.array.ofType(ow.any(
             ow.string,
             ow.object.hasKeys('purl'),
@@ -250,7 +258,7 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
         }
     }
 
-    let requestOptions = createRequestOptions(urls);
+    let requestOptions = createRequestOptions(urls, options);
 
     if (transformRequestFunction) {
         requestOptions = requestOptions.map((request) => transformRequestFunction(request)).filter((r) => !!r) as RequestOptions[];

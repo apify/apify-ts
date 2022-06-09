@@ -116,12 +116,13 @@ describe('enqueueLinks()', () => {
             };
             const globs = [
                 'https://example.com/**/*',
-                { glob: '?(http|https)://cool.com/', method: 'POST' as const, userData: { label: 'COOL' } },
+                { glob: '?(http|https)://cool.com/', method: 'POST' as const },
             ];
 
             await browserCrawlerEnqueueLinks({
                 options: {
                     selector: '.click',
+                    label: 'COOL',
                     globs,
                     transformRequestFunction: (request) => {
                         if (request.url.match(/example\.com\/a\/b\/third/)) {
@@ -642,6 +643,7 @@ describe('enqueueLinks()', () => {
             await cheerioCrawlerEnqueueLinks({
                 options: {
                     selector: '.click',
+                    userData: { label: 'DEFAULT' },
                     pseudoUrls,
                     transformRequestFunction: (request) => {
                         if (request.url.match(/example\.com\/a\/b\/third/)) {
@@ -659,11 +661,11 @@ describe('enqueueLinks()', () => {
 
             expect(enqueued[0].url).toBe('https://example.com/a/b/first');
             expect(enqueued[0].method).toBe('GET');
-            expect(enqueued[0].userData).toEqual({});
+            expect(enqueued[0].userData).toEqual({ label: 'DEFAULT' });
 
             expect(enqueued[1].url).toBe('https://example.com/a/b/third');
             expect(enqueued[1].method).toBe('OPTIONS');
-            expect(enqueued[1].userData).toEqual({});
+            expect(enqueued[1].userData).toEqual({ label: 'DEFAULT' });
 
             expect(enqueued[2].url).toBe('http://cool.com/');
             expect(enqueued[2].method).toBe('POST');

@@ -11,10 +11,8 @@ const router = createCheerioRouter();
 
 router.addHandler('START', async ({ enqueueLinks }) => {
     await enqueueLinks({
-        globs: [{
-            glob: 'https://apify.com/apify/web-scraper',
-            userData: { label: 'DETAIL' },
-        }],
+        label: 'DETAIL',
+        globs: ['https://apify.com/apify/web-scraper'],
     });
 });
 

@@ -20,7 +20,8 @@ crawler.router.addHandler('START', async ({ log, enqueueLinks, page }) => {
         // Enqueue all loaded links
         await enqueueLinks({
             selector: 'a.ActorStoreItem',
-            globs: [{ glob: 'https://apify.com/*/*', userData: { label: 'DETAIL' } }],
+            label: 'DETAIL',
+            globs: ['https://apify.com/*/*'],
         });
         log.info(`Enqueued actors for page ${pageNo}`);
         log.info('Loading the next page');
