@@ -186,13 +186,13 @@ export function injectJQuery(page: Page): Promise<unknown> {
  *
  * **Example usage**
  * ```javascript
- * const Apify = require('apify');
+ * import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
  *
- * const browser = await Actor.launchPuppeteer();
+ * const browser = await launchPuppeteer();
  * const page = await browser.newPage();
  *
  * // Block all requests to URLs that include `adsbygoogle.js` and also all defaults.
- * await Actor.utils.puppeteer.blockRequests(page, {
+ * await puppeteerUtils.blockRequests(page, {
  *     extraUrlPatterns: ['adsbygoogle.js'],
  * });
  *
