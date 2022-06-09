@@ -167,7 +167,7 @@ export function createRequestOptions(
         })
         .map((requestOptions) => {
             requestOptions.userData ??= options.userData ?? {};
-            requestOptions.userData.label ??= options.label;
+            requestOptions.userData!.label ??= options.label;
             return requestOptions;
         });
 }
