@@ -140,11 +140,11 @@ describe('enqueueLinks()', () => {
 
             expect(enqueued[0].url).toBe('https://example.com/a/b/first');
             expect(enqueued[0].method).toBe('GET');
-            expect(enqueued[0].userData).toEqual({});
+            expect(enqueued[0].userData).toEqual({ label: 'COOL' });
 
             expect(enqueued[1].url).toBe('https://example.com/a/b/third');
             expect(enqueued[1].method).toBe('OPTIONS');
-            expect(enqueued[1].userData).toEqual({});
+            expect(enqueued[1].userData).toEqual({ label: 'COOL' });
 
             expect(enqueued[2].url).toBe('http://cool.com/');
             expect(enqueued[2].method).toBe('POST');

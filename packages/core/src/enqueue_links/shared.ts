@@ -154,7 +154,7 @@ export function createRequests(requestOptions: (string | RequestOptions)[], urlP
  */
 export function createRequestOptions(
     sources: (string | Record<string, unknown>)[],
-    options: Pick<EnqueueLinksOptions, 'label' | 'userData'>,
+    options: Pick<EnqueueLinksOptions, 'label' | 'userData'> = {},
 ): RequestOptions[] {
     return sources
         .map((src) => (typeof src === 'string' ? { url: src } : src as unknown as RequestOptions))
