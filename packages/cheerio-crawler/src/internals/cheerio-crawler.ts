@@ -574,6 +574,10 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             allowUndefined: true,
         });
 
+        if (!this.requestHandler) {
+            this.requestHandler = this.router;
+        }
+
         // Cookies should be persisted per session only if session pool is used
         if (!this.useSessionPool && persistCookiesPerSession) {
             throw new Error('You cannot use "persistCookiesPerSession" without "useSessionPool" set to true.');
