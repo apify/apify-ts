@@ -16,6 +16,7 @@ import {
     ProxyInfo,
     Request,
     RequestQueue,
+    Router,
     resolveBaseUrl,
     Session,
     validators,
@@ -1044,4 +1045,32 @@ function addResponsePropertiesToStream(stream: GotRequest) {
     }
 
     return stream as unknown as IncomingMessage;
+}
+
+/**
+ * Creates new {@link Router} instance that works based on request labels.
+ * This instance can then serve as a `requestHandler` of your {@link CheerioCrawler}.
+ * Defaults to the {@link CheerioCrawlingContext}.
+ *
+ * > Serves as a shortcut for using `Router.create<CheerioCrawlingContext>()`.
+ *
+ * ```ts
+ * import { CheerioCrawler, createCheerioRouter } from '@crawlee/cheerio';
+ *
+ * const router = createCheerioRouter();
+ * router.addHandler('label-a', async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ * router.addDefaultHandler(async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ *
+ * const crawler = new CheerioCrawler({
+ *     requestHandler: router,
+ * });
+ * await crawler.run();
+ * ```
+ */
+export function createCheerioRouter<Context extends CheerioCrawlingContext = CheerioCrawlingContext>() {
+    return Router.create<Context>();
 }

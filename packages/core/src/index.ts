@@ -7,6 +7,7 @@ export * from './events';
 export * from './log';
 export * from './proxy_configuration';
 export * from './request';
+export * from './router';
 export * from './serialization';
 export * from './session_pool';
 export * from './storages';

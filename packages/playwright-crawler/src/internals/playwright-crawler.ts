@@ -7,6 +7,7 @@ import {
     BrowserCrawlingContext,
     BrowserCrawlerHandleRequest,
     BrowserHook,
+    Router,
 } from '@crawlee/browser';
 import { Dictionary } from '@crawlee/types';
 import { Cookie } from 'tough-cookie';
@@ -261,4 +262,32 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
             ].filter((c): c is PlaywrightCookie => c !== undefined),
         );
     }
+}
+
+/**
+ * Creates new {@link Router} instance that works based on request labels.
+ * This instance can then serve as a `requestHandler` of your {@link PlaywrightCrawler}.
+ * Defaults to the {@link PlaywrightCrawlingContext}.
+ *
+ * > Serves as a shortcut for using `Router.create<PlaywrightCrawlingContext>()`.
+ *
+ * ```ts
+ * import { PlaywrightCrawler, createPlaywrightRouter } from '@crawlee/playwright';
+ *
+ * const router = createPlaywrightRouter();
+ * router.addHandler('label-a', async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ * router.addDefaultHandler(async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ *
+ * const crawler = new PlaywrightCrawler({
+ *     requestHandler: router,
+ * });
+ * await crawler.run();
+ * ```
+ */
+export function createPlaywrightRouter<Context extends PlaywrightCrawlingContext = PlaywrightCrawlingContext>() {
+    return Router.create<Context>();
 }
