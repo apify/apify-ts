@@ -571,6 +571,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             propertyKey: 'requestHandler',
             newProperty: requestHandler,
             oldProperty: handlePageFunction,
+            allowUndefined: true,
         });
 
         // Cookies should be persisted per session only if session pool is used
