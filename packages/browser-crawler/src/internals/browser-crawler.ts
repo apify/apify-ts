@@ -385,7 +385,12 @@ export abstract class BrowserCrawler<
             propertyKey: 'userProvidedRequestHandler',
             newProperty: userProvidedRequestHandler,
             oldProperty: handlePageFunction,
+            allowUndefined: true, // fallback to the default router
         });
+
+        if (!this.userProvidedRequestHandler) {
+            this.userProvidedRequestHandler = this.router;
+        }
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',

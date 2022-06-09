@@ -20,11 +20,13 @@ import {
     type CrawlingContext,
     RequestOptions,
     RequestQueueOperationOptions,
+    Router,
     createRequests,
     Configuration,
     EventManager,
     EventType,
     FinalStatistics,
+    RouterHandler,
 } from '@crawlee/core';
 import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
 import { ProcessedRequest } from '@crawlee/types';
@@ -338,6 +340,12 @@ export class BasicCrawler<
      */
     autoscaledPool?: AutoscaledPool;
 
+    /**
+     * Default router instance that will be used if we don't specify any {@link requestHandler}.
+     * See {@link Router.addHandler} and {@link Router.addDefaultHandler.}
+     */
+    readonly router: RouterHandler<Context> = Router.create<Context>();
+
     protected log: Log;
     protected requestHandler!: RequestHandler<Context>;
     protected failedRequestHandler?: FailedRequestHandler<ErrorContext>;
@@ -357,7 +365,6 @@ export class BasicCrawler<
         // Subclasses override this function instead of passing it
         // in constructor, so this validation needs to apply only
         // if the user creates an instance of BasicCrawler directly.
-        // TODO: remove .optional from requestHandler once migration period is over
         requestHandler: ow.optional.function,
         // TODO: remove in a future release
         handleRequestFunction: ow.optional.function,
@@ -425,7 +432,12 @@ export class BasicCrawler<
             propertyKey: 'requestHandler',
             newProperty: requestHandler,
             oldProperty: handleRequestFunction,
+            allowUndefined: true, // fallback to the default router
         });
+
+        if (!this.requestHandler) {
+            this.requestHandler = this.router;
+        }
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',
@@ -1052,4 +1064,32 @@ interface HandlePropertyNameChangeData<New, Old> {
     newName: string;
     propertyKey: string;
     allowUndefined?: boolean;
+}
+
+/**
+ * Creates new {@link Router} instance that works based on request labels.
+ * This instance can then serve as a `requestHandler` of your {@link BasicCrawler}.
+ * Defaults to the {@link BasicCrawlingContext}.
+ *
+ * > Serves as a shortcut for using `Router.create<BasicCrawlingContext>()`.
+ *
+ * ```ts
+ * import { BasicCrawler, createBasicRouter } from '@crawlee/basic';
+ *
+ * const router = createBasicRouter();
+ * router.addHandler('label-a', async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ * router.addDefaultHandler(async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ *
+ * const crawler = new BasicCrawler({
+ *     requestHandler: router,
+ * });
+ * await crawler.run();
+ * ```
+ */
+export function createBasicRouter<Context extends BasicCrawlingContext = BasicCrawlingContext>() {
+    return Router.create<Context>();
 }
