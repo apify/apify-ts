@@ -171,6 +171,7 @@ export async function findOrCacheKeyValueStoreByPossibleId(client: MemoryStorage
                 try {
                     // Try parsing the JSON ahead of time (not ideal but solves invalid files being loaded into stores)
                     JSON.parse(stringifiedJson);
+                    finalFileContent = stringifiedJson;
                 } catch {
                     memoryStorageLog.warning(
                         `Key-value entry "${entry.name}" for store ${entryNameOrId} has invalid JSON content and will be ignored from the store.`,
