@@ -5,16 +5,15 @@
  * **Example usage:**
  *
  * ```javascript
- * const Apify = require('apify');
- * const { puppeteer } = Actor.utils;
+ * import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
  *
  * // Open https://www.example.com in Puppeteer
- * const browser = await Actor.launchPuppeteer();
+ * const browser = await launchPuppeteer();
  * const page = await browser.newPage();
  * await page.goto('https://www.example.com');
  *
  * // Inject jQuery into a page
- * await puppeteer.injectJQuery(page);
+ * await puppeteerUtils.injectJQuery(page);
  * ```
  * @module puppeteerUtils
  */
