@@ -30,6 +30,9 @@ describe('fallback to fs for reading', () => {
 
         await ensureDir(resolve(storage.keyValueStoresDirectory, 'no-ext'));
         await writeFile(resolve(storage.keyValueStoresDirectory, 'no-ext/INPUT'), JSON.stringify({ foo: 'bar but from fs' }));
+
+        await ensureDir(resolve(storage.keyValueStoresDirectory, 'invalid-json'));
+        await writeFile(resolve(storage.keyValueStoresDirectory, 'invalid-json/INPUT.json'), '{');
     });
 
     afterAll(async () => {
@@ -80,5 +83,12 @@ describe('fallback to fs for reading', () => {
             value: JSON.stringify({ foo: 'bar but from fs' }),
             contentType: 'text/plain',
         });
+    });
+
+    test('attempting to read "invalid-json" key value store should ignore the invalid "INPUT" json file', async () => {
+        const invalidJsonStore = storage.keyValueStore('invalid-json');
+
+        const input = await invalidJsonStore.getRecord('INPUT');
+        expect(input).toBeUndefined();
     });
 });
