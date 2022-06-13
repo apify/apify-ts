@@ -131,7 +131,7 @@ export class DatasetClient<Data extends Dictionary = Dictionary> extends BaseCli
             this.throwOnNonExisting(StorageTypes.Dataset);
         }
 
-        const [start, end] = this.getStartAndEndIndexes(offset, limit);
+        const [start, end] = existingStoreById.getStartAndEndIndexes(offset, limit);
 
         const items: Data[] = [];
 
