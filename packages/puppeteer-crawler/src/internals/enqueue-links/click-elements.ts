@@ -13,7 +13,7 @@ import {
     RequestOptions,
 } from '@crawlee/browser';
 import log_ from '@apify/log';
-import { Dictionary } from '@crawlee/utils';
+import { Dictionary, BatchAddRequestsResult } from '@crawlee/types';
 import ow from 'ow';
 import {
     BrowserContextEmittedEvents,
@@ -26,7 +26,6 @@ import {
     Target,
 } from 'puppeteer';
 import { URL } from 'url';
-import { BatchAddRequestsResult } from '@crawlee/types';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;

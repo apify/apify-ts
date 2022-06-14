@@ -21,8 +21,8 @@ import {
     Session,
     validators,
 } from '@crawlee/core';
-import { BatchAddRequestsResult } from '@crawlee/types';
-import { Awaitable, CheerioRoot, Dictionary, entries, parseContentTypeFromResponse } from '@crawlee/utils';
+import { BatchAddRequestsResult, Awaitable, Dictionary } from '@crawlee/types';
+import { CheerioRoot, entries, parseContentTypeFromResponse } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';

@@ -5,3 +5,4 @@ export * from './internals/general';
 export * from './internals/memory-info';
 export * as social from './internals/social';
 export * from './internals/typedefs';
+export { Dictionary, Awaitable, Constructor } from '@crawlee/types';
