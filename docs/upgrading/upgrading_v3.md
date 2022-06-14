@@ -49,6 +49,8 @@ Alternatively we can also use the `crawlee` meta-package which contains (re-expo
 
 Both Crawlee and Actor SDK are full TypeScript rewrite, so they include up-to-date types in the package. For your TypeScript crawlers we recommend using our predefined TypeScript configuration from `@apify/tsconfig` package. Don't forget to set the `module` and `target` to `ES2022` or above to be able to use top level await.
 
+> The `@apify/tsconfig` config has [`noImplicitAny`](https://www.typescriptlang.org/tsconfig#noImplicitAny) enabled, you might want to disable it during the initial development as it will cause build failures if you left some unused local variables in your code.
+
 ```json title="tsconfig.json"
 {
     "extends": "@apify/tsconfig",
@@ -263,6 +265,19 @@ await Actor.main(async () => {
 ```
 
 `Actor.init()` will conditionally set the storage implementation of Crawlee to the `ApifyClient` when running on the Apify platform, or keep the default (memory storage) implementation otherwise. It will also subscribe to the websocket events (or mimic them locally). `Actor.exit()` will handle the tear down and calls `process.exit()` to ensure our process won't hang indefinitely for some reason.
+
+### Events
+
+Apify SDK exports `Apify.events`, which is an `EventEmitter` instance. With Crawlee, the events are managed by `EventManager` class instead. We can either access it via `Actor.eventManager` getter, or use `Actor.on` and `Actor.off` shortcuts instead.
+
+```diff
+-Apify.events.on(...);
++Actor.on(...);
+```
+
+> We can also get the `EventManager` instance via `Configuration.getEventManager()`.
+
+In addition to the existing events, we now have an `exit` event fired when calling `Actor.exit()` (which is called at the end of `Actor.main()`). This event allows you to gracefully shut down any resources when `Actor.exit` is called.
 
 ## Smaller/internal breaking changes
 
