@@ -15,7 +15,6 @@ import {
 } from '@crawlee/basic';
 import express from 'express';
 import { Dictionary, sleep } from '@crawlee/utils';
-import { Response } from 'got-scraping';
 import { SingleStorageCase } from '../../shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
 
@@ -89,7 +88,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
         const processed: { url: string }[] = [];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
         const requestHandler: RequestHandler = async ({ request, crawler }) => {
             await sleep(10);
             const state = await crawler.getState({ processed });
@@ -101,7 +100,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             requestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
         const state = await basicCrawler.getState();
 

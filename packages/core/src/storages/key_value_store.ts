@@ -106,9 +106,10 @@ export class KeyValueStore {
     readonly id: string;
     readonly name?: string;
     private readonly client: KeyValueStoreClient;
+    private persistStateEventStarted = false;
 
     /** Cache for persistent (auto-saved) values. When we try to set such value, the cache will be updated automatically. */
-    private readonly cache: Dictionary = {};
+    private readonly cache = new Map<string, unknown>();
 
     /**
      * @internal
@@ -159,14 +160,29 @@ export class KeyValueStore {
     }
 
     async getAutoSavedValue<T extends Dictionary = Dictionary>(key: string, defaultValue = {} as T): Promise<T> {
-        if (this.cache[key]) {
-            return this.cache[key];
+        if (this.cache.has(key)) {
+            return this.cache.get(key) as T;
         }
 
-        this.cache[key] = await this.getValue<T>(key, defaultValue);
-        this.config.getEventManager().on('persistState', () => this.setValue(key, this.cache[key]));
+        const value = await this.getValue<T>(key, defaultValue);
+        this.cache.set(key, value);
+        this.ensurePersistStateEvent();
 
-        return this.cache[key];
+        return value!;
+    }
+
+    private ensurePersistStateEvent(): void {
+        if (this.persistStateEventStarted) {
+            return;
+        }
+
+        this.config.getEventManager().on('persistState', async () => {
+            for (const [key, value] of this.cache) {
+                await this.setValue(key, value);
+            }
+        });
+
+        this.persistStateEventStarted = true;
     }
 
     /**
@@ -230,17 +246,19 @@ export class KeyValueStore {
         const optionsCopy = { ...options };
 
         // If we try to set the value of a cached state to a different reference, we need to update the cache accordingly.
-        if (key in this.cache && this.cache[key] !== value) {
+        const cachedValue = this.cache.get(key) as T;
+
+        if (this.cache.has(key) && cachedValue !== value) {
             if (value === null) {
                 // Cached state can be only object, so a propagation of `null` means removing all its properties.
-                Object.keys(this.cache[key]).forEach((k) => delete this.cache[key][k]);
+                Object.keys(cachedValue).forEach((k) => this.cache.delete(k));
             } else if (typeof value === 'object') {
                 // We need to remove the keys that are no longer present in the new value.
-                Object.keys(this.cache[key])
+                Object.keys(cachedValue)
                     .filter((k) => !(k in value!))
-                    .forEach((k) => delete this.cache[key][k]);
+                    .forEach((k) => this.cache.delete(k));
                 // And update the existing ones + add new ones.
-                Object.assign(this.cache[key], value);
+                Object.assign(cachedValue, value);
             }
         }
 
@@ -273,6 +291,11 @@ export class KeyValueStore {
     getPublicUrl(key: string): string {
         // FIXME how should this work? should we remove this method or provide a way to configure the base url?
         return `https://api.apify.com/v2/key-value-stores/${this.id}/records/${key}`;
+    }
+
+    /** @internal */
+    clearCache(): void {
+        this.cache.clear();
     }
 
     /**
@@ -332,7 +355,7 @@ export class KeyValueStore {
      * @param [options] Storage manager options.
      */
     static async open(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
-        ow(storeIdOrName, ow.optional.string);
+        ow(storeIdOrName, ow.optional.any(ow.string, ow.null));
         ow(options, ow.object.exactShape({
             config: ow.optional.object.instanceOf(Configuration),
         }));

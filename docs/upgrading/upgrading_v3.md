@@ -3,6 +3,8 @@ id: upgrading-to-v3
 title: Upgrading to v3
 ---
 
+import ApiLink from '@site/src/components/ApiLink';
+
 This page summarizes most of the breaking changes between Crawlee (v3) and Apify SDK (v2). Crawlee is the spiritual successor to Apify SDK, so we decided to keep the versioning and release Crawlee as v3.
 
 ## Crawlee vs Apify SDK
@@ -282,14 +284,14 @@ await Actor.main(async () => {
 
 ### Events
 
-Apify SDK exports `Apify.events`, which is an `EventEmitter` instance. With Crawlee, the events are managed by `EventManager` class instead. We can either access it via `Actor.eventManager` getter, or use `Actor.on` and `Actor.off` shortcuts instead.
+Apify SDK exports `Apify.events`, which is an `EventEmitter` instance. With Crawlee, the events are managed by <ApiLink to="core/class/EventManager">`EventManager`</ApiLink> class instead. We can either access it via `Actor.eventManager` getter, or use `Actor.on` and `Actor.off` shortcuts instead.
 
 ```diff
 -Apify.events.on(...);
 +Actor.on(...);
 ```
 
-> We can also get the `EventManager` instance via `Configuration.getEventManager()`.
+> We can also get the <ApiLink to="core/class/EventManager">`EventManager`</ApiLink> instance via `Configuration.getEventManager()`.
 
 In addition to the existing events, we now have an `exit` event fired when calling `Actor.exit()` (which is called at the end of `Actor.main()`). This event allows you to gracefully shut down any resources when `Actor.exit` is called.
 
