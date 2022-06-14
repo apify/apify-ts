@@ -827,7 +827,7 @@ export class RequestList {
      *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
      */
     static async open(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
-        ow(listName, ow.any(ow.string, ow.null));
+        ow(listName, ow.optional.any(ow.string, ow.null));
         ow(sources, ow.array);
         ow(options, ow.object.is((v) => !Array.isArray(v)));
 

@@ -871,7 +871,9 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
                     if (e.message.match('argument to be of type `string`')) {
                         expect(e.message).toMatch('received type `undefined`');
                     } else if (e.message.match('argument to be of type `array`')) {
-                        const isMatched = e.message.match('received type `Object`') || e.message.match('received type `number`');
+                        const isMatched = e.message.match('received type `Object`')
+                            || e.message.match('received type `number`')
+                            || e.message.match('received type `undefined`');
                         expect(isMatched).toBeTruthy();
                     } else if (e.message.match('argument to be of type `null`')) {
                         expect(e.message).toMatch('received type `undefined`');

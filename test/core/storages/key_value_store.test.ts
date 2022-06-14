@@ -96,8 +96,13 @@ describe('KeyValueStore', () => {
 
             const val = await KeyValueStore.getValue('key-1');
             expect(getValueSpy).toBeCalledTimes(1);
-            expect(getValueSpy).toBeCalledWith('key-1');
+            expect(getValueSpy).toBeCalledWith('key-1', undefined);
             expect(val).toBe(123);
+
+            const val2 = await KeyValueStore.getValue('key-2', 321);
+            expect(getValueSpy).toBeCalledTimes(2);
+            expect(getValueSpy).toBeCalledWith('key-2', 321);
+            expect(val2).toBe(321);
         });
     });
 

@@ -1,9 +1,12 @@
 import { rm } from 'node:fs/promises';
+import { StorageManager } from '@crawlee/core';
 
 export abstract class StorageEmulator {
     protected localStorageDirectories: string[] = [];
 
-    abstract init(dirName?: string): Promise<void>;
+    async init(dirName?: string): Promise<void> {
+        StorageManager.clearCache();
+    }
 
     async destroy() {
         const promises = this.localStorageDirectories.map((dir) => {
@@ -11,5 +14,6 @@ export abstract class StorageEmulator {
         });
 
         await Promise.all(promises);
+        StorageManager.clearCache();
     }
 }

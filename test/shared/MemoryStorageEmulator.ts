@@ -9,7 +9,8 @@ import { StorageEmulator } from './StorageEmulator';
 const LOCAL_EMULATION_DIR = resolve(__dirname, '..', 'tmp', 'memory-emulation-dir');
 
 export class MemoryStorageEmulator extends StorageEmulator {
-    async init(dirName = cryptoRandomObjectId(10)) {
+    override async init(dirName = cryptoRandomObjectId(10)) {
+        await super.init();
         const localStorageDir = resolve(LOCAL_EMULATION_DIR, dirName);
         this.localStorageDirectories.push(localStorageDir);
         await ensureDir(localStorageDir);

@@ -583,7 +583,8 @@ export class BasicCrawler<
     }
 
     async getState<State extends Dictionary = Dictionary>(defaultValue = {} as State): Promise<State> {
-        return KeyValueStore.getAutoSavedValue<State>(BasicCrawler.CRAWLEE_STATE_KEY, defaultValue);
+        const kvs = await KeyValueStore.open(null, { config: this.config });
+        return kvs.getAutoSavedValue<State>(BasicCrawler.CRAWLEE_STATE_KEY, defaultValue);
     }
 
     /**
