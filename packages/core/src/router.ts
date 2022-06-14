@@ -134,8 +134,8 @@ export class Router<Context extends CrawlingContext> {
         obj.getHandler = router.getHandler.bind(router);
 
         const func = function (context: Context) {
-            const { url, label } = context.request;
-            context.log.info('Page opened.', { label, url });
+            const { url, loadedUrl, label } = context.request;
+            context.log.info('Page opened.', { label, url: loadedUrl ?? url });
             return router.getHandler(label)(context);
         };
 
