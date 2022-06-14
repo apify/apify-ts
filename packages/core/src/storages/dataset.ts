@@ -214,7 +214,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     /**
      * @internal
      */
-    constructor(options: DatasetOptions) {
+    constructor(options: DatasetOptions, readonly config = Configuration.getGlobalConfig()) {
         this.id = options.id;
         this.name = options.name;
         this.client = options.client.dataset(this.id) as DatasetClient<Data>;
@@ -410,7 +410,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(Dataset);
+        const manager = StorageManager.getManager(Dataset, this.config);
         manager.closeStorage(this);
     }
 
@@ -433,9 +433,10 @@ export class Dataset<Data extends Dictionary = Dictionary> {
         ow(options, ow.object.exactShape({
             config: ow.optional.object.instanceOf(Configuration),
         }));
+        options.config ??= Configuration.getGlobalConfig();
 
-        const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
-        return manager.openStorage(datasetIdOrName);
+        const manager = StorageManager.getManager<Dataset<Data>>(Dataset, options.config);
+        return manager.openStorage(datasetIdOrName, options.config.getStorageClient());
     }
 
     /**
