@@ -4,31 +4,35 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import {
     AutoscaledPool,
     AutoscaledPoolOptions,
-    EnqueueLinksOptions,
-    FailedRequestContext,
+    Configuration,
+    type CrawlingContext,
+    createRequests,
     enqueueLinks,
+    EnqueueLinksOptions,
+    EventManager,
+    EventType,
+    FailedRequestContext,
+    FinalStatistics,
+    KeyValueStore,
+    MissingRouteError,
     ProxyInfo,
     QueueOperationInfo,
     Request,
     RequestList,
+    RequestOptions,
     RequestQueue,
+    RequestQueueOperationOptions,
+    Router,
+    RouterHandler,
     Session,
     SessionPool,
     SessionPoolOptions,
     Statistics,
     validators,
-    type CrawlingContext,
-    RequestOptions,
-    RequestQueueOperationOptions,
-    createRequests,
-    Configuration,
-    EventManager,
-    EventType,
-    FinalStatistics,
 } from '@crawlee/core';
 import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
-import { ProcessedRequest } from '@crawlee/types';
-import { Awaitable, Dictionary, sleep, chunk } from '@crawlee/utils';
+import { ProcessedRequest, Dictionary, Awaitable } from '@crawlee/types';
+import { chunk, sleep } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
@@ -85,7 +89,7 @@ export interface BasicCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: RequestHandler<Context>;
+    requestHandler?: RequestHandler<Context>;
 
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
@@ -303,6 +307,8 @@ export class BasicCrawler<
     Context extends CrawlingContext = BasicCrawlingContext,
     ErrorContext extends FailedRequestContext = BasicFailedRequestContext,
 > {
+    private static readonly CRAWLEE_STATE_KEY = 'CRAWLEE_STATE';
+
     /**
      * Static list of URLs to be processed.
      */
@@ -338,6 +344,12 @@ export class BasicCrawler<
      */
     autoscaledPool?: AutoscaledPool;
 
+    /**
+     * Default router instance that will be used if we don't specify any {@link requestHandler}.
+     * See {@link Router.addHandler} and {@link Router.addDefaultHandler.}
+     */
+    readonly router: RouterHandler<Context> = Router.create<Context>();
+
     protected log: Log;
     protected requestHandler!: RequestHandler<Context>;
     protected failedRequestHandler?: FailedRequestHandler<ErrorContext>;
@@ -350,6 +362,7 @@ export class BasicCrawler<
     protected crawlingContexts = new Map<string, Context>();
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
     protected events: EventManager;
+    private _closeEvents?: boolean;
 
     protected static optionsShape = {
         requestList: ow.optional.object.validate(validators.requestList),
@@ -357,7 +370,6 @@ export class BasicCrawler<
         // Subclasses override this function instead of passing it
         // in constructor, so this validation needs to apply only
         // if the user creates an instance of BasicCrawler directly.
-        // TODO: remove .optional from requestHandler once migration period is over
         requestHandler: ow.optional.function,
         // TODO: remove in a future release
         handleRequestFunction: ow.optional.function,
@@ -425,7 +437,12 @@ export class BasicCrawler<
             propertyKey: 'requestHandler',
             newProperty: requestHandler,
             oldProperty: handleRequestFunction,
+            allowUndefined: true, // fallback to the default router
         });
+
+        if (!this.requestHandler) {
+            this.requestHandler = this.router;
+        }
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',
@@ -566,6 +583,11 @@ export class BasicCrawler<
         return this.requestQueue!;
     }
 
+    async getState<State extends Dictionary = Dictionary>(defaultValue = {} as State): Promise<State> {
+        const kvs = await KeyValueStore.open(null, { config: this.config });
+        return kvs.getAutoSavedValue<State>(BasicCrawler.CRAWLEE_STATE_KEY, defaultValue);
+    }
+
     /**
      * Adds requests to be processed by the crawler
      * @param requests The requests to add
@@ -639,6 +661,11 @@ export class BasicCrawler<
     }
 
     protected async _init(): Promise<void> {
+        if (!this.events.isInitialized()) {
+            await this.events.init();
+            this._closeEvents = true;
+        }
+
         // Initialize AutoscaledPool before awaiting _loadHandledRequestCount(),
         // so that the caller can get a reference to it before awaiting the promise returned from run()
         // (otherwise there would be no way)
@@ -898,7 +925,7 @@ export class BasicCrawler<
         const { request } = crawlingContext;
         request.pushErrorMessage(error);
 
-        const shouldRetryRequest = !request.noRetry && request.retryCount < this.maxRequestRetries;
+        const shouldRetryRequest = !request.noRetry && request.retryCount < this.maxRequestRetries && !(error instanceof MissingRouteError);
         if (shouldRetryRequest) {
             request.retryCount++;
             const { url, retryCount, id } = request;
@@ -969,8 +996,14 @@ export class BasicCrawler<
      * @ignore
      */
     async teardown(): Promise<void> {
+        this.events.emit(EventType.PERSIST_STATE, { isMigrating: false });
+
         if (this.useSessionPool) {
             await this.sessionPool!.teardown();
+        }
+
+        if (this._closeEvents) {
+            await this.events.close();
         }
     }
 
@@ -1052,4 +1085,32 @@ interface HandlePropertyNameChangeData<New, Old> {
     newName: string;
     propertyKey: string;
     allowUndefined?: boolean;
+}
+
+/**
+ * Creates new {@link Router} instance that works based on request labels.
+ * This instance can then serve as a `requestHandler` of your {@link BasicCrawler}.
+ * Defaults to the {@link BasicCrawlingContext}.
+ *
+ * > Serves as a shortcut for using `Router.create<BasicCrawlingContext>()`.
+ *
+ * ```ts
+ * import { BasicCrawler, createBasicRouter } from '@crawlee/basic';
+ *
+ * const router = createBasicRouter();
+ * router.addHandler('label-a', async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ * router.addDefaultHandler(async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ *
+ * const crawler = new BasicCrawler({
+ *     requestHandler: router,
+ * });
+ * await crawler.run();
+ * ```
+ */
+export function createBasicRouter<Context extends BasicCrawlingContext = BasicCrawlingContext>() {
+    return Router.create<Context>();
 }

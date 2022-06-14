@@ -19,8 +19,8 @@ import {
     Source,
     StorageManager,
 } from '@crawlee/core';
-import type { StorageClient } from '@crawlee/types';
-import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
+import type { Awaitable, Constructor, Dictionary, StorageClient } from '@crawlee/types';
+import { sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
@@ -30,7 +30,7 @@ import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configura
  * that will be used on the instance methods. Environment variables will have precedence over this configuration.
  * See {@link Configuration} for details about what can be configured and what are the default values.
  */
-export class Actor {
+export class Actor<Data extends Dictionary = Dictionary> {
     /** @internal */
     static _instance: Actor;
 
@@ -51,8 +51,6 @@ export class Actor {
      * @internal
      */
     readonly eventManager: EventManager;
-
-    private readonly storageManagers = new Map<Constructor, StorageManager>();
 
     constructor(options: ConfigurationOptions = {}) {
         // use default configuration object if nothing overridden (it fallbacks to env vars)
@@ -178,14 +176,15 @@ export class Actor {
         options.exit ??= true;
         options.exitCode ??= EXIT_CODES.SUCCESS;
         options.timeoutSecs ??= 5;
-        options.statusMessage ??= `Actor finished with exit code ${options.exitCode}`;
 
         this.eventManager.emit(EventType.EXIT, options);
         await this.eventManager.close();
 
         if (options.exitCode > 0) {
+            options.statusMessage ??= `Actor finished with an error (exit code ${options.exitCode})`;
             log.error(options.statusMessage);
         } else {
+            options.statusMessage ??= `Actor finished successfully (exit code ${options.exitCode})`;
             log.info(options.statusMessage);
         }
 
@@ -194,7 +193,7 @@ export class Actor {
         }
 
         if (options.timeoutSecs > 0) {
-            log.debug(`Waiting for ${options.timeoutSecs} before calling process.exit()`);
+            log.debug(`Waiting for ${options.timeoutSecs} seconds before calling process.exit()`);
             await setTimeout(options.timeoutSecs! * 1000);
         }
 
@@ -431,7 +430,7 @@ export class Actor {
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      * @ignore
      */
-    async pushData(item: Dictionary): Promise<void> {
+    async pushData(item: Data | Data[]): Promise<void> {
         const dataset = await this.openDataset();
         return dataset.pushData(item);
     }
@@ -451,8 +450,9 @@ export class Actor {
      * @param [options]
      * @ignore
      */
-    async openDataset<Data extends Dictionary = Dictionary>(
-        datasetIdOrName?: string | null, options: OpenStorageOptions = {},
+    async openDataset(
+        datasetIdOrName?: string | null,
+        options: OpenStorageOptions = {},
     ): Promise<Dataset<Data>> {
         ow(datasetIdOrName, ow.optional.string);
         ow(options, ow.object.exactShape({
@@ -1013,7 +1013,7 @@ export class Actor {
      * @param item Object or array of objects containing data to be stored in the default dataset.
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      */
-    static async pushData(item: Dictionary): Promise<void> {
+    static async pushData<Data extends Dictionary = Dictionary>(item: Data | Data[]): Promise<void> {
         return Actor.getDefaultInstance().pushData(item);
     }
 
@@ -1316,16 +1316,7 @@ export class Actor {
 
     private _openStorage<T extends IStorage>(storageClass: Constructor<T>, id?: string, options: OpenStorageOptions = {}) {
         const client = options.forceCloud ? this.apifyClient : undefined;
-        return this._getStorageManager<T>(storageClass).openStorage(id, client);
-    }
-
-    private _getStorageManager<T extends IStorage>(storageClass: Constructor<T>): StorageManager<T> {
-        if (!this.storageManagers.has(storageClass)) {
-            const manager = new StorageManager(storageClass, this.config);
-            this.storageManagers.set(storageClass, manager);
-        }
-
-        return this.storageManagers.get(storageClass) as StorageManager<T>;
+        return StorageManager.openStorage<T>(storageClass, id, client, this.config);
     }
 }
 

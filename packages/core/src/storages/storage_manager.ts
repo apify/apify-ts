@@ -1,6 +1,5 @@
 import { ENV_VARS } from '@apify/consts';
-import { LruCache } from '@apify/datastructures';
-import { StorageClient } from '@crawlee/types';
+import { Dictionary, StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { Constructor } from '../typedefs';
 
@@ -26,10 +25,10 @@ export interface IStorage {
  * @ignore
  */
 export class StorageManager<T extends IStorage = IStorage> {
-    private static readonly MAX_OPENED_STORAGES = 1000;
+    private static readonly storageManagers = new Map<Constructor, StorageManager>();
     private readonly name: 'Dataset' | 'KeyValueStore' | 'RequestQueue';
     private readonly StorageConstructor: Constructor<T> & { name: string };
-    private readonly cache: LruCache<T>;
+    private readonly cache = new Map<string, T>();
 
     constructor(
         StorageConstructor: Constructor<T>,
@@ -37,10 +36,42 @@ export class StorageManager<T extends IStorage = IStorage> {
     ) {
         this.StorageConstructor = StorageConstructor;
         this.name = this.StorageConstructor.name as 'Dataset' | 'KeyValueStore' | 'RequestQueue';
-        this.cache = new LruCache({ maxLength: StorageManager.MAX_OPENED_STORAGES });
     }
 
-    async openStorage(idOrName?: string, client?: StorageClient): Promise<T> {
+    static openStorage<T extends IStorage>(
+        storageClass: Constructor<T>,
+        idOrName?: string,
+        client?: StorageClient,
+        config = Configuration.getGlobalConfig(),
+    ): Promise<T> {
+        return this.getManager(storageClass, config).openStorage(idOrName, client);
+    }
+
+    static getManager<T extends IStorage>(
+        storageClass: Constructor<T>,
+        config = Configuration.getGlobalConfig(),
+    ): StorageManager<T> {
+        if (!this.storageManagers.has(storageClass)) {
+            const manager = new StorageManager(storageClass, config);
+            this.storageManagers.set(storageClass, manager);
+        }
+
+        return this.storageManagers.get(storageClass) as StorageManager<T>;
+    }
+
+    /** @internal */
+    static clearCache(): void {
+        this.storageManagers.forEach((manager) => {
+            if (manager.name === 'KeyValueStore') {
+                manager.cache.forEach((item) => {
+                    (item as Dictionary).clearCache?.();
+                });
+            }
+        });
+        this.storageManagers.clear();
+    }
+
+    async openStorage(idOrName?: string | null, client?: StorageClient): Promise<T> {
         if (!idOrName) {
             const defaultIdEnvVarName = DEFAULT_ID_ENV_VAR_NAMES[this.name];
             const defaultIdConfigKey = DEFAULT_ID_CONFIG_KEYS[this.name];
@@ -67,11 +98,11 @@ export class StorageManager<T extends IStorage = IStorage> {
 
     closeStorage(storage: { id: string; name?: string }): void {
         const idKey = storage.id;
-        this.cache.remove(idKey);
+        this.cache.delete(idKey);
 
         if (storage.name) {
             const nameKey = storage.name;
-            this.cache.remove(nameKey);
+            this.cache.delete(nameKey);
         }
     }
 
@@ -106,11 +137,11 @@ export class StorageManager<T extends IStorage = IStorage> {
 
     protected _addStorageToCache(storage: T): void {
         const idKey = storage.id;
-        this.cache.add(idKey, storage);
+        this.cache.set(idKey, storage);
 
         if (storage.name) {
             const nameKey = storage.name;
-            this.cache.add(nameKey, storage);
+            this.cache.set(nameKey, storage);
         }
     }
 }

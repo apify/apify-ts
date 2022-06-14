@@ -1,5 +1,5 @@
 import ow from 'ow';
-import { Dictionary } from './typedefs';
+import { Dictionary } from '@crawlee/types';
 
 /** @internal */
 export const validators = {

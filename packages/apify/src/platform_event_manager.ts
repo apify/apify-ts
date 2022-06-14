@@ -92,7 +92,7 @@ export class PlatformEventManager extends EventManager {
             this.log.exception(err, 'web socket connection failed');
         });
         this.eventsWs.on('close', () => {
-            this.log.warning('web socket has been closed');
+            this.log.debug('web socket has been closed');
             this.eventsWs = undefined;
         });
     }

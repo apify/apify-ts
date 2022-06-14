@@ -1,7 +1,7 @@
+import { Dictionary } from '@crawlee/types';
 import { IncomingMessage } from 'node:http';
 import { HTTPResponse } from 'puppeteer';
 import { Cookie } from 'tough-cookie';
-import { Dictionary } from '../typedefs';
 import { CookieParseError } from './errors';
 
 export function getCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]> }): Cookie[] {

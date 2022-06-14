@@ -47,6 +47,7 @@
     "dependencies": {
         "@apify/log": "^1.2.3",
         "@apify/ps-tree": "^1.1.4",
+        "@crawlee/types": "^3.0.0",
         "cheerio": "1.0.0-rc.11",
         "content-type": "^1.0.4",
         "got-scraping": "^3.2.9",

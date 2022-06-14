@@ -15,7 +15,6 @@ import {
 } from '@crawlee/basic';
 import express from 'express';
 import { Dictionary, sleep } from '@crawlee/utils';
-import { Response } from 'got-scraping';
 import { SingleStorageCase } from '../../shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
 
@@ -80,6 +79,34 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
         expect(basicCrawler.autoscaledPool.minConcurrency).toBe(25);
         expect(processed).toEqual(sourcesCopy);
+        expect(await requestList.isFinished()).toBe(true);
+        expect(await requestList.isEmpty()).toBe(true);
+    });
+
+    test('auto-saved state object', async () => {
+        const sources = [...Array(50).keys()].map((index) => ({ url: `https://example.com/${index}` }));
+        const sourcesCopy = JSON.parse(JSON.stringify(sources));
+
+        const processed: { url: string }[] = [];
+        const requestList = await RequestList.open(null, sources);
+        const requestHandler: RequestHandler = async ({ request, crawler }) => {
+            await sleep(10);
+            const state = await crawler.getState({ processed });
+            state.processed.push({ url: request.url });
+        };
+
+        const basicCrawler = new BasicCrawler({
+            requestList,
+            requestHandler,
+        });
+
+        await basicCrawler.run();
+        const state = await basicCrawler.getState();
+
+        expect(processed).toEqual(sourcesCopy);
+        expect(state.processed).toEqual(sourcesCopy);
+        expect(state.processed).toBe(processed);
+        expect(state.processed).toEqual(sourcesCopy);
         expect(await requestList.isFinished()).toBe(true);
         expect(await requestList.isEmpty()).toBe(true);
     });

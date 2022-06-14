@@ -1,9 +1,9 @@
 import { KEY_VALUE_STORE_KEY_REGEX } from '@apify/consts';
 import { jsonStringifyExtended } from '@apify/utilities';
 import ow, { ArgumentError } from 'ow';
-import { StorageClient, KeyValueStoreClient } from '@crawlee/types';
+import { Dictionary, KeyValueStoreClient, StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
-import { Awaitable, Dictionary } from '../typedefs';
+import { Awaitable } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 
 /**
@@ -105,7 +105,11 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
 export class KeyValueStore {
     readonly id: string;
     readonly name?: string;
-    private client: KeyValueStoreClient;
+    private readonly client: KeyValueStoreClient;
+    private persistStateEventStarted = false;
+
+    /** Cache for persistent (auto-saved) values. When we try to set such value, the cache will be updated automatically. */
+    private readonly cache = new Map<string, unknown>();
 
     /**
      * @internal
@@ -141,16 +145,44 @@ export class KeyValueStore {
      * @param key
      *   Unique key of the record. It can be at most 256 characters long and only consist
      *   of the following characters: `a`-`z`, `A`-`Z`, `0`-`9` and `!-_.'()`
+     * @param defaultValue
+     *   Fallback that will be returned if no value if present in the storage.
      * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record.
      */
-    async getValue<T = unknown>(key: string): Promise<T | null> {
+    async getValue<T = unknown>(key: string, defaultValue?: T): Promise<T | null> {
         ow(key, ow.string.nonEmpty);
         const record = await this.client.getRecord(key);
 
-        return record?.value as T ?? null;
+        return record?.value as T ?? defaultValue ?? null;
+    }
+
+    async getAutoSavedValue<T extends Dictionary = Dictionary>(key: string, defaultValue = {} as T): Promise<T> {
+        if (this.cache.has(key)) {
+            return this.cache.get(key) as T;
+        }
+
+        const value = await this.getValue<T>(key, defaultValue);
+        this.cache.set(key, value);
+        this.ensurePersistStateEvent();
+
+        return value!;
+    }
+
+    private ensurePersistStateEvent(): void {
+        if (this.persistStateEventStarted) {
+            return;
+        }
+
+        this.config.getEventManager().on('persistState', async () => {
+            for (const [key, value] of this.cache) {
+                await this.setValue(key, value);
+            }
+        });
+
+        this.persistStateEventStarted = true;
     }
 
     /**
@@ -213,6 +245,23 @@ export class KeyValueStore {
         // Make copy of options, don't update what user passed.
         const optionsCopy = { ...options };
 
+        // If we try to set the value of a cached state to a different reference, we need to update the cache accordingly.
+        const cachedValue = this.cache.get(key) as T;
+
+        if (this.cache.has(key) && cachedValue !== value) {
+            if (value === null) {
+                // Cached state can be only object, so a propagation of `null` means removing all its properties.
+                Object.keys(cachedValue).forEach((k) => this.cache.delete(k));
+            } else if (typeof value === 'object') {
+                // We need to remove the keys that are no longer present in the new value.
+                Object.keys(cachedValue)
+                    .filter((k) => !(k in value!))
+                    .forEach((k) => this.cache.delete(k));
+                // And update the existing ones + add new ones.
+                Object.assign(cachedValue, value);
+            }
+        }
+
         // In this case delete the record.
         if (value === null) return this.client.deleteRecord(key);
 
@@ -231,7 +280,7 @@ export class KeyValueStore {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(KeyValueStore, this.config);
+        const manager = StorageManager.getManager(KeyValueStore, this.config);
         manager.closeStorage(this);
     }
 
@@ -242,6 +291,11 @@ export class KeyValueStore {
     getPublicUrl(key: string): string {
         // FIXME how should this work? should we remove this method or provide a way to configure the base url?
         return `https://api.apify.com/v2/key-value-stores/${this.id}/records/${key}`;
+    }
+
+    /** @internal */
+    clearCache(): void {
+        this.cache.clear();
     }
 
     /**
@@ -301,12 +355,12 @@ export class KeyValueStore {
      * @param [options] Storage manager options.
      */
     static async open(storeIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<KeyValueStore> {
-        ow(storeIdOrName, ow.optional.string);
+        ow(storeIdOrName, ow.optional.any(ow.string, ow.null));
         ow(options, ow.object.exactShape({
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        const manager = new StorageManager(KeyValueStore, options.config);
+        const manager = StorageManager.getManager(KeyValueStore, options.config);
         return manager.openStorage(storeIdOrName);
     }
 
@@ -331,6 +385,7 @@ export class KeyValueStore {
      * and  {@link KeyValueStore.getValue}.
      *
      * @param key Unique record key.
+     * @param defaultValue Fallback that will be returned if no value if present in the storage.
      * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
@@ -338,9 +393,14 @@ export class KeyValueStore {
      *   if the record is missing.
      * @ignore
      */
-    static async getValue<T = unknown>(key: string): Promise<T | null> {
+    static async getValue<T = unknown>(key: string, defaultValue?: T): Promise<T | null> {
         const store = await this.open();
-        return store.getValue<T>(key);
+        return store.getValue<T>(key, defaultValue);
+    }
+
+    static async getAutoSavedValue<T extends Dictionary = Dictionary>(key: string, defaultValue = {} as T): Promise<T> {
+        const store = await this.open();
+        return store.getAutoSavedValue(key, defaultValue);
     }
 
     /**

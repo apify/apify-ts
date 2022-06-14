@@ -1,4 +1,5 @@
 import { downloadListOfUrls } from '@crawlee/utils';
+import { Dictionary } from '@crawlee/types';
 import ow, { ArgumentError } from 'ow';
 import { EventManager, EventType } from '../events';
 import { Configuration } from '../configuration';
@@ -6,7 +7,6 @@ import { log } from '../log';
 import { Request, RequestOptions } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
 import { KeyValueStore } from '../storages/key_value_store';
-import { Dictionary } from '../typedefs';
 import { ProxyConfiguration } from '../proxy_configuration';
 
 /** @internal */
@@ -827,7 +827,7 @@ export class RequestList {
      *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
      */
     static async open(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
-        ow(listName, ow.any(ow.string, ow.null));
+        ow(listName, ow.optional.any(ow.string, ow.null));
         ow(sources, ow.array);
         ow(options, ow.object.is((v) => !Array.isArray(v)));
 

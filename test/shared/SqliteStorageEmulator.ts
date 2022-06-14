@@ -16,7 +16,8 @@ const DEFAULT_FOLDERS = Object.values(LOCAL_STORAGE_SUBDIRS)
     ] as any);
 
 export class SqliteStorageEmulator extends StorageEmulator {
-    async init(dirName = cryptoRandomObjectId(10)) {
+    override async init(dirName = cryptoRandomObjectId(10)) {
+        await super.init();
         const localStorageDir = resolve(LOCAL_EMULATION_DIR, dirName);
         this.localStorageDirectories.push(localStorageDir);
         await ensureDir(localStorageDir);

@@ -1,9 +1,9 @@
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import ow from 'ow';
-import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient } from '@crawlee/types';
+import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient, Dictionary } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { log } from '../log';
-import { Awaitable, Dictionary } from '../typedefs';
+import { Awaitable } from '../typedefs';
 import { StorageManager, StorageManagerOptions } from './storage_manager';
 
 /** @internal */
@@ -214,7 +214,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
     /**
      * @internal
      */
-    constructor(options: DatasetOptions) {
+    constructor(options: DatasetOptions, readonly config = Configuration.getGlobalConfig()) {
         this.id = options.id;
         this.name = options.name;
         this.client = options.client.dataset(this.id) as DatasetClient<Data>;
@@ -410,7 +410,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(Dataset);
+        const manager = StorageManager.getManager(Dataset, this.config);
         manager.closeStorage(this);
     }
 
@@ -433,9 +433,10 @@ export class Dataset<Data extends Dictionary = Dictionary> {
         ow(options, ow.object.exactShape({
             config: ow.optional.object.instanceOf(Configuration),
         }));
+        options.config ??= Configuration.getGlobalConfig();
 
-        const manager = new StorageManager<Dataset<Data>>(Dataset, options.config);
-        return manager.openStorage(datasetIdOrName);
+        const manager = StorageManager.getManager<Dataset<Data>>(Dataset, options.config);
+        return manager.openStorage(datasetIdOrName, options.config.getStorageClient());
     }
 
     /**
@@ -462,7 +463,7 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      * The objects must be serializable to JSON and the JSON representation of each object must be smaller than 9MB.
      * @ignore
      */
-    static async pushData(item: Dictionary): Promise<void> {
+    static async pushData<Data extends Dictionary = Dictionary>(item: Data | Data[]): Promise<void> {
         const dataset = await this.open();
         return dataset.pushData(item);
     }

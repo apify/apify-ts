@@ -10,8 +10,8 @@ import type {
     RequestOptions,
     RequestQueue,
     RequestQueueOperationOptions,
+    Dictionary,
 } from '@crawlee/puppeteer';
-import { Dictionary } from '@crawlee/utils';
 import { Input } from './consts';
 import { GlobalStore } from './global_store';
 
@@ -140,11 +140,11 @@ export function createBundle(apifyNamespace: string) {
             }
 
             getValue<T>(...args: Parameters<KeyValueStore['getValue']>) {
-                return this[internalState].keyValueStore!.getValue<T>(...args);
+                return this[internalState].keyValueStore!.getValue(...args) as Promise<T>;
             }
 
             setValue<T>(...args: Parameters<KeyValueStore['setValue']>) {
-                return this[internalState].keyValueStore!.setValue<T>(...args as [key: string, value: T | null, options?: RecordOptions]);
+                return this[internalState].keyValueStore!.setValue(...args as [key: string, value: T | null, options?: RecordOptions]);
             }
 
             async saveSnapshot() {

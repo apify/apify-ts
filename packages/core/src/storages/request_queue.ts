@@ -4,11 +4,11 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import crypto from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
-import { StorageClient, RequestQueueClient, RequestQueueInfo, BatchAddRequestsResult } from '@crawlee/types';
-import { StorageManager } from './storage_manager';
+import { BatchAddRequestsResult, Dictionary, RequestQueueClient, RequestQueueInfo, StorageClient } from '@crawlee/types';
+import { StorageManager, StorageManagerOptions } from './storage_manager';
 import { log } from '../log';
 import { Request, RequestOptions } from '../request';
-import { Dictionary } from '../typedefs';
+import { Configuration } from '../configuration';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -195,7 +195,7 @@ export class RequestQueue {
     /**
      * @internal
      */
-    constructor(options: RequestQueueOptions) {
+    constructor(options: RequestQueueOptions, readonly config = Configuration.getGlobalConfig()) {
         this.id = options.id;
         this.name = options.name;
         this.client = options.client.requestQueue(this.id, {
@@ -717,7 +717,7 @@ export class RequestQueue {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(RequestQueue);
+        const manager = StorageManager.getManager(RequestQueue, this.config);
         manager.closeStorage(this);
     }
 
@@ -780,9 +780,13 @@ export class RequestQueue {
      *   the function returns the default request queue associated with the crawler run.
      * @param [options] Open Request Queue options.
      */
-    static async open(queueIdOrName?: string | null): Promise<RequestQueue> {
+    static async open(queueIdOrName?: string | null, options: StorageManagerOptions = {}): Promise<RequestQueue> {
         ow(queueIdOrName, ow.optional.string);
-        const manager = new StorageManager(RequestQueue);
+        ow(options, ow.object.exactShape({
+            config: ow.optional.object.instanceOf(Configuration),
+        }));
+
+        const manager = StorageManager.getManager(RequestQueue, options.config);
         return manager.openStorage(queueIdOrName);
     }
 }

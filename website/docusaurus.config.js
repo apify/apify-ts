@@ -62,6 +62,12 @@ module.exports = {
                         path: 'packages/core',
                     },
                     {
+                        path: 'packages/memory-storage',
+                    },
+                    {
+                        path: 'packages/types',
+                    },
+                    {
                         path: 'packages/utils',
                     },
                     {

@@ -18,8 +18,9 @@ import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
     BasicCrawler,
     BasicCrawlerOptions,
+    Awaitable,
+    Dictionary,
 } from '@crawlee/basic';
-import { Awaitable, Dictionary } from '@crawlee/utils';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,
@@ -120,7 +121,7 @@ export interface BrowserCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: BrowserCrawlerHandleRequest<Context>;
+    requestHandler?: BrowserCrawlerHandleRequest<Context>;
 
     /**
      * Function that is called to process each request.
@@ -385,7 +386,12 @@ export abstract class BrowserCrawler<
             propertyKey: 'userProvidedRequestHandler',
             newProperty: userProvidedRequestHandler,
             oldProperty: handlePageFunction,
+            allowUndefined: true, // fallback to the default router
         });
+
+        if (!this.userProvidedRequestHandler) {
+            this.userProvidedRequestHandler = this.router;
+        }
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',

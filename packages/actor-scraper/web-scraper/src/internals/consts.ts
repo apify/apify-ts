@@ -1,5 +1,4 @@
-import type { ProxyConfigurationOptions, PseudoUrlObject, RequestOptions, Session } from '@crawlee/puppeteer';
-import { Dictionary } from '@crawlee/utils';
+import type { ProxyConfigurationOptions, PseudoUrlObject, RequestOptions, Session, Dictionary } from '@crawlee/puppeteer';
 import { PuppeteerLifeCycleEvent } from 'puppeteer';
 
 /**

@@ -72,6 +72,10 @@ export abstract class EventManager {
         this.events.emit(event, ...args);
     }
 
+    isInitialized(): boolean {
+        return this.initialized;
+    }
+
     /**
      * @internal
      */

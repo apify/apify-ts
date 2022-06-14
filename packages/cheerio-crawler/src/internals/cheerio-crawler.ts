@@ -16,12 +16,13 @@ import {
     ProxyInfo,
     Request,
     RequestQueue,
+    Router,
     resolveBaseUrl,
     Session,
     validators,
 } from '@crawlee/core';
-import { BatchAddRequestsResult } from '@crawlee/types';
-import { Awaitable, CheerioRoot, Dictionary, entries, parseContentTypeFromResponse } from '@crawlee/utils';
+import { BatchAddRequestsResult, Awaitable, Dictionary } from '@crawlee/types';
+import { CheerioRoot, entries, parseContentTypeFromResponse } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
 import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';
@@ -52,8 +53,8 @@ export interface CheerioFailedRequestContext<UserData extends Dictionary = Dicti
 
 export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestContext<JSONData>) => Awaitable<void>;
 
-export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
-    BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
+export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Dictionary> extends Omit<
+    BasicCrawlerOptions<CheerioCrawlingContext<UserData, JSONData>>,
     // Overridden with cheerio context
     | 'requestHandler'
     | 'handleRequestFunction'
@@ -122,7 +123,7 @@ export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: CheerioRequestHandler<JSONData>;
+    requestHandler?: CheerioRequestHandler<JSONData>;
 
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
@@ -570,7 +571,12 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             propertyKey: 'requestHandler',
             newProperty: requestHandler,
             oldProperty: handlePageFunction,
+            allowUndefined: true,
         });
+
+        if (!this.requestHandler) {
+            this.requestHandler = this.router;
+        }
 
         // Cookies should be persisted per session only if session pool is used
         if (!this.useSessionPool && persistCookiesPerSession) {
@@ -1002,10 +1008,18 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
                 throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
                     + 'Use options.baseUrl in enqueueLinks() to automatically resolve relative URLs.');
             }
+            const tryAbsolute = () => {
+                try {
+                    return (new URL(href, baseUrl)).href;
+                } catch {
+                    return undefined;
+                }
+            };
             return baseUrl
-                ? (new URL(href, baseUrl)).href
+                ? tryAbsolute()
                 : href;
-        });
+        })
+        .filter((href) => !!href) as string[];
 }
 
 /**
@@ -1044,4 +1058,32 @@ function addResponsePropertiesToStream(stream: GotRequest) {
     }
 
     return stream as unknown as IncomingMessage;
+}
+
+/**
+ * Creates new {@link Router} instance that works based on request labels.
+ * This instance can then serve as a `requestHandler` of your {@link CheerioCrawler}.
+ * Defaults to the {@link CheerioCrawlingContext}.
+ *
+ * > Serves as a shortcut for using `Router.create<CheerioCrawlingContext>()`.
+ *
+ * ```ts
+ * import { CheerioCrawler, createCheerioRouter } from '@crawlee/cheerio';
+ *
+ * const router = createCheerioRouter();
+ * router.addHandler('label-a', async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ * router.addDefaultHandler(async (ctx) => {
+ *    ctx.log.info('...');
+ * });
+ *
+ * const crawler = new CheerioCrawler({
+ *     requestHandler: router,
+ * });
+ * await crawler.run();
+ * ```
+ */
+export function createCheerioRouter<Context extends CheerioCrawlingContext = CheerioCrawlingContext>() {
+    return Router.create<Context>();
 }

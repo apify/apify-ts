@@ -3,6 +3,8 @@ id: upgrading-to-v3
 title: Upgrading to v3
 ---
 
+import ApiLink from '@site/src/components/ApiLink';
+
 This page summarizes most of the breaking changes between Crawlee (v3) and Apify SDK (v2). Crawlee is the spiritual successor to Apify SDK, so we decided to keep the versioning and release Crawlee as v3.
 
 ## Crawlee vs Apify SDK
@@ -48,6 +50,8 @@ Alternatively we can also use the `crawlee` meta-package which contains (re-expo
 ## Full TypeScript support
 
 Both Crawlee and Actor SDK are full TypeScript rewrite, so they include up-to-date types in the package. For your TypeScript crawlers we recommend using our predefined TypeScript configuration from `@apify/tsconfig` package. Don't forget to set the `module` and `target` to `ES2022` or above to be able to use top level await.
+
+> The `@apify/tsconfig` config has [`noImplicitAny`](https://www.typescriptlang.org/tsconfig#noImplicitAny) enabled, you might want to disable it during the initial development as it will cause build failures if you left some unused local variables in your code.
 
 ```json title="tsconfig.json"
 {
@@ -197,6 +201,10 @@ const result = await crawler.addRequests([/* many requests, can be even millions
 await result.waitForAllRequestsToBeAdded;
 ```
 
+## Less verbose error logging
+
+Previously an error throw from inside request handler resulted in full error object being logger. With crawlee, we log only the error message as a warning as long as we know the request will be retried. If you want to enable verbose logging as in v2, use `CRAWLEE_VERBOSE_LOG` env var.
+
 ## Removal of `requestAsBrowser`
 
 In v1 we replaced the underlying implementation of `requestAsBrowser` to be just a proxy over calling [`got-scraping`](https://github.com/apify/got-scraping) - our custom extension to `got` that tries to mimic the real browsers as much as possible. With v3, we are removing the `requestAsBrowser`, encouraging the use of [`got-scraping`](https://github.com/apify/got-scraping) directly.
@@ -230,6 +238,20 @@ const crawler = new CheerioCrawler({
 });
 ```
 
+## Auto-saved crawler state
+
+Every crawler instance now has `getState()` method that will return a state object we can use. It will be automatically saved when `persistState` event occurs. The value is cached, so we can freely call this method multiple times and get the exact same reference. No need to worry about saving the value either, as it will happen automatically.
+
+```ts
+const crawler = new CheerioCrawler({
+    async requestHandler({ crawler }) {
+        const state = await crawler.getState({ foo: [] as number[] });
+        // just change the value, no need to care about saving it
+        state.foo.push(123);
+    },
+});
+```
+
 ## Actor SDK
 
 The Apify platform helpers can be now found in the Actor SDK (`apify` NPM package). It exports the `Actor` class that offers following static helpers:
@@ -259,6 +281,19 @@ await Actor.main(async () => {
 ```
 
 `Actor.init()` will conditionally set the storage implementation of Crawlee to the `ApifyClient` when running on the Apify platform, or keep the default (memory storage) implementation otherwise. It will also subscribe to the websocket events (or mimic them locally). `Actor.exit()` will handle the tear down and calls `process.exit()` to ensure our process won't hang indefinitely for some reason.
+
+### Events
+
+Apify SDK exports `Apify.events`, which is an `EventEmitter` instance. With Crawlee, the events are managed by <ApiLink to="core/class/EventManager">`EventManager`</ApiLink> class instead. We can either access it via `Actor.eventManager` getter, or use `Actor.on` and `Actor.off` shortcuts instead.
+
+```diff
+-Apify.events.on(...);
++Actor.on(...);
+```
+
+> We can also get the <ApiLink to="core/class/EventManager">`EventManager`</ApiLink> instance via `Configuration.getEventManager()`.
+
+In addition to the existing events, we now have an `exit` event fired when calling `Actor.exit()` (which is called at the end of `Actor.main()`). This event allows you to gracefully shut down any resources when `Actor.exit` is called.
 
 ## Smaller/internal breaking changes
 

@@ -192,9 +192,11 @@ export async function gotoExtended(page: Page, request: Request, gotoOptions: Di
 }
 
 export interface PlaywrightContextUtils {
-    // TODO update when we have some utils
+    injectFile(filePath: string, options?: InjectFileOptions): Promise<unknown>;
+    injectJQuery(): Promise<unknown>;
 }
 
-export function registerUtilsToContext(_context: PlaywrightCrawlingContext): void {
-    // TODO register utils to context when we have some (to be backported from apify-js)
+export function registerUtilsToContext(context: PlaywrightCrawlingContext): void {
+    context.injectFile = (filePath: string, options?: InjectFileOptions) => injectFile(context.page, filePath, options);
+    context.injectJQuery = () => injectJQuery(context.page);
 }

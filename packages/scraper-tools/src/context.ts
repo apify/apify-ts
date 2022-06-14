@@ -96,7 +96,7 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
     }
 
     getValue<T>(...args: Parameters<KeyValueStore['getValue']>) {
-        return this[setup].keyValueStore.getValue<T>(...args);
+        return this[setup].keyValueStore.getValue<T>(...args as [string, T]);
     }
 
     setValue<T>(...args: Parameters<KeyValueStore['setValue']>) {

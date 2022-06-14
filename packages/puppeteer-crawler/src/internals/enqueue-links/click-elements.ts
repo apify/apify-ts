@@ -13,7 +13,7 @@ import {
     RequestOptions,
 } from '@crawlee/browser';
 import log_ from '@apify/log';
-import { Dictionary } from '@crawlee/utils';
+import { Dictionary, BatchAddRequestsResult } from '@crawlee/types';
 import ow from 'ow';
 import {
     BrowserContextEmittedEvents,
@@ -26,7 +26,6 @@ import {
     Target,
 } from 'puppeteer';
 import { URL } from 'url';
-import { BatchAddRequestsResult } from '@crawlee/types';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;
@@ -48,6 +47,12 @@ export interface EnqueueLinksByClickingElementsOptions {
      * value. This is to prevent suboptimal use of this function by using it too broadly.
      */
     selector: string;
+
+    /** Sets {@link Request.userData} for newly enqueued requests. */
+    userData?: Dictionary;
+
+    /** Sets {@link Request.label} for newly enqueued requests. */
+    label?: string;
 
     /**
      * Click options for use in Puppeteer's click handler.
@@ -255,7 +260,7 @@ export async function enqueueLinksByClickingElements(options: EnqueueLinksByClic
         maxWaitForPageIdleMillis,
         clickOptions,
     });
-    let requestOptions = createRequestOptions(interceptedRequests);
+    let requestOptions = createRequestOptions(interceptedRequests, options);
     if (transformRequestFunction) {
         requestOptions = requestOptions.map(transformRequestFunction).filter((r) => !!r) as RequestOptions[];
     }

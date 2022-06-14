@@ -37,7 +37,6 @@ describe('Moving from handleRequest* to requestHandler*', () => {
             const oldHandler = () => {};
             const warningSpy = jest.spyOn(testLogger, 'warning');
 
-            // @ts-expect-error -- We are verifying the deprecation warning
             const crawler = new BasicCrawler({
                 requestList,
                 log: testLogger,

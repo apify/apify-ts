@@ -2,6 +2,7 @@ import { URL } from 'url';
 import { purlToRegExp } from '@apify/pseudo_url';
 import minimatch from 'minimatch';
 import { Request, RequestOptions } from '../request';
+import { EnqueueLinksOptions } from './enqueue_links';
 
 const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
 
@@ -16,17 +17,17 @@ const enqueueLinksPatternCache = new Map();
 export type UrlPatternObject = {
     glob?: string;
     regexp?: RegExp;
-} & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+} & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
-export type PseudoUrlObject = { purl: string } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+export type PseudoUrlObject = { purl: string } & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
 export type PseudoUrlInput = string | PseudoUrlObject;
 
-export type GlobObject = { glob: string } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+export type GlobObject = { glob: string } & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
 export type GlobInput = string | GlobObject;
 
-export type RegExpObject = { regexp: RegExp } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+export type RegExpObject = { regexp: RegExp } & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
 export type RegExpInput = RegExp | RegExpObject;
 
@@ -151,7 +152,10 @@ export function createRequests(requestOptions: (string | RequestOptions)[], urlP
 /**
  * @ignore
  */
-export function createRequestOptions(sources: (string | Record<string, unknown>)[]): RequestOptions[] {
+export function createRequestOptions(
+    sources: (string | Record<string, unknown>)[],
+    options: Pick<EnqueueLinksOptions, 'label' | 'userData'> = {},
+): RequestOptions[] {
     return sources
         .map((src) => (typeof src === 'string' ? { url: src } : src as unknown as RequestOptions))
         .filter(({ url }) => {
@@ -162,7 +166,8 @@ export function createRequestOptions(sources: (string | Record<string, unknown>)
             }
         })
         .map((requestOptions) => {
-            requestOptions.userData ??= {};
+            requestOptions.userData ??= options.userData ?? {};
+            requestOptions.userData!.label ??= options.label;
             return requestOptions;
         });
 }
