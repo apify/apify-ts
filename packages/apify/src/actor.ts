@@ -178,14 +178,15 @@ export class Actor<Data extends Dictionary = Dictionary> {
         options.exit ??= true;
         options.exitCode ??= EXIT_CODES.SUCCESS;
         options.timeoutSecs ??= 5;
-        options.statusMessage ??= `Actor finished with exit code ${options.exitCode}`;
 
         this.eventManager.emit(EventType.EXIT, options);
         await this.eventManager.close();
 
         if (options.exitCode > 0) {
+            options.statusMessage ??= `Actor finished with an error (exit code ${options.exitCode})`;
             log.error(options.statusMessage);
         } else {
+            options.statusMessage ??= `Actor finished successfully (exit code ${options.exitCode})`;
             log.info(options.statusMessage);
         }
 
