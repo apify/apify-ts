@@ -1,4 +1,4 @@
-import { Router } from '@crawlee/core';
+import { MissingRouteError, Router } from '@crawlee/core';
 import { BasicCrawler } from '@crawlee/basic';
 
 describe('Router', () => {
@@ -30,7 +30,6 @@ describe('Router', () => {
         await router({ request: { loadedUrl: 'https://example.com/A', label: 'A' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
-        await router({ request: { loadedUrl: 'https://example.com/D', label: 'D' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
 
         expect(logs).toEqual([
@@ -44,9 +43,10 @@ describe('Router', () => {
             'label A handled with url https://example.com/A',
             'label C handled with url https://example.com/C',
             'label C handled with url https://example.com/C',
-            'default handled with url https://example.com/D',
             'label C handled with url https://example.com/C',
         ]);
+
+        expect(() => router({ request: { loadedUrl: 'https://example.com/D', label: 'D' }, log } as any)).toThrow(MissingRouteError);
     });
 
     test('validation', async () => {
