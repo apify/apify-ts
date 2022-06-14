@@ -15,11 +15,11 @@ for (const filepath of files) {
         if (match = line.match(/^([^']+)'node\/([^$]+)/)) {
             output.push(`${match[1]} '${match[2]}`);
             changed = true;
-        } else if (match = line.match(/^([^']+)'puppeteer'/)) {
-            output.push('// @ts-ignore optional peer dependency');
-            output.push(line);
-            changed = true;
-        } else if (match = line.match(/^([^']+)'playwright[/']/)) {
+        } else if (
+            line.match(/^([^']+)'puppeteer'/) ||
+            line.match(/^([^']+)'playwright'/) ||
+            line.match(/^export declare type PuppeteerHook/)
+        ) {
             output.push('// @ts-ignore optional peer dependency');
             output.push(line);
             changed = true;
