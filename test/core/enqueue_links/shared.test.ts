@@ -13,7 +13,7 @@ describe('Enqueue links shared functions', () => {
         test('should work', () => {
             const globs = [
                 'https://example.com/**/*',
-                { glob: '?(http|https)://cool.com/', userData: { foo: 'bar' } },
+                { glob: '?(http|https)://cool.com/', userData: { foo: 'bar' }, label: 'foobar' },
             ];
             const globObjects = constructGlobObjectsFromGlobs(globs);
             expect(globObjects).toHaveLength(2);
@@ -21,6 +21,7 @@ describe('Enqueue links shared functions', () => {
             expect(globObjects[0].userData).toBe(undefined);
             expect(globObjects[1].glob).toEqual('?(http|https)://cool.com/');
             expect(globObjects[1].userData).toStrictEqual({ foo: 'bar' });
+            expect(globObjects[1].label).toBe('foobar');
         });
     });
 
@@ -75,7 +76,7 @@ describe('Enqueue links shared functions', () => {
         test('should work', () => {
             const sources = [
                 'http://example.com/foo',
-                { url: 'https://example.com/bar', method: 'POST' },
+                { url: 'https://example.com/bar', method: 'POST', label: 'POST-REQUEST' },
                 'https://apify.com',
             ];
             const pseudoUrls = [{ purl: 'http[s?]://example.com/[.*]', userData: { one: 1 } }];
@@ -96,6 +97,7 @@ describe('Enqueue links shared functions', () => {
             });
             expect(requests[0].method).toBe('GET');
             expect(requests[1].method).toBe('POST');
+            expect(requests[1].userData).toEqual({ foo: 'bar', one: 1, label: 'POST-REQUEST' });
         });
     });
 

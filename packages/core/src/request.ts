@@ -20,6 +20,7 @@ const requestOptionalPredicates = {
     errorMessages: ow.optional.array.ofType(ow.string),
     headers: ow.optional.object,
     userData: ow.optional.object,
+    label: ow.optional.string,
     handledAt: ow.optional.any(ow.string.date, ow.date),
     keepUrlFragment: ow.optional.boolean,
     useExtendedUniqueKey: ow.optional.boolean,
@@ -141,6 +142,7 @@ export class Request<UserData extends Dictionary = Dictionary> {
             errorMessages = [],
             headers = {},
             userData = {},
+            label,
             handledAt,
             keepUrlFragment = false,
             useExtendedUniqueKey = false,
@@ -166,6 +168,10 @@ export class Request<UserData extends Dictionary = Dictionary> {
         this.errorMessages = [...errorMessages];
         this.headers = { ...headers };
         this.handledAt = handledAt as unknown instanceof Date ? (handledAt as Date).toISOString() : handledAt!;
+
+        if (label) {
+            userData.label = label;
+        }
 
         Object.defineProperties(this, {
             _userData: {
@@ -354,6 +360,11 @@ export interface RequestOptions<UserData extends Dictionary = Dictionary> {
      * request's scope, keeping them accessible on retries, failures etc.
      */
     userData?: UserData;
+
+    /**
+     * Shortcut for setting `userData: { label: '...' }`.
+     */
+    label?: string;
 
     /**
      * If `false` then the hash part of a URL is removed when computing the `uniqueKey` property.

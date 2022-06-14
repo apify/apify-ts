@@ -17,17 +17,17 @@ const enqueueLinksPatternCache = new Map();
 export type UrlPatternObject = {
     glob?: string;
     regexp?: RegExp;
-} & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+} & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
-export type PseudoUrlObject = { purl: string } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+export type PseudoUrlObject = { purl: string } & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
 export type PseudoUrlInput = string | PseudoUrlObject;
 
-export type GlobObject = { glob: string } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+export type GlobObject = { glob: string } & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
 export type GlobInput = string | GlobObject;
 
-export type RegExpObject = { regexp: RegExp } & Pick<RequestOptions, 'method' | 'payload' | 'userData' | 'headers'>;
+export type RegExpObject = { regexp: RegExp } & Pick<RequestOptions, 'method' | 'payload' | 'label' | 'userData' | 'headers'>;
 
 export type RegExpInput = RegExp | RegExpObject;
 
