@@ -84,6 +84,35 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         expect(await requestList.isEmpty()).toBe(true);
     });
 
+    test('auto-saved state object', async () => {
+        const sources = [...Array(50).keys()].map((index) => ({ url: `https://example.com/${index}` }));
+        const sourcesCopy = JSON.parse(JSON.stringify(sources));
+
+        const processed: { url: string }[] = [];
+        const requestList = new RequestList({ sources });
+        const requestHandler: RequestHandler = async ({ request, crawler }) => {
+            await sleep(10);
+            const state = await crawler.getState({ processed });
+            state.processed.push({ url: request.url });
+        };
+
+        const basicCrawler = new BasicCrawler({
+            requestList,
+            requestHandler,
+        });
+
+        await requestList.initialize();
+        await basicCrawler.run();
+        const state = await basicCrawler.getState();
+
+        expect(processed).toEqual(sourcesCopy);
+        expect(state.processed).toEqual(sourcesCopy);
+        expect(state.processed).toBe(processed);
+        expect(state.processed).toEqual(sourcesCopy);
+        expect(await requestList.isFinished()).toBe(true);
+        expect(await requestList.isEmpty()).toBe(true);
+    });
+
     test.each([EventType.MIGRATING, EventType.ABORTING])('should pause on %s event and persist RequestList state', async (event) => {
         const sources = [...Array(500).keys()].map((index) => ({ url: `https://example.com/${index + 1}` }));
 
