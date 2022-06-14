@@ -7,7 +7,7 @@ import ApiLink from '@site/src/components/ApiLink';
 
 Crawlee has several result storage types that are useful for specific tasks. The data is stored on a local disk to the directory defined by the `CRAWLEE_STORAGE_DIR` environment variable. If neither of these variables is defined, by default Crawlee sets `CRAWLEE_STORAGE_DIR` to `./crawlee_storage` in the current working directory.
 
-Crawlee storage is managed by [@crawlee/memory-storage](https://github.com/apify/apify-ts/tree/master/packages/memory-storage) NPM package. During the crawler run all information is stored in memory, while also being off-loaded to the local files in respective storage type folders.
+Crawlee storage is managed by <ApiLink to="memory-storage/class/MemoryStorage">`MemoryStorage`</ApiLink> class. During the crawler run all information is stored in memory, while also being off-loaded to the local files in respective storage type folders.
 
 ## Key-value store
 
@@ -107,7 +107,7 @@ To see how to use the dataset to store crawler results, see the [Cheerio Crawler
 
 ## Cleaning up the storages
 
-Default storages are not purged before the crawler starts if not specified otherwise. If you want to start the run with the empty default storages, you should use the `purge()` function before running the crawler as follows:
+Default storages are not purged before the crawler starts if not specified otherwise. If you want to start the run with the empty default storages, you should first <ApiLink to="core/class/Configuration#getStorageClient">get</ApiLink> the default <ApiLink to="types/interface/StorageClient">`StorageClient`</ApiLink> instance and then use the <ApiLink to="types/interface/StorageClient#purge">`purge()`</ApiLink> function before running the crawler as follows:
 
 ```javascript
 import { Configuration } from '@crawlee/core';
@@ -118,7 +118,4 @@ import { Configuration } from '@crawlee/core';
 await Configuration.getStorageClient().purge();
 ```
 
-Calling this function will clean up the following directories:
- - local directory containing the default dataset;
- - all records from the default key-value store in the local directory, except for the "INPUT" key;
- - local directory containing the default request queue.
+Calling this function will clean up the default results storage directories except the `INPUT` key in default key-value store directory.
