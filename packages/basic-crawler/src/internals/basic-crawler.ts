@@ -358,6 +358,7 @@ export class BasicCrawler<
     protected crawlingContexts = new Map<string, Context>();
     protected autoscaledPoolOptions: AutoscaledPoolOptions;
     protected events: EventManager;
+    private _closeEvents?: boolean;
 
     protected static optionsShape = {
         requestList: ow.optional.object.validate(validators.requestList),
@@ -651,6 +652,11 @@ export class BasicCrawler<
     }
 
     protected async _init(): Promise<void> {
+        if (!this.events.isInitialized()) {
+            await this.events.init();
+            this._closeEvents = true;
+        }
+
         // Initialize AutoscaledPool before awaiting _loadHandledRequestCount(),
         // so that the caller can get a reference to it before awaiting the promise returned from run()
         // (otherwise there would be no way)
@@ -981,8 +987,14 @@ export class BasicCrawler<
      * @ignore
      */
     async teardown(): Promise<void> {
+        this.events.emit(EventType.PERSIST_STATE, { isMigrating: false });
+
         if (this.useSessionPool) {
             await this.sessionPool!.teardown();
+        }
+
+        if (this._closeEvents) {
+            await this.events.close();
         }
     }
 
