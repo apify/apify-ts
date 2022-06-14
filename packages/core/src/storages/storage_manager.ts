@@ -27,6 +27,7 @@ export interface IStorage {
  */
 export class StorageManager<T extends IStorage = IStorage> {
     private static readonly MAX_OPENED_STORAGES = 1000;
+    private static readonly storageManagers = new Map<Constructor, StorageManager>();
     private readonly name: 'Dataset' | 'KeyValueStore' | 'RequestQueue';
     private readonly StorageConstructor: Constructor<T> & { name: string };
     private readonly cache: LruCache<T>;
@@ -38,6 +39,27 @@ export class StorageManager<T extends IStorage = IStorage> {
         this.StorageConstructor = StorageConstructor;
         this.name = this.StorageConstructor.name as 'Dataset' | 'KeyValueStore' | 'RequestQueue';
         this.cache = new LruCache({ maxLength: StorageManager.MAX_OPENED_STORAGES });
+    }
+
+    static openStorage<T extends IStorage>(
+        storageClass: Constructor<T>,
+        idOrName?: string,
+        client?: StorageClient,
+        config = Configuration.getGlobalConfig(),
+    ): Promise<T> {
+        return this.getManager(storageClass, config).openStorage(idOrName, client);
+    }
+
+    static getManager<T extends IStorage>(
+        storageClass: Constructor<T>,
+        config = Configuration.getGlobalConfig(),
+    ): StorageManager<T> {
+        if (!this.storageManagers.has(storageClass)) {
+            const manager = new StorageManager(storageClass, config);
+            this.storageManagers.set(storageClass, manager);
+        }
+
+        return this.storageManagers.get(storageClass) as StorageManager<T>;
     }
 
     async openStorage(idOrName?: string, client?: StorageClient): Promise<T> {

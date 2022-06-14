@@ -231,7 +231,7 @@ export class KeyValueStore {
      */
     async drop(): Promise<void> {
         await this.client.delete();
-        const manager = new StorageManager(KeyValueStore, this.config);
+        const manager = StorageManager.getManager(KeyValueStore, this.config);
         manager.closeStorage(this);
     }
 
@@ -306,7 +306,7 @@ export class KeyValueStore {
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
-        const manager = new StorageManager(KeyValueStore, options.config);
+        const manager = StorageManager.getManager(KeyValueStore, options.config);
         return manager.openStorage(storeIdOrName);
     }
 

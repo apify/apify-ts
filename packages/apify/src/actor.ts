@@ -52,8 +52,6 @@ export class Actor<Data extends Dictionary = Dictionary> {
      */
     readonly eventManager: EventManager;
 
-    private readonly storageManagers = new Map<Constructor, StorageManager>();
-
     constructor(options: ConfigurationOptions = {}) {
         // use default configuration object if nothing overridden (it fallbacks to env vars)
         this.config = Object.keys(options).length === 0 ? Configuration.getGlobalConfig() : new Configuration(options);
@@ -1318,16 +1316,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
 
     private _openStorage<T extends IStorage>(storageClass: Constructor<T>, id?: string, options: OpenStorageOptions = {}) {
         const client = options.forceCloud ? this.apifyClient : undefined;
-        return this._getStorageManager<T>(storageClass).openStorage(id, client);
-    }
-
-    private _getStorageManager<T extends IStorage>(storageClass: Constructor<T>): StorageManager<T> {
-        if (!this.storageManagers.has(storageClass)) {
-            const manager = new StorageManager(storageClass, this.config);
-            this.storageManagers.set(storageClass, manager);
-        }
-
-        return this.storageManagers.get(storageClass) as StorageManager<T>;
+        return StorageManager.openStorage<T>(storageClass, id, client, this.config);
     }
 }
 
