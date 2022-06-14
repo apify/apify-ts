@@ -90,39 +90,23 @@ Add PlaywrightCrawler gif here.
 </TabItem>
 </Tabs>
 
-By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this behavior by setting the
-`CRAWLEE_STORAGE_DIR` environment variable. For details, see [Environment variables](../guides/environment-variables), [Request storage](../guides/request-storage) and [Result storage](../guides/result-storage).
+By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this behavior by setting the `CRAWLEE_STORAGE_DIR` environment variable. For details, see [Environment variables](../guides/environment-variables), [Request storage](../guides/request-storage) and [Result storage](../guides/result-storage).
 
 For more examples showcasing various features of Crawlee, see the [Examples](../examples) section of the documentation.
 
 ## Local usage with Crawlee command-line interface (CLI)
 
-To avoid the need to set the environment variables manually, and to create a boilerplate of your project, you can use the [Crawlee command-line interface (CLI)](https://...) tool.
-
-:::danger TODO
-
-Add CLI docs here and update further info respectively.
-
-:::
-
-Install the CLI by running:
+To create a boilerplate of your project, you can use the [Crawlee command-line interface (CLI)](https://...) tool by running:
 
 ```bash
-npm -g install apify-cli
+npx crawlee create my-hello-world
 ```
 
-Now create a boilerplate of your new web crawling project by running:
-
-```bash
-apify create my-hello-world
-```
-
-The CLI will prompt you to select a project boilerplate template - just pick "Hello world". The tool will create a directory called `my-hello-world`
-with a Node.js project files. You can run the project as follows:
+The CLI will prompt you to select a project boilerplate template - just pick "Hello world". The tool will create a directory called `my-hello-world` with a Node.js project files. You can run the project as follows:
 
 ```bash
 cd my-hello-world
-apify run
+npm run start
 ```
 
 By default, the crawling data will be stored in a local directory at `./crawlee_storage`. For example, the input JSON file for the actor is expected to be in the default key-value store in `./crawlee_storage/key_value_stores/default/INPUT.json`.
