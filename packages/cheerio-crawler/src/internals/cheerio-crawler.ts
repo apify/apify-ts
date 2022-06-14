@@ -1008,10 +1008,18 @@ function extractUrlsFromCheerio($: CheerioRoot, selector: string, baseUrl?: stri
                 throw new Error(`An extracted URL: ${href} is relative and options.baseUrl is not set. `
                     + 'Use options.baseUrl in enqueueLinks() to automatically resolve relative URLs.');
             }
+            const tryAbsolute = () => {
+                try {
+                    return (new URL(href, baseUrl)).href;
+                } catch {
+                    return undefined;
+                }
+            };
             return baseUrl
-                ? (new URL(href, baseUrl)).href
+                ? tryAbsolute()
                 : href;
-        });
+        })
+        .filter((href) => !!href) as string[];
 }
 
 /**
