@@ -8,6 +8,11 @@ export interface RouterHandler<Context extends CrawlingContext = CrawlingContext
 }
 
 /**
+ * @ignore
+ */
+export class MissingRouteError extends Error {}
+
+/**
  * Simple router that works based on request labels. This instance can then serve as a `requestHandler` of your crawler.
  *
  * ```ts
@@ -78,19 +83,19 @@ export class Router<Context extends CrawlingContext> {
      * Returns route handler for given label. If no label is provided, the default request handler will be returned.
      */
     getHandler(label?: string | symbol): (ctx: Context) => Awaitable<void> {
-        if (label && this.routes.has(label)) {
-            return this.routes.get(label)!;
+        if (label) {
+            if (this.routes.has(label)) {
+                return this.routes.get(label)!;
+            }
+
+            throw new MissingRouteError(`Route not found for label '${String(label)}'!`);
         }
 
         if (this.routes.has(defaultRoute)) {
             return this.routes.get(defaultRoute)!;
         }
 
-        if (!label) {
-            throw new Error(`No default route set up!`);
-        }
-
-        throw new Error(`Route not found for label '${String(label)}' and no default route set up!`);
+        throw new MissingRouteError(`No default route set up!`);
     }
 
     /**
