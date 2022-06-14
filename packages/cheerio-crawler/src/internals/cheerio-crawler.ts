@@ -53,8 +53,8 @@ export interface CheerioFailedRequestContext<UserData extends Dictionary = Dicti
 
 export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestContext<JSONData>) => Awaitable<void>;
 
-export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<
-    BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
+export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Dictionary> extends Omit<
+    BasicCrawlerOptions<CheerioCrawlingContext<UserData, JSONData>>,
     // Overridden with cheerio context
     | 'requestHandler'
     | 'handleRequestFunction'
