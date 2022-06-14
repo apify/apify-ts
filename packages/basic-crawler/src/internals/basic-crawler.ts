@@ -4,33 +4,34 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import {
     AutoscaledPool,
     AutoscaledPoolOptions,
-    EnqueueLinksOptions,
-    FailedRequestContext,
+    Configuration,
+    type CrawlingContext,
+    createRequests,
     enqueueLinks,
+    EnqueueLinksOptions,
+    EventManager,
+    EventType,
+    FailedRequestContext,
+    FinalStatistics,
+    KeyValueStore,
     ProxyInfo,
     QueueOperationInfo,
     Request,
     RequestList,
+    RequestOptions,
     RequestQueue,
+    RequestQueueOperationOptions,
+    Router,
+    RouterHandler,
     Session,
     SessionPool,
     SessionPoolOptions,
     Statistics,
     validators,
-    type CrawlingContext,
-    RequestOptions,
-    RequestQueueOperationOptions,
-    Router,
-    createRequests,
-    Configuration,
-    EventManager,
-    EventType,
-    FinalStatistics,
-    RouterHandler,
 } from '@crawlee/core';
 import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
 import { ProcessedRequest } from '@crawlee/types';
-import { Awaitable, Dictionary, sleep, chunk } from '@crawlee/utils';
+import { Awaitable, chunk, Dictionary, sleep } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
@@ -305,6 +306,8 @@ export class BasicCrawler<
     Context extends CrawlingContext = BasicCrawlingContext,
     ErrorContext extends FailedRequestContext = BasicFailedRequestContext,
 > {
+    private static readonly CRAWLEE_STATE_KEY = 'CRAWLEE_STATE';
+
     /**
      * Static list of URLs to be processed.
      */
@@ -577,6 +580,10 @@ export class BasicCrawler<
         this.requestQueue ??= await RequestQueue.open();
 
         return this.requestQueue!;
+    }
+
+    async getState<State extends Dictionary = Dictionary>(defaultValue = {} as State): Promise<State> {
+        return KeyValueStore.getAutoSavedValue<State>(BasicCrawler.CRAWLEE_STATE_KEY, defaultValue);
     }
 
     /**

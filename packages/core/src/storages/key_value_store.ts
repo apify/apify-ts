@@ -105,7 +105,10 @@ export const maybeStringify = <T>(value: T, options: { contentType?: string }) =
 export class KeyValueStore {
     readonly id: string;
     readonly name?: string;
-    private client: KeyValueStoreClient;
+    private readonly client: KeyValueStoreClient;
+
+    /** Cache for persistent (auto-saved) values. When we try to set such value, the cache will be updated automatically. */
+    private readonly cache: Dictionary = {};
 
     /**
      * @internal
@@ -141,16 +144,29 @@ export class KeyValueStore {
      * @param key
      *   Unique key of the record. It can be at most 256 characters long and only consist
      *   of the following characters: `a`-`z`, `A`-`Z`, `0`-`9` and `!-_.'()`
+     * @param defaultValue
+     *   Fallback that will be returned if no value if present in the storage.
      * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
      *   on the MIME content type of the record.
      */
-    async getValue<T = unknown>(key: string): Promise<T | null> {
+    async getValue<T = unknown>(key: string, defaultValue?: T): Promise<T | null> {
         ow(key, ow.string.nonEmpty);
         const record = await this.client.getRecord(key);
 
-        return record?.value as T ?? null;
+        return record?.value as T ?? defaultValue ?? null;
+    }
+
+    async getAutoSavedValue<T extends Dictionary = Dictionary>(key: string, defaultValue = {} as T): Promise<T> {
+        if (this.cache[key]) {
+            return this.cache[key];
+        }
+
+        this.cache[key] = await this.getValue<T>(key, defaultValue);
+        this.config.getEventManager().on('persistState', () => this.setValue(key, this.cache[key]));
+
+        return this.cache[key];
     }
 
     /**
@@ -212,6 +228,21 @@ export class KeyValueStore {
 
         // Make copy of options, don't update what user passed.
         const optionsCopy = { ...options };
+
+        // If we try to set the value of a cached state to a different reference, we need to update the cache accordingly.
+        if (key in this.cache && this.cache[key] !== value) {
+            if (value === null) {
+                // Cached state can be only object, so a propagation of `null` means removing all its properties.
+                Object.keys(this.cache[key]).forEach((k) => delete this.cache[key][k]);
+            } else if (typeof value === 'object') {
+                // We need to remove the keys that are no longer present in the new value.
+                Object.keys(this.cache[key])
+                    .filter((k) => !(k in value!))
+                    .forEach((k) => delete this.cache[key][k]);
+                // And update the existing ones + add new ones.
+                Object.assign(this.cache[key], value);
+            }
+        }
 
         // In this case delete the record.
         if (value === null) return this.client.deleteRecord(key);
@@ -331,6 +362,7 @@ export class KeyValueStore {
      * and  {@link KeyValueStore.getValue}.
      *
      * @param key Unique record key.
+     * @param defaultValue Fallback that will be returned if no value if present in the storage.
      * @returns
      *   Returns a promise that resolves to an object, string
      *   or [`Buffer`](https://nodejs.org/api/buffer.html), depending
@@ -338,9 +370,14 @@ export class KeyValueStore {
      *   if the record is missing.
      * @ignore
      */
-    static async getValue<T = unknown>(key: string): Promise<T | null> {
+    static async getValue<T = unknown>(key: string, defaultValue?: T): Promise<T | null> {
         const store = await this.open();
-        return store.getValue<T>(key);
+        return store.getValue<T>(key, defaultValue);
+    }
+
+    static async getAutoSavedValue<T extends Dictionary = Dictionary>(key: string, defaultValue = {} as T): Promise<T> {
+        const store = await this.open();
+        return store.getAutoSavedValue(key, defaultValue);
     }
 
     /**
