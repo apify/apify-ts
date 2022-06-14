@@ -83,19 +83,19 @@ export class Router<Context extends CrawlingContext> {
      * Returns route handler for given label. If no label is provided, the default request handler will be returned.
      */
     getHandler(label?: string | symbol): (ctx: Context) => Awaitable<void> {
-        if (label) {
-            if (this.routes.has(label)) {
-                return this.routes.get(label)!;
-            }
-
-            throw new MissingRouteError(`Route not found for label '${String(label)}'!`);
+        if (label && this.routes.has(label)) {
+            return this.routes.get(label)!;
         }
 
         if (this.routes.has(defaultRoute)) {
             return this.routes.get(defaultRoute)!;
         }
 
-        throw new MissingRouteError(`No default route set up!`);
+        if (!label) {
+            throw new MissingRouteError(`No default route set up!`);
+        }
+
+        throw new MissingRouteError(`Route not found for label '${String(label)}' and no default route set up!`);
     }
 
     /**

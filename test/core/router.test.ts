@@ -30,6 +30,7 @@ describe('Router', () => {
         await router({ request: { loadedUrl: 'https://example.com/A', label: 'A' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
+        await router({ request: { loadedUrl: 'https://example.com/D', label: 'D' }, log } as any);
         await router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any);
 
         expect(logs).toEqual([
@@ -43,10 +44,9 @@ describe('Router', () => {
             'label A handled with url https://example.com/A',
             'label C handled with url https://example.com/C',
             'label C handled with url https://example.com/C',
+            'default handled with url https://example.com/D',
             'label C handled with url https://example.com/C',
         ]);
-
-        expect(() => router({ request: { loadedUrl: 'https://example.com/D', label: 'D' }, log } as any)).toThrow(MissingRouteError);
     });
 
     test('validation', async () => {
@@ -54,7 +54,7 @@ describe('Router', () => {
         router.addHandler('A', async (ctx) => {});
         expect(() => router.addHandler('A', async (ctx) => {})).toThrow();
         const log = { info: jest.fn(), warn: jest.fn() };
-        expect(() => router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any)).toThrow();
+        expect(() => router({ request: { loadedUrl: 'https://example.com/C', label: 'C' }, log } as any)).toThrow(MissingRouteError);
         router.addDefaultHandler(async (ctx) => {});
         expect(() => router.addDefaultHandler(async (ctx) => {})).toThrow();
     });
