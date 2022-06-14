@@ -18,8 +18,9 @@ import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
     BasicCrawler,
     BasicCrawlerOptions,
+    Awaitable,
+    Dictionary,
 } from '@crawlee/basic';
-import { Awaitable, Dictionary } from '@crawlee/utils';
 import {
     BROWSER_CONTROLLER_EVENTS,
     BrowserController,

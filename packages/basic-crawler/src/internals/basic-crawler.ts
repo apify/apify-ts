@@ -30,8 +30,8 @@ import {
     validators,
 } from '@crawlee/core';
 import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
-import { ProcessedRequest } from '@crawlee/types';
-import { Awaitable, chunk, Dictionary, sleep } from '@crawlee/utils';
+import { ProcessedRequest, Dictionary, Awaitable } from '@crawlee/types';
+import { chunk, sleep } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {

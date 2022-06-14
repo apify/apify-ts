@@ -1,5 +1,5 @@
 import type * as storage from '@crawlee/types';
-import { Dictionary } from '@crawlee/utils';
+import { Dictionary } from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
 import { rm } from 'node:fs/promises';

@@ -13,8 +13,9 @@ import {
     RequestList,
     RequestQueue,
     log,
+    Awaitable,
+    Dictionary,
 } from '@crawlee/puppeteer';
-import { Awaitable, Dictionary } from '@crawlee/utils';
 import contentType from 'content-type';
 // TODO: type devtools module
 // @ts-ignore

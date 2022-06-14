@@ -19,8 +19,8 @@ import {
     Source,
     StorageManager,
 } from '@crawlee/core';
-import type { StorageClient } from '@crawlee/types';
-import { Awaitable, Constructor, Dictionary, sleep, snakeCaseToCamelCase } from '@crawlee/utils';
+import type { Awaitable, Constructor, Dictionary, StorageClient } from '@crawlee/types';
+import { sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
 import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
