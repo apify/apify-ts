@@ -1,7 +1,16 @@
 import { MemoryStorage } from '@crawlee/memory-storage';
-import { readdir, rm } from 'node:fs/promises';
+import { access, readdir, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
+
+async function waitTillWrittenToDisk(path: string) {
+    try {
+        await access(path);
+    } catch {
+        await setTimeout(50);
+        return waitTillWrittenToDisk(path);
+    }
+}
 
 describe('writeMetadata option', () => {
     const tmpLocation = resolve(__dirname, './tmp/write-metadata-tests');
@@ -19,9 +28,10 @@ describe('writeMetadata option', () => {
 
         test('creating a data store should not write __metadata__.json file', async () => {
             const keyValueStore = await storage.keyValueStores().getOrCreate();
-            await setTimeout(50);
+            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStore.id}`);
+            await waitTillWrittenToDisk(expectedPath);
 
-            const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStore.id}`));
+            const directoryFiles = await readdir(expectedPath);
 
             expect(directoryFiles).toHaveLength(0);
         });
@@ -31,9 +41,11 @@ describe('writeMetadata option', () => {
 
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
             await keyValueStore.setRecord({ key: 'owo', value: 'test' });
-            await setTimeout(50);
 
-            const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`));
+            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`);
+            await waitTillWrittenToDisk(expectedPath);
+
+            const directoryFiles = await readdir(expectedPath);
 
             expect(directoryFiles).toHaveLength(1);
         });
@@ -48,9 +60,10 @@ describe('writeMetadata option', () => {
 
         test('creating a data store should write __metadata__.json file', async () => {
             const keyValueStore = await storage.keyValueStores().getOrCreate();
-            await setTimeout(50);
+            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStore.id}`);
+            await waitTillWrittenToDisk(expectedPath);
 
-            const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStore.id}`));
+            const directoryFiles = await readdir(expectedPath);
 
             expect(directoryFiles).toHaveLength(1);
         });
@@ -60,9 +73,11 @@ describe('writeMetadata option', () => {
 
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
             await keyValueStore.setRecord({ key: 'owo', value: 'test' });
-            await setTimeout(50);
 
-            const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`));
+            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`);
+            await waitTillWrittenToDisk(expectedPath);
+
+            const directoryFiles = await readdir(expectedPath);
 
             expect(directoryFiles).toHaveLength(3);
         });
