@@ -40,9 +40,9 @@ describe('writeMetadata option', () => {
             const keyValueStoreInfo = await storage.keyValueStores().getOrCreate();
 
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
-            await keyValueStore.setRecord({ key: 'owo', value: 'test' });
+            await keyValueStore.setRecord({ key: 'foo', value: 'test' });
 
-            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`);
+            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}/foo.txt`);
             await waitTillWrittenToDisk(expectedPath);
 
             const directoryFiles = await readdir(expectedPath);
@@ -72,12 +72,13 @@ describe('writeMetadata option', () => {
             const keyValueStoreInfo = await storage.keyValueStores().getOrCreate();
 
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
-            await keyValueStore.setRecord({ key: 'owo', value: 'test' });
+            await keyValueStore.setRecord({ key: 'foo', value: 'test' });
 
-            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`);
-            await waitTillWrittenToDisk(expectedPath);
+            const expectedFilePath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}/foo.txt`);
+            const expectedMetadataPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}/foo.__metadata__.json`);
+            await Promise.all([waitTillWrittenToDisk(expectedFilePath), waitTillWrittenToDisk(expectedMetadataPath)]);
 
-            const directoryFiles = await readdir(expectedPath);
+            const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`));
 
             expect(directoryFiles).toHaveLength(3);
         });
