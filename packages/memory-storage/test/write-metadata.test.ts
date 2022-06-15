@@ -42,10 +42,10 @@ describe('writeMetadata option', () => {
             const keyValueStore = storage.keyValueStore(keyValueStoreInfo.id);
             await keyValueStore.setRecord({ key: 'foo', value: 'test' });
 
-            const expectedPath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}/foo.txt`);
-            await waitTillWrittenToDisk(expectedPath);
+            const expectedFilePath = resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}/foo.txt`);
+            await waitTillWrittenToDisk(expectedFilePath);
 
-            const directoryFiles = await readdir(expectedPath);
+            const directoryFiles = await readdir(resolve(storage.keyValueStoresDirectory, `${keyValueStoreInfo.id}`));
 
             expect(directoryFiles).toHaveLength(1);
         });
