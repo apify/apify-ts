@@ -3,7 +3,7 @@ import { access, readdir, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
-async function waitTillWrittenToDisk(path: string) {
+async function waitTillWrittenToDisk(path: string): Promise<void> {
     try {
         await access(path);
     } catch {
