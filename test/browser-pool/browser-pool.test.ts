@@ -730,7 +730,7 @@ describe('BrowserPool', () => {
                     afterEach(async () => {
                         await browserPoolCache.destroy();
                     });
-                    test('should use fingerprint per proxy by default', async () => {
+                    test('should use fingerprint per session by default', async () => {
                         browserPoolCache = new BrowserPool({
                             ...commonOptions,
                             useFingerprints: true,
@@ -744,7 +744,7 @@ describe('BrowserPool', () => {
                             ...commonOptions,
                             useFingerprints: true,
                             fingerprintsOptions: {
-                                useFingerprintPerProxyCache: false,
+                                useFingerprintPerSessionCache: false,
                             },
                         });
 
@@ -756,7 +756,7 @@ describe('BrowserPool', () => {
                             ...commonOptions,
                             useFingerprints: true,
                             fingerprintsOptions: {
-                                fingerprintPerProxyCacheSize: 1,
+                                fingerprintPerSessionCacheSize: 1,
                             },
                         });
                         // cast to any type in order to acces the maxSize property for testing purposes.
@@ -771,7 +771,7 @@ describe('BrowserPool', () => {
                             preLaunchHooks: [
                                 (_pageId, launchContext) => {
                                     // @ts-expect-error issue caused by generics
-                                    launchContext.extend({ proxyUrl: 'http://localhost:8080' });
+                                    launchContext.extend({ session: { id: '123' } });
                                 },
                             ],
                         });

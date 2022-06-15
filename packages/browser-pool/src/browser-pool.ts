@@ -29,11 +29,11 @@ export interface FingerprintsOptions{
     /**
      * @default true
      */
-    useFingerprintPerProxyCache?: boolean;
+    useFingerprintPerSessionCache?: boolean;
     /**
     * @default 10000
     */
-    fingerprintPerProxyCacheSize?: number;
+    fingerprintPerSessionCacheSize?: number;
 }
 
 export interface BrowserPoolOptions<Plugin extends BrowserPlugin = BrowserPlugin> {
@@ -738,12 +738,12 @@ export class BrowserPool<
     }
 
     private _initializeFingerprinting(): void {
-        const { useFingerprintPerProxyCache = true, fingerprintPerProxyCacheSize = 10_000 } = this.fingerprintsOptions;
+        const { useFingerprintPerSessionCache = true, fingerprintPerSessionCacheSize = 10_000 } = this.fingerprintsOptions;
         this.fingerprintGenerator = new FingerprintGenerator(this.fingerprintsOptions.fingerprintGeneratorOptions);
         this.fingerprintInjector = new FingerprintInjector();
 
-        if (useFingerprintPerProxyCache) {
-            this.fingerprintCache = new QuickLRU({ maxSize: fingerprintPerProxyCacheSize });
+        if (useFingerprintPerSessionCache) {
+            this.fingerprintCache = new QuickLRU({ maxSize: fingerprintPerSessionCacheSize });
         }
 
         this._addFingerprintHooks();

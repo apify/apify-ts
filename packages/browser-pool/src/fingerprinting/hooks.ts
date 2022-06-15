@@ -18,18 +18,21 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
     } = browserPool;
 
     return (_pageId: string, launchContext: LaunchContext) => {
-        const { useIncognitoPages, proxyUrl } = launchContext;
+        const { useIncognitoPages } = launchContext;
+
         // @TODO: Fix the typings so they are easier to work with.
+        const session = launchContext.session as { id: string };
         const { launchOptions }: { launchOptions: any } = launchContext;
+
         // If no options are passed we try to pass best default options as possible to match browser and OS.
         const fingerprintGeneratorFinalOptions = fingerprintGeneratorOptions || getGeneratorDefaultOptions(launchContext);
         let fingerprint : BrowserFingerprintWithHeaders;
 
-        if (proxyUrl && fingerprintCache?.has(proxyUrl)) {
-            fingerprint = fingerprintCache.get(proxyUrl)!;
-        } else if (proxyUrl) {
+        if (session && fingerprintCache?.has(session.id)) {
+            fingerprint = fingerprintCache.get(session.id)!;
+        } else if (session) {
             fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions);
-            fingerprintCache?.set(proxyUrl, fingerprint);
+            fingerprintCache?.set(session.id, fingerprint);
         } else {
             fingerprint = fingerprintGenerator!.getFingerprint(fingerprintGeneratorFinalOptions);
         }
