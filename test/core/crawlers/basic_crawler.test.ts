@@ -94,7 +94,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         const requestList = await RequestList.open(null, sources);
         const requestHandler: RequestHandler = async ({ request, crawler }) => {
             await sleep(10);
-            const state = await crawler.getState({ processed });
+            const state = await crawler.useState({ processed });
             state.processed.push({ url: request.url });
         };
 
@@ -104,7 +104,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         });
 
         await basicCrawler.run();
-        const state = await basicCrawler.getState();
+        const state = await basicCrawler.useState();
 
         expect(processed).toEqual(sourcesCopy);
         expect(state.processed).toEqual(sourcesCopy);

@@ -584,7 +584,7 @@ export class BasicCrawler<
         return this.requestQueue!;
     }
 
-    async getState<State extends Dictionary = Dictionary>(defaultValue = {} as State): Promise<State> {
+    async useState<State extends Dictionary = Dictionary>(defaultValue = {} as State): Promise<State> {
         const kvs = await KeyValueStore.open(null, { config: this.config });
         return kvs.getAutoSavedValue<State>(BasicCrawler.CRAWLEE_STATE_KEY, defaultValue);
     }

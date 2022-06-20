@@ -240,12 +240,12 @@ const crawler = new CheerioCrawler({
 
 ## Auto-saved crawler state
 
-Every crawler instance now has `getState()` method that will return a state object we can use. It will be automatically saved when `persistState` event occurs. The value is cached, so we can freely call this method multiple times and get the exact same reference. No need to worry about saving the value either, as it will happen automatically.
+Every crawler instance now has `useState()` method that will return a state object we can use. It will be automatically saved when `persistState` event occurs. The value is cached, so we can freely call this method multiple times and get the exact same reference. No need to worry about saving the value either, as it will happen automatically.
 
 ```ts
 const crawler = new CheerioCrawler({
     async requestHandler({ crawler }) {
-        const state = await crawler.getState({ foo: [] as number[] });
+        const state = await crawler.useState({ foo: [] as number[] });
         // just change the value, no need to care about saving it
         state.foo.push(123);
     },
