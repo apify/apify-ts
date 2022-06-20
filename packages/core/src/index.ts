@@ -1,3 +1,4 @@
+export * from './errors';
 export * from './autoscaling';
 export * from './configuration';
 export * from './constants';

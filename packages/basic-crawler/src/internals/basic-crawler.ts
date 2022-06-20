@@ -14,7 +14,8 @@ import {
     FailedRequestContext,
     FinalStatistics,
     KeyValueStore,
-    MissingRouteError,
+    CriticalError,
+    NonRetryableError,
     ProxyInfo,
     QueueOperationInfo,
     Request,
@@ -925,7 +926,11 @@ export class BasicCrawler<
         const { request } = crawlingContext;
         request.pushErrorMessage(error);
 
-        const shouldRetryRequest = !request.noRetry && request.retryCount < this.maxRequestRetries && !(error instanceof MissingRouteError);
+        if (error instanceof CriticalError) {
+            throw error;
+        }
+
+        const shouldRetryRequest = !request.noRetry && request.retryCount < this.maxRequestRetries && !(error instanceof NonRetryableError);
         if (shouldRetryRequest) {
             request.retryCount++;
             const { url, retryCount, id } = request;

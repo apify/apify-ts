@@ -1,16 +1,12 @@
 import { CrawlingContext } from './crawlers/crawler_commons';
 import { Awaitable } from './typedefs';
+import { MissingRouteError } from './errors';
 
 const defaultRoute = Symbol('default-route');
 
 export interface RouterHandler<Context extends CrawlingContext = CrawlingContext> extends Router<Context> {
     (ctx: Context): Awaitable<void>;
 }
-
-/**
- * @ignore
- */
-export class MissingRouteError extends Error {}
 
 /**
  * Simple router that works based on request labels. This instance can then serve as a `requestHandler` of your crawler.

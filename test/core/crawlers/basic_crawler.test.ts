@@ -12,6 +12,9 @@ import {
     BasicCrawler,
     KeyValueStore,
     EventType,
+    NonRetryableError,
+    CriticalError,
+    MissingRouteError,
 } from '@crawlee/basic';
 import express from 'express';
 import { Dictionary, sleep } from '@crawlee/utils';
@@ -302,6 +305,100 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         expect(await requestList.isFinished()).toBe(true);
         expect(await requestList.isEmpty()).toBe(true);
         errors.forEach((error) => expect(error).toBeInstanceOf(Error));
+    });
+
+    test('should not retry on NonRetryableError', async () => {
+        const sources = [
+            { url: 'http://example.com/1' },
+            { url: 'http://example.com/2' },
+            { url: 'http://example.com/3' },
+        ];
+        const failed: Dictionary<Request> = {};
+        const errors: Error[] = [];
+        const requestList = new RequestList({ sources });
+
+        const requestHandler: RequestHandler = async () => {
+            throw new NonRetryableError('some-error');
+        };
+
+        const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
+            failed[request.url] = request;
+            errors.push(error);
+        };
+
+        const basicCrawler = new BasicCrawler({
+            requestList,
+            requestHandler,
+            failedRequestHandler,
+        });
+
+        await requestList.initialize();
+        await basicCrawler.run();
+
+        expect(failed['http://example.com/1'].errorMessages).toHaveLength(1);
+        expect(failed['http://example.com/1'].retryCount).toBe(0);
+        expect(failed['http://example.com/2'].errorMessages).toHaveLength(1);
+        expect(failed['http://example.com/2'].retryCount).toBe(0);
+        expect(failed['http://example.com/3'].errorMessages).toHaveLength(1);
+        expect(failed['http://example.com/3'].retryCount).toBe(0);
+        expect(Object.values(failed)).toHaveLength(3);
+        expect(await requestList.isFinished()).toBe(true);
+        expect(await requestList.isEmpty()).toBe(true);
+        errors.forEach((error) => expect(error).toBeInstanceOf(NonRetryableError));
+    });
+
+    test('should crash on CriticalError', async () => {
+        const sources = [
+            { url: 'http://example.com/1' },
+            { url: 'http://example.com/2' },
+            { url: 'http://example.com/3' },
+        ];
+        const requestList = new RequestList({ sources });
+
+        const requestHandler: RequestHandler = async () => {
+            throw new CriticalError('some-error');
+        };
+
+        const failedRequestHandler = jest.fn() as FailedRequestHandler;
+
+        const basicCrawler = new BasicCrawler({
+            requestList,
+            requestHandler,
+            failedRequestHandler,
+        });
+
+        await requestList.initialize();
+
+        await expect(basicCrawler.run()).rejects.toThrow(CriticalError);
+
+        expect(failedRequestHandler).not.toBeCalled();
+        expect(await requestList.isFinished()).toBe(false);
+    });
+
+    test('should crash on MissingRouteError', async () => {
+        const sources = [
+            { url: 'http://example.com/1', label: 'TEST' }, // will match
+            { url: 'http://example.com/2', label: 'FOO' }, // will fail as no FOO route or default route exists
+            { url: 'http://example.com/3' }, // will fail as no default route exists
+        ];
+        const requestList = new RequestList({ sources });
+
+        const failedRequestHandler = jest.fn() as FailedRequestHandler;
+
+        const basicCrawler = new BasicCrawler({
+            requestList,
+            failedRequestHandler,
+        });
+        const testRoute = jest.fn();
+        basicCrawler.router.addHandler('TEST', testRoute);
+
+        await requestList.initialize();
+
+        await expect(basicCrawler.run()).rejects.toThrow(MissingRouteError);
+
+        expect(failedRequestHandler).not.toBeCalled();
+        expect(testRoute).toBeCalled();
+        expect(await requestList.isFinished()).toBe(false);
     });
 
     test('should correctly combine RequestList and RequestQueue', async () => {
