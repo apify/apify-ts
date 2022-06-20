@@ -192,7 +192,7 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
     /**
      * Timeout in which the HTTP request to the resource needs to finish, given in seconds.
      */
-    requestTimeoutSecs?: number;
+    navigationTimeoutSecs?: number;
 
     /**
      * If set to true, SSL certificate errors will be ignored.
@@ -505,7 +505,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
     protected preNavigationHooks: CheerioHook<JSONData>[];
     protected postNavigationHooks: CheerioHook<JSONData>[];
     protected persistCookiesPerSession: boolean;
-    protected requestTimeoutMillis: number;
+    protected navigationTimeoutMillis: number;
     protected ignoreSslErrors: boolean;
     protected suggestResponseEncoding?: string;
     protected forceResponseEncoding?: string;
@@ -515,7 +515,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
         ...BasicCrawler.optionsShape,
         handlePageFunction: ow.optional.function,
 
-        requestTimeoutSecs: ow.optional.number,
+        navigationTimeoutSecs: ow.optional.number,
         ignoreSslErrors: ow.optional.boolean,
         additionalMimeTypes: ow.optional.array.ofType(ow.string),
         suggestResponseEncoding: ow.optional.string,
@@ -538,7 +538,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             handlePageFunction,
 
             requestHandlerTimeoutSecs = 60,
-            requestTimeoutSecs = 30,
+            navigationTimeoutSecs = 30,
             ignoreSslErrors = true,
             additionalMimeTypes = [],
             suggestResponseEncoding,
@@ -563,7 +563,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             autoscaledPoolOptions,
             // We need to add some time for internal functions to finish,
             // but not too much so that we would stall the crawler.
-            requestHandlerTimeoutSecs: requestTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+            requestHandlerTimeoutSecs: navigationTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
         });
 
         this._handlePropertyNameChange({
@@ -592,7 +592,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
         }
 
         this.userRequestHandlerTimeoutMillis = requestHandlerTimeoutSecs * 1000;
-        this.requestTimeoutMillis = requestTimeoutSecs * 1000;
+        this.navigationTimeoutMillis = navigationTimeoutSecs * 1000;
         this.ignoreSslErrors = ignoreSslErrors;
         this.suggestResponseEncoding = suggestResponseEncoding;
         this.forceResponseEncoding = forceResponseEncoding;
@@ -739,8 +739,8 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
 
         crawlingContext.response = await addTimeoutToPromise(
             () => this._requestFunction({ request, session, proxyUrl, gotOptions }),
-            this.requestTimeoutMillis,
-            `request timed out after ${this.requestTimeoutMillis / 1000} seconds.`,
+            this.navigationTimeoutMillis,
+            `request timed out after ${this.navigationTimeoutMillis / 1000} seconds.`,
         );
         tryCancel();
 
@@ -821,7 +821,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             url: request.url,
             method: request.method as Method,
             proxyUrl,
-            timeout: { request: this.requestTimeoutMillis },
+            timeout: { request: this.navigationTimeoutMillis },
             sessionToken: session,
             ...gotOptions,
             headers: { ...request.headers, ...gotOptions?.headers },

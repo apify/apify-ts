@@ -148,6 +148,7 @@ Some options were renamed to better reflect what they do. We still support all t
 * `handlePageFunction` -> `requestHandler`
 * `handleRequestTimeoutSecs` -> `requestHandlerTimeoutSecs`
 * `handlePageTimeoutSecs` -> `requestHandlerTimeoutSecs`
+* `requestTimeoutSecs` -> `navigationTimeoutSecs`
 * `handleFailedRequestFunction` -> `failedRequestHandler`
 
 We also renamed the crawling context interfaces, so they follow the same convention and are more meaningful:

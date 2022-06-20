@@ -318,7 +318,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             log.setLevel(ll);
         });
 
-        test('after requestTimeoutSecs', async () => {
+        test('after navigationTimeoutSecs', async () => {
             const sources = [
                 { url: 'http://example.com/?q=0' },
                 { url: 'http://example.com/?q=1' },
@@ -333,7 +333,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
 
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
-                requestTimeoutSecs: 5 / 1000,
+                navigationTimeoutSecs: 5 / 1000,
                 maxRequestRetries: 1,
                 minConcurrency: 2,
                 maxConcurrency: 2,
@@ -398,7 +398,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
     });
 
     describe('should not timeout by the default httpRequest timeoutSecs', () => {
-        it('when requestTimeoutSecs is greater than 30', async () => {
+        it('when navigationTimeoutSecs is greater than 30', async () => {
             const sources = [
                 { url: `http://${HOST}:${port}/timeout?a=12` },
                 { url: `http://${HOST}:${port}/timeout?a=23` },
@@ -413,7 +413,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             const cheerioCrawler = new CheerioCrawler({
                 requestList,
                 maxRequestRetries: 1,
-                requestTimeoutSecs: 35,
+                navigationTimeoutSecs: 35,
                 minConcurrency: 2,
                 maxConcurrency: 2,
                 requestHandler,
@@ -802,7 +802,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                     `http://${HOST}:${port}/timeout?a=23`,
                 ]),
                 maxRequestRetries: 1,
-                requestTimeoutSecs: 1,
+                navigationTimeoutSecs: 1,
                 maxConcurrency: 1,
                 useSessionPool: true,
                 requestHandler: async () => {

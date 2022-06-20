@@ -164,7 +164,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             postNavigationHooks: this.evaledPostNavigationHooks,
             requestList: this.requestList,
             requestQueue: this.requestQueue,
-            requestTimeoutSecs: this.input.pageLoadTimeoutSecs,
+            navigationTimeoutSecs: this.input.pageLoadTimeoutSecs,
             requestHandlerTimeoutSecs: this.input.pageFunctionTimeoutSecs,
             // prepareRequestFunction: this._prepareRequestFunction.bind(this),
             ignoreSslErrors: this.input.ignoreSslErrors,
