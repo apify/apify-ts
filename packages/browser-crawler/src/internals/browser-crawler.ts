@@ -8,7 +8,6 @@ import {
     handleRequestTimeout,
     ProxyConfiguration,
     ProxyInfo,
-    Request,
     RequestQueue,
     Session,
     validators,
@@ -33,7 +32,7 @@ import {
     InferBrowserPluginArray,
     LaunchContext,
 } from '@crawlee/browser-pool';
-import { Response as GotResponse } from 'got-scraping';
+import { GotOptionsInit, Response as GotResponse } from 'got-scraping';
 import ow from 'ow';
 import { Cookie } from 'tough-cookie';
 import { BatchAddRequestsResult } from '@crawlee/types';
@@ -50,7 +49,7 @@ export interface BrowserCrawlingContext<
     response?: Response;
     crawler: BrowserCrawler;
     enqueueLinks: (options?: BrowserCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
-    sendRequest: (request?: Request) => Promise<GotResponse<string>>;
+    sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
 }
 
 export interface BrowserFailedRequestContext extends FailedRequestContext<BrowserCrawler> {}

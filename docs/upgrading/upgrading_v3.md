@@ -209,13 +209,14 @@ Previously an error throw from inside request handler resulted in full error obj
 
 In v1 we replaced the underlying implementation of `requestAsBrowser` to be just a proxy over calling [`got-scraping`](https://github.com/apify/got-scraping) - our custom extension to `got` that tries to mimic the real browsers as much as possible. With v3, we are removing the `requestAsBrowser`, encouraging the use of [`got-scraping`](https://github.com/apify/got-scraping) directly.
 
-For easier migration, we also added `context.sendRequest()` helper that allows processing our `Request` object instances through [`got-scraping`](https://github.com/apify/got-scraping):
+For easier migration, we also added `context.sendRequest()` helper that allows processing the context bound `Request` object through [`got-scraping`](https://github.com/apify/got-scraping):
 
 ```ts
 const crawler = new BasicCrawler({
-    async requestHandler({ sendRequest }) {
-        // by default it will use the `Request` object from current context
-        const res = await sendRequest(/* new Request(...) */);
+    async requestHandler({ sendRequest, log }) {
+        // we can use the options parameter to override gotScraping options
+        const res = await sendRequest({ responseType: 'json' });
+        log.info('received body', res.body);
     },
 });
 ```

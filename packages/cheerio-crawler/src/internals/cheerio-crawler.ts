@@ -25,7 +25,7 @@ import { BatchAddRequestsResult, Awaitable, Dictionary } from '@crawlee/types';
 import { CheerioRoot, entries, parseContentTypeFromResponse } from '@crawlee/utils';
 import cheerio, { CheerioOptions } from 'cheerio';
 import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest } from 'got-scraping';
+import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest, Response as GotResponse, GotOptionsInit } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
 import { IncomingHttpHeaders, IncomingMessage } from 'http';
@@ -400,6 +400,7 @@ export interface CheerioCrawlingContext<UserData extends Dictionary = Dictionary
     crawler: CheerioCrawler<JSONData, UserData>;
     response: IncomingMessage;
     enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
+    sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
 }
 
 export type CheerioRequestHandler<JSONData = Dictionary> = (inputs: CheerioCrawlingContext<JSONData>) => Awaitable<void>;

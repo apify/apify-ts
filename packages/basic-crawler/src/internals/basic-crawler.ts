@@ -31,7 +31,7 @@ import {
     Statistics,
     validators,
 } from '@crawlee/core';
-import { gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
+import { GotOptionsInit, gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
 import { ProcessedRequest, Dictionary, Awaitable } from '@crawlee/types';
 import { chunk, sleep } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
@@ -39,7 +39,7 @@ import ow, { ArgumentError } from 'ow';
 export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
     crawler: BasicCrawler;
     enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
-    sendRequest: (request?: Request) => Promise<GotResponse<string>>;
+    sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
 }
 
 export interface BasicFailedRequestContext<UserData extends Dictionary = Dictionary> extends FailedRequestContext<BasicCrawler, UserData> {}
@@ -810,22 +810,24 @@ export class BasicCrawler<
                     requestQueue: await this.getRequestQueue(),
                 });
             },
-            sendRequest: async (req?: Request) => {
-                req ??= request!;
+            sendRequest: async (overrideOptions?: Partial<GotOptionsInit>) => {
                 return gotScraping({
-                    url: req.url,
-                    method: req.method,
-                    body: req.payload,
-                    headers: req.headers,
-                    retry: {
-                        limit: 0,
-                    },
+                    url: request!.url,
+                    method: request!.method,
+                    body: request!.payload,
+                    headers: request!.headers,
                     proxyUrl: crawlingContext.proxyInfo?.url,
                     sessionToken: session,
                     responseType: 'text',
+                    ...overrideOptions,
+                    retry: {
+                        limit: 0,
+                        ...overrideOptions?.retry,
+                    },
                     cookieJar: {
                         getCookieString: (url: string) => session!.getCookieString(url),
                         setCookie: (rawCookie: string, url: string) => session!.setCookie(rawCookie, url),
+                        ...overrideOptions?.cookieJar,
                     },
                 } as OptionsOfTextResponseBody);
             },
