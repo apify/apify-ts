@@ -2,7 +2,16 @@ import ow from 'ow';
 import { setTimeout } from 'node:timers/promises';
 import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
-import { ActorRun as ClientActorRun, ActorStartOptions, ApifyClient, ApifyClientOptions, TaskStartOptions, Webhook, WebhookEventType } from 'apify-client';
+import {
+    ActorRun as ClientActorRun,
+    ActorStartOptions,
+    ApifyClient,
+    ApifyClientOptions,
+    RunAbortOptions,
+    TaskStartOptions,
+    Webhook,
+    WebhookEventType,
+} from 'apify-client';
 import {
     Configuration,
     ConfigurationOptions,
@@ -248,7 +257,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * [Run actor](https://apify.com/docs/api/v2#/reference/actors/run-collection/run-actor)
      * and several other API endpoints to obtain the output.
      *
-     * @param actId
+     * @param actorId
      *  Allowed formats are `username/actor-name`, `userId/actor-name` or actor ID.
      * @param [input]
      *  Input for the actor. If it is an object, it will be stringified to
@@ -257,11 +266,64 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * @param [options]
      * @ignore
      */
-    async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
+    async call(actorId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
         const { token, ...rest } = options;
         const client = token ? this.newClient({ token }) : this.apifyClient;
 
-        return client.actor(actId).call(input, rest);
+        return client.actor(actorId).call(input, rest);
+    }
+
+    /**
+     * Runs an actor on the Apify platform using the current user account (determined by the `APIFY_TOKEN` environment variable),
+     * unlike `Actor.call`, this method just starts the run without waiting for finish.
+     *
+     * The result of the function is an {@link ActorRun} object that contains details about the actor run.
+     *
+     * For more information about actors, read the
+     * [documentation](https://docs.apify.com/actor).
+     *
+     * **Example usage:**
+     *
+     * ```javascript
+     * const run = await Actor.start('apify/hello-world', { myInput: 123 });
+     * ```
+     *
+     * @param actorId
+     *  Allowed formats are `username/actor-name`, `userId/actor-name` or actor ID.
+     * @param [input]
+     *  Input for the actor. If it is an object, it will be stringified to
+     *  JSON and its content type set to `application/json; charset=utf-8`.
+     *  Otherwise the `options.contentType` parameter must be provided.
+     * @param [options]
+     * @ignore
+     */
+    async start(actorId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
+        const { token, ...rest } = options;
+        const client = token ? this.newClient({ token }) : this.apifyClient;
+
+        return client.actor(actorId).start(input, rest);
+    }
+
+    /**
+     * Aborts given actor run on the Apify platform using the current user account (determined by the `APIFY_TOKEN` environment variable).
+     *
+     * The result of the function is an {@link ActorRun} object that contains details about the actor run.
+     *
+     * For more information about actors, read the
+     * [documentation](https://docs.apify.com/actor).
+     *
+     * **Example usage:**
+     *
+     * ```javascript
+     * const run = await Actor.abort(runId);
+     * ```
+     * @ignore
+     */
+    async abort(runId: string, options: AbortOptions = {}): Promise<ClientActorRun> {
+        const { token, ...rest } = options;
+        const client = token ? this.newClient({ token }) : this.apifyClient;
+
+        return client.run(runId).abort(rest);
     }
 
     /**
@@ -899,7 +961,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * [Run actor](https://apify.com/docs/api/v2#/reference/actors/run-collection/run-actor)
      * and several other API endpoints to obtain the output.
      *
-     * @param actId
+     * @param actorId
      *  Allowed formats are `username/actor-name`, `userId/actor-name` or actor ID.
      * @param [input]
      *  Input for the actor. If it is an object, it will be stringified to
@@ -907,8 +969,8 @@ export class Actor<Data extends Dictionary = Dictionary> {
      *  Otherwise the `options.contentType` parameter must be provided.
      * @param [options]
      */
-    static async call(actId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
-        return Actor.getDefaultInstance().call(actId, input, options);
+    static async call(actorId: string, input?: unknown, options: CallOptions = {}): Promise<ClientActorRun> {
+        return Actor.getDefaultInstance().call(actorId, input, options);
     }
 
     /**
@@ -948,6 +1010,51 @@ export class Actor<Data extends Dictionary = Dictionary> {
      */
     static async callTask(taskId: string, input?: Dictionary, options: CallTaskOptions = {}): Promise<ClientActorRun> {
         return Actor.getDefaultInstance().callTask(taskId, input, options);
+    }
+
+    /**
+     * Runs an actor on the Apify platform using the current user account (determined by the `APIFY_TOKEN` environment variable),
+     * unlike `Actor.call`, this method just starts the run without waiting for finish.
+     *
+     * The result of the function is an {@link ActorRun} object that contains details about the actor run.
+     *
+     * For more information about actors, read the
+     * [documentation](https://docs.apify.com/actor).
+     *
+     * **Example usage:**
+     *
+     * ```javascript
+     * const run = await Actor.start('apify/hello-world', { myInput: 123 });
+     * ```
+     *
+     * @param actorId
+     *  Allowed formats are `username/actor-name`, `userId/actor-name` or actor ID.
+     * @param [input]
+     *  Input for the actor. If it is an object, it will be stringified to
+     *  JSON and its content type set to `application/json; charset=utf-8`.
+     *  Otherwise the `options.contentType` parameter must be provided.
+     * @param [options]
+     */
+    static async start(actorId: string, input?: Dictionary, options: CallOptions = {}): Promise<ClientActorRun> {
+        return Actor.getDefaultInstance().start(actorId, input, options);
+    }
+
+    /**
+     * Aborts given actor run on the Apify platform using the current user account (determined by the `APIFY_TOKEN` environment variable).
+     *
+     * The result of the function is an {@link ActorRun} object that contains details about the actor run.
+     *
+     * For more information about actors, read the
+     * [documentation](https://docs.apify.com/actor).
+     *
+     * **Example usage:**
+     *
+     * ```javascript
+     * const run = await Actor.abort(runId);
+     * ```
+     */
+    static async abort(runId: string, options: AbortOptions = {}): Promise<ClientActorRun> {
+        return Actor.getDefaultInstance().abort(runId, options);
     }
 
     /**
@@ -1398,6 +1505,13 @@ export interface CallOptions extends ActorStartOptions {
 }
 
 export interface CallTaskOptions extends TaskStartOptions {
+    /**
+     * User API token that is used to run the actor. By default, it is taken from the `APIFY_TOKEN` environment variable.
+     */
+    token?: string;
+}
+
+export interface AbortOptions extends RunAbortOptions {
     /**
      * User API token that is used to run the actor. By default, it is taken from the `APIFY_TOKEN` environment variable.
      */
