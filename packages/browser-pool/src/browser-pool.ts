@@ -24,7 +24,7 @@ export interface BrowserPoolEvents<BC extends BrowserController, Page> {
     [BROWSER_POOL_EVENTS.BROWSER_LAUNCHED]: (browserController: BC) => void | Promise<void>;
 }
 
-export interface FingerprintOptions{
+export interface FingerprintOptions {
     fingerprintGeneratorOptions?: ConstructorParameters<typeof FingerprintGenerator>[0];
     /**
      * @default true
