@@ -12,7 +12,7 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
     const {
         fingerprintGenerator,
         fingerprintCache,
-        fingerprintsOptions: {
+        fingerprintOptions: {
             fingerprintGeneratorOptions,
         },
     } = browserPool;
