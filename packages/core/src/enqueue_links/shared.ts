@@ -91,6 +91,9 @@ export function constructGlobObjectsFromGlobs(globs: GlobInput[]): GlobObject[] 
     });
 }
 
+/**
+ * @internal
+ */
 export function validateGlobPattern(glob: string): string {
     const globTrimmed = glob.trim();
     if (globTrimmed.length === 0) throw new Error(`Cannot parse Glob pattern '${globTrimmed}': it must be an non-empty string`);

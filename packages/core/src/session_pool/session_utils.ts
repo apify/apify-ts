@@ -4,6 +4,9 @@ import type { HTTPResponse } from 'puppeteer';
 import { Cookie } from 'tough-cookie';
 import { CookieParseError } from './errors';
 
+/**
+ * @internal
+ */
 export function getCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]> }): Cookie[] {
     const headers = typeof response.headers === 'function' ? response.headers() : response.headers;
     const cookieHeader = headers['set-cookie'] || '';
