@@ -123,7 +123,7 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -185,7 +185,7 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -476,7 +476,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * // Crawl the URLs
  * const crawler = new CheerioCrawler({
  *     requestList,
- *     handlePageFunction: async ({ request, response, body, contentType, $ }) => {
+ *     async requestHandler({ request, response, body, contentType, $ }) {
  *         const data = [];
  *
  *         // Do some data extraction from the page with Cheerio.
@@ -485,7 +485,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *         });
  *
  *         // Save the data to dataset.
- *         await Actor.pushData({
+ *         await Dataset.pushData({
  *             url: request.url,
  *             html: body,
  *             data,
@@ -650,7 +650,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
     }
 
     /**
-     * Wrapper around handlePageFunction that opens and closes pages etc.
+     * Wrapper around requestHandler that opens and closes pages etc.
      */
     protected override async _runRequestHandler(crawlingContext: CheerioCrawlingContext<JSONData>) {
         const { request, session } = crawlingContext;
@@ -841,7 +841,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
         // TODO this is incorrect, the check for man in the middle needs to be done
         //   on individual proxy level, not on the `proxyConfiguration` level,
         //   because users can use normal + MITM proxies in a single configuration.
-        //   Disable SSL verification for MITM proxies
+        // Disable SSL verification for MITM proxies
         if (this.proxyConfiguration && this.proxyConfiguration.isManInTheMiddle) {
             requestOptions.https = {
                 ...requestOptions.https,

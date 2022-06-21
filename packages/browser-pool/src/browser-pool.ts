@@ -216,8 +216,8 @@ export interface BrowserPoolHooks<
  *
  * **Example:**
  * ```js
- * const { BrowserPool, PlaywrightPlugin } = require('@crawlee/browser-pool');
- * const playwright = require('playwright');
+ * import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
+ * import playwright from 'playwright';
  *
  * const browserPool = new BrowserPool({
  *     browserPlugins: [ new PlaywrightPlugin(playwright.chromium)],
@@ -730,9 +730,9 @@ export class BrowserPool<
             // might fail with "Protocol error (Target.closeTarget): Target closed."
             setTimeout(() => {
                 log.debug('Closing retired browser because it has no active pages', { id: browserController.id });
-                // TODO: @typescript-eslint/no-floating-promises
-                browserController.close(); // eslint-disable-line
-                this.retiredBrowserControllers.delete(browserController);
+                browserController.close().finally(() => {
+                    this.retiredBrowserControllers.delete(browserController);
+                });
             }, PAGE_CLOSE_KILL_TIMEOUT_MILLIS);
         }
     }

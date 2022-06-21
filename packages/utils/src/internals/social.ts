@@ -255,8 +255,6 @@ export function parseHandlesFromHtml(html: string, data: Record<string, unknown>
         discords: [],
     };
 
-    // TODO: maybe extract phone numbers from JSON+LD
-
     if (typeof html as unknown !== 'string') return result;
 
     const $ = cheerio.load(html, { decodeEntities: true });

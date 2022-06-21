@@ -10,6 +10,7 @@ export class LocalEventManager extends EventManager {
 
     /**
      * Initializes the EventManager and sets up periodic `systemInfo` and `persistState` events.
+     * This is automatically called at the beginning of `crawler.run()`.
      */
     override async init() {
         if (this.initialized) {
@@ -24,9 +25,7 @@ export class LocalEventManager extends EventManager {
     }
 
     /**
-     * Closes websocket providing events from Actor infrastructure and also stops sending internal events
-     * of Apify package such as `persistState`.
-     * This is automatically called at the end of `Actor.main()`.
+     * @inheritDoc
      */
     override async close() {
         if (!this.initialized) {

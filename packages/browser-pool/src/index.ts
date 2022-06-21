@@ -4,13 +4,13 @@
  *
  * **Example:**
  * ```js
- * const {
+ * import {
  *  BrowserPool,
  *  PuppeteerPlugin,
  *  PlaywrightPlugin
- * } = require('@crawlee/browser-pool');
- * const puppeteer = require('puppeteer');
- * const playwright = require('playwright');
+ * } from '@crawlee/browser-pool';
+ * import puppeteer from 'puppeteer';
+ * import playwright from 'playwright';
  *
  * const browserPool = new BrowserPool({
  *     browserPlugins: [

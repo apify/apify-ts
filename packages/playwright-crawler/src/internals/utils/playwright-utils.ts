@@ -5,13 +5,13 @@
  * **Example usage:**
  *
  * ```javascript
- * const Apify = require('apify');
- * const { playwright } = Actor.utils;
+ * import { Actor } from 'apify';
+ * import { launchPlaywright, playwrightUtils } from 'crawlee';
  *
  * // Navigate to https://www.example.com in Playwright with a POST request
- * const browser = await Actor.launchPlaywright();
+ * const browser = await launchPlaywright();
  * const page = await browser.newPage();
- * await playwright.gotoExtended(page, {
+ * await playwrightUtils.gotoExtended(page, {
  *     url: 'https://example.com,
  *     method: 'POST',
  * });
@@ -201,3 +201,10 @@ export function registerUtilsToContext(context: PlaywrightCrawlingContext): void
     context.injectFile = (filePath: string, options?: InjectFileOptions) => injectFile(context.page, filePath, options);
     context.injectJQuery = () => injectJQuery(context.page);
 }
+
+/** @internal */
+export const playwrightUtils = {
+    injectFile,
+    injectJQuery,
+    gotoExtended,
+};

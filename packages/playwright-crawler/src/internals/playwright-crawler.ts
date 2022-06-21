@@ -59,7 +59,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -96,7 +96,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -142,11 +142,6 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * The same options as used by {@link launchPlaywright}.
      */
     launchContext?: PlaywrightLaunchContext;
-
-    // /**
-    //  * Indicates how many times the request is retried if {@link handlePageFunction} fails.
-    //  */
-    // maxRequestRetries?: number;
 }
 
 /**
@@ -171,7 +166,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
  * The crawler finishes when there are no more {@link Request} objects to crawl.
  *
  * `PlaywrightCrawler` opens a new Chrome page (i.e. tab) for each {@link Request} object to crawl
- * and then calls the function provided by user as the {@link PlaywrightCrawlerOptions.handlePageFunction} option.
+ * and then calls the function provided by user as the {@link PlaywrightCrawlerOptions.requestHandler} option.
  *
  * New pages are only opened when there is enough free CPU and memory available,
  * using the functionality provided by the {@link AutoscaledPool} class.
@@ -186,19 +181,19 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
  * ```javascript
  * const crawler = new PlaywrightCrawler({
  *     requestList,
- *     handlePageFunction: async ({ page, request }) => {
+ *     async requestHandler({ page, request }) {
  *         // This function is called to extract data from a single web page
  *         // 'page' is an instance of Playwright.Page with page.goto(request.url) already called
  *         // 'request' is an instance of Request class with information about the page to load
- *         await Actor.pushData({
+ *         await Dataset.pushData({
  *             title: await page.title(),
  *             url: request.url,
  *             succeeded: true,
  *         })
  *     },
- *     handleFailedRequestFunction: async ({ request }) => {
+ *     async failedRequestHandler({ request }) {
  *         // This function is called when the crawling of a request failed too many times
- *         await Actor.pushData({
+ *         await Dataset.pushData({
  *             url: request.url,
  *             succeeded: false,
  *             errors: request.errorMessages,

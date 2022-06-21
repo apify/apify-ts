@@ -17,8 +17,7 @@ import {
     Dictionary,
 } from '@crawlee/puppeteer';
 import contentType from 'content-type';
-// TODO: type devtools module
-// @ts-ignore
+// @ts-expect-error no typings
 import DevToolsServer from 'devtools-server';
 import { readFile } from 'node:fs/promises';
 import { HTTPResponse, Page, Serializable } from 'puppeteer';
@@ -396,7 +395,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         /**
          * USER FUNCTION EXECUTION
          */
-        tools.logPerformance(request, 'handlePageFunction PREPROCESSING', start);
+        tools.logPerformance(request, 'requestHandler PREPROCESSING', start);
 
         if (this.isDevRun && this.input.breakpointLocation === BreakpointLocation.BeforePageFunction) {
             await page.evaluate(async () => { debugger; }); // eslint-disable-line no-debugger
@@ -443,7 +442,7 @@ export class CrawlerSetup implements CrawlerSetupOptions {
             return replaceAllDatesInObjectWithISOStrings(output);
         }, contextOptions as unknown as Serializable, namespace);
 
-        tools.logPerformance(request, 'handlePageFunction USER FUNCTION', startUserFn);
+        tools.logPerformance(request, 'requestHandler USER FUNCTION', startUserFn);
         const finishUserFn = process.hrtime();
 
         /**
@@ -467,8 +466,8 @@ export class CrawlerSetup implements CrawlerSetupOptions {
         // Save the `pageFunction`s result (or just metadata) to the default dataset.
         await this._handleResult(request, response, pageFunctionResult);
 
-        tools.logPerformance(request, 'handlePageFunction POSTPROCESSING', finishUserFn);
-        tools.logPerformance(request, 'handlePageFunction EXECUTION', start);
+        tools.logPerformance(request, 'requestHandler POSTPROCESSING', finishUserFn);
+        tools.logPerformance(request, 'requestHandler EXECUTION', start);
 
         if (this.isDevRun && this.input.breakpointLocation === BreakpointLocation.AfterPageFunction) {
             await page.evaluate(async () => { debugger; }); // eslint-disable-line no-debugger

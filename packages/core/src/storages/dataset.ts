@@ -268,10 +268,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
 
     /**
      * Returns {@link DatasetContent} object holding the items in the dataset based on the provided parameters.
-     *
-     * If you need to get data in an unparsed format, use the {@link Actor.newClient} function to get a new
-     * `apify-client` instance and call
-     * [`datasetClient.downloadItems()`](https://github.com/apify/apify-client-js#DatasetClient+downloadItems)
      */
     async getData(options: DatasetDataOptions = {}): Promise<PaginatedList<Data>> {
         try {
@@ -516,7 +512,6 @@ export interface DatasetOptions {
     client: StorageClient;
 }
 
-// FIXME duplicity with `PaginationList` interface?
 export interface DatasetContent<Data> {
     /** Total count of entries in the dataset. */
     total: number;

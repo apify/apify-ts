@@ -63,7 +63,6 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
 
     readonly Actor = Actor;
     readonly log = log;
-    // FIXME
     readonly puppeteerUtils = puppeteerUtils;
     readonly input: any;
     readonly env: ApifyEnv;

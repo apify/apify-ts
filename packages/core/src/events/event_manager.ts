@@ -28,8 +28,8 @@ export abstract class EventManager {
     constructor(readonly config = Configuration.getGlobalConfig()) {}
 
     /**
-     * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
-     * This is an internal function that is automatically called by `Actor.main()`.
+     * Initializes the event manager by creating the `persistState` event interval.
+     * This is automatically called at the beginning of `crawler.run()`.
      */
     async init() {
         if (this.initialized) {
@@ -45,8 +45,8 @@ export abstract class EventManager {
     }
 
     /**
-     * Closes websocket providing events from Actor infrastructure and also stops sending internal events
-     * of Apify package such as `persistState`. This is automatically called at the end of `Actor.main()`.
+     * Clears the internal `persistState` event interval.
+     * This is automatically called at the end of `crawler.run()`.
      */
     async close() {
         if (!this.initialized) {

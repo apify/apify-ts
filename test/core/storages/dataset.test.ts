@@ -175,14 +175,10 @@ describe('dataset', () => {
             const expected: Awaited<ReturnType<Dataset['getInfo']>> = {
                 id: 'WkzbQMuFYuamGv3YF',
                 name: 'd7b9MDYsbtX5L7XAj',
-                userId: 'wRsJZtadYvn4mBZmm',
                 createdAt: new Date('2015-12-12T07:34:14.202Z'),
                 modifiedAt: new Date('2015-12-13T08:36:13.202Z'),
                 accessedAt: new Date('2015-12-14T08:36:13.202Z'),
                 itemCount: 14,
-                cleanItemCount: 10,
-                stats: {},
-                fields: [],
             };
 
             const mockGetDataset = jest.spyOn(dataset.client, 'get');

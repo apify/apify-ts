@@ -103,7 +103,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * The user function can be synchronous:
      *
      * ```javascript
-     * Actor.main(() => {
+     * await Actor.main(() => {
      *   // My synchronous function that returns immediately
      *   console.log('Hello world from actor!');
      * });
@@ -111,9 +111,9 @@ export class Actor<Data extends Dictionary = Dictionary> {
      *
      * If the user function returns a promise, it is considered asynchronous:
      * ```javascript
-     * const { gotScraping } = require('got-scraping');
+     * import { gotScraping } from 'got-scraping';
      *
-     * Actor.main(() => {
+     * await Actor.main(() => {
      *   // My asynchronous function that returns a promise
      *   return gotScraping('http://www.example.com').then((html) => {
      *     console.log(html);
@@ -124,9 +124,9 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * To simplify your code, you can take advantage of the `async`/`await` keywords:
      *
      * ```javascript
-     * const { gotScraping } = require('got-scraping');
+     * import { gotScraping } from 'got-scraping';
      *
-     * Actor.main(async () => {
+     * await Actor.main(async () => {
      *   // My asynchronous function
      *   const html = await request('http://www.example.com');
      *   console.log(html);
@@ -172,6 +172,8 @@ export class Actor<Data extends Dictionary = Dictionary> {
             this.config.set('availableMemoryRatio', 1);
             this.config.useStorageClient(this.apifyClient);
             this.config.useEventManager(this.eventManager);
+            // for browser launcher, adds `--no-sandbox` to args
+            process.env.CRAWLEE_DISABLE_BROWSER_SANDBOX = '1';
         } else if (options.storage) {
             this.config.useStorageClient(options.storage);
         }
@@ -760,7 +762,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
-     *   handlePageFunction: ({ proxyInfo }) => {
+     *   requestHandler({ proxyInfo }) {
      *       const usedProxyUrl = proxyInfo.url; // Getting the proxy URL
      *   }
      * })
@@ -881,7 +883,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * The user function can be synchronous:
      *
      * ```javascript
-     * Actor.main(() => {
+     * await Actor.main(() => {
      *   // My synchronous function that returns immediately
      *   console.log('Hello world from actor!');
      * });
@@ -889,9 +891,9 @@ export class Actor<Data extends Dictionary = Dictionary> {
      *
      * If the user function returns a promise, it is considered asynchronous:
      * ```javascript
-     * const { gotScraping } = require('got-scraping');
+     * import { gotScraping } from 'got-scraping';
      *
-     * Actor.main(() => {
+     * await Actor.main(() => {
      *   // My asynchronous function that returns a promise
      *   return gotScraping('http://www.example.com').then((html) => {
      *     console.log(html);
@@ -902,9 +904,9 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * To simplify your code, you can take advantage of the `async`/`await` keywords:
      *
      * ```javascript
-     * const { gotScraping } = require('got-scraping');
+     * import { gotScraping } from 'got-scraping';
      *
-     * Actor.main(async () => {
+     * await Actor.main(async () => {
      *   // My asynchronous function
      *   const html = await gotScraping('http://www.example.com');
      *   console.log(html);
@@ -1361,7 +1363,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
      * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
-     *   handlePageFunction: ({ proxyInfo }) => {
+     *   requestHandler({ proxyInfo }) {
      *       const usedProxyUrl = proxyInfo.url; // Getting the proxy URL
      *   }
      * })

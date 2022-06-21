@@ -88,7 +88,7 @@ export interface BasicCrawlerOptions<
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -114,7 +114,7 @@ export interface BasicCrawlerOptions<
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -194,7 +194,7 @@ export interface BasicCrawlerOptions<
     handleFailedRequestFunction?: FailedRequestHandler<ErrorContext>;
 
     /**
-     * Indicates how many times the request is retried if {@link requestHandler} or {@link handlePageFunction} fails.
+     * Indicates how many times the request is retried if {@link requestHandler} fails.
      * @default 3
      */
     maxRequestRetries?: number;
@@ -273,7 +273,7 @@ export interface BasicCrawlerOptions<
  * **Example usage:**
  *
  * ```javascript
- * const { gotScraping } = require('got-scraping');
+ * import { gotScraping } from 'got-scraping';
  *
  * // Prepare a list of URLs to crawl
  * const requestList = new RequestList({
@@ -297,7 +297,7 @@ export interface BasicCrawlerOptions<
  *             headers: request.headers,
  *         });
  *
- *         await Actor.pushData({
+ *         await Dataset.pushData({
  *             url: request.url,
  *             html: body,
  *         })

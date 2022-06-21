@@ -30,20 +30,18 @@ export interface ProxyConfigurationOptions {
  * **Example usage:**
  *
  * ```javascript
- * // TODO fix examples and jsdoc
  * const proxyConfiguration = new ProxyConfiguration({
- *   groups: ['GROUP1', 'GROUP2'] // List of Apify Proxy groups
- *   countryCode: 'US',
+ *   proxyUrls: ['...', '...'] // List of Proxy URLs to rotate
  * });
  *
  * // Getting proxyInfo object by calling class method directly
- * const proxyInfo = proxyConfiguration.newProxyInfo();
+ * const proxyInfo = await proxyConfiguration.newProxyInfo();
  *
  * // In crawler
  * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
- *   handlePageFunction: ({ proxyInfo }) => {
+ *   requestHandler({ proxyInfo }) {
  *      // Getting used proxy URL
  *       const proxyUrl = proxyInfo.url;
  *
@@ -106,7 +104,7 @@ export interface ProxyInfo {
  * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
- *   handlePageFunction: ({ proxyInfo }) => {
+ *   requestHandler({ proxyInfo }) {
  *      const usedProxyUrl = proxyInfo.url; // Getting the proxy URL
  *   }
  * })
@@ -135,7 +133,7 @@ export class ProxyConfiguration {
      * const crawler = new CheerioCrawler({
      *   // ...
      *   proxyConfiguration,
-     *   handlePageFunction: ({ proxyInfo }) => {
+     *   requestHandler({ proxyInfo }) {
      *       const usedProxyUrl = proxyInfo.url; // Getting the proxy URL
      *   }
      * })
@@ -161,7 +159,7 @@ export class ProxyConfiguration {
     /**
      * This function creates a new {@link ProxyInfo} info object.
      * It is used by CheerioCrawler and PuppeteerCrawler to generate proxy URLs and also to allow the user to inspect
-     * the currently used proxy via the handlePageFunction parameter: proxyInfo.
+     * the currently used proxy via the requestHandler parameter `proxyInfo`.
      * Use it if you want to work with a rich representation of a proxy URL.
      * If you need the URL string only, use {@link ProxyConfiguration.newUrl}.
      * @param [sessionId]
