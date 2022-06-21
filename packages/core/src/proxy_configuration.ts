@@ -1,6 +1,6 @@
 import ow from 'ow';
 import log from '@apify/log';
-import { Configuration } from './configuration';
+import { Dictionary } from '@crawlee/types';
 
 export interface ProxyConfigurationFunction {
     (sessionId: string | number): string | Promise<string>;
@@ -141,12 +141,10 @@ export class ProxyConfiguration {
      * })
      *
      * ```
-     * @param options
-     * @param config
-     * @param validateRequired internal flag to disable validation that requires one of `proxyUrls` or `newUrlFunction`, defaults to true
      */
-    constructor(options: ProxyConfigurationOptions = {}, readonly config = Configuration.getGlobalConfig(), validateRequired = true) {
-        ow(options, ow.object.exactShape({
+    constructor(options: ProxyConfigurationOptions = {}) {
+        const { validateRequired, ...rest } = options as Dictionary;
+        ow(rest, ow.object.exactShape({
             proxyUrls: ow.optional.array.nonEmpty.ofType(ow.string.url),
             newUrlFunction: ow.optional.function,
         }));

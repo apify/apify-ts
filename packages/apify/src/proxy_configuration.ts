@@ -157,9 +157,9 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
     /**
      * @internal
      */
-    constructor(options: ProxyConfigurationOptions = {}, config = Configuration.getGlobalConfig()) {
+    constructor(options: ProxyConfigurationOptions = {}, readonly config = Configuration.getGlobalConfig()) {
         const { proxyUrls, newUrlFunction, ...rest } = options;
-        super({ proxyUrls, newUrlFunction }, config, false);
+        super({ proxyUrls, newUrlFunction, ['validateRequired' as string]: false });
         ow(rest, ow.object.exactShape({
             groups: ow.optional.array.ofType(ow.string.matches(APIFY_PROXY_VALUE_REGEX)),
             apifyProxyGroups: ow.optional.array.ofType(ow.string.matches(APIFY_PROXY_VALUE_REGEX)),
