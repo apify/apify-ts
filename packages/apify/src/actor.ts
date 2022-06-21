@@ -177,10 +177,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             this.config.useStorageClient(options.storage);
         }
 
-        // purge the storage by default
-        if (options?.purge ?? true) {
-            await purgeDefaultStorages(this.config);
-        }
+        await purgeDefaultStorages(this.config);
     }
 
     /**
@@ -399,7 +396,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             customAfterSleepMillis = this.config.get('metamorphAfterSleepMillis'),
             ...metamorphOpts
         } = options;
-        const runId = this.config.get('actorRunId')!;
+        const runId = process.env[ENV_VARS.ACTOR_RUN_ID]!;
         await this.apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);
 
         // Wait some time for container to be stopped.
@@ -426,7 +423,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             ...this.config.getEventManager().listeners(EventType.MIGRATING).map((x) => x()),
         ]);
 
-        const actorId = this.config.get('actorId')!;
+        const actorId = process.env[ENV_VARS.ACTOR_ID]!;
         await this.metamorph(actorId);
     }
 
@@ -457,7 +454,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             return undefined;
         }
 
-        const runId = this.config.get('actorRunId');
+        const runId = process.env[ENV_VARS.ACTOR_RUN_ID]!;
         if (!runId) {
             throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
         }
@@ -1434,7 +1431,6 @@ export class Actor<Data extends Dictionary = Dictionary> {
 }
 
 export interface InitOptions {
-    purge?: boolean;
     storage?: StorageClient;
 }
 
