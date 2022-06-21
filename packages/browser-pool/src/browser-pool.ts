@@ -24,7 +24,7 @@ export interface BrowserPoolEvents<BC extends BrowserController, Page> {
     [BROWSER_POOL_EVENTS.BROWSER_LAUNCHED]: (browserController: BC) => void | Promise<void>;
 }
 
-export interface FingerprintsOptions{
+export interface FingerprintOptions{
     fingerprintGeneratorOptions?: ConstructorParameters<typeof FingerprintGenerator>[0];
     /**
      * @default true
@@ -79,7 +79,7 @@ export interface BrowserPoolOptions<Plugin extends BrowserPlugin = BrowserPlugin
      * @default true
      */
     useFingerprints?: boolean;
-    fingerprintsOptions?: FingerprintsOptions;
+    fingerprintOptions?: FingerprintOptions;
 }
 
 /**
@@ -265,7 +265,7 @@ export class BrowserPool<
     operationTimeoutMillis: number;
     closeInactiveBrowserAfterMillis: number;
     useFingerprints?: boolean;
-    fingerprintsOptions: FingerprintsOptions;
+    fingerprintOptions: FingerprintOptions;
     preLaunchHooks: PreLaunchHook<LaunchContextReturn>[];
     postLaunchHooks: PostLaunchHook<BrowserControllerReturn>[];
     prePageCreateHooks: PrePageCreateHook<BrowserControllerReturn, PageOptions>[];
@@ -308,7 +308,7 @@ export class BrowserPool<
             prePageCloseHooks: ow.optional.array,
             postPageCloseHooks: ow.optional.array,
             useFingerprints: ow.optional.boolean,
-            fingerprintsOptions: ow.optional.object,
+            fingerprintOptions: ow.optional.object,
         }));
 
         const {
@@ -324,7 +324,7 @@ export class BrowserPool<
             prePageCloseHooks = [],
             postPageCloseHooks = [],
             useFingerprints = true,
-            fingerprintsOptions = {},
+            fingerprintOptions = {},
         } = options;
 
         this.browserPlugins = browserPlugins as unknown as BrowserPlugins;
@@ -333,7 +333,7 @@ export class BrowserPool<
         this.operationTimeoutMillis = operationTimeoutSecs * 1000;
         this.closeInactiveBrowserAfterMillis = closeInactiveBrowserAfterSecs * 1000;
         this.useFingerprints = useFingerprints;
-        this.fingerprintsOptions = fingerprintsOptions;
+        this.fingerprintOptions = fingerprintOptions;
 
         // hooks
         this.preLaunchHooks = preLaunchHooks;
@@ -738,8 +738,8 @@ export class BrowserPool<
     }
 
     private _initializeFingerprinting(): void {
-        const { useFingerprintCache = true, fingerprintCacheSize = 10_000 } = this.fingerprintsOptions;
-        this.fingerprintGenerator = new FingerprintGenerator(this.fingerprintsOptions.fingerprintGeneratorOptions);
+        const { useFingerprintCache = true, fingerprintCacheSize = 10_000 } = this.fingerprintOptions;
+        this.fingerprintGenerator = new FingerprintGenerator(this.fingerprintOptions.fingerprintGeneratorOptions);
         this.fingerprintInjector = new FingerprintInjector();
 
         if (useFingerprintCache) {

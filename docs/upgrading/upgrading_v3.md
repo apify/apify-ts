@@ -319,4 +319,5 @@ In addition to the existing events, we now have an `exit` event fired when calli
 * `prepareRequestFunction` and `postResponseFunction` options are removed, use navigation hooks instead
 * `gotoFunction` and `gotoTimeoutSecs` are removed
 * removed compatibility fix for old/broken request queues with null `Request` props
-* `fingerprintsOptions` now accept `useFingerprintCache` and `fingerprintCacheSize` (instead of `useFingerprintPerProxyCache` and `fingerprintPerProxyCacheSize`, which are now no longer available). This is because the cached fingerprints are no longer connected to proxy URLs but to sessions.
+* `fingerprintsOptions` renamed to `fingerprintOptions` (`fingerprints` -> `fingerprint`).
+* `fingerprintOptions` now accept `useFingerprintCache` and `fingerprintCacheSize` (instead of `useFingerprintPerProxyCache` and `fingerprintPerProxyCacheSize`, which are now no longer available). This is because the cached fingerprints are no longer connected to proxy URLs but to sessions.

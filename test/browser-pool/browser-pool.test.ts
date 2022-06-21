@@ -743,7 +743,7 @@ describe('BrowserPool', () => {
                         browserPoolCache = new BrowserPool({
                             ...commonOptions,
                             useFingerprints: true,
-                            fingerprintsOptions: {
+                            fingerprintOptions: {
                                 useFingerprintCache: false,
                             },
                         });
@@ -755,7 +755,7 @@ describe('BrowserPool', () => {
                         browserPoolCache = new BrowserPool({
                             ...commonOptions,
                             useFingerprints: true,
-                            fingerprintsOptions: {
+                            fingerprintOptions: {
                                 fingerprintCacheSize: 1,
                             },
                         });
@@ -835,7 +835,7 @@ describe('BrowserPool', () => {
                     browserPoolConfig = new BrowserPool({
                         ...commonOptions,
                         useFingerprints: true,
-                        fingerprintsOptions: {
+                        fingerprintOptions: {
                             fingerprintGeneratorOptions: {
                                 operatingSystems: [OperatingSystemsName.windows],
                                 browsers: [BrowserName.chrome],

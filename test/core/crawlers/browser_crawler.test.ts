@@ -530,7 +530,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             browserPoolOptions: {
                 browserPlugins: [puppeteerPlugin],
                 useFingerprints: true,
-                fingerprintsOptions: {
+                fingerprintOptions: {
                     fingerprintGeneratorOptions: {
                         operatingSystems: [OperatingSystemsName.windows],
                     },

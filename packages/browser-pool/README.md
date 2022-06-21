@@ -348,7 +348,7 @@ it will be killed after a timeout to prevent hanging browser processes.
 Changing browser fingerprints is beneficial for avoiding getting blocked and simulating real user browsers.
 With Browser Pool, you can do this otherwise complicated technique by enabling the `useFingerprints` option.
 The fingerprints are by default tied to the respective proxy urls to not use the same unique fingerprint from various IP addresses.
-You can disable this behavior in the [`fingerprintOptions`](#new_BrowserPool_new). In the `fingerprintsOptions`, You can also control which fingerprints are generated.
+You can disable this behavior in the [`fingerprintOptions`](#new_BrowserPool_new). In the `fingerprintOptions`, You can also control which fingerprints are generated.
 You can control parameters as browser, operating system, and browser versions.
 
 ### (UNSTABLE) Extensibility with plugins
@@ -482,10 +482,10 @@ const browserPool = new BrowserPool({
 | [options.prePageCloseHooks] | <code>Array.&lt;function()&gt;</code> |  | Pre-page-close hooks give you the opportunity to make last second changes  in a page that's about to be closed, such as saving a snapshot or updating  state.  The hooks are called with two arguments:  `page`: `Page` and `browserController`: [BrowserController](#BrowserController) |
 | [options.postPageCloseHooks] | <code>Array.&lt;function()&gt;</code> |  | Post-page-close hooks allow you to do page related clean up.  The hooks are called with two arguments:  `pageId`: `string` and `browserController`: [BrowserController](#BrowserController) |
 | [options.useFingerprints] | <code>boolean</code> | <code>false</code> | If true the Browser pool will automatically generate and inject fingerprints to browsers. |
-| [options.fingerprintsOptions] | <code>FingerprintOptions </code> |  | Fingerprints options that allows customizing the fingerprinting behavior. |
-| [options.fingerprintsOptions.fingerprintGeneratorOptions] |  |  | See the [Fingerprint generator]("https://github.com/apify/fingerprint-generator#headergeneratoroptions") documentation. |
-| [options.fingerprintsOptions.useFingerprintCache] | <code>boolean</code> | <code>true</code> | Fingerprints are automatically assigned to an instance of a Session or proxy URL. You can disable this behavior by setting this property to `false`. |
-| [options.fingerprintsOptions.fingerprintCacheSize] | <code>number</code> | <code>10000</code> | Maximum number of cached browser fingerprints. |
+| [options.fingerprintOptions] | <code>FingerprintOptions </code> |  | Fingerprints options that allows customizing the fingerprinting behavior. |
+| [options.fingerprintOptions.fingerprintGeneratorOptions] |  |  | See the [Fingerprint generator]("https://github.com/apify/fingerprint-generator#headergeneratoroptions") documentation. |
+| [options.fingerprintOptions.useFingerprintCache] | <code>boolean</code> | <code>true</code> | Fingerprints are automatically assigned to an instance of a Session or proxy URL. You can disable this behavior by setting this property to `false`. |
+| [options.fingerprintOptions.fingerprintCacheSize] | <code>number</code> | <code>10000</code> | Maximum number of cached browser fingerprints. |
 * * *
 
 <a name="BrowserPool+newPage"></a>
