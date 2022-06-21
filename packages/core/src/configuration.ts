@@ -1,10 +1,12 @@
 import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
-import { MemoryStorage, MemoryStorageOptions } from '@crawlee/memory-storage';
+import type { MemoryStorageOptions } from '@crawlee/memory-storage';
+import { MemoryStorage } from '@crawlee/memory-storage';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { EventEmitter } from 'node:events';
-import { Dictionary, StorageClient } from '@crawlee/types';
+import type { Dictionary, StorageClient } from '@crawlee/types';
 import { entries } from './typedefs';
-import { EventManager, LocalEventManager } from './events';
+import type { EventManager } from './events';
+import { LocalEventManager } from './events';
 
 // FIXME many of the options are apify specific, if they should be somewhere, its in the actor sdk
 export interface ConfigurationOptions {

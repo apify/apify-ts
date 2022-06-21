@@ -1,11 +1,14 @@
-import { Log } from '@apify/log';
+import type { Log } from '@apify/log';
 import { addTimeoutToPromise } from '@apify/timeout';
-import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
+import type { BetterIntervalID } from '@apify/utilities';
+import { betterClearInterval, betterSetInterval } from '@apify/utilities';
 import ow from 'ow';
 import { Configuration } from '../configuration';
 import { log as defaultLog } from '../log';
-import { Snapshotter, SnapshotterOptions } from './snapshotter';
-import { SystemInfo, SystemStatus, SystemStatusOptions } from './system_status';
+import type { SnapshotterOptions } from './snapshotter';
+import { Snapshotter } from './snapshotter';
+import type { SystemInfo, SystemStatusOptions } from './system_status';
+import { SystemStatus } from './system_status';
 
 export interface AutoscaledPoolOptions {
     /**

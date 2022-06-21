@@ -1,4 +1,5 @@
-import log, { Log } from '@apify/log';
+import type { Log } from '@apify/log';
+import log from '@apify/log';
 import { BasicCrawler, RequestList } from '../src/index';
 
 describe('Moving from handleRequest* to requestHandler*', () => {

@@ -1,8 +1,9 @@
 import merge from 'lodash.merge';
-import { LaunchContext, LaunchContextOptions } from '../launch-context';
-import { BrowserController } from './browser-controller';
+import type { LaunchContextOptions } from '../launch-context';
+import { LaunchContext } from '../launch-context';
+import type { BrowserController } from './browser-controller';
 import { throwImplementationNeeded } from './utils';
-import { UnwrapPromise } from '../utils';
+import type { UnwrapPromise } from '../utils';
 
 /**
  * The default User Agent used by `PlaywrightCrawler`, `launchPlaywright`, 'PuppeteerCrawler' and 'launchPuppeteer'

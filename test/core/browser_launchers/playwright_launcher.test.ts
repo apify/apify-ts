@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 // @ts-expect-error no types
 import proxy from 'proxy';
-import http, { Server } from 'http';
+import type { Server } from 'http';
+import http from 'http';
 import util from 'util';
 // @ts-expect-error no types
 import portastic from 'portastic';
@@ -11,8 +12,8 @@ import basicAuthParser from 'basic-auth-parser';
 import { ENV_VARS } from '@apify/consts';
 import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlee/playwright';
 
-import { AddressInfo } from 'net';
-import { Browser, BrowserType } from 'playwright';
+import type { AddressInfo } from 'net';
+import type { Browser, BrowserType } from 'playwright';
 
 let prevEnvHeadless: string;
 let proxyServer: Server;

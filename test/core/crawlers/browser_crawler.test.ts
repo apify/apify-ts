@@ -1,17 +1,20 @@
 import { ENV_VARS } from '@apify/consts';
 import { BROWSER_POOL_EVENTS, BrowserPool, OperatingSystemsName, PuppeteerPlugin } from '@crawlee/browser-pool';
-import puppeteer, { HTTPResponse } from 'puppeteer';
+import type { HTTPResponse } from 'puppeteer';
+import puppeteer from 'puppeteer';
 import log from '@apify/log';
-import {
-    AutoscaledPool,
+import type {
     BrowserCrawler,
     BrowserFailedRequestContext,
     BrowserCrawlingContext,
-    ProxyConfiguration,
     ProxyInfo,
     PuppeteerCrawlingContext,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
+} from '@crawlee/puppeteer';
+import {
+    AutoscaledPool,
+    ProxyConfiguration,
     Request,
     RequestList,
     Session,

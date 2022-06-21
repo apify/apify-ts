@@ -1,38 +1,42 @@
-import defaultLog, { Log } from '@apify/log';
+import type { Log } from '@apify/log';
+import defaultLog from '@apify/log';
 import { addTimeoutToPromise, TimeoutError, tryCancel } from '@apify/timeout';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import {
-    AutoscaledPool,
+import type {
     AutoscaledPoolOptions,
-    Configuration,
-    type CrawlingContext,
-    createRequests,
-    enqueueLinks,
     EnqueueLinksOptions,
     EventManager,
-    EventType,
     FailedRequestContext,
     FinalStatistics,
-    KeyValueStore,
-    CriticalError,
-    NonRetryableError,
     ProxyInfo,
     QueueOperationInfo,
     Request,
     RequestList,
     RequestOptions,
-    RequestQueue,
     RequestQueueOperationOptions,
-    Router,
     RouterHandler,
     Session,
-    SessionPool,
     SessionPoolOptions,
+} from '@crawlee/core';
+import {
+    AutoscaledPool,
+    Configuration,
+    type CrawlingContext,
+    createRequests,
+    enqueueLinks,
+    EventType,
+    KeyValueStore,
+    CriticalError,
+    NonRetryableError,
+    RequestQueue,
+    Router,
+    SessionPool,
     Statistics,
     validators,
 } from '@crawlee/core';
-import { GotOptionsInit, gotScraping, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
-import { ProcessedRequest, Dictionary, Awaitable } from '@crawlee/types';
+import type { GotOptionsInit, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
+import { gotScraping } from 'got-scraping';
+import type { ProcessedRequest, Dictionary, Awaitable } from '@crawlee/types';
 import { chunk, sleep } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 

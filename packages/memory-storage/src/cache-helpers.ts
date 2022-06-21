@@ -325,5 +325,7 @@ export async function findRequestQueueByPossibleId(client: MemoryStorage, entryN
 
 /* eslint-disable import/first -- Fixing circulars */
 import { DatasetClient } from './resource-clients/dataset';
-import { InternalKeyRecord, KeyValueStoreClient } from './resource-clients/key-value-store';
-import { InternalRequest, RequestQueueClient } from './resource-clients/request-queue';
+import type { InternalKeyRecord } from './resource-clients/key-value-store';
+import { KeyValueStoreClient } from './resource-clients/key-value-store';
+import type { InternalRequest } from './resource-clients/request-queue';
+import { RequestQueueClient } from './resource-clients/request-queue';

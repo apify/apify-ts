@@ -3,8 +3,8 @@ import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { createHash } from 'node:crypto';
 import { REQUEST_ID_LENGTH } from './consts';
-import { InternalKeyRecord } from './resource-clients/key-value-store';
-import { InternalRequest } from './resource-clients/request-queue';
+import type { InternalKeyRecord } from './resource-clients/key-value-store';
+import type { InternalRequest } from './resource-clients/request-queue';
 
 /**
  * Removes all properties with a null value

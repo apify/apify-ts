@@ -1,7 +1,9 @@
 import { ACT_JOB_STATUSES, ENV_VARS, KEY_VALUE_STORE_KEYS, WEBHOOK_EVENT_TYPES } from '@apify/consts';
 import log from '@apify/log';
-import { Actor, ApifyEnv, ProxyConfiguration } from 'apify';
-import { ActorClient, ApifyClient, RunClient, TaskClient, WebhookUpdateData } from 'apify-client';
+import type { ApifyEnv } from 'apify';
+import { Actor, ProxyConfiguration } from 'apify';
+import type { WebhookUpdateData } from 'apify-client';
+import { ActorClient, ApifyClient, RunClient, TaskClient } from 'apify-client';
 import { Configuration, EventType, Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
 import { StorageTestCases } from '../shared/test-cases';

@@ -1,5 +1,5 @@
 import { isDocker, weightedAvg, sleep, snakeCaseToCamelCase, parseContentTypeFromResponse } from '@crawlee/utils';
-import { IncomingMessage } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 import asyncFs from 'node:fs/promises';
 
 describe('isDocker()', () => {

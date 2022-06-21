@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Worker } from 'node:worker_threads';
-import { memoryStorageLog, WorkerReceivedMessage } from '../utils';
+import type { WorkerReceivedMessage } from '../utils';
+import { memoryStorageLog } from '../utils';
 import { FileStorageWorkerEmulator } from './file-storage-worker-emulator';
 
 let workerInstance: Worker | FileStorageWorkerEmulator;

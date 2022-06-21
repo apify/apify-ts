@@ -1,7 +1,7 @@
 import { ENV_VARS } from '@apify/consts';
-import { Dictionary, StorageClient } from '@crawlee/types';
+import type { Dictionary, StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
-import { Constructor } from '../typedefs';
+import type { Constructor } from '../typedefs';
 
 const DEFAULT_ID_ENV_VAR_NAMES = {
     Dataset: ENV_VARS.DEFAULT_DATASET_ID,

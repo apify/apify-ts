@@ -1,4 +1,4 @@
-import { BrowserFingerprintWithHeaders as Fingerprint } from 'fingerprint-generator';
+import type { BrowserFingerprintWithHeaders as Fingerprint } from 'fingerprint-generator';
 
 export interface FingerprintGenerator {
     getFingerprint: (fingerprintGeneratorOptions?: FingerprintGeneratorOptions) => GetFingerprintReturn;

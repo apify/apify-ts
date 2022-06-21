@@ -1,5 +1,5 @@
-import { CrawlingContext } from './crawlers/crawler_commons';
-import { Awaitable } from './typedefs';
+import type { CrawlingContext } from './crawlers/crawler_commons';
+import type { Awaitable } from './typedefs';
 import { MissingRouteError } from './errors';
 
 const defaultRoute = Symbol('default-route');

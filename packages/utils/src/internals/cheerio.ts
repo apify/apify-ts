@@ -1,4 +1,5 @@
-import cheerio, { load } from 'cheerio';
+import type { load } from 'cheerio';
+import cheerio from 'cheerio';
 
 export type CheerioRoot = ReturnType<typeof load>;
 

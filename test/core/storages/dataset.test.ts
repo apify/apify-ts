@@ -1,6 +1,6 @@
 import { MAX_PAYLOAD_SIZE_BYTES } from '@apify/consts';
 import { Dataset, checkAndSerialize, chunkBySize, Configuration } from '@crawlee/core';
-import { Dictionary } from '@crawlee/utils';
+import type { Dictionary } from '@crawlee/utils';
 
 describe('dataset', () => {
     const storageClient = Configuration.getStorageClient();

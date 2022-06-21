@@ -1,11 +1,12 @@
+/* eslint-disable import/no-duplicates */
 import type * as storage from '@crawlee/types';
-import { Dictionary } from '@crawlee/types';
+import type { Dictionary } from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { randomUUID } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { move } from 'fs-extra';
-import { MemoryStorage } from '../index';
+import type { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
 import { BaseClient } from './common/base-client';
 import { sendWorkerMessage } from '../workers/instance';

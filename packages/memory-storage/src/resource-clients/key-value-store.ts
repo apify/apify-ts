@@ -6,7 +6,7 @@ import { Readable } from 'node:stream';
 import { resolve } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { move } from 'fs-extra';
-import { MemoryStorage } from '../index';
+import type { MemoryStorage } from '../index';
 import { maybeParseBody } from '../body-parser';
 import { DEFAULT_API_PARAM_LIMIT, StorageTypes } from '../consts';
 import { isBuffer, isStream } from '../utils';

@@ -1,19 +1,18 @@
 import log from '@apify/log';
-import { CheerioRoot } from '@crawlee/utils';
+import type { CheerioRoot } from '@crawlee/utils';
 import cheerio from 'cheerio';
+import type { Request, RequestOptions } from '@crawlee/puppeteer';
 import {
     browserCrawlerEnqueueLinks,
     Configuration,
     EnqueueStrategy,
     launchPuppeteer,
-    Request,
-    RequestOptions,
     RequestQueue,
 } from '@crawlee/puppeteer';
 import { cheerioCrawlerEnqueueLinks } from '@crawlee/cheerio';
 import { launchPlaywright } from '@crawlee/playwright';
-import { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
-import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
+import type { Browser as PlaywrightBrowser, Page as PlaywrightPage } from 'playwright';
+import type { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 
 const apifyClient = Configuration.getStorageClient();
 

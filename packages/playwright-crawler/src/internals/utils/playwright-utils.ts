@@ -21,12 +21,13 @@
 
 import { readFile } from 'node:fs/promises';
 import ow from 'ow';
-import { Page, Response, Route } from 'playwright';
+import type { Page, Response, Route } from 'playwright';
 import { LruCache } from '@apify/datastructures';
 import log_ from '@apify/log';
-import { validators, Request } from '@crawlee/core';
-import { Dictionary } from '@crawlee/utils';
-import { PlaywrightCrawlingContext } from '../playwright-crawler';
+import type { Request } from '@crawlee/core';
+import { validators } from '@crawlee/core';
+import type { Dictionary } from '@crawlee/utils';
+import type { PlaywrightCrawlingContext } from '../playwright-crawler';
 
 const log = log_.child({ prefix: 'Playwright Utils' });
 

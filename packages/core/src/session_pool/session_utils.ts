@@ -1,6 +1,6 @@
-import { Dictionary } from '@crawlee/types';
-import { IncomingMessage } from 'node:http';
-import { HTTPResponse } from 'puppeteer';
+import type { Dictionary } from '@crawlee/types';
+import type { IncomingMessage } from 'node:http';
+import type { HTTPResponse } from 'puppeteer';
 import { Cookie } from 'tough-cookie';
 import { CookieParseError } from './errors';
 

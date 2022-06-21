@@ -4,8 +4,7 @@ import { ApifyStorageLocal } from '@apify/storage-local';
 
 const crawlerLogger = defaultLog.child({
     prefix: 'AutoscalingTest',
-    // Set this to false if you want to see verbose output from the autoscaled pool
-    level: true ? defaultLog.getOptions().level : LogLevel.PERF,
+    level: LogLevel.INFO,
 });
 
 const mainOptions = {

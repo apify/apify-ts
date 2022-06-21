@@ -3,8 +3,9 @@ import ow from 'ow';
 import type { DatasetClient, DatasetInfo, PaginatedList, StorageClient, Dictionary } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import { log } from '../log';
-import { Awaitable } from '../typedefs';
-import { StorageManager, StorageManagerOptions } from './storage_manager';
+import type { Awaitable } from '../typedefs';
+import type { StorageManagerOptions } from './storage_manager';
+import { StorageManager } from './storage_manager';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;

@@ -22,13 +22,16 @@ import { readFile } from 'fs/promises';
 import ow from 'ow';
 import vm from 'vm';
 import { LruCache } from '@apify/datastructures';
-import { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
+import type { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log_ from '@apify/log';
-import { KeyValueStore, Request, validators } from '@crawlee/core';
-import { Dictionary, BatchAddRequestsResult } from '@crawlee/types';
-import { enqueueLinksByClickingElements, EnqueueLinksByClickingElementsOptions } from '../enqueue-links/click-elements';
-import { addInterceptRequestHandler, InterceptHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
-import { PuppeteerCrawlingContext } from '../puppeteer-crawler';
+import type { Request } from '@crawlee/core';
+import { KeyValueStore, validators } from '@crawlee/core';
+import type { Dictionary, BatchAddRequestsResult } from '@crawlee/types';
+import type { EnqueueLinksByClickingElementsOptions } from '../enqueue-links/click-elements';
+import { enqueueLinksByClickingElements } from '../enqueue-links/click-elements';
+import type { InterceptHandler } from './puppeteer_request_interception';
+import { addInterceptRequestHandler, removeInterceptRequestHandler } from './puppeteer_request_interception';
+import type { PuppeteerCrawlingContext } from '../puppeteer-crawler';
 
 const jqueryPath = require.resolve('jquery');
 

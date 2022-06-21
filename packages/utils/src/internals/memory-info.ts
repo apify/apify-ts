@@ -1,7 +1,7 @@
 import log from '@apify/log';
 // @ts-expect-error We need to add typings for @apify/ps-tree
 import psTree from '@apify/ps-tree';
-import { Dictionary } from '@crawlee/types';
+import type { Dictionary } from '@crawlee/types';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';

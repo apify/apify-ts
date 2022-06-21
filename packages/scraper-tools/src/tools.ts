@@ -1,10 +1,10 @@
 import log from '@apify/log';
-import { PuppeteerCookie, Request, Session } from '@crawlee/core';
-import { Dictionary } from '@crawlee/utils';
+import type { PuppeteerCookie, Request, Session } from '@crawlee/core';
+import type { Dictionary } from '@crawlee/utils';
 import Ajv from 'ajv';
 import { randomBytes as callbackRandomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { IncomingMessage } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { runInThisContext } from 'node:vm';

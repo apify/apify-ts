@@ -1,5 +1,5 @@
 import { Statistics, Configuration, EventType } from '@crawlee/core';
-import { Dictionary } from '@crawlee/utils';
+import type { Dictionary } from '@crawlee/utils';
 import { StorageTestCases } from 'test/shared/test-cases';
 
 describe.each(StorageTestCases)('Statistics - %s', (Emulator) => {

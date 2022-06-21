@@ -1,9 +1,9 @@
 import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
 import { sleep } from '@crawlee/utils';
 import express from 'express';
-import { Server } from 'http';
-import { AddressInfo } from 'net';
-import { HTTPRequest } from 'puppeteer';
+import type { Server } from 'http';
+import type { AddressInfo } from 'net';
+import type { HTTPRequest } from 'puppeteer';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const { addInterceptRequestHandler, removeInterceptRequestHandler } = puppeteerUtils;

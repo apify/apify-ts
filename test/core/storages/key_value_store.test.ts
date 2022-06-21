@@ -1,6 +1,6 @@
 import { ENV_VARS } from '@apify/consts';
 import { KeyValueStore, maybeStringify, Configuration } from '@crawlee/core';
-import { Dictionary } from '@crawlee/utils';
+import type { Dictionary } from '@crawlee/utils';
 import { PassThrough } from 'stream';
 
 // TODO this does not make sense here

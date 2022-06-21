@@ -2,7 +2,7 @@ import os from 'node:os';
 import log from '@apify/log';
 import { betterClearInterval, betterSetInterval } from '@apify/utilities';
 import { getMemoryInfo } from '@crawlee/utils';
-import { SystemInfo } from '../autoscaling';
+import type { SystemInfo } from '../autoscaling';
 import { EventManager, EventType } from './event_manager';
 
 export class LocalEventManager extends EventManager {

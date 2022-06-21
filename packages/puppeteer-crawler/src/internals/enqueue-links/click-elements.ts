@@ -1,9 +1,4 @@
-import {
-    constructGlobObjectsFromGlobs,
-    constructRegExpObjectsFromPseudoUrls,
-    constructRegExpObjectsFromRegExps,
-    createRequests,
-    createRequestOptions,
+import type {
     GlobInput,
     PseudoUrlInput,
     RegExpInput,
@@ -12,18 +7,27 @@ import {
     RequestQueue,
     RequestOptions,
 } from '@crawlee/browser';
-import log_ from '@apify/log';
-import { Dictionary, BatchAddRequestsResult } from '@crawlee/types';
-import ow from 'ow';
 import {
-    BrowserContextEmittedEvents,
-    BrowserEmittedEvents,
+    constructGlobObjectsFromGlobs,
+    constructRegExpObjectsFromPseudoUrls,
+    constructRegExpObjectsFromRegExps,
+    createRequests,
+    createRequestOptions,
+} from '@crawlee/browser';
+import log_ from '@apify/log';
+import type { Dictionary, BatchAddRequestsResult } from '@crawlee/types';
+import ow from 'ow';
+import type {
     ClickOptions,
     Frame,
     HTTPRequest as PuppeteerRequest,
     Page,
-    PageEmittedEvents,
     Target,
+} from 'puppeteer';
+import {
+    BrowserContextEmittedEvents,
+    BrowserEmittedEvents,
+    PageEmittedEvents,
 } from 'puppeteer';
 import { URL } from 'url';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';

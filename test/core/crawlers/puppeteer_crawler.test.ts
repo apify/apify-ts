@@ -1,22 +1,25 @@
 import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
-import {
-    ProxyConfiguration,
+import type {
     PuppeteerCookie,
-    PuppeteerCrawler,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
     Request,
+} from '@crawlee/puppeteer';
+import {
+    ProxyConfiguration,
+    PuppeteerCrawler,
     RequestList,
     RequestQueue,
     Session,
 } from '@crawlee/puppeteer';
 import { sleep } from '@crawlee/utils';
 import { once } from 'events';
-import { createServer, Server } from 'http';
-import { AddressInfo } from 'net';
+import type { Server } from 'http';
+import { createServer } from 'http';
+import type { AddressInfo } from 'net';
 import os from 'os';
-import { Server as ProxyChainServer } from 'proxy-chain';
+import type { Server as ProxyChainServer } from 'proxy-chain';
 import { StorageTestCases } from 'test/shared/test-cases';
 import { promisify } from 'util';
 import { createProxyServer } from '../create-proxy-server';

@@ -2,10 +2,10 @@ import path from 'path';
 import express from 'express';
 import log from '@apify/log';
 import { KeyValueStore, launchPuppeteer, puppeteerUtils, Request } from '@crawlee/puppeteer';
-import { Dictionary } from '@crawlee/utils';
-import { Browser, Page, ResponseForRequest } from 'puppeteer';
-import { Server } from 'http';
-import { AddressInfo } from 'net';
+import type { Dictionary } from '@crawlee/utils';
+import type { Browser, Page, ResponseForRequest } from 'puppeteer';
+import type { Server } from 'http';
+import type { AddressInfo } from 'net';
 import { startExpressAppPromise } from '../shared/_helper';
 import { StorageTestCases } from '../shared/test-cases';
 

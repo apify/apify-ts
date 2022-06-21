@@ -2,11 +2,11 @@ import os from 'node:os';
 import fs from 'node:fs';
 import ow from 'ow';
 import { ENV_VARS } from '@apify/consts';
-import {
+import type {
     Dictionary,
     Constructor,
 } from '@crawlee/utils';
-import {
+import type {
     BrowserPlugin,
     BrowserPluginOptions,
 } from '@crawlee/browser-pool';

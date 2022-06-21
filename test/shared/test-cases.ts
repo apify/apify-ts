@@ -1,9 +1,9 @@
 // This is its own file to prevent circulars causing issues
 
-import { Constructor } from 'crawlee';
+import type { Constructor } from 'crawlee';
 import { MemoryStorageEmulator } from './MemoryStorageEmulator';
 import { SqliteStorageEmulator } from './SqliteStorageEmulator';
-import { StorageEmulator } from './StorageEmulator';
+import type { StorageEmulator } from './StorageEmulator';
 
 /**
  * A list of StorageEmulators that should be used for tests that depend on storage.

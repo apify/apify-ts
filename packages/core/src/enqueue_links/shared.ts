@@ -1,8 +1,9 @@
 import { URL } from 'url';
 import { purlToRegExp } from '@apify/pseudo_url';
 import minimatch from 'minimatch';
-import { Request, RequestOptions } from '../request';
-import { EnqueueLinksOptions } from './enqueue_links';
+import type { RequestOptions } from '../request';
+import { Request } from '../request';
+import type { EnqueueLinksOptions } from './enqueue_links';
 
 const MAX_ENQUEUE_LINKS_CACHE_SIZE = 1000;
 

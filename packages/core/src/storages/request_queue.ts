@@ -4,10 +4,12 @@ import { cryptoRandomObjectId } from '@apify/utilities';
 import crypto from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import ow from 'ow';
-import { BatchAddRequestsResult, Dictionary, RequestQueueClient, RequestQueueInfo, StorageClient } from '@crawlee/types';
-import { StorageManager, StorageManagerOptions } from './storage_manager';
+import type { BatchAddRequestsResult, Dictionary, RequestQueueClient, RequestQueueInfo, StorageClient } from '@crawlee/types';
+import type { StorageManagerOptions } from './storage_manager';
+import { StorageManager } from './storage_manager';
 import { log } from '../log';
-import { Request, RequestOptions } from '../request';
+import type { RequestOptions } from '../request';
+import { Request } from '../request';
 import { Configuration } from '../configuration';
 
 const MAX_CACHED_REQUESTS = 1_000_000;

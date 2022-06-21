@@ -1,5 +1,6 @@
 import { EVENT_SESSION_RETIRED, ProxyConfiguration, Session, SessionPool, STATUS_CODES_BLOCKED } from '@crawlee/core';
-import { Dictionary, entries, sleep } from '@crawlee/utils';
+import type { Dictionary } from '@crawlee/utils';
+import { entries, sleep } from '@crawlee/utils';
 
 describe('Session - testing session behaviour ', () => {
     let sessionPool: SessionPool;

@@ -1,6 +1,7 @@
 import log from '@apify/log';
 import { EventEmitter } from 'node:events';
-import { betterClearInterval, BetterIntervalID, betterSetInterval } from '@apify/utilities';
+import type { BetterIntervalID } from '@apify/utilities';
+import { betterClearInterval, betterSetInterval } from '@apify/utilities';
 import { Configuration } from '../configuration';
 
 export const enum EventType {

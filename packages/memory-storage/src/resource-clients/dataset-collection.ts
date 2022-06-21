@@ -2,7 +2,7 @@ import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
 import { resolve } from 'path';
 import { findOrCacheDatasetByPossibleId } from '../cache-helpers';
-import { MemoryStorage } from '../index';
+import type { MemoryStorage } from '../index';
 import { sendWorkerMessage } from '../workers/instance';
 import { DatasetClient } from './dataset';
 

@@ -1,17 +1,18 @@
-import {
-    BrowserCrawler,
+import type {
     BrowserCrawlerHandleRequest,
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserHook,
-    Router,
 } from '@crawlee/browser';
-import { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
-import { Dictionary } from '@crawlee/types';
+import { BrowserCrawler, Router } from '@crawlee/browser';
+import type { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
+import type { Dictionary } from '@crawlee/types';
 import ow from 'ow';
-import { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
-import { PuppeteerLaunchContext, PuppeteerLauncher } from './puppeteer-launcher';
-import { DirectNavigationOptions, gotoExtended, PuppeteerContextUtils, registerUtilsToContext } from './utils/puppeteer_utils';
+import type { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
+import type { PuppeteerLaunchContext } from './puppeteer-launcher';
+import { PuppeteerLauncher } from './puppeteer-launcher';
+import type { DirectNavigationOptions, PuppeteerContextUtils } from './utils/puppeteer_utils';
+import { gotoExtended, registerUtilsToContext } from './utils/puppeteer_utils';
 
 export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
 export type PuppeteerCrawlingContext<UserData extends Dictionary = Dictionary> =

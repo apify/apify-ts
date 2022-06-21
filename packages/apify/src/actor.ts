@@ -2,10 +2,8 @@ import ow from 'ow';
 import { setTimeout } from 'node:timers/promises';
 import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
-import {
-    ActorRun as ClientActorRun,
+import type {
     ActorStartOptions,
-    ApifyClient,
     ApifyClientOptions,
     RunAbortOptions,
     TaskStartOptions,
@@ -13,26 +11,33 @@ import {
     WebhookEventType,
 } from 'apify-client';
 import {
-    Configuration,
+    ActorRun as ClientActorRun,
+    ApifyClient,
+} from 'apify-client';
+import type {
     ConfigurationOptions,
-    Dataset,
     EventManager,
-    EventType,
     EventTypeName,
     IStorage,
-    KeyValueStore,
     RecordOptions,
-    RequestList,
     RequestListOptions,
-    RequestQueue,
     Source,
+} from '@crawlee/core';
+import {
+    Configuration,
+    Dataset,
+    EventType,
+    KeyValueStore,
+    RequestList,
+    RequestQueue,
     StorageManager,
 } from '@crawlee/core';
 import type { Awaitable, Constructor, Dictionary, StorageClient } from '@crawlee/types';
 import { sleep, snakeCaseToCamelCase } from '@crawlee/utils';
 import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
-import { ProxyConfiguration, ProxyConfigurationOptions } from './proxy_configuration';
+import type { ProxyConfigurationOptions } from './proxy_configuration';
+import { ProxyConfiguration } from './proxy_configuration';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration

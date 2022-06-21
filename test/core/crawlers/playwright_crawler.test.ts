@@ -3,15 +3,17 @@ import os from 'os';
 import express from 'express';
 import playwright from 'playwright';
 import log from '@apify/log';
-import {
-    PlaywrightCrawler,
+import type {
     PlaywrightGotoOptions,
     PlaywrightRequestHandler,
     Request,
+} from '@crawlee/playwright';
+import {
+    PlaywrightCrawler,
     RequestList,
 } from '@crawlee/playwright';
-import { Server } from 'http';
-import { AddressInfo } from 'net';
+import type { Server } from 'http';
+import type { AddressInfo } from 'net';
 import { StorageTestCases } from 'test/shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
 

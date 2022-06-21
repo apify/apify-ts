@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 // @ts-expect-error no types
 import proxy from 'proxy';
-import http, { Server } from 'http';
+import type { Server } from 'http';
+import http from 'http';
 import util from 'util';
 // @ts-expect-error no types
 import portastic from 'portastic';
@@ -11,9 +12,9 @@ import basicAuthParser from 'basic-auth-parser';
 import { ENV_VARS } from '@apify/consts';
 import express from 'express';
 import { BrowserLauncher, launchPuppeteer } from '@crawlee/puppeteer';
-import { Dictionary } from '@crawlee/utils';
-import { AddressInfo } from 'net';
-import { Browser, Page } from 'puppeteer';
+import type { Dictionary } from '@crawlee/utils';
+import type { AddressInfo } from 'net';
+import type { Browser, Page } from 'puppeteer';
 import { startExpressAppPromise } from '../../shared/_helper';
 
 let prevEnvHeadless: string;

@@ -1,5 +1,5 @@
 import { isMainThread, parentPort } from 'node:worker_threads';
-import { WorkerReceivedMessage } from '../utils';
+import type { WorkerReceivedMessage } from '../utils';
 import { handleMessage } from './worker-utils';
 
 if (isMainThread || !parentPort) {

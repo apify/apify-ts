@@ -1,20 +1,22 @@
 /* eslint-disable dot-notation -- Accessing private properties */
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import http from 'http';
 import { promisify } from 'util';
-import { Server as ProxyChainServer } from 'proxy-chain';
-import puppeteer, { Page } from 'puppeteer';
+import type { Server as ProxyChainServer } from 'proxy-chain';
+import type { Page } from 'puppeteer';
+import puppeteer from 'puppeteer';
 import playwright from 'playwright';
 import { addTimeoutToPromise } from '@apify/timeout';
-import { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
-import { BrowserPool, PrePageCreateHook } from '../../packages/browser-pool/src/browser-pool';
+import type { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
+import type { PrePageCreateHook } from '../../packages/browser-pool/src/browser-pool';
+import { BrowserPool } from '../../packages/browser-pool/src/browser-pool';
 import { PuppeteerPlugin } from '../../packages/browser-pool/src/puppeteer/puppeteer-plugin';
 import { PlaywrightPlugin } from '../../packages/browser-pool/src/playwright/playwright-plugin';
 import { BROWSER_POOL_EVENTS } from '../../packages/browser-pool/src/events';
-import { BrowserController } from '../../packages/browser-pool/src/abstract-classes/browser-controller';
-import { PlaywrightController } from '../../packages/browser-pool/src/playwright/playwright-controller';
+import type { BrowserController } from '../../packages/browser-pool/src/abstract-classes/browser-controller';
+import type { PlaywrightController } from '../../packages/browser-pool/src/playwright/playwright-controller';
 import { BrowserName, OperatingSystemsName } from '../../packages/browser-pool/src/fingerprinting/types';
-import { PuppeteerController } from '../../packages/browser-pool/src/puppeteer/puppeteer-controller';
+import type { PuppeteerController } from '../../packages/browser-pool/src/puppeteer/puppeteer-controller';
 import { createProxyServer } from './browser-plugins/create-proxy-server';
 
 const fingerprintingMatrix: [string, PlaywrightPlugin | PuppeteerPlugin][] = [

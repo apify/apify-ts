@@ -1,5 +1,5 @@
-import { Application } from 'express';
-import { Server } from 'http';
+import type { Application } from 'express';
+import type { Server } from 'http';
 
 export const startExpressAppPromise = (app: Application, port: number) => {
     return new Promise<Server>((resolve) => {

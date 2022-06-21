@@ -2,10 +2,10 @@ import { nanoid } from 'nanoid';
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { tryCancel } from '@apify/timeout';
 import { BROWSER_CONTROLLER_EVENTS } from '../events';
-import { LaunchContext } from '../launch-context';
+import type { LaunchContext } from '../launch-context';
 import { log } from '../logger';
-import { UnwrapPromise } from '../utils';
-import { BrowserPlugin, CommonBrowser, CommonLibrary } from './browser-plugin';
+import type { UnwrapPromise } from '../utils';
+import type { BrowserPlugin, CommonBrowser, CommonLibrary } from './browser-plugin';
 import { throwImplementationNeeded } from './utils';
 
 const PROCESS_KILL_TIMEOUT_MILLIS = 5000;

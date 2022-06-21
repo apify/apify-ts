@@ -1,8 +1,9 @@
-import { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
-import { FingerprintInjector } from 'fingerprint-injector';
-import { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } from '..';
-import { BrowserController } from '../abstract-classes/browser-controller';
-import { LaunchContext } from '../launch-context';
+import type { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
+import type { FingerprintInjector } from 'fingerprint-injector';
+import type { BrowserPool } from '..';
+import { PlaywrightPlugin, PuppeteerPlugin } from '..';
+import type { BrowserController } from '../abstract-classes/browser-controller';
+import type { LaunchContext } from '../launch-context';
 import { getGeneratorDefaultOptions } from './utils';
 
 /**

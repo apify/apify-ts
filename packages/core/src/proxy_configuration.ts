@@ -1,6 +1,6 @@
 import ow from 'ow';
 import log from '@apify/log';
-import { Dictionary } from '@crawlee/types';
+import type { Dictionary } from '@crawlee/types';
 
 export interface ProxyConfigurationFunction {
     (sessionId: string | number): string | Promise<string>;

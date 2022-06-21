@@ -1,30 +1,32 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
-import {
+import type {
     EnqueueLinksOptions,
     FailedRequestContext,
     CrawlingContext,
-    enqueueLinks,
-    EVENT_SESSION_RETIRED,
-    handleRequestTimeout,
     ProxyConfiguration,
     ProxyInfo,
     RequestQueue,
     Session,
+} from '@crawlee/core';
+import {
+    enqueueLinks,
+    EVENT_SESSION_RETIRED,
+    handleRequestTimeout,
     validators,
     resolveBaseUrl,
 } from '@crawlee/core';
-import {
-    BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
-    BasicCrawler,
+import type {
     BasicCrawlerOptions,
     Awaitable,
     Dictionary,
 } from '@crawlee/basic';
 import {
-    BROWSER_CONTROLLER_EVENTS,
+    BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
+    BasicCrawler,
+} from '@crawlee/basic';
+import type {
     BrowserController,
     BrowserPlugin,
-    BrowserPool,
     BrowserPoolHooks,
     BrowserPoolOptions,
     CommonPage,
@@ -32,11 +34,15 @@ import {
     InferBrowserPluginArray,
     LaunchContext,
 } from '@crawlee/browser-pool';
-import { GotOptionsInit, Response as GotResponse } from 'got-scraping';
+import {
+    BROWSER_CONTROLLER_EVENTS,
+    BrowserPool,
+} from '@crawlee/browser-pool';
+import type { GotOptionsInit, Response as GotResponse } from 'got-scraping';
 import ow from 'ow';
 import { Cookie } from 'tough-cookie';
-import { BatchAddRequestsResult } from '@crawlee/types';
-import { BrowserLaunchContext } from './browser-launcher';
+import type { BatchAddRequestsResult } from '@crawlee/types';
+import type { BrowserLaunchContext } from './browser-launcher';
 
 export interface BrowserCrawlingContext<
     Page extends CommonPage = CommonPage,

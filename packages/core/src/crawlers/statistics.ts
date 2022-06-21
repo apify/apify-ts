@@ -1,7 +1,8 @@
 import ow from 'ow';
 import { log as defaultLog } from '../log';
 import { KeyValueStore } from '../storages/key_value_store';
-import { EventManager, EventType } from '../events/event_manager';
+import type { EventManager } from '../events/event_manager';
+import { EventType } from '../events/event_manager';
 import { Configuration } from '../configuration';
 
 /**

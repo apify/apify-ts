@@ -1,29 +1,33 @@
 import log, { Log } from '@apify/log';
-import { Dictionary, entries, sleep } from '@crawlee/utils';
-import { gotScraping, OptionsInit } from 'got-scraping';
+import type { Dictionary } from '@crawlee/utils';
+import { entries, sleep } from '@crawlee/utils';
+import type { OptionsInit } from 'got-scraping';
+import { gotScraping } from 'got-scraping';
 import bodyParser from 'body-parser';
-import {
-    AutoscaledPool,
-    CheerioCrawler,
+import type {
     CheerioFailedRequestContext,
     CheerioRequestHandler,
     CheerioCrawlingContext,
+    PrepareRequestInputs,
+    ProxyInfo,
+    Source,
+} from '@crawlee/cheerio';
+import {
+    AutoscaledPool,
+    CheerioCrawler,
     CrawlerExtension,
     mergeCookies,
-    PrepareRequestInputs,
     ProxyConfiguration,
-    ProxyInfo,
     Request,
     RequestList,
     Session,
-    Source,
     STATUS_CODES_BLOCKED,
 } from '@crawlee/cheerio';
 import express from 'express';
 import fs from 'fs';
-import { IncomingHttpHeaders, Server } from 'http';
+import type { IncomingHttpHeaders, Server } from 'http';
 import iconv from 'iconv-lite';
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import path from 'path';
 import { Readable } from 'stream';
 import { StorageTestCases } from 'test/shared/test-cases';

@@ -1,12 +1,11 @@
+import type { Request, RequestOptions } from '@crawlee/puppeteer';
 import {
-    Request,
     RequestQueue,
-    RequestOptions,
     puppeteerClickElements,
     launchPuppeteer,
     puppeteerUtils,
 } from '@crawlee/puppeteer';
-import { Browser, Page, Target } from 'puppeteer';
+import type { Browser, Page, Target } from 'puppeteer';
 
 const { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } = puppeteerClickElements;
 

@@ -1,34 +1,40 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import { concatStreamToBuffer, readStreamToString } from '@apify/utilities';
+import type { BasicCrawlerOptions } from '@crawlee/basic';
 import {
     BasicCrawler,
-    BasicCrawlerOptions,
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlee/basic';
-import {
-    CrawlerExtension,
+import type {
     FailedRequestContext,
     CrawlingContext,
-    enqueueLinks,
     EnqueueLinksOptions,
-    mergeCookies,
     ProxyConfiguration,
     ProxyInfo,
     Request,
     RequestQueue,
+    Session,
+} from '@crawlee/core';
+import {
+    CrawlerExtension,
+    enqueueLinks,
+    mergeCookies,
     Router,
     resolveBaseUrl,
-    Session,
     validators,
 } from '@crawlee/core';
-import { BatchAddRequestsResult, Awaitable, Dictionary } from '@crawlee/types';
-import { CheerioRoot, entries, parseContentTypeFromResponse } from '@crawlee/utils';
-import cheerio, { CheerioOptions } from 'cheerio';
-import contentTypeParser, { RequestLike, ResponseLike } from 'content-type';
-import { gotScraping, OptionsInit, Method, TimeoutError, Request as GotRequest, Response as GotResponse, GotOptionsInit } from 'got-scraping';
+import type { BatchAddRequestsResult, Awaitable, Dictionary } from '@crawlee/types';
+import type { CheerioRoot } from '@crawlee/utils';
+import { entries, parseContentTypeFromResponse } from '@crawlee/utils';
+import type { CheerioOptions } from 'cheerio';
+import cheerio from 'cheerio';
+import type { RequestLike, ResponseLike } from 'content-type';
+import contentTypeParser from 'content-type';
+import type { OptionsInit, Method, Request as GotRequest, Response as GotResponse, GotOptionsInit } from 'got-scraping';
+import { gotScraping, TimeoutError } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
-import { IncomingHttpHeaders, IncomingMessage } from 'http';
+import type { IncomingHttpHeaders, IncomingMessage } from 'http';
 import iconv from 'iconv-lite';
 import ow from 'ow';
 import util from 'util';

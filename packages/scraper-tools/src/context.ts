@@ -1,5 +1,6 @@
-import { Actor, ApifyEnv } from 'apify';
-import {
+import type { ApifyEnv } from 'apify';
+import { Actor } from 'apify';
+import type {
     KeyValueStore,
     RecordOptions,
     Request,
@@ -8,12 +9,14 @@ import {
     RequestQueueOperationOptions,
 } from '@crawlee/core';
 import { puppeteerUtils } from '@crawlee/puppeteer';
-import { Dictionary } from '@crawlee/utils';
+import type { Dictionary } from '@crawlee/utils';
 import log from '@apify/log';
-import contentTypeParser, { MediaType } from 'content-type';
-import { saveSnapshot, SnapshotOptions } from './browser_tools';
+import type { MediaType } from 'content-type';
+import contentTypeParser from 'content-type';
+import type { SnapshotOptions } from './browser_tools';
+import { saveSnapshot } from './browser_tools';
 import { META_KEY } from './consts';
-import { RequestMetadata } from './tools';
+import type { RequestMetadata } from './tools';
 
 export interface CrawlerSetupOptions {
     rawInput: string;

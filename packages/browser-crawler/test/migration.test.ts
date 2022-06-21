@@ -1,4 +1,5 @@
-import log, { Log } from '@apify/log';
+import type { Log } from '@apify/log';
+import log from '@apify/log';
 import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import puppeteer from 'puppeteer';
 import { BrowserCrawler, RequestList } from '../src/index';

@@ -1,10 +1,11 @@
 import express from 'express';
 import path from 'path';
 import log from '@apify/log';
-import { Server } from 'http';
-import { AddressInfo } from 'net';
+import type { Server } from 'http';
+import type { AddressInfo } from 'net';
 import { Request, launchPlaywright, playwrightUtils } from '@crawlee/playwright';
-import { Browser, chromium } from 'playwright';
+import type { Browser } from 'playwright';
+import { chromium } from 'playwright';
 import { StorageTestCases } from 'test/shared/test-cases';
 import { startExpressAppPromise } from '../shared/_helper';
 

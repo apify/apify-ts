@@ -1,10 +1,12 @@
 import ow from 'ow';
 import { APIFY_PROXY_VALUE_REGEX, ENV_VARS } from '@apify/consts';
+import type {
+    ProxyConfigurationOptions as CoreProxyConfigurationOptions,
+    ProxyInfo as CoreProxyInfo,
+} from '@crawlee/core';
 import {
     Configuration,
     ProxyConfiguration as CoreProxyConfiguration,
-    ProxyConfigurationOptions as CoreProxyConfigurationOptions,
-    ProxyInfo as CoreProxyInfo,
 } from '@crawlee/core';
 import { gotScraping } from 'got-scraping';
 import { Actor } from './actor';

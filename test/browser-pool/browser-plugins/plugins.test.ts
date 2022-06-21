@@ -1,8 +1,8 @@
-import { AddressInfo } from 'net';
+import type { AddressInfo } from 'net';
 import http from 'http';
 import { promisify } from 'util';
 
-import { Server as ProxyChainServer } from 'proxy-chain';
+import type { Server as ProxyChainServer } from 'proxy-chain';
 import puppeteer from 'puppeteer';
 import playwright from 'playwright';
 
@@ -13,8 +13,8 @@ import { PlaywrightController } from '@crawlee/browser-pool/src/playwright/playw
 import { Browser } from '@crawlee/browser-pool/src/playwright/browser';
 
 import { LaunchContext } from '@crawlee/browser-pool/src/launch-context';
-import { UnwrapPromise } from '@crawlee/browser-pool/src/utils';
-import { CommonLibrary } from '@crawlee/browser-pool/src/abstract-classes/browser-plugin';
+import type { UnwrapPromise } from '@crawlee/browser-pool/src/utils';
+import type { CommonLibrary } from '@crawlee/browser-pool/src/abstract-classes/browser-plugin';
 
 import { createProxyServer } from './create-proxy-server';
 

@@ -1,9 +1,9 @@
 import type { Browser as PlaywrightBrowser, BrowserType } from 'playwright';
 import { Browser as PlaywrightBrowserWithPersistentContext } from './browser';
 import { PlaywrightController } from './playwright-controller';
-import { BrowserController } from '../abstract-classes/browser-controller';
+import type { BrowserController } from '../abstract-classes/browser-controller';
 import { BrowserPlugin } from '../abstract-classes/browser-plugin';
-import { LaunchContext } from '../launch-context';
+import type { LaunchContext } from '../launch-context';
 import { log } from '../logger';
 import { getLocalProxyAddress } from '../proxy-server';
 import { anonymizeProxySugar } from '../anonymize-proxy';

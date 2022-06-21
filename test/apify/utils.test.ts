@@ -1,10 +1,11 @@
 import { ENV_VARS } from '@apify/consts';
-import { Request, log } from '@crawlee/core';
+import type { Request } from '@crawlee/core';
+import { log } from '@crawlee/core';
 import { tools } from '@apify/scraper-tools';
 import { Actor } from 'apify';
 import { printOutdatedSdkWarning } from 'apify/src/utils';
 import semver from 'semver';
-import { IncomingMessage } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 
 const { createRequestDebugInfo } = tools;
 

@@ -1,10 +1,13 @@
-import { Dictionary } from '@crawlee/types';
+import type { Dictionary } from '@crawlee/types';
 import { normalizeUrl } from '@apify/utilities';
-import crypto, { BinaryLike } from 'node:crypto';
-import ow, { ArgumentError, BasePredicate } from 'ow';
+import type { BinaryLike } from 'node:crypto';
+import crypto from 'node:crypto';
+import type { BasePredicate } from 'ow';
+import ow, { ArgumentError } from 'ow';
 import util from 'node:util';
 import { log as defaultLog } from './log';
-import { AllowedHttpMethods, keys } from './typedefs';
+import type { AllowedHttpMethods } from './typedefs';
+import { keys } from './typedefs';
 
 // new properties on the Request object breaks serialization
 const log = defaultLog.child({ prefix: 'Request' });

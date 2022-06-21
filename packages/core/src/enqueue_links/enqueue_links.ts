@@ -1,21 +1,23 @@
 import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
-import { BatchAddRequestsResult, Dictionary } from '@crawlee/types';
-import {
-    constructGlobObjectsFromGlobs,
-    constructRegExpObjectsFromPseudoUrls,
-    constructRegExpObjectsFromRegExps,
-    createRequests,
-    createRequestOptions,
+import type { BatchAddRequestsResult, Dictionary } from '@crawlee/types';
+import type {
     GlobInput,
     PseudoUrlInput,
     RegExpInput,
     RequestTransform,
     UrlPatternObject,
 } from './shared';
-import { RequestQueue } from '../storages/request_queue';
-import { RequestOptions } from '../request';
+import {
+    constructGlobObjectsFromGlobs,
+    constructRegExpObjectsFromPseudoUrls,
+    constructRegExpObjectsFromRegExps,
+    createRequests,
+    createRequestOptions,
+} from './shared';
+import type { RequestQueue } from '../storages/request_queue';
+import type { RequestOptions } from '../request';
 
 export interface EnqueueLinksOptions {
     /** Limit the amount of actually enqueued URLs to this number. Useful for testing across the entire crawling scope. */

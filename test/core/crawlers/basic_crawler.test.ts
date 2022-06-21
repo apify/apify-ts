@@ -1,10 +1,12 @@
-import http, { Server } from 'http';
-import { AddressInfo } from 'net';
+import type { Server } from 'http';
+import http from 'http';
+import type { AddressInfo } from 'net';
 import log from '@apify/log';
-import {
+import type {
     CrawlingContext,
     FailedRequestHandler,
-    RequestHandler,
+    RequestHandler } from '@crawlee/basic';
+import {
     Request,
     RequestQueue,
     RequestList,
@@ -17,7 +19,8 @@ import {
     MissingRouteError,
 } from '@crawlee/basic';
 import express from 'express';
-import { Dictionary, sleep } from '@crawlee/utils';
+import type { Dictionary } from '@crawlee/utils';
+import { sleep } from '@crawlee/utils';
 import { SingleStorageCase } from '../../shared/test-cases';
 import { startExpressAppPromise } from '../../shared/_helper';
 

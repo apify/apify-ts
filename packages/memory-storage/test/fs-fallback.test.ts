@@ -1,5 +1,5 @@
 import { MemoryStorage } from '@crawlee/memory-storage';
-import { KeyValueStoreRecord } from '@crawlee/types';
+import type { KeyValueStoreRecord } from '@crawlee/types';
 import { ensureDir } from 'fs-extra';
 import { randomUUID } from 'node:crypto';
 import { rm, writeFile } from 'node:fs/promises';

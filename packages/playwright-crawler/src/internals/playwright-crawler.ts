@@ -1,18 +1,22 @@
 import ow from 'ow';
-import { LaunchOptions, Page, Response } from 'playwright';
-import { BrowserPoolOptions, PlaywrightPlugin } from '@crawlee/browser-pool';
-import {
-    BrowserCrawler,
+import type { LaunchOptions, Page, Response } from 'playwright';
+import type { BrowserPoolOptions, PlaywrightPlugin } from '@crawlee/browser-pool';
+import type {
     BrowserCrawlerOptions,
     BrowserCrawlingContext,
     BrowserCrawlerHandleRequest,
     BrowserHook,
+} from '@crawlee/browser';
+import {
+    BrowserCrawler,
     Router,
 } from '@crawlee/browser';
-import { Dictionary } from '@crawlee/types';
+import type { Dictionary } from '@crawlee/types';
 import { Cookie } from 'tough-cookie';
-import { PlaywrightLauncher, PlaywrightLaunchContext } from './playwright-launcher';
-import { DirectNavigationOptions, gotoExtended, PlaywrightContextUtils, registerUtilsToContext } from './utils/playwright-utils';
+import type { PlaywrightLaunchContext } from './playwright-launcher';
+import { PlaywrightLauncher } from './playwright-launcher';
+import type { DirectNavigationOptions, PlaywrightContextUtils } from './utils/playwright-utils';
+import { gotoExtended, registerUtilsToContext } from './utils/playwright-utils';
 
 export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
 export type PlaywrightCrawlingContext<UserData extends Dictionary = Dictionary> =

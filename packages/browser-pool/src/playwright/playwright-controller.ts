@@ -1,6 +1,7 @@
 import type { Browser, BrowserType, Page } from 'playwright';
 import { tryCancel } from '@apify/timeout';
-import { BrowserController, Cookie } from '../abstract-classes/browser-controller';
+import type { Cookie } from '../abstract-classes/browser-controller';
+import { BrowserController } from '../abstract-classes/browser-controller';
 import { anonymizeProxySugar } from '../anonymize-proxy';
 
 export class PlaywrightController extends BrowserController<BrowserType, Parameters<BrowserType['launch']>[0], Browser> {

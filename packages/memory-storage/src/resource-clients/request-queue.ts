@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { move } from 'fs-extra';
-import { MemoryStorage } from '../index';
+import type { MemoryStorage } from '../index';
 import { StorageTypes } from '../consts';
 import { purgeNullsFromObject, uniqueKeyToRequestId } from '../utils';
 import { BaseClient } from './common/base-client';
