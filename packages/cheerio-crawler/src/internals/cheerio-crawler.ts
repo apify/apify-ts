@@ -530,7 +530,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
     /**
      * All `CheerioCrawler` parameters are passed via an options object.
      */
-    constructor(options: CheerioCrawlerOptions<JSONData>) {
+    constructor(options: CheerioCrawlerOptions<JSONData> = {}) {
         ow(options, 'CheerioCrawlerOptions', ow.object.exactShape(CheerioCrawler.optionsShape));
 
         const {

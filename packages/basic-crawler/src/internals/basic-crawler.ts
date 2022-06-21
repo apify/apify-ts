@@ -397,7 +397,7 @@ export class BasicCrawler<
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions<Context, ErrorContext>, readonly config = Configuration.getGlobalConfig()) {
+    constructor(options: BasicCrawlerOptions<Context, ErrorContext> = {}, readonly config = Configuration.getGlobalConfig()) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {

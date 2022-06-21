@@ -71,11 +71,11 @@ function Features() {
     );
 }
 
-const example = `import { PuppeteerCrawler } from '@crawlee/puppeteer';
+const example = `import { PuppeteerCrawler } from 'crawlee';
 
 const crawler = new PuppeteerCrawler();
 
-crawler.router.addDefaultHandler(({ request, page, enqueueLinks }) => {
+crawler.router.addDefaultHandler(async ({ request, page, enqueueLinks }) => {
     const title = await page.title();
     console.log(\`Title of $\{request.url}: $\{title}\`);
     await enqueueLinks();

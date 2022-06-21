@@ -61,7 +61,7 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * The exceptions are logged to the request using the
      * {@link Request.pushErrorMessage} function.
      */
-    requestHandler: PlaywrightRequestHandler;
+    requestHandler?: PlaywrightRequestHandler;
 
     /**
      * Function that is called to process each request.
@@ -216,7 +216,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
     /**
      * All `PlaywrightCrawler` parameters are passed via an options object.
      */
-    constructor(options: PlaywrightCrawlerOptions) {
+    constructor(options: PlaywrightCrawlerOptions = {}) {
         ow(options, 'PlaywrightCrawlerOptions', ow.object.exactShape(PlaywrightCrawler.optionsShape));
 
         const {
