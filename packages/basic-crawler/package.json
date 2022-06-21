@@ -38,7 +38,7 @@
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
-        "compile": "tsc -p tsconfig.build.json",
+        "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
         "copy": "ts-node -T ../../scripts/copy.ts"
     },
     "publishConfig": {
