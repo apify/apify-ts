@@ -505,7 +505,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
      */
-    public proxyConfiguration?: ProxyConfiguration;
+    proxyConfiguration?: ProxyConfiguration;
 
     protected userRequestHandlerTimeoutMillis: number;
     protected preNavigationHooks: CheerioHook<JSONData>[];

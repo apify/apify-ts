@@ -304,7 +304,6 @@ export class Dataset<Data extends Dictionary = Dictionary> {
      *   modifiedAt: new Date("2015-12-13T08:36:13.202Z"),
      *   accessedAt: new Date("2015-12-14T08:36:13.202Z"),
      *   itemCount: 14,
-     *   cleanItemCount: 10
      * }
      * ```
      */

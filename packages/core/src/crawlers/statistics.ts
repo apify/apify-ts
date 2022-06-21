@@ -49,7 +49,7 @@ export class Statistics {
     /**
      * Current statistic state used for doing calculations on {@link Statistics.calculate} calls
      */
-    public state!: StatisticState;
+    state!: StatisticState;
 
     /**
      * Contains the current retries histogram. Index 0 means 0 retries, index 2, 2 retries, and so on

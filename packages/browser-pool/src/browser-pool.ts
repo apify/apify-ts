@@ -280,8 +280,7 @@ export class BrowserPool<
     retiredBrowserControllers = new Set<BrowserControllerReturn>();
     pageToBrowserController = new WeakMap<PageReturn, BrowserControllerReturn>();
     fingerprintInjector?: FingerprintInjector;
-    // fingerprintGenerator?: FingerprintGenerator; // FIXME revert once we migrate to the new fingerprint suite
-    fingerprintGenerator?: any;
+    fingerprintGenerator?: FingerprintGenerator;
     fingerprintCache?: QuickLRU<string, BrowserFingerprintWithHeaders>;
 
     private browserKillerInterval? = setInterval(

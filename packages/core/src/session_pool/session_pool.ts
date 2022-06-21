@@ -191,11 +191,10 @@ export class SessionPool extends EventEmitter {
     async initialize(): Promise<void> {
         this.keyValueStore = await KeyValueStore.open(this.persistStateKeyValueStoreId, { config: this.config });
 
-        // FIXME should we still validate this somehow somewhere?
-        // if (this.forceCloud && !this.persistStateKeyValueStoreId) {
-        //     this.log.warning(`You enabled 'forceCloud' in the session pool options but you haven't specified a 'persistStateKeyValueStoreId'!`);
-        //     this.log.warning(`This session pool's data has been saved in the KeyValueStore with the id: ${this.keyValueStore.id}`);
-        // }
+        if (!this.persistStateKeyValueStoreId) {
+            // eslint-disable-next-line max-len
+            this.log.debug(`No 'persistStateKeyValueStoreId' options specified, this session pool's data has been saved in the KeyValueStore with the id: ${this.keyValueStore.id}`);
+        }
 
         // in case of migration happened and SessionPool state should be restored from the keyValueStore.
         await this._maybeLoadSessionPool();

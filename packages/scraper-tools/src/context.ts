@@ -61,14 +61,14 @@ class Context<Options extends ContextOptions = ContextOptions, ExtraFields = Opt
     private readonly [setup]: CrawlerSetupOptions;
     private readonly [internalState]: InternalState;
 
-    public readonly Actor = Actor;
-    public readonly log = log;
+    readonly Actor = Actor;
+    readonly log = log;
     // FIXME
-    public readonly puppeteerUtils = puppeteerUtils;
-    public readonly input: any;
-    public readonly env: ApifyEnv;
-    public readonly customData: unknown;
-    public readonly globalStore: Map<string, unknown> | MapLike<string, unknown>;
+    readonly puppeteerUtils = puppeteerUtils;
+    readonly input: any;
+    readonly env: ApifyEnv;
+    readonly customData: unknown;
+    readonly globalStore: Map<string, unknown> | MapLike<string, unknown>;
 
     constructor(options: Options) {
         const {
