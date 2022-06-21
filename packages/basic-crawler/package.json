@@ -38,17 +38,17 @@
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
-        "compile": "tsc -p tsconfig.build.json",
+        "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
         "copy": "ts-node -T ../../scripts/copy.ts"
     },
     "publishConfig": {
         "access": "public"
     },
     "dependencies": {
-        "@apify/consts": "^1.10.0",
-        "@apify/log": "^1.2.3",
-        "@apify/timeout": "^0.2.1",
-        "@apify/utilities": "^1.2.12",
+        "@apify/consts": "^2.0.0",
+        "@apify/log": "^2.0.0",
+        "@apify/timeout": "^0.3.0",
+        "@apify/utilities": "^2.0.0",
         "@crawlee/core": "^3.0.0",
         "@crawlee/types": "^3.0.0",
         "@crawlee/utils": "^3.0.0",

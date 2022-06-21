@@ -52,12 +52,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/consts": "^1.10.0",
-        "@apify/datastructures": "^1.0.1",
-        "@apify/log": "^1.2.3",
-        "@apify/pseudo_url": "^1.1.4",
-        "@apify/timeout": "^0.2.1",
-        "@apify/utilities": "^1.2.12",
+        "@apify/consts": "^2.0.0",
+        "@apify/datastructures": "^2.0.0",
+        "@apify/log": "^2.0.0",
+        "@apify/pseudo_url": "^2.0.0",
+        "@apify/timeout": "^0.3.0",
+        "@apify/utilities": "^2.0.0",
         "@crawlee/browser-pool": "^3.0.0",
         "@crawlee/memory-storage": "^3.0.0",
         "@crawlee/types": "^3.0.0",
