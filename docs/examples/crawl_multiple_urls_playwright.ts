@@ -1,4 +1,4 @@
-import { PlaywrightCrawler } from '@crawlee/playwright';
+import { PlaywrightCrawler } from 'crawlee';
 
 const crawler = new PlaywrightCrawler({
     // Function called for each URL

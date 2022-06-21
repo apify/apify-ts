@@ -1,4 +1,4 @@
-import { Dataset, KeyValueStore } from '@crawlee/core';
+import { Dataset, KeyValueStore } from 'crawlee';
 
 const dataset = await Dataset.open<{ headingCount: number }>();
 const keyValueStore = await KeyValueStore.open();

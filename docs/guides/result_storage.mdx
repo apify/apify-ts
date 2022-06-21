@@ -32,10 +32,7 @@ The data is stored in the directory specified by the `CRAWLEE_STORAGE_DIR` envir
 The following code demonstrates basic operations of key-value stores:
 
 ```javascript
-import { KeyValueStore } from '@crawlee/core';
-//                   ... from '@crawlee/cheerio';
-//                   ... from '@crawlee/playwright';
-//                   ... from '@crawlee/puppeteer';
+import { KeyValueStore } from 'crawlee';
 
 // Get the INPUT from the default key-value store
 const input = await KeyValueStore.getInput();
@@ -85,10 +82,7 @@ The data is stored in the directory specified by the `CRAWLEE_STORAGE_DIR` envir
 The following code demonstrates basic operations of the dataset:
 
 ```javascript
-import { Dataset } from '@crawlee/core';
-//             ... from '@crawlee/cheerio';
-//             ... from '@crawlee/playwright';
-//             ... from '@crawlee/puppeteer';
+import { Dataset } from 'crawlee';
 
 // Write a single row to the default dataset
 await Dataset.pushData({ col1: 123, col2: 'val2' });
@@ -110,10 +104,7 @@ To see how to use the dataset to store crawler results, see the [Cheerio Crawler
 Default storages are not purged before the crawler starts if not specified otherwise. If you want to start the run with the empty default storages, you should first <ApiLink to="core/class/Configuration#getStorageClient">get</ApiLink> the default <ApiLink to="types/interface/StorageClient">`StorageClient`</ApiLink> instance and then use the <ApiLink to="types/interface/StorageClient#purge">`purge()`</ApiLink> function before running the crawler as follows:
 
 ```javascript
-import { Configuration } from '@crawlee/core';
-//                   ... from '@crawlee/cheerio';
-//                   ... from '@crawlee/playwright';
-//                   ... from '@crawlee/puppeteer';
+import { Configuration } from 'crawlee';
 
 await Configuration.getStorageClient().purge();
 ```

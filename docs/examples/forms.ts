@@ -1,4 +1,4 @@
-import { Dataset, launchPuppeteer } from '@crawlee/puppeteer';
+import { Dataset, launchPuppeteer } from 'crawlee';
 
 const dataset = await Dataset.open();
 

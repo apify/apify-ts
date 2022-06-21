@@ -11,7 +11,7 @@ Changing browser fingerprints can be a tedious job. Luckily, Crawlee provides th
  Changing browser fingerprints is available in `PlaywrightCrawler` and `PuppeteerCrawler`. You have to pass the `useFingerprints` option to the `browserPoolOptions`.
 
  ```javascript
-import { PlaywrightCrawler } from '@crawlee/playwright';
+import { PlaywrightCrawler } from 'crawlee';
 
 const crawler = new PlaywrightCrawler({
     browserPoolOptions: {
@@ -23,7 +23,7 @@ const crawler = new PlaywrightCrawler({
 Now, it is all set. The fingerprints are going to be generated for the default browser and the operating system. The Crawler can have the generation algorithm customized to reflect particular browser version and many more. Let's take a look at the example bellow:
 
  ```javascript
-import { PlaywrightCrawler } from '@crawlee/playwright';
+import { PlaywrightCrawler } from 'crawlee';
 
 const crawler = new PlaywrightCrawler({
     browserPoolOptions: {

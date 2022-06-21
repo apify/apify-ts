@@ -174,7 +174,7 @@ Easy, right? It really doesn't get much more difficult than that. For the purpos
 
 ```ts
 import { Actor } from 'apify';
-import { RequestQueue } from '@crawlee/cheerio';
+import { RequestQueue } from 'crawlee';
 
 // This is how you use the Actor.main() function.
 await Actor.main(async () => {
@@ -191,7 +191,7 @@ await Actor.main(async () => {
 The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `requestHandler`.
 
 ```ts
-import { CheerioCrawlingContext } from '@crawlee/cheerio';
+import { CheerioCrawlingContext } from 'crawlee';
 
 // We'll define the function separately so it's more obvious.
 const requestHandler: CheerioCrawlingContext = async ({ request, $ }) => {
@@ -207,7 +207,7 @@ Wait, where did the `$` come from? Remember what we learned about the `requestHa
 
 ```ts
 import { Actor } from 'apify';
-import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from '@crawlee/cheerio';
+import { CheerioCrawler, RequestQueue, CheerioCrawlingContext } from 'crawlee';
 
 await Actor.main(async () => {
     const requestQueue = await RequestQueue.open();
@@ -232,7 +232,7 @@ That starts to look almost good. Almost? Yes, we can do even better! Since v3, t
 
 ```ts
 import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
@@ -323,7 +323,7 @@ it to the console. This is the original source code:
 
 ```ts
 import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
@@ -470,7 +470,7 @@ will be allowed to finish too.
 ```ts
 import { URL } from 'url'; // <------ This is new.
 import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.main(async () => {
     // Set up the crawler, passing a single options object as an argument.
@@ -704,7 +704,7 @@ enqueued all the links manually.
 ```ts
 import { URL } from 'url'; // <------ This is new.
 import { Actor } from 'apify';
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.main(async () => {
     const requestHandler = async ({ request, $ }) => {
@@ -740,7 +740,7 @@ Since we've already prepared the `enqueueLinks()` options, we can just replace a
 
 ```ts
 import { Actor } from 'apify';
-import { CheerioCrawler, CheerioCrawlingContext } from '@crawlee/cheerio';
+import { CheerioCrawler, CheerioCrawlingContext } from 'crawlee';
 
 await Actor.main(async () => {
     const requestHandler: CheerioCrawlingContext = async ({ request, $, enqueueLinks }) => {
@@ -1523,7 +1523,7 @@ In our `main.mjs` file, we place the general structure of the crawler:
 ```ts
 // main.mjs
 import { Actor } from 'apify';
-import { CheerioCrawler, log } from '@crawlee/cheerio';
+import { CheerioCrawler, log } from 'crawlee';
 import * as tools from './tools';
 
 await Actor.main(async () => {
@@ -1554,7 +1554,7 @@ Then in a separate `tools.mjs`, we add our helper functions:
 ```ts
 // tools.mjs
 import { Actor } from 'apify';
-import { log } from '@crawlee/core';
+import { log } from 'crawlee';
 import * as routes from './routes';
 
 export async function getSources() {
@@ -1583,7 +1583,7 @@ And finally our routes in a separate `routes.mjs` file:
 ```ts
 // routes.mjs
 import { Actor } from 'apify';
-import { log } from '@crawlee/core';
+import { log } from 'crawlee';
 
 export const CATEGORY = async ({ enqueueLinks }) => {
     return enqueueLinks({

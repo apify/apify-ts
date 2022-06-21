@@ -1,4 +1,4 @@
-import { PuppeteerCrawler } from '@crawlee/puppeteer';
+import { PuppeteerCrawler } from 'crawlee';
 
 const crawler = new PuppeteerCrawler({
     async requestHandler({ request, enqueueLinks }) {

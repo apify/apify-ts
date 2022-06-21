@@ -1,4 +1,4 @@
-import { ProxyConfiguration, SessionPool } from '@crawlee/core'
+import { ProxyConfiguration, SessionPool } from 'crawlee'
 
 const proxyConfiguration = new ProxyConfiguration({ /* opts */ });
 const sessionPool = await SessionPool.open({ /* opts */ });

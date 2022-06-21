@@ -1,5 +1,5 @@
-import { PuppeteerCrawler } from '@crawlee/puppeteer';
-import { downloadListOfUrls } from '@crawlee/utils';
+import { PuppeteerCrawler } from 'crawlee';
+import { downloadListOfUrls } from 'crawlee';
 
 const crawler = new PuppeteerCrawler({
     // Function called for each URL

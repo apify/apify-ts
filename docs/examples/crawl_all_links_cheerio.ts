@@ -1,4 +1,4 @@
-import { CheerioCrawler } from '@crawlee/cheerio';
+import { CheerioCrawler } from 'crawlee';
 
 const crawler = new CheerioCrawler({
     async requestHandler({ request, enqueueLinks }) {

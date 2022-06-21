@@ -1,4 +1,4 @@
-import { Dataset, CheerioCrawler } from '@crawlee/cheerio';
+import { Dataset, CheerioCrawler } from 'crawlee';
 
 // Create a dataset where we will store the results.
 const dataset = await Dataset.open();
