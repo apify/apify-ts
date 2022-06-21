@@ -53,8 +53,8 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/consts": "^1.10.0",
-        "@apify/timeout": "^0.2.1",
+        "@apify/consts": "^2.0.0",
+        "@apify/timeout": "^0.3.0",
         "@crawlee/basic": "^3.0.0",
         "@crawlee/browser-pool": "^3.0.0",
         "@crawlee/core": "^3.0.0",
