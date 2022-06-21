@@ -52,6 +52,7 @@
     },
     "devDependencies": {
         "@apify/eslint-config-ts": "^0.2.3",
+        "@apify/log": "^2.0.0",
         "@apify/storage-local": "^2.1.0",
         "@apify/tsconfig": "^0.1.0",
         "@commitlint/config-conventional": "^17.0.2",
