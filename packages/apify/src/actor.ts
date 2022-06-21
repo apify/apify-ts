@@ -31,6 +31,7 @@ import {
     RequestList,
     RequestQueue,
     StorageManager,
+    purgeDefaultStorages,
 } from '@crawlee/core';
 import type { Awaitable, Constructor, Dictionary, StorageClient } from '@crawlee/types';
 import { sleep, snakeCaseToCamelCase } from '@crawlee/utils';
@@ -178,7 +179,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
 
         // purge the storage by default
         if (options?.purge ?? true) {
-            await this.config.getStorageClient().purge?.();
+            await purgeDefaultStorages(this.config);
         }
     }
 

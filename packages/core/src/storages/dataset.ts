@@ -6,6 +6,7 @@ import { log } from '../log';
 import type { Awaitable } from '../typedefs';
 import type { StorageManagerOptions } from './storage_manager';
 import { StorageManager } from './storage_manager';
+import { purgeDefaultStorages } from './utils';
 
 /** @internal */
 export const DATASET_ITERATORS_DEFAULT_LIMIT = 10000;
@@ -435,8 +436,9 @@ export class Dataset<Data extends Dictionary = Dictionary> {
             config: ow.optional.object.instanceOf(Configuration),
         }));
         options.config ??= Configuration.getGlobalConfig();
-
+        await purgeDefaultStorages();
         const manager = StorageManager.getManager<Dataset<Data>>(Dataset, options.config);
+
         return manager.openStorage(datasetIdOrName, options.config.getStorageClient());
     }
 

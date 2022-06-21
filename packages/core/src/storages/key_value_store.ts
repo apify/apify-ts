@@ -6,6 +6,7 @@ import { Configuration } from '../configuration';
 import type { Awaitable } from '../typedefs';
 import type { StorageManagerOptions } from './storage_manager';
 import { StorageManager } from './storage_manager';
+import { purgeDefaultStorages } from './utils';
 
 /**
  * Helper function to possibly stringify value if options.contentType is not set.
@@ -360,8 +361,9 @@ export class KeyValueStore {
         ow(options, ow.object.exactShape({
             config: ow.optional.object.instanceOf(Configuration),
         }));
-
+        await purgeDefaultStorages();
         const manager = StorageManager.getManager(KeyValueStore, options.config);
+
         return manager.openStorage(storeIdOrName);
     }
 

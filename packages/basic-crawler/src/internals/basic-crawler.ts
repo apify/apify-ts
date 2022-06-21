@@ -32,6 +32,7 @@ import {
     Router,
     SessionPool,
     Statistics,
+    purgeDefaultStorages,
     validators,
 } from '@crawlee/core';
 import type { GotOptionsInit, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
@@ -560,6 +561,7 @@ export class BasicCrawler<
      * Runs the crawler. Returns a promise that gets resolved once all the requests are processed.
      */
     async run(): Promise<FinalStatistics> {
+        await purgeDefaultStorages();
         await this._init();
         await this.stats.startCapturing();
 

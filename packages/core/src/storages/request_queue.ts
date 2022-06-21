@@ -11,6 +11,7 @@ import { log } from '../log';
 import type { RequestOptions } from '../request';
 import { Request } from '../request';
 import { Configuration } from '../configuration';
+import { purgeDefaultStorages } from './utils';
 
 const MAX_CACHED_REQUESTS = 1_000_000;
 
@@ -788,7 +789,9 @@ export class RequestQueue {
             config: ow.optional.object.instanceOf(Configuration),
         }));
 
+        await purgeDefaultStorages();
         const manager = StorageManager.getManager(RequestQueue, options.config);
+
         return manager.openStorage(queueIdOrName);
     }
 }
