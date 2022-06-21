@@ -520,10 +520,10 @@ able to get the most out of Crawlee.
 ### Meet `Actor.utils`
 
 We will talk at length about them later, but in short, `Actor.utils` is a namespace where you can find various helpful functions and constants that
-make your life easier. One of the available functions is `Actor.utils.enqueueLinks()` which encapsulates the whole enqueueing process and even adds
+make your life easier. One of the available functions is `enqueueLinks()` which encapsulates the whole enqueueing process and even adds
 some extra functionality.
 
-### Introduction to `Actor.utils.enqueueLinks()`
+### Introduction to `enqueueLinks()`
 
 Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as possible. With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`. It also allows you to modify the resulting `Requests` to match your crawling needs.
 
@@ -767,7 +767,7 @@ And that's it! No more parsing the links from HTML using Cheerio, filtering them
 `enqueueLinks()` is just one example of Crawlee's powerful helper functions. They're all designed to make your life easier so you can focus on
 getting your data, while leaving the mundane crawling management to your tools.
 
-`Actor.utils.enqueueLinks()` has a lot more tricks up its sleeve. Make sure to check out the
+`enqueueLinks()` has a lot more tricks up its sleeve. Make sure to check out the
 <ApiLink to="utils#enqueueLinks">reference documentation</ApiLink> to see what else it can do for you. Namely the feature to prepopulate the `Request`
 instances it creates with `userData` of your choice is extremely useful!
 
@@ -1002,14 +1002,11 @@ You will see that only the actor cards will be returned, and nothing else.
 
 #### Enqueueing the detail links using a custom selector
 
-In the previous chapter, we used the `Actor.utils.enqueueLinks()` function like this:
+In the previous chapter, we used the `enqueueLinks()` function like this:
 
 ```ts
 await enqueueLinks({
-    $,
-    requestQueue,
     pseudoUrls: ['http[s?]://apify.com[.*]'],
-    baseUrl: request.loadedUrl,
 });
 ```
 
@@ -1018,20 +1015,14 @@ need to find only the specific ones that will take us to the actor detail pages.
 interested in. Using the power of DevTools and yet another `enqueueLinks()` parameter, this becomes fairly easy.
 
 ```ts
-const requestHandler = async ({ $, request }) => {
+const requestHandler = async ({ request, enqueueLinks }) => {
     console.log(`Processing ${request.url}`);
 
     // Only enqueue new links from the category pages.
     if (!request.userData.detailPage) {
-        await Actor.utils.enqueueLinks({
-            $,
-            requestQueue,
+        await enqueueLinks({
             selector: 'div.item > a',
-            baseUrl: request.loadedUrl,
-            transformRequestFunction: req => {
-                req.userData.detailPage = true;
-                return req;
-            },
+            userData: { detailPage: true },
         });
     }
 };
@@ -1086,20 +1077,14 @@ await Actor.main(async () => {
         maxRequestsPerCrawl: 50, // <----------------------------------------
         requestList,
         requestQueue, // <---------------------------------------------------
-        requestHandler: async ({ $, request }) => {
+        requestHandler: async ({ request, enqueueLinks }) => {
             console.log(`Processing ${request.url}`);
 
             // Only enqueue new links from the category pages.
             if (!request.userData.detailPage) {
-                await Actor.utils.enqueueLinks({
-                    $,
-                    requestQueue,
+                await enqueueLinks({
                     selector: 'div.item > a',
-                    baseUrl: request.loadedUrl,
-                    transformRequestFunction: req => {
-                        req.userData.detailPage = true;
-                        return req;
-                    },
+                    userData: { detailPage: true },
                 });
             }
         },
@@ -1298,7 +1283,7 @@ await Actor.main(async () => {
         maxRequestsPerCrawl: 50,
         requestList,
         requestQueue,
-        requestHandler: async ({ $, request }) => {
+        requestHandler: async ({ $, request, enqueueLinks }) => {
             console.log(`Processing ${request.url}`);
 
             // This is our new scraping logic.
@@ -1328,15 +1313,9 @@ await Actor.main(async () => {
 
             // Only enqueue new links from the category pages.
             if (!request.userData.detailPage) {
-                await Actor.utils.enqueueLinks({
-                    $,
-                    requestQueue,
+                await enqueueLinks({
                     selector: 'div.item > a',
-                    baseUrl: request.loadedUrl,
-                    transformRequestFunction: req => {
-                        req.userData.detailPage = true;
-                        return req;
-                    },
+                    userData: { detailPage: true },
                 });
             }
         },
@@ -1359,7 +1338,7 @@ this chapter so make sure to pay attention very carefully!
 First, replace the `console.log('RESULTS', results)` call with
 
 ```ts
-await Actor.pushData(results);
+await Dataset.pushData(results);
 ```
 
 and that's it. Unlike in the previous paragraph, I'm being serious now. That's it, we're done. The final code therefore looks exactly like this:
@@ -1381,7 +1360,7 @@ await Actor.main(async () => {
         maxRequestsPerCrawl: 50,
         requestList,
         requestQueue,
-        requestHandler: async ({ $, request }) => {
+        requestHandler: async ({ $, request, enqueueLinks }) => {
             console.log(`Processing ${request.url}`);
 
             // This is our new scraping logic.
@@ -1406,20 +1385,14 @@ await Actor.main(async () => {
                             .replace(',', ''),
                     ),
                 };
-                await Actor.pushData(results);
+                await Dataset.pushData(results);
             }
 
             // Only enqueue new links from the category pages.
             if (!request.userData.detailPage) {
-                await Actor.utils.enqueueLinks({
-                    $,
-                    requestQueue,
+                await enqueueLinks({
                     selector: 'div.item > a',
-                    baseUrl: request.loadedUrl,
-                    transformRequestFunction: req => {
-                        req.userData.detailPage = true;
-                        return req;
-                    },
+                    userData: { detailPage: true },
                 });
             }
         },
@@ -1429,9 +1402,9 @@ await Actor.main(async () => {
 });
 ```
 
-#### What's `Actor.pushData()`
+#### What's `Dataset.pushData()`
 
-&#8203;<ApiLink to="core/class/Dataset#pushData">`Actor.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Actor.pushData()` a new row in the table is created, with the property names serving as column titles.
+&#8203;<ApiLink to="core/class/Dataset#pushData">`Dataset.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Dataset.pushData()` a new row in the table is created, with the property names serving as column titles.
 
 > Each actor run has one default `Dataset` so no need to initialize it or create an instance first. It just gets done automatically for you. You can
 > also create named datasets at will.
@@ -1456,7 +1429,7 @@ this tutorial anyway, you'll find your data in your local Apify Storage.
 ```
 
 The above folder will hold all your saved data in numbered files, as they were pushed into the dataset. Each file represents one invocation of
-`Actor.pushData()` or one table row.
+`Dataset.pushData()` or one table row.
 
 > Unfortunately, the local datasets don't yet support the export in various formats functionality that the Platform Dataset page offers, so for the
 > time being, we're stuck with JSON.
@@ -1647,7 +1620,7 @@ export const DETAIL = async ({ $, request }) => {
     };
 
     log.debug('Pushing data to dataset.');
-    await Actor.pushData(results);
+    await Dataset.pushData(results);
 };
 ```
 

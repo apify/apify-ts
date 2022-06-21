@@ -126,7 +126,7 @@ interface ExpectedShape {
     someFields: Fields[];
 }
 
-const dataset = await Actor.openDataset();
+const dataset = await Dataset.open();
 await dataset.forEach((item: ExpectedShape) => {
     // deal with item.id / item.someFields
     // otherwise item is "any"

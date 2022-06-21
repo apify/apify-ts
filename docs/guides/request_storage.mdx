@@ -43,11 +43,11 @@ await requestQueue.addRequest({ url: 'https://example.com' });
 // The crawler will automatically process requests from the queue
 const crawler = new CheerioCrawler({
     requestQueue,
-    handlePageFunction: async ({ $, request }) => {
+    async requestHandler({ $, crawler, enqueueLinks }) {
         // Add new request to the queue
-        await requestQueue.addRequest({ url: 'https://example.com/new-page' });
+        await crawler.addRequests(['https://example.com/new-page']);
         // Add links found on page to the queue
-        await Actor.utils.enqueueLinks({ $, requestQueue });
+        await enqueueLinks();
     },
 });
 ```
@@ -78,7 +78,7 @@ const requestList = await RequestList.open('my-list', sources);
 // The crawler will automatically process requests from the list
 const crawler = new PuppeteerCrawler({
     requestList,
-    handlePageFunction: async ({ page, request }) => {
+    async requestHandler({ page, request }) {
         // Process the page (extract data, take page screenshot, etc).
         // No more requests could be added to the request list here
     },
@@ -119,12 +119,12 @@ const crawler = new PuppeteerCrawler({
     requestQueue,
     // Each request from the request list is enqueued to the request queue one by one.
     // At this point request with the same URL would exist in the list and the queue
-    handlePageFunction: async ({ request, page }) => {
+    async requestHandler({ crawler, enqueueLinks }) {
         // Add new request to the queue
-        await requestQueue.addRequest({ url: 'http://www.example.com/new-page' });
+        await crawler.addRequests(['http://www.example.com/new-page']);
 
         // Add links found on page to the queue
-        await Actor.utils.enqueueLinks({ page, requestQueue });
+        await enqueueLinks();
 
         // The requests above would be added to the queue (but not to the list)
         // and would be processed after the request list is empty.

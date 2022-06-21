@@ -19,7 +19,6 @@ Now let's take a look at how to use a Session pool.
 **Example usage in <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink>**
 
 ```javascript
-
 const proxyConfiguration = await Actor.createProxyConfiguration();
 
 const crawler = new PuppeteerCrawler({
@@ -35,7 +34,7 @@ const crawler = new PuppeteerCrawler({
     // Set to true if you want the crawler to save cookies per session,
     // and set the cookies to page before navigation automatically.
     persistCookiesPerSession: true,
-    handlePageFunction: async ({ request, page, session }) => {
+    async requestHandler({ request, page, session }) {
         const title = await page.title();
 
         if (title === "Blocked") {
@@ -45,7 +44,6 @@ const crawler = new PuppeteerCrawler({
         } else {
             // session.markGood() - this step is done automatically in puppeteer pool.
         }
-
     }
 });
 ```
@@ -68,7 +66,7 @@ const crawler = new PuppeteerCrawler({
         // Set to true if you want the crawler to save cookies per session,
         // and set the cookie header to request automatically...
         persistCookiesPerSession: true,
-        handlePageFunction: async ({request, $, session}) => {
+        async enqueueLinks({ request, $, session }) {
             const title = $("title");
 
             if (title === "Blocked") {
@@ -78,7 +76,6 @@ const crawler = new PuppeteerCrawler({
             } else {
                 // session.markGood() - this step is done automatically in BasicCrawler.
             }
-
         }
     });
 ```
