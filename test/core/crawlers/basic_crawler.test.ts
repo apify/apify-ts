@@ -24,7 +24,7 @@ import { startExpressAppPromise } from '../../shared/_helper';
 describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
     let logLevel: number;
     const localStorageEmulator = new Emulator();
-    const events = Configuration.getGlobalConfig().getEventManager();
+    const events = Configuration.getEventManager();
 
     const HOSTNAME = '127.0.0.1';
     let port: number;

@@ -97,7 +97,7 @@ describe('Snapshotter', () => {
     test('correctly marks CPU overloaded using Platform event', async () => {
         let count = 0;
         const emitAndWait = async (delay: number) => {
-            Configuration.getGlobalConfig().getEventManager().emit(EventType.SYSTEM_INFO, {
+            Configuration.getEventManager().emit(EventType.SYSTEM_INFO, {
                 isCpuOverloaded: count % 2 === 0,
                 createdAt: new Date().toISOString(),
                 cpuCurrentUsage: 66.6,

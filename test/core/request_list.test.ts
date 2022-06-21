@@ -39,7 +39,7 @@ afterAll(() => {
 describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
     let ll: number;
     const emulator = new Emulator();
-    const events = Configuration.getGlobalConfig().getEventManager();
+    const events = Configuration.getEventManager();
 
     beforeAll(() => {
         ll = log.getLevel();

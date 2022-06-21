@@ -9,7 +9,7 @@ describe.each(StorageTestCases)('Statistics - %s', (Emulator) => {
 
     let stats: Statistics;
     const localStorageEmulator = new Emulator();
-    const events = Configuration.getGlobalConfig().getEventManager();
+    const events = Configuration.getEventManager();
 
     beforeAll(async () => {
         jest.useFakeTimers();

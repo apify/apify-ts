@@ -6,7 +6,7 @@ import { StorageTestCases } from 'test/shared/test-cases';
 describe.each(StorageTestCases)('SessionPool - testing session pool - %s', (Emulator) => {
     let sessionPool: SessionPool;
     const localStorageEmulator = new Emulator();
-    const events = Configuration.getGlobalConfig().getEventManager();
+    const events = Configuration.getEventManager();
 
     beforeEach(async () => {
         await localStorageEmulator.init();
