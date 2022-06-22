@@ -56,7 +56,7 @@
         "@apify/storage-local": "^2.1.0",
         "@apify/tsconfig": "^0.1.0",
         "@commitlint/config-conventional": "^17.0.2",
-        "@favware/rollup-type-bundler": "^1.0.8-next.3325288.0",
+        "@favware/rollup-type-bundler": "^1.0.8-next.b0ea2c6.0",
         "@types/content-type": "^1.1.5",
         "@types/deep-equal": "^1.0.1",
         "@types/domhandler": "^2.4.2",
