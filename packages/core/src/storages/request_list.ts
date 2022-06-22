@@ -10,6 +10,7 @@ import { Request } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
 import { KeyValueStore } from '../storages/key_value_store';
 import type { ProxyConfiguration } from '../proxy_configuration';
+import { purgeDefaultStorages } from './utils';
 
 /** @internal */
 export const STATE_PERSISTENCE_KEY = 'REQUEST_LIST_STATE';
@@ -345,7 +346,9 @@ export class RequestList {
         if (this.isLoading) {
             throw new Error('RequestList sources are already loading or were loaded.');
         }
+
         this.isLoading = true;
+        await purgeDefaultStorages();
 
         const [state, persistedRequests] = await this._loadStateAndPersistedRequests();
 

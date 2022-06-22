@@ -31,6 +31,7 @@ import {
     RequestList,
     RequestQueue,
     StorageManager,
+    purgeDefaultStorages,
 } from '@crawlee/core';
 import type { Awaitable, Constructor, Dictionary, StorageClient } from '@crawlee/types';
 import { sleep, snakeCaseToCamelCase } from '@crawlee/utils';
@@ -176,10 +177,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             this.config.useStorageClient(options.storage);
         }
 
-        // purge the storage by default
-        if (options?.purge ?? true) {
-            await this.config.getStorageClient().purge?.();
-        }
+        await purgeDefaultStorages(this.config);
     }
 
     /**
@@ -456,7 +454,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             return undefined;
         }
 
-        const runId = this.config.get('actorRunId');
+        const runId = this.config.get('actorRunId')!;
         if (!runId) {
             throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
         }
@@ -1433,7 +1431,6 @@ export class Actor<Data extends Dictionary = Dictionary> {
 }
 
 export interface InitOptions {
-    purge?: boolean;
     storage?: StorageClient;
 }
 

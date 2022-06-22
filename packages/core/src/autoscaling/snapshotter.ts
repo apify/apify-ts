@@ -170,7 +170,7 @@ export class Snapshotter {
     async start(): Promise<void> {
         const { totalBytes } = await this._getMemoryInfo();
         this.maxMemoryBytes = Math.ceil(totalBytes * this.config.get('availableMemoryRatio')!);
-        this.log.debug(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. Use the AVAILABLE_MEMORY_RATIO environment variable to override it.`); // eslint-disable-line max-len
+        this.log.debug(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. Use the CRAWLEE_AVAILABLE_MEMORY_RATIO environment variable to override it.`); // eslint-disable-line max-len
 
         // Ensure events are initialized.
         // await this.events.init();

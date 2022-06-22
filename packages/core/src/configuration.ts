@@ -14,15 +14,16 @@ export interface ConfigurationOptions {
     eventManager?: EventManager;
     storageClientOptions?: Dictionary;
     defaultDatasetId?: string;
+    purgeOnStart?: boolean;
     defaultKeyValueStoreId?: string;
     defaultRequestQueueId?: string;
     maxUsedCpuRatio?: number;
     availableMemoryRatio?: number;
     persistStateIntervalMillis?: number;
     systemInfoIntervalMillis?: number;
+    inputKey?: string;
 
     metamorphAfterSleepMillis?: number;
-    inputKey?: string;
     actorId?: string;
     actorRunId?: string;
     actorTaskId?: string;
@@ -82,11 +83,12 @@ export interface ConfigurationOptions {
  */
 export class Configuration {
     /**
-     * Maps environment variables to config keys (e.g. `APIFY_PROXY_PORT` to `proxyPort`)
+     * Maps environment variables to config keys (e.g. `CRAWLEE_PROXY_PORT` to `proxyPort`)
      */
     private static ENV_MAP = {
         // TODO prefix once we have a package name
-        AVAILABLE_MEMORY_RATIO: 'availableMemoryRatio',
+        CRAWLEE_AVAILABLE_MEMORY_RATIO: 'availableMemoryRatio',
+        CRAWLEE_PURGE_ON_START: 'purgeOnStart',
 
         APIFY_DEFAULT_DATASET_ID: 'defaultDatasetId',
         APIFY_DEFAULT_KEY_VALUE_STORE_ID: 'defaultKeyValueStoreId',
@@ -119,7 +121,7 @@ export class Configuration {
         return obj;
     }, {} as Record<string, string>);
 
-    private static BOOLEAN_VARS: string[] = [];
+    private static BOOLEAN_VARS: string[] = ['purgeOnStart'];
 
     private static INTEGER_VARS = ['proxyPort', 'memoryMbytes', 'containerPort'];
 
@@ -130,6 +132,7 @@ export class Configuration {
         maxUsedCpuRatio: 0.95,
         availableMemoryRatio: 0.25,
         storageClientOptions: {},
+        purgeOnStart: true,
         inputKey: 'INPUT',
         proxyHostname: LOCAL_ENV_VARS[ENV_VARS.PROXY_HOSTNAME],
         proxyPort: +LOCAL_ENV_VARS[ENV_VARS.PROXY_PORT],

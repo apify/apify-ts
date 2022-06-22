@@ -101,12 +101,12 @@ To see how to use the dataset to store crawler results, see the [Cheerio Crawler
 
 ## Cleaning up the storages
 
-Default storages are not purged before the crawler starts if not specified otherwise. If you want to start the run with the empty default storages, you should first <ApiLink to="core/class/Configuration#getStorageClient">get</ApiLink> the default <ApiLink to="types/interface/StorageClient">`StorageClient`</ApiLink> instance and then use the <ApiLink to="types/interface/StorageClient#purge">`purge()`</ApiLink> function before running the crawler as follows:
+Default storages are purged before the crawler starts if not specified otherwise. This happens as early as when we try to open some storage (e.g. via `Dataset.open()`) or when we try to work with a default storage via one of the helper methods (e.g. `Dataset.pushData()` that under the hood calls `Dataset.open()`). If we don't work with storages explicitly in our code, the purging will eventually happen when the `run` method of our crawler is executed. In case we need to purge the storages sooner, we can use the <ApiLink to="core/function/purgeDefaultStorages">`purgeDefaultStorages()`</ApiLink> helper explicitly:
 
 ```javascript
-import { Configuration } from 'crawlee';
+import { purgeDefaultStorages } from 'crawlee';
 
-await Configuration.getStorageClient().purge();
+await purgeDefaultStorages();
 ```
 
-Calling this function will clean up the default results storage directories except the `INPUT` key in default key-value store directory.
+Calling this function will clean up the default results storage directories except the `INPUT` key in default key-value store directory. This is a shortcut for running (optional) `purge` method on the <ApiLink to="types/interface/StorageClient">`StorageClient`</ApiLink> interface, in other words it will call the `purge` method of the underlying storage implementation we are currently using. In addition, this method will make sure the storage is purged only once for a given execution context, so it is safe to call it multiple times.
