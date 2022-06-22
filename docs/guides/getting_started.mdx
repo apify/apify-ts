@@ -470,7 +470,7 @@ const crawler = new CheerioCrawler({
         const sameDomainLinks = absoluteUrls.filter(url => url.origin === origin).map(url => ({ url: url.href} ));
 
         console.log(`Enqueueing ${sameDomainLinks.length} URLs.`);
-        await crawler.addRequests();
+        await crawler.addRequests(sameDomainLinks);
     },
 });
 
