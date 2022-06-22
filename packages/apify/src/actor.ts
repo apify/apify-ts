@@ -396,7 +396,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             customAfterSleepMillis = this.config.get('metamorphAfterSleepMillis'),
             ...metamorphOpts
         } = options;
-        const runId = process.env[ENV_VARS.ACTOR_RUN_ID]!;
+        const runId = this.config.get('actorRunId')!;
         await this.apifyClient.run(runId).metamorph(targetActorId, input, metamorphOpts);
 
         // Wait some time for container to be stopped.
@@ -423,7 +423,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             ...this.config.getEventManager().listeners(EventType.MIGRATING).map((x) => x()),
         ]);
 
-        const actorId = process.env[ENV_VARS.ACTOR_ID]!;
+        const actorId = this.config.get('actorId')!;
         await this.metamorph(actorId);
     }
 
@@ -454,7 +454,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             return undefined;
         }
 
-        const runId = process.env[ENV_VARS.ACTOR_RUN_ID]!;
+        const runId = this.config.get('actorRunId')!;
         if (!runId) {
             throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
         }

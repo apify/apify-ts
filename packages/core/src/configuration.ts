@@ -24,6 +24,9 @@ export interface ConfigurationOptions {
     inputKey?: string;
 
     metamorphAfterSleepMillis?: number;
+    actorId?: string;
+    actorRunId?: string;
+    actorTaskId?: string;
     containerPort?: number;
     containerUrl?: string;
     proxyHostname?: string;
@@ -60,6 +63,9 @@ export interface ConfigurationOptions {
  *
  * Key | Environment Variable | Default Value
  * ---|---|---
+ * `actorId` | `APIFY_ACTOR_ID` | -
+ * `actorRunId` | `APIFY_ACTOR_RUN_ID` | -
+ * `actorTaskId` | `APIFY_ACTOR_TASK_ID` | -
  * `containerPort` | `APIFY_CONTAINER_PORT` | `4321`
  * `containerUrl` | `APIFY_CONTAINER_URL` | `'http://localhost:4321'`
  * `inputKey` | `APIFY_INPUT_KEY` | `'INPUT'`
@@ -91,6 +97,9 @@ export class Configuration {
         APIFY_PERSIST_STATE_INTERVAL_MILLIS: 'persistStateIntervalMillis',
         APIFY_TEST_PERSIST_INTERVAL_MILLIS: 'persistStateIntervalMillis', // for BC, seems to be unused
         APIFY_INPUT_KEY: 'inputKey',
+        APIFY_ACTOR_ID: 'actorId',
+        APIFY_ACTOR_RUN_ID: 'actorRunId',
+        APIFY_ACTOR_TASK_ID: 'actorTaskId',
         APIFY_CONTAINER_PORT: 'containerPort',
         APIFY_CONTAINER_URL: 'containerUrl',
         APIFY_PROXY_HOSTNAME: 'proxyHostname',
