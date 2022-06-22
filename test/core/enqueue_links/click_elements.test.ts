@@ -1,10 +1,10 @@
-import type { Request, RequestOptions } from '@crawlee/puppeteer';
+import type { Request, RequestOptions } from 'crawlee';
 import {
     RequestQueue,
     puppeteerClickElements,
     launchPuppeteer,
-    puppeteerUtils,
-} from '@crawlee/puppeteer';
+    utils,
+} from 'crawlee';
 import type { Browser, Page, Target } from 'puppeteer';
 
 const { clickElements, clickElementsAndInterceptNavigationRequests, isTargetRelevant } = puppeteerClickElements;
@@ -42,7 +42,7 @@ describe('enqueueLinksByClickingElements()', () => {
         `;
 
         await page.setContent(html);
-        await puppeteerUtils.enqueueLinksByClickingElements({
+        await utils.puppeteer.enqueueLinksByClickingElements({
             page,
             requestQueue,
             selector: 'a',

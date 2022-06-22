@@ -1,4 +1,4 @@
-import { launchPuppeteer, puppeteerUtils } from 'crawlee';
+import { launchPuppeteer, utils } from 'crawlee';
 
 const url = 'http://www.example.com/';
 // Start a browser
@@ -11,7 +11,7 @@ const page = await browser.newPage();
 await page.goto(url);
 
 // Capture the screenshot
-await puppeteerUtils.saveSnapshot(page, { key: 'my-key', saveHtml: false });
+await utils.puppeteer.saveSnapshot(page, { key: 'my-key', saveHtml: false });
 
 // Close Puppeteer
 await browser.close();

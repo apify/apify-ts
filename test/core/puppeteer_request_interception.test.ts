@@ -1,4 +1,4 @@
-import { launchPuppeteer, puppeteerUtils } from '@crawlee/puppeteer';
+import { launchPuppeteer, utils } from 'crawlee';
 import { sleep } from '@crawlee/utils';
 import express from 'express';
 import type { Server } from 'http';
@@ -6,7 +6,7 @@ import type { AddressInfo } from 'net';
 import type { HTTPRequest } from 'puppeteer';
 import { startExpressAppPromise } from '../shared/_helper';
 
-const { addInterceptRequestHandler, removeInterceptRequestHandler } = puppeteerUtils;
+const { addInterceptRequestHandler, removeInterceptRequestHandler } = utils.puppeteer;
 
 // Simple page with image, script and stylesheet links.
 const HTML_PAGE = `<html><body>
@@ -42,7 +42,7 @@ afterAll(() => {
     server.close();
 });
 
-describe('Apify.puppeteerUtils.addInterceptRequestHandler|removeInterceptRequestHandler()', () => {
+describe('utils.puppeteer.addInterceptRequestHandler|removeInterceptRequestHandler()', () => {
     test('should allow multiple handlers', async () => {
         const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 
@@ -230,7 +230,7 @@ describe('Apify.puppeteerUtils.addInterceptRequestHandler|removeInterceptRequest
     });
 });
 
-describe('Apify.puppeteerUtils.removeInterceptRequestHandler()', () => {
+describe('utils.puppeteer.removeInterceptRequestHandler()', () => {
     test('works', async () => {
         const browser = await launchPuppeteer({ launchOptions: { headless: true } });
 

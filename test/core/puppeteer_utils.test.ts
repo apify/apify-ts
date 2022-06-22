@@ -36,7 +36,7 @@ afterAll(() => {
     server.close();
 });
 
-describe.each(StorageTestCases)('Apify.puppeteerUtils - %s', (Emulator) => {
+describe.each(StorageTestCases)('utils.puppeteer - %s', (Emulator) => {
     let ll: number;
     const localStorageEmulator = new Emulator();
 
