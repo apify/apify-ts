@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 const indexDTsFile = new URL('../dist/index.d.ts', import.meta.url);
-const ident = ' '.repeat(4);
 
 const currentContent = (await readFile(indexDTsFile, 'utf8')).split('\n');
 
