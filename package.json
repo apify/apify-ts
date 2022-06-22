@@ -35,7 +35,7 @@
     },
     "homepage": "https://sdk.apify.com/",
     "scripts": {
-        "postinstall": "npx husky install",
+        "postinstall": "npx husky install && npm run build",
         "prepublishOnly": "turbo run copy",
         "clean": "turbo run clean",
         "build": "turbo run build",
@@ -56,6 +56,7 @@
         "@apify/storage-local": "^2.1.0",
         "@apify/tsconfig": "^0.1.0",
         "@commitlint/config-conventional": "^17.0.2",
+        "@favware/rollup-type-bundler": "^1.0.8-next.3325288.0",
         "@types/content-type": "^1.1.5",
         "@types/deep-equal": "^1.0.1",
         "@types/domhandler": "^2.4.2",
@@ -92,10 +93,14 @@
         "portastic": "^1.0.1",
         "proxy": "^1.0.2",
         "puppeteer": "^14.3.0",
+        "rollup": "^2.75.7",
         "ts-jest": "^28.0.4",
         "ts-node": "^10.8.1",
         "turbo": "1.2.16",
         "typescript": "^4.7.3"
     },
-    "packageManager": "npm@8.5.3"
+    "packageManager": "npm@8.5.3",
+    "dependencies": {
+        "@favware/cliff-jumper": "^1.8.4-next.52aad39.0"
+    }
 }

@@ -1,6 +1,4 @@
-// eslint isn't compatible with `import type`
-import type Puppeteer from './puppeteer-proxy-per-page';
-import type { Browser, Target, BrowserContext } from './puppeteer-proxy-per-page';
+import type * as Puppeteer from 'puppeteer';
 import type { BrowserController } from '../abstract-classes/browser-controller';
 import { BrowserPlugin } from '../abstract-classes/browser-plugin';
 import type { LaunchContext } from '../launch-context';
@@ -12,7 +10,7 @@ import { anonymizeProxySugar } from '../anonymize-proxy';
 const PROXY_SERVER_ARG = '--proxy-server=';
 
 export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
-    protected async _launch(launchContext: LaunchContext<typeof Puppeteer>): Promise<Browser> {
+    protected async _launch(launchContext: LaunchContext<typeof Puppeteer>): Promise<Puppeteer.Browser> {
         const {
             launchOptions,
             userDataDir,
@@ -60,7 +58,7 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
             }
         }
 
-        browser.on('targetcreated', async (target: Target) => {
+        browser.on('targetcreated', async (target: Puppeteer.Target) => {
             try {
                 const page = await target.page();
 
@@ -80,7 +78,7 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
         browser = new Proxy(browser, {
             get: (target, property: keyof typeof browser) => {
                 if (property === 'newPage') {
-                    return (async (...args: Parameters<BrowserContext['newPage']>) => {
+                    return (async (...args: Parameters<Puppeteer.BrowserContext['newPage']>) => {
                         let page: Puppeteer.Page;
 
                         if (useIncognitoPages) {
@@ -176,5 +174,16 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
         // @ts-expect-error cannot find .product on this.library
         const browserName = launchOptions.product || this.library.product!;
         return browserName === 'chrome';
+    }
+}
+
+declare module 'puppeteer' {
+    export interface ContextOptions extends Puppeteer.BrowserContextOptions {
+        proxyUsername?: string;
+        proxyPassword?: string;
+    }
+
+    interface Browser {
+        newPage(contextOptions?: ContextOptions): Promise<Page>;
     }
 }

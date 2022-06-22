@@ -18,9 +18,9 @@
  * @module puppeteerUtils
  */
 
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
 import ow from 'ow';
-import vm from 'vm';
+import vm from 'node:vm';
 import { LruCache } from '@apify/datastructures';
 import type { Page, HTTPResponse, ResponseForRequest, HTTPRequest as PuppeteerRequest } from 'puppeteer';
 import log_ from '@apify/log';

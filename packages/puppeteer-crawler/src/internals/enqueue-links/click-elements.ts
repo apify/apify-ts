@@ -29,7 +29,7 @@ import {
     BrowserEmittedEvents,
     PageEmittedEvents,
 } from 'puppeteer';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { addInterceptRequestHandler, removeInterceptRequestHandler } from '../utils/puppeteer_request_interception';
 
 const STARTING_Z_INDEX = 2147400000;

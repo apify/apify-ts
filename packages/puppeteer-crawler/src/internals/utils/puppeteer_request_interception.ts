@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import ow from 'ow';
 import type { HTTPRequest, HTTPRequest as PuppeteerRequest, Page } from 'puppeteer';
 import type { Dictionary } from '@crawlee/utils';

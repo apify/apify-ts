@@ -30,7 +30,7 @@
         "url": "https://github.com/apify/apify-ts/issues"
     },
     "scripts": {
-        "build": "npm run clean && npm run compile && npm run copy && node copy-definitions.mjs",
+        "build": "rollup-type-bundler && npm run copy",
         "clean": "rimraf ./dist",
         "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
         "copy": "ts-node -T ../../scripts/copy.ts"

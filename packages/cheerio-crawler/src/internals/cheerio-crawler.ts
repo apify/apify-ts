@@ -34,10 +34,10 @@ import type { OptionsInit, Method, Request as GotRequest, Response as GotRespons
 import { gotScraping, TimeoutError } from 'got-scraping';
 import { DomHandler } from 'htmlparser2';
 import { WritableStream } from 'htmlparser2/lib/WritableStream';
-import type { IncomingHttpHeaders, IncomingMessage } from 'http';
+import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import iconv from 'iconv-lite';
 import ow from 'ow';
-import util from 'util';
+import util from 'node:util';
 
 /**
  * Default mime types, which CheerioScraper supports.

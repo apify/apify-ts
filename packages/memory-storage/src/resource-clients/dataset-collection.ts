@@ -1,6 +1,6 @@
 import type * as storage from '@crawlee/types';
 import { s } from '@sapphire/shapeshift';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import { findOrCacheDatasetByPossibleId } from '../cache-helpers';
 import type { MemoryStorage } from '../index';
 import { sendWorkerMessage } from '../workers/instance';

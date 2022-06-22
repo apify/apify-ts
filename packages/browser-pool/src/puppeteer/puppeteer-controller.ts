@@ -1,5 +1,5 @@
 import { tryCancel } from '@apify/timeout';
-import type Puppeteer from './puppeteer-proxy-per-page';
+import type * as Puppeteer from 'puppeteer';
 import type { Cookie } from '../abstract-classes/browser-controller';
 import { BrowserController } from '../abstract-classes/browser-controller';
 import { log } from '../logger';

@@ -1,17 +1,6 @@
 {
     "extends": "./tsconfig.build.json",
     "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "apify": ["packages/apify/src"],
-            "@apify/scraper-tools": ["packages/scraper-tools/src"],
-            "crawlee": ["packages/crawlee/src"],
-            "@crawlee/basic": ["packages/basic-crawler/src"],
-            "@crawlee/browser": ["packages/browser-crawler/src"],
-            "@crawlee/cheerio": ["packages/cheerio-crawler/src"],
-            "@crawlee/playwright": ["packages/playwright-crawler/src"],
-            "@crawlee/puppeteer": ["packages/puppeteer-crawler/src"],
-            "@crawlee/*": ["packages/*/src"],
-        }
+        "baseUrl": "."
     }
 }

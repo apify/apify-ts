@@ -1,0 +1,17 @@
+{
+	"$schema": "https://raw.githubusercontent.com/favware/rollup-type-bundler/main/assets/rollup-type-bundler.schema.json",
+	"dist": "./dist",
+	"buildScript": "compile",
+	"verbose": true,
+	"external": [
+		"node:url",
+		"node:os",
+		"node:http",
+		"node:crypto",
+		"node:timers",
+		"node:async_hooks",
+		"node:events",
+		"node:util",
+		"node:zlib"
+	]
+}

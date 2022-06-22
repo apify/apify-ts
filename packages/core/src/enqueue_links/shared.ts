@@ -1,4 +1,4 @@
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { purlToRegExp } from '@apify/pseudo_url';
 import minimatch from 'minimatch';
 import type { RequestOptions } from '../request';

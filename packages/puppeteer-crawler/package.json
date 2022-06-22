@@ -44,7 +44,7 @@
     },
     "homepage": "https://sdk.apify.com/",
     "scripts": {
-        "build": "npm run clean && npm run compile && npm run copy",
+        "build": "rollup-type-bundler && npm run copy",
         "clean": "rimraf ./dist",
         "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
         "copy": "ts-node -T ../../scripts/copy.ts"

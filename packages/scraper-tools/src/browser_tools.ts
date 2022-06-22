@@ -1,7 +1,7 @@
 import { Actor } from 'apify';
 import log from '@apify/log';
 import type { Page } from 'puppeteer';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 import { RESOURCE_LOAD_ERROR_MESSAGE, SNAPSHOT } from './consts';
 import { createRandomHash } from './tools';
 
