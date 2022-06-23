@@ -56,7 +56,7 @@
         "@apify/storage-local": "^2.1.0",
         "@apify/tsconfig": "^0.1.0",
         "@commitlint/config-conventional": "^17.0.2",
-        "@favware/rollup-type-bundler": "^1.0.8-next.b0ea2c6.0",
+        "@favware/rollup-type-bundler": "^1.0.8",
         "@types/content-type": "^1.1.5",
         "@types/deep-equal": "^1.0.1",
         "@types/domhandler": "^2.4.2",
@@ -99,8 +99,5 @@
         "turbo": "1.2.16",
         "typescript": "^4.7.3"
     },
-    "packageManager": "npm@8.5.3",
-    "dependencies": {
-        "@favware/cliff-jumper": "^1.8.4-next.52aad39.0"
-    }
+    "packageManager": "npm@8.5.3"
 }
