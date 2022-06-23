@@ -35,7 +35,7 @@
     },
     "homepage": "https://sdk.apify.com/",
     "scripts": {
-        "postinstall": "npx husky install && npm run build",
+        "postinstall": "npx husky install",
         "prepublishOnly": "turbo run copy",
         "clean": "turbo run clean",
         "build": "turbo run build",
