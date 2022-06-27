@@ -1,4 +1,3 @@
-import type { Dictionary } from '@crawlee/types';
 import type { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
 import type { FingerprintInjector } from 'fingerprint-injector';
 import type { BrowserPool } from '..';
@@ -21,7 +20,7 @@ export function createFingerprintPreLaunchHook(browserPool: BrowserPool<any, any
 
     return (_pageId: string, launchContext: LaunchContext) => {
         const { useIncognitoPages } = launchContext;
-        const cacheKey = (launchContext as Dictionary).session?.id ?? launchContext.proxyUrl;
+        const cacheKey = (launchContext.session as { id: string } | undefined)?.id ?? launchContext.proxyUrl;
         const { launchOptions }: { launchOptions: any } = launchContext;
 
         // If no options are passed we try to pass best default options as possible to match browser and OS.
