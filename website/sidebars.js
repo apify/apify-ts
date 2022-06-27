@@ -19,7 +19,7 @@ module.exports = {
                 'guides/environment-variables',
                 'guides/proxy-management',
                 'guides/session-management',
-                'guides/type-script-actor',
+                'guides/type-script-project',
                 'guides/docker-images',
                 'guides/avoid-blocking',
             ],
