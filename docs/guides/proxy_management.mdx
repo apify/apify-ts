@@ -12,7 +12,7 @@ import CodeBlock from '@theme/CodeBlock';
 import CheerioSource from '!!raw-loader!./proxy_management_integration_cheerio.ts';
 import PlaywrightSource from '!!raw-loader!./proxy_management_integration_playwright.ts';
 import PuppeteerSource from '!!raw-loader!./proxy_management_integration_puppeteer.ts';
-import SessionStandalonSource from '!!raw-loader!./proxy_management_session_standalone.ts';
+import SessionStandaloneSource from '!!raw-loader!./proxy_management_session_standalone.ts';
 import SessionCheerioSource from '!!raw-loader!./proxy_management_session_cheerio.ts';
 import SessionPlaywrightSource from '!!raw-loader!./proxy_management_session_playwright.ts';
 import SessionPuppeteerSource from '!!raw-loader!./proxy_management_session_puppeteer.ts';
@@ -98,7 +98,7 @@ When no `sessionId` is provided, our proxy URLs are rotated round-robin.
     </TabItem>
     <TabItem value="standalone" label="Standalone">
         <CodeBlock language="js">
-            {SessionStandalonSource}
+            {SessionStandaloneSource}
         </CodeBlock>
     </TabItem>
 </Tabs>
