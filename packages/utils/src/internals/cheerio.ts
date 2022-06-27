@@ -28,7 +28,7 @@ const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|
  * with the `decodeEntities` option set to `true`. For example:
  *
  * ```javascript
- * const cheerio = require('cheerio');
+ * import cheerio from 'cheerio';
  * const html = '<html><body>Some text</body></html>';
  * const text = htmlToText(cheerio.load(html, { decodeEntities: true }));
  * ```

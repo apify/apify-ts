@@ -47,8 +47,8 @@ your own. By calling `browserPool.newPage()` you launch a new Firefox browser
 and open a new page in that browser.
 
 ```js
-const { BrowserPool, PlaywrightPlugin } = require('@crawlee/browser-pool');
-const playwright = require('playwright');
+import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
+import playwright from 'playwright';
 
 const browserPool = new BrowserPool({
     browserPlugins: [new PlaywrightPlugin(playwright.chromium)],
@@ -81,8 +81,8 @@ in the background. You only need to provide the relevant plugins and call
 `browserPool.newPage()`.
 
 ```js
-const { BrowserPool, PlaywrightPlugin } = require('@crawlee/browser-pool');
-const playwright = require('playwright');
+import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
+import playwright from 'playwright';
 
 const browserPool = new BrowserPool({
     browserPlugins: [
@@ -109,9 +109,9 @@ if you need to consistently run tasks in multiple environments.
 For that, there's the `newPageWithEachPlugin` function.
 
 ```js
-const { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } = require('@crawlee/browser-pool');
-const playwright = require('playwright');
-const puppeteer = require('puppeteer');
+import { BrowserPool, PlaywrightPlugin, PuppeteerPlugin } from '@crawlee/browser-pool';
+import playwright from 'playwright';
+import puppeteer from 'puppeteer';
 
 const browserPool = new BrowserPool({
     browserPlugins: [
@@ -369,13 +369,9 @@ itself and two for the included Puppeteer and Playwright plugins.
 
 **Example:**
 ```js
-const {
- BrowserPool,
- PuppeteerPlugin,
- PlaywrightPlugin
-} = require('@crawlee/browser-pool');
-const puppeteer = require('puppeteer');
-const playwright = require('playwright');
+import { BrowserPool, PuppeteerPlugin, PlaywrightPlugin } from '@crawlee/browser-pool';
+import puppeteer from 'puppeteer';
+import playwright from 'playwright';
 
 const browserPool = new BrowserPool({
     browserPlugins: [
@@ -409,8 +405,8 @@ stage of the browser / page lifecycle.
 
 **Example:**
 ```js
-const { BrowserPool, PlaywrightPlugin } = require('@crawlee/browser-pool');
-const playwright = require('playwright');
+import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
+import playwright from 'playwright';
 
 const browserPool = new BrowserPool({
     browserPlugins: [ new PlaywrightPlugin(playwright.chromium)],

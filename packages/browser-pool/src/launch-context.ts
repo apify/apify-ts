@@ -52,23 +52,16 @@ export class LaunchContext<
     NewPageResult = UnwrapPromise<ReturnType<LaunchResult['newPage']>>,
 > {
     id?: string;
-
     browserPlugin: BrowserPlugin<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>;
-
     launchOptions: LibraryOptions;
-
     useIncognitoPages: boolean;
-
     userDataDir: string;
 
     private _proxyUrl?: string;
-
     private readonly _reservedFieldNames = [...Reflect.ownKeys(this), 'extend'];
 
     fingerprint?: BrowserFingerprintWithHeaders;
-
-    // TODO: change this to PropertyKey when TypeScript 4.4 releases
-    [K: string]: unknown;
+    [K: PropertyKey]: unknown;
 
     constructor(options: LaunchContextOptions<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>) {
         const {

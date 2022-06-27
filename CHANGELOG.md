@@ -138,7 +138,7 @@ early as possible.
 ### Mitigation of zero concurrency issue
 
 Several new timeouts were added to the task function, which should help mitigate the zero concurrency bug. Namely fetching of next request information and reclaiming failed requests back to the queue
-are now executed with a timeout with 3 additional retries before the task fails. The timeout is always at least 300s (5 minutes), or `handleRequestTimeoutSecs` if that value is higher.
+are now executed with a timeout with 3 additional retries before the task fails. The timeout is always at least 300s (5 minutes), or `requestHandlerTimeoutSecs` if that value is higher.
 
 ### Full list of changes
 

@@ -77,11 +77,11 @@ export interface ProxyConfigurationOptions extends CoreProxyConfigurationOptions
  * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
- *   handlePageFunction: ({ proxyInfo }) => {
- *      // Getting used proxy URL
+ *   requestHandler({ proxyInfo }) {
+ *       // Getting used proxy URL
  *       const proxyUrl = proxyInfo.url;
  *
- *      // Getting ID of used Session
+ *       // Getting ID of used Session
  *       const sessionIdentifier = proxyInfo.sessionId;
  *   }
  * })
@@ -140,7 +140,7 @@ export interface ProxyInfo extends CoreProxyInfo {
  * const crawler = new CheerioCrawler({
  *   // ...
  *   proxyConfiguration,
- *   handlePageFunction: ({ proxyInfo }) => {
+ *   requestHandler({ proxyInfo }) {
  *      const usedProxyUrl = proxyInfo.url; // Getting the proxy URL
  *   }
  * })
@@ -222,7 +222,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
     /**
      * This function creates a new {@link ProxyInfo} info object.
      * It is used by CheerioCrawler and PuppeteerCrawler to generate proxy URLs and also to allow the user to inspect
-     * the currently used proxy via the handlePageFunction parameter: proxyInfo.
+     * the currently used proxy via the requestHandler parameter `proxyInfo`.
      * Use it if you want to work with a rich representation of a proxy URL.
      * If you need the URL string only, use {@link ProxyConfiguration.newUrl}.
      * @param [sessionId]

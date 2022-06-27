@@ -111,7 +111,7 @@ export function createDeserialize(compressedData: Buffer): Readable {
         zlib.createGunzip(),
         destination,
         // TODO: figure this out
-        // @ts-expect-error Somethings wrong here, the types are wrong but tests fail if we correct the code to make them right
+        // @ts-expect-error Something's wrong here, the types are wrong but tests fail if we correct the code to make them right
         (err) => destination.emit(err),
     );
 

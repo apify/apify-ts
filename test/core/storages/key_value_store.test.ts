@@ -1,9 +1,8 @@
 import { ENV_VARS } from '@apify/consts';
-import { KeyValueStore, maybeStringify, Configuration } from '@crawlee/core';
+import { maybeStringify, Configuration, KeyValueStore } from '@crawlee/core';
 import type { Dictionary } from '@crawlee/utils';
 import { PassThrough } from 'stream';
 
-// TODO this does not make sense here
 describe('KeyValueStore', () => {
     const client = Configuration.getStorageClient();
 
@@ -313,6 +312,7 @@ describe('KeyValueStore', () => {
         });
     });
 
+    // TODO move to actor sdk tests before splitting the repos
     describe('getPublicUrl', () => {
         test('should return the url of a file in apify cloud', async () => {
             process.env[ENV_VARS.TOKEN] = 'xxx';
@@ -322,7 +322,9 @@ describe('KeyValueStore', () => {
                 client,
             });
 
-            expect(store.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
+            await import('apify');
+            const storeFromActorSdk = store as import('apify').KeyValueStore;
+            expect(storeFromActorSdk.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
             delete process.env[ENV_VARS.TOKEN];
         });
     });

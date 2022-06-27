@@ -135,7 +135,7 @@ export function ensureMetaData(request: Request) {
  * Merges the result of the page function, that may be a single object
  * or an array objects, with request metadata and a flag, whether
  * an error occured. This would typically be used after the page
- * had been retried and the handleFailedRequestFunction was called.
+ * had been retried and the failedRequestHandler was called.
  *
  * If an Object[] is returned from the page function, each of the objects
  * will have the metadata appended for consistency, since the dataset

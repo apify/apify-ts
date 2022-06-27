@@ -286,15 +286,6 @@ export class KeyValueStore {
         manager.closeStorage(this);
     }
 
-    /**
-     * Returns a URL for the given key that may be used to publicly
-     * access the value in the remote key-value store.
-     */
-    getPublicUrl(key: string): string {
-        // FIXME how should this work? should we remove this method or provide a way to configure the base url?
-        return `https://api.apify.com/v2/key-value-stores/${this.id}/records/${key}`;
-    }
-
     /** @internal */
     clearCache(): void {
         this.cache.clear();

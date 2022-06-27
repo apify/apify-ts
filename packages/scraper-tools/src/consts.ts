@@ -24,7 +24,7 @@ export const RESOURCE_LOAD_ERROR_MESSAGE = 'Failed to load resource: net::ERR_FA
 export const PAGE_FUNCTION_FILENAME = 'page_function.js';
 
 /**
- * Just a handlePageFunction timeout value for when DevTools are used
+ * Just a requestHandler timeout value for when DevTools are used
  * so the user has time to browse the DevTools console.
  */
 export const DEVTOOLS_TIMEOUT_SECS = 3600;

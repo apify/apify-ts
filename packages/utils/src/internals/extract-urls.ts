@@ -17,7 +17,7 @@ export interface DownloadListOfUrlsOptions {
     /**
      * Custom regular expression to identify the URLs in the file to extract.
      * The regular expression should be case-insensitive and have global flag set (i.e. `/something/gi`).
-     * @default Actor.utils.URL_NO_COMMAS_REGEX
+     * @default URL_NO_COMMAS_REGEX
      */
     urlRegExp?: RegExp;
 }

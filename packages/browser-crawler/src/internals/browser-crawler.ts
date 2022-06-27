@@ -120,7 +120,7 @@ export interface BrowserCrawlerOptions<
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -161,7 +161,7 @@ export interface BrowserCrawlerOptions<
      * If the function throws an exception, the crawler will try to re-crawl the
      * request later, up to `option.maxRequestRetries` times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `handleFailedRequestFunction` parameter.
+     * provided to the `failedRequestHandler` parameter.
      * To make this work, you should **always**
      * let your function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
@@ -297,7 +297,7 @@ export interface BrowserCrawlerOptions<
  * The crawler finishes when there are no more {@link Request} objects to crawl.
  *
  * `BrowserCrawler` opens a new browser page (i.e. tab or window) for each {@link Request} object to crawl
- * and then calls the function provided by user as the {@link BrowserCrawlerOptions.handlePageFunction} option.
+ * and then calls the function provided by user as the {@link BrowserCrawlerOptions.requestHandler} option.
  *
  * New pages are only opened when there is enough free CPU and memory available,
  * using the functionality provided by the {@link AutoscaledPool} class.
@@ -326,7 +326,6 @@ export abstract class BrowserCrawler<
     /**
      * A reference to the underlying `BrowserPool` class that manages the crawler's browsers.
      * For more information about it, see the [`browser-pool` module](https://github.com/apify/browser-pool).
-     * @todo the type is almost unusable with so many generic arguments, what should go there? we need inference
      */
     browserPool: BrowserPool<InternalBrowserPoolOptions>;
 
@@ -445,7 +444,7 @@ export abstract class BrowserCrawler<
     }
 
     /**
-     * Wrapper around handlePageFunction that opens and closes pages etc.
+     * Wrapper around requestHandler that opens and closes pages etc.
      */
     protected override async _runRequestHandler(crawlingContext: Context) {
         const newPageOptions: Dictionary = {

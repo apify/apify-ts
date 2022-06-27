@@ -97,7 +97,6 @@ export abstract class BrowserLauncher<
             if (e.code === 'MODULE_NOT_FOUND') {
                 const msg = `Cannot find module '${launcher}'. Did you you install the '${launcher}' package?\n`
                     + `Make sure you have '${launcher}' in your package.json dependencies and in your package-lock.json, if you use it.`;
-                // TODO we should not depend on apify env vars here ideally
                 if (process.env.APIFY_IS_AT_HOME) {
                     e.message = `${msg}\nOn the Apify platform, '${launcher}' can only be used with the ${apifyImageName} Docker image.`;
                 }
@@ -160,8 +159,7 @@ export abstract class BrowserLauncher<
             ...this.launchOptions,
         };
 
-        // TODO is this needed? should be controlled via public options preferably
-        if (process.env.APIFY_IS_AT_HOME) {
+        if (process.env.CRAWLEE_DISABLE_BROWSER_SANDBOX) {
             launchOptions.args.push('--no-sandbox');
         }
 

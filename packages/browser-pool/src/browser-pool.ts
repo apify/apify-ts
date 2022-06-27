@@ -216,8 +216,8 @@ export interface BrowserPoolHooks<
  *
  * **Example:**
  * ```js
- * const { BrowserPool, PlaywrightPlugin } = require('@crawlee/browser-pool');
- * const playwright = require('playwright');
+ * import { BrowserPool, PlaywrightPlugin } from '@crawlee/browser-pool';
+ * import playwright from 'playwright';
  *
  * const browserPool = new BrowserPool({
  *     browserPlugins: [ new PlaywrightPlugin(playwright.chromium)],
@@ -280,8 +280,7 @@ export class BrowserPool<
     retiredBrowserControllers = new Set<BrowserControllerReturn>();
     pageToBrowserController = new WeakMap<PageReturn, BrowserControllerReturn>();
     fingerprintInjector?: FingerprintInjector;
-    // fingerprintGenerator?: FingerprintGenerator; // FIXME revert once we migrate to the new fingerprint suite
-    fingerprintGenerator?: any;
+    fingerprintGenerator?: FingerprintGenerator;
     fingerprintCache?: QuickLRU<string, BrowserFingerprintWithHeaders>;
 
     private browserKillerInterval? = setInterval(
@@ -731,9 +730,9 @@ export class BrowserPool<
             // might fail with "Protocol error (Target.closeTarget): Target closed."
             setTimeout(() => {
                 log.debug('Closing retired browser because it has no active pages', { id: browserController.id });
-                // TODO: @typescript-eslint/no-floating-promises
-                browserController.close(); // eslint-disable-line
-                this.retiredBrowserControllers.delete(browserController);
+                browserController.close().finally(() => {
+                    this.retiredBrowserControllers.delete(browserController);
+                });
             }, PAGE_CLOSE_KILL_TIMEOUT_MILLIS);
         }
     }

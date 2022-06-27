@@ -590,19 +590,6 @@ describe.each(StorageTestCases)('Actor - %s', (Emulator) => {
                 expect(pushDataSpy).toBeCalledWith({ foo: 'bar' });
             });
 
-            test('openRequestList should create RequestList', async () => {
-                const initializeSpy = jest.spyOn(RequestList.prototype, 'initialize');
-                initializeSpy.mockImplementationOnce(async () => {});
-                const list = await sdk.openRequestList('my-list', ['url-1', 'url-2', 'url-3']);
-                expect(initializeSpy).toBeCalledTimes(1);
-                // @ts-expect-error Private property
-                expect(list.sources).toEqual(['url-1', 'url-2', 'url-3']);
-                // @ts-expect-error Private property
-                expect(list.persistStateKey).toBe('SDK_my-list-REQUEST_LIST_STATE');
-                // @ts-expect-error Private property
-                expect(list.persistRequestsKey).toBe('SDK_my-list-REQUEST_LIST_REQUESTS');
-            });
-
             test('openRequestQueue should open storage', async () => {
                 const queueId = 'abc';
                 const options = { forceCloud: true };

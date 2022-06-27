@@ -69,16 +69,12 @@ export interface PaginatedList<Data> {
 export interface DatasetInfo {
     id: string;
     name?: string;
-    userId?: string; // FIXME not provided by storage-local?
     createdAt: Date;
     modifiedAt: Date;
     accessedAt: Date;
     itemCount: number;
-    cleanItemCount?: number; // FIXME not provided by storage-local?
     actId?: string;
     actRunId?: string;
-    stats?: DatasetStats; // FIXME not provided by storage-local?
-    fields?: string[]; // FIXME not provided by storage-local?
 }
 export interface DatasetStats {
     readCount?: number;

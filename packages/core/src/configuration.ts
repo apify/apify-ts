@@ -37,15 +37,17 @@ export interface ConfigurationOptions {
 /**
  * `Configuration` is a value object holding the SDK configuration. We can use it in two ways:
  *
- * 1. When using `Apify` class, we can get the instance configuration via `sdk.config`
+ * 1. When using `Actor` class, we can get the instance configuration via `sdk.config`
  *     ```js
- *     const { Apify } = require('apify');
+ *     import { Actor } from 'apify';
  *
- *     const sdk = new Apify({ token: '123' });
+ *     const sdk = new Actor({ token: '123' });
  *     console.log(sdk.config.get('token')); // '123'
  *     ```
  * 2. To get the global configuration (singleton instance). It will respect the environment variables.
  *     ```js
+ *     import { Configuration } from 'crawlee';
+ *
  *     // returns the token from APIFY_TOKEN env var
  *     console.log(Configuration.getGlobalConfig().get('token'));
  *     ```
@@ -267,8 +269,6 @@ export class Configuration {
 
     /**
      * Returns the global configuration instance. It will respect the environment variables.
-     * When used inside SDK instance (`sdk.main()`), the return value is equal to `sdk.config`.
-     *
      */
     static getGlobalConfig() : Configuration {
         if (Configuration.storage.getStore()) {
