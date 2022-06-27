@@ -13,5 +13,5 @@ export class KeyValueStore extends CoreKeyValueStore {
     }
 }
 
-// @ts-expect-error
+// @ts-expect-error extension of the core class to make this only a type-issue
 CoreKeyValueStore.prototype.getPublicUrl = KeyValueStore.prototype.getPublicUrl;

@@ -267,7 +267,7 @@ The Apify platform helpers can be now found in the Actor SDK (`apify` NPM packag
 
 * `ApifyClient` shortcuts: `addWebhook()`, `call()`, `callTask()`, `metamorph()`
 * helpers for running on Apify platform: `init()`, `exit()`, `fail()`, `main()`, `isAtHome()`, `createProxyConfiguration()`
-* storage support: `getInput()`, `getValue()`, `openDataset()`, `openKeyValueStore()`, `openRequestList()`, `openRequestQueue()`, `pushData()`, `setValue()`
+* storage support: `getInput()`, `getValue()`, `openDataset()`, `openKeyValueStore()`, `openRequestQueue()`, `pushData()`, `setValue()`
 * events support: `on()`, `off()`
 * other utilities: `getEnv()`, `newClient()`, `reboot()`
 

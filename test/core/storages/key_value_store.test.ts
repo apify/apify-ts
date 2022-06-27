@@ -322,7 +322,9 @@ describe('KeyValueStore', () => {
                 client,
             });
 
-            expect(store.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
+            await import('apify');
+            const storeFromActorSdk = store as import('apify').KeyValueStore;
+            expect(storeFromActorSdk.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
             delete process.env[ENV_VARS.TOKEN];
         });
     });
