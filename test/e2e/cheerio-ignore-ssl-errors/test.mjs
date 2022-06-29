@@ -11,5 +11,3 @@ await expect(
     validateDataset(datasetItems, ['url', 'title']),
     'Dataset items validation',
 );
-
-process.exit(0);

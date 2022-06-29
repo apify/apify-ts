@@ -8,5 +8,3 @@ const { requestCounter, navigationCounter } = datasetItems[0];
 
 await expect(requestCounter === 3, 'Processed 3 requests');
 await expect(navigationCounter === 1, 'Navigated on 1 request only');
-
-process.exit(0);

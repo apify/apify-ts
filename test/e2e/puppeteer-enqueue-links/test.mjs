@@ -7,5 +7,3 @@ const { datasetItems } = await runActor(testActorDirname, 16384);
 const { isEqual } = datasetItems[0];
 
 await expect(isEqual, `Enqueueing on same subdomain but different loaded url doesn't enqueue`);
-
-process.exit(0);

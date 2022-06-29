@@ -10,5 +10,3 @@ await expect(
     stats.crawlerRuntimeMillis > 30 * 1e3 && stats.crawlerRuntimeMillis < 35 * 1e3,
     'RequestQueue triggers auto-reset after being stuck with requests in progress',
 );
-
-process.exit(0);

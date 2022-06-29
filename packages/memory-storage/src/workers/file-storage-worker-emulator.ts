@@ -6,4 +6,6 @@ export class FileStorageWorkerEmulator {
     }
 
     terminate(): void {}
+
+    unref(): void {}
 }

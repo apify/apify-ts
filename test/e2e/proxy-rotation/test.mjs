@@ -8,5 +8,3 @@ const { stats, datasetItems } = await runActor(testActorDirname, 16384);
 await expect(stats.requestsFinished === 5, 'All requests finished');
 await expect(datasetItems.length === 5, 'Number of dataset items');
 await expect(validateDataset(datasetItems, ['clientIp']), 'Dataset items validation');
-
-process.exit(0);

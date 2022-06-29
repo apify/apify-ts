@@ -10,5 +10,3 @@ await expect(
     stats.crawlerRuntimeMillis > 60_000 && stats.crawlerRuntimeMillis < 65_000,
     `Ran one task per minute, took ~1 minute to complete, but no more than that (${stats.crawlerRuntimeMillis}ms)`,
 );
-
-process.exit(0);

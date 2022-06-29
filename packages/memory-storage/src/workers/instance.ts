@@ -25,6 +25,7 @@ export function initWorkerIfNeeded() {
 
     if (exists) {
         workerInstance = new Worker(workerPath);
+        workerInstance.unref();
 
         (workerInstance as Worker).once('exit', (code) => {
             memoryStorageLog.debug(`File storage worker exited with code ${code}`);
