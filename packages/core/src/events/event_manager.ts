@@ -55,6 +55,9 @@ export abstract class EventManager {
 
         betterClearInterval(this.intervals.persistState!);
         this.initialized = false;
+
+        // Emit final PERSIST_STATE event
+        this.emit(EventType.PERSIST_STATE, { isMigrating: false });
     }
 
     on(event: EventTypeName, listener: (...args: any[]) => any): void {

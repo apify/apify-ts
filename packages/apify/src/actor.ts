@@ -1,6 +1,6 @@
 import ow from 'ow';
-import { setTimeout } from 'node:timers/promises';
 import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
+import { addTimeoutToPromise } from '@apify/timeout';
 import log from '@apify/log';
 import type {
     ActorStartOptions,
@@ -186,11 +186,21 @@ export class Actor<Data extends Dictionary = Dictionary> {
         options = typeof messageOrOptions === 'string' ? { ...options, statusMessage: messageOrOptions } : { ...messageOrOptions, ...options };
         options.exit ??= true;
         options.exitCode ??= EXIT_CODES.SUCCESS;
-        options.timeoutSecs ??= 1;
+        options.timeoutSecs ??= 30;
 
-        this.eventManager.emit(EventType.EXIT, options);
-        await this.eventManager.waitForAllListenersToComplete();
+        // Close the event manager and emit the final PERSIST_STATE event
         await this.eventManager.close();
+
+        // Emit the exit event
+        this.eventManager.emit(EventType.EXIT, options);
+
+        // Wait for all event listeners to be processed
+        log.debug(`Waiting for ${options.timeoutSecs} seconds for all event listeners to complete their execution`);
+        await addTimeoutToPromise(
+            () => this.eventManager.waitForAllListenersToComplete(),
+            options.timeoutSecs * 1000,
+            `Waiting for all event listeners to complete their execution timed out after ${options.timeoutSecs} seconds`,
+        );
 
         if (options.exitCode > 0) {
             options.statusMessage ??= `Actor finished with an error (exit code ${options.exitCode})`;
@@ -202,11 +212,6 @@ export class Actor<Data extends Dictionary = Dictionary> {
 
         if (!options.exit) {
             return;
-        }
-
-        if (options.timeoutSecs > 0) {
-            log.debug(`Waiting for ${options.timeoutSecs} seconds before calling process.exit()`);
-            await setTimeout(options.timeoutSecs! * 1000);
         }
 
         process.exit(options.exitCode);
@@ -1458,7 +1463,10 @@ export interface MetamorphOptions {
 export interface ExitOptions {
     /** Exit with given status message */
     statusMessage?: string;
-    /** Wait before calling exit(), defaults to 5s */
+    /**
+     * Amount of time, in seconds, to wait for all event handlers to finish before exiting the process.
+     * @default 5
+     */
     timeoutSecs?: number;
     /** Exit code, defaults to 0 */
     exitCode?: number;
