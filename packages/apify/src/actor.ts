@@ -189,6 +189,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
         options.timeoutSecs ??= 5;
 
         this.eventManager.emit(EventType.EXIT, options);
+        await this.eventManager.awaitAllListenersToComplete();
         await this.eventManager.close();
 
         if (options.exitCode > 0) {
