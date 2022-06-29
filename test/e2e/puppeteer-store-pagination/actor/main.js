@@ -2,6 +2,8 @@ import { Actor } from 'apify';
 import { PuppeteerCrawler } from '@crawlee/puppeteer';
 import { ApifyStorageLocal } from '@apify/storage-local';
 
+await Actor.init({ storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined });
+
 const crawler = new PuppeteerCrawler({
     maxRequestsPerCrawl: 10,
     preNavigationHooks: [({ session, request }, goToOptions) => {
@@ -54,7 +56,7 @@ crawler.router.addHandler('DETAIL', async ({ log, page, request: { url } }) => {
     await Actor.pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
 });
 
-await Actor.init({ storage: process.env.STORAGE_IMPLEMENTATION === 'LOCAL' ? new ApifyStorageLocal() : undefined });
 await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
 await crawler.run();
+
 await Actor.exit({ exit: Actor.isAtHome() });

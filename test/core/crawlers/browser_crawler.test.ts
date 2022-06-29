@@ -47,8 +47,8 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
     let puppeteerPlugin: PuppeteerPlugin;
 
     beforeAll(async () => {
-        prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
-        process.env[ENV_VARS.HEADLESS] = '1';
+        prevEnvHeadless = process.env.CRAWLEE_HEADLESS;
+        process.env.CRAWLEE_HEADLESS = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
     });
@@ -64,7 +64,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
 
     afterAll(async () => {
         log.setLevel(logLevel);
-        process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
+        process.env.CRAWLEE_HEADLESS = prevEnvHeadless;
         await localStorageEmulator.destroy();
     });
 

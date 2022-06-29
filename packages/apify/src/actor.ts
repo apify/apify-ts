@@ -22,7 +22,7 @@ import type {
     RecordOptions,
 } from '@crawlee/core';
 import {
-    Configuration,
+    Configuration as CoreConfiguration,
     Dataset,
     EventType,
     RequestQueue,
@@ -36,6 +36,7 @@ import { PlatformEventManager } from './platform_event_manager';
 import type { ProxyConfigurationOptions } from './proxy_configuration';
 import { ProxyConfiguration } from './proxy_configuration';
 import { KeyValueStore } from './key_value_store';
+import { Configuration } from './configuration';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -146,7 +147,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             let ret: T;
 
             try {
-                ret = await Configuration.storage.run(this.config, userFunc) as unknown as T;
+                ret = await userFunc() as T;
                 await this.exit(options);
             } catch (err: any) {
                 log.exception(err, err.message);
@@ -164,19 +165,22 @@ export class Actor<Data extends Dictionary = Dictionary> {
         logSystemInfo();
         printOutdatedSdkWarning();
 
+        // reset global config instance to respect APIFY_ prefixed env vars
+        CoreConfiguration.globalConfig = Configuration.getGlobalConfig();
+
         await this.eventManager.init();
 
         if (this.isAtHome()) {
             this.config.set('availableMemoryRatio', 1);
+            this.config.set('disableBrowserSandbox', true); // for browser launcher, adds `--no-sandbox` to args
             this.config.useStorageClient(this.apifyClient);
             this.config.useEventManager(this.eventManager);
-            // for browser launcher, adds `--no-sandbox` to args
-            process.env.CRAWLEE_DISABLE_BROWSER_SANDBOX = '1';
         } else if (options.storage) {
             this.config.useStorageClient(options.storage);
         }
 
         await purgeDefaultStorages(this.config);
+        Configuration.storage.enterWith(this.config);
     }
 
     /**
@@ -781,8 +785,8 @@ export class Actor<Data extends Dictionary = Dictionary> {
     newClient(options: ApifyClientOptions = {}): ApifyClient {
         const { storageDir, ...storageClientOptions } = this.config.get('storageClientOptions') as Dictionary;
         return new ApifyClient({
-            baseUrl: process.env[ENV_VARS.API_BASE_URL] ?? 'https://api.apify.com',
-            token: process.env[ENV_VARS.TOKEN],
+            baseUrl: this.config.get('apiBaseUrl'),
+            token: this.config.get('token'),
             ...storageClientOptions,
             ...options, // allow overriding the instance configuration
         });

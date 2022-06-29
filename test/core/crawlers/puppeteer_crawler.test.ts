@@ -1,4 +1,3 @@
-import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import type {
     PuppeteerCookie,
@@ -35,8 +34,8 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
     let proxyConfiguration: ProxyConfiguration;
 
     beforeAll(async () => {
-        prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
-        process.env[ENV_VARS.HEADLESS] = '1';
+        prevEnvHeadless = process.env.CRAWLEE_HEADLESS;
+        process.env.CRAWLEE_HEADLESS = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
 
@@ -76,7 +75,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
 
     afterAll(async () => {
         log.setLevel(logLevel);
-        process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
+        process.env.CRAWLEE_HEADLESS = prevEnvHeadless;
         await localStorageEmulator.destroy();
 
         await Promise.all(servers.map((server) => promisify(server.close.bind(server))(true)));

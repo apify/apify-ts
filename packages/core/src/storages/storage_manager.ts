@@ -1,13 +1,6 @@
-import { ENV_VARS } from '@apify/consts';
 import type { Dictionary, StorageClient } from '@crawlee/types';
 import { Configuration } from '../configuration';
 import type { Constructor } from '../typedefs';
-
-const DEFAULT_ID_ENV_VAR_NAMES = {
-    Dataset: ENV_VARS.DEFAULT_DATASET_ID,
-    KeyValueStore: ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID,
-    RequestQueue: ENV_VARS.DEFAULT_REQUEST_QUEUE_ID,
-} as const;
 
 const DEFAULT_ID_CONFIG_KEYS = {
     Dataset: 'defaultDatasetId',
@@ -73,10 +66,8 @@ export class StorageManager<T extends IStorage = IStorage> {
 
     async openStorage(idOrName?: string | null, client?: StorageClient): Promise<T> {
         if (!idOrName) {
-            const defaultIdEnvVarName = DEFAULT_ID_ENV_VAR_NAMES[this.name];
             const defaultIdConfigKey = DEFAULT_ID_CONFIG_KEYS[this.name];
             idOrName = this.config.get(defaultIdConfigKey) as string;
-            if (!idOrName) throw new Error(`The '${defaultIdEnvVarName}' environment variable is not defined.`);
         }
 
         const cacheKey = idOrName;

@@ -1,4 +1,3 @@
-import { ENV_VARS } from '@apify/consts';
 import os from 'os';
 import express from 'express';
 import playwright from 'playwright';
@@ -40,8 +39,8 @@ describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
     });
 
     beforeAll(async () => {
-        prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
-        process.env[ENV_VARS.HEADLESS] = '1';
+        prevEnvHeadless = process.env.CRAWLEE_HEADLESS;
+        process.env.CRAWLEE_HEADLESS = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
     });
@@ -55,7 +54,7 @@ describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
 
     afterAll(async () => {
         log.setLevel(logLevel);
-        process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
+        process.env.CRAWLEE_HEADLESS = prevEnvHeadless;
         await localStorageEmulator.destroy();
     });
     afterAll(async () => {
