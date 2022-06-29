@@ -186,7 +186,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
         options = typeof messageOrOptions === 'string' ? { ...options, statusMessage: messageOrOptions } : { ...messageOrOptions, ...options };
         options.exit ??= true;
         options.exitCode ??= EXIT_CODES.SUCCESS;
-        options.timeoutSecs ??= 5;
+        options.timeoutSecs ??= 1;
 
         this.eventManager.emit(EventType.EXIT, options);
         await this.eventManager.awaitAllListenersToComplete();
