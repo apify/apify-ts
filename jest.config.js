@@ -13,7 +13,6 @@ module.exports = {
     ],
     moduleNameMapper: {
         '^apify$': '<rootDir>/packages/apify/src',
-        '^@apify/scraper-tools$': '<rootDir>/packages/scraper-tools/src',
         '^crawlee$': '<rootDir>/packages/crawlee/src',
         '^@crawlee/basic$': '<rootDir>/packages/basic-crawler/src',
         '^@crawlee/browser$': '<rootDir>/packages/browser-crawler/src',

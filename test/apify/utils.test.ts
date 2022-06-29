@@ -1,13 +1,11 @@
 import { ENV_VARS } from '@apify/consts';
 import type { Request } from '@crawlee/core';
 import { log } from '@crawlee/core';
-import { tools } from '@apify/scraper-tools';
+import { createRequestDebugInfo } from '@crawlee/utils';
 import { Actor } from 'apify';
 import { printOutdatedSdkWarning } from 'apify/src/utils';
 import semver from 'semver';
 import type { IncomingMessage } from 'node:http';
-
-const { createRequestDebugInfo } = tools;
 
 describe('Actor.isAtHome()', () => {
     test('works', () => {
