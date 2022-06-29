@@ -110,7 +110,7 @@ async function run() {
 if (isMainThread) {
     await run();
     // We want to exit with non-zero code if any of the tests failed
-    if (failure) process.exit(1)
+    if (failure) process.exit(1);
 } else {
     await import(`${basePath}/${workerData}/test.mjs`);
 }
