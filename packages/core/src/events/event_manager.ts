@@ -1,7 +1,7 @@
 import log from '@apify/log';
-import { EventEmitter } from 'node:events';
 import type { BetterIntervalID } from '@apify/utilities';
 import { betterClearInterval, betterSetInterval } from '@apify/utilities';
+import { AsyncEventEmitter } from '@vladfrangu/async_event_emitter';
 import { Configuration } from '../configuration';
 
 export const enum EventType {
@@ -20,7 +20,7 @@ interface Intervals {
 }
 
 export abstract class EventManager {
-    protected events = new EventEmitter();
+    protected events = new AsyncEventEmitter();
     protected initialized = false;
     protected intervals: Intervals = {};
     protected log = log.child({ prefix: 'Events' });
@@ -55,6 +55,9 @@ export abstract class EventManager {
 
         betterClearInterval(this.intervals.persistState!);
         this.initialized = false;
+
+        // Emit final PERSIST_STATE event
+        this.emit(EventType.PERSIST_STATE, { isMigrating: false });
     }
 
     on(event: EventTypeName, listener: (...args: any[]) => any): void {
@@ -89,5 +92,12 @@ export abstract class EventManager {
      */
     listeners(event: EventTypeName): (() => Promise<unknown>)[] {
         return this.events.listeners(event) as (() => Promise<unknown>)[];
+    }
+
+    /**
+     * @internal
+     */
+    waitForAllListenersToComplete() {
+        return this.events.waitForAllListenersToComplete();
     }
 }

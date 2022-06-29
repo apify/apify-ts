@@ -118,6 +118,6 @@ describe('events', () => {
         jest.advanceTimersByTime(60001);
         jest.advanceTimersByTime(60001);
         await events.close();
-        expect(eventsReceived.length).toBe(4);
+        expect(eventsReceived.length).toBe(5);
     });
 });
