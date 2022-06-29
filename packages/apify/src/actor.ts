@@ -195,7 +195,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
         this.eventManager.emit(EventType.EXIT, options);
 
         // Wait for all event listeners to be processed
-        log.debug(`Waiting for ${options.timeoutSecs} seconds for all event listeners to complete their execution`);
+        log.debug(`Waiting for all event listeners to complete their execution (with ${options.timeoutSecs} seconds timeout)`);
         await addTimeoutToPromise(
             () => this.eventManager.waitForAllListenersToComplete(),
             options.timeoutSecs * 1000,
