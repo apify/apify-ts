@@ -172,6 +172,9 @@ export class Actor<Data extends Dictionary = Dictionary> {
             this.config.useEventManager(this.eventManager);
             // for browser launcher, adds `--no-sandbox` to args
             process.env.CRAWLEE_DISABLE_BROWSER_SANDBOX = '1';
+            if (!process.env.CRAWLEE_DEFAULT_DATASET_ID) this.config.set('defaultDatasetId', process.env.APIFY_DEFAULT_DATASET_ID);
+            if (!process.env.CRAWLEE_DEFAULT_KEY_VALUE_STORE_ID) this.config.set('defaultKeyValueStoreId', process.env.APIFY_DEFAULT_KEY_VALUE_STORE_ID);
+            if (!process.env.CRAWLEE_DEFAULT_REQUEST_QUEUE_ID) this.config.set('defaultRequestQueueId', process.env.APIFY_DEFAULT_REQUEST_QUEUE_ID);
         } else if (options.storage) {
             this.config.useStorageClient(options.storage);
         }

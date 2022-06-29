@@ -56,10 +56,10 @@ export interface ConfigurationOptions {
  *
  * Key | Environment Variable | Default Value
  * ---|---|---
- * `defaultDatasetId` | `APIFY_DEFAULT_DATASET_ID` | `'default'`
- * `defaultKeyValueStoreId` | `APIFY_DEFAULT_KEY_VALUE_STORE_ID` | `'default'`
- * `defaultRequestQueueId` | `APIFY_DEFAULT_REQUEST_QUEUE_ID` | `'default'`
- * `persistStateIntervalMillis` | `APIFY_PERSIST_STATE_INTERVAL_MILLIS` | `60e3`
+ * `defaultDatasetId` | `CRAWLEE_DEFAULT_DATASET_ID` | `'default'`
+ * `defaultKeyValueStoreId` | `CRAWLEE_DEFAULT_KEY_VALUE_STORE_ID` | `'default'`
+ * `defaultRequestQueueId` | `CRAWLEE_DEFAULT_REQUEST_QUEUE_ID` | `'default'`
+ * `persistStateIntervalMillis` | `CRAWLEE_PERSIST_STATE_INTERVAL_MILLIS` | `60e3`
  *
  * ## Advanced Configuration Options
  *
@@ -91,13 +91,12 @@ export class Configuration {
         // TODO prefix once we have a package name
         CRAWLEE_AVAILABLE_MEMORY_RATIO: 'availableMemoryRatio',
         CRAWLEE_PURGE_ON_START: 'purgeOnStart',
+        CRAWLEE_DEFAULT_DATASET_ID: 'defaultDatasetId',
+        CRAWLEE_DEFAULT_KEY_VALUE_STORE_ID: 'defaultKeyValueStoreId',
+        CRAWLEE_DEFAULT_REQUEST_QUEUE_ID: 'defaultRequestQueueId',
+        CRAWLEE_PERSIST_STATE_INTERVAL_MILLIS: 'persistStateIntervalMillis',
 
-        APIFY_DEFAULT_DATASET_ID: 'defaultDatasetId',
-        APIFY_DEFAULT_KEY_VALUE_STORE_ID: 'defaultKeyValueStoreId',
-        APIFY_DEFAULT_REQUEST_QUEUE_ID: 'defaultRequestQueueId',
         APIFY_METAMORPH_AFTER_SLEEP_MILLIS: 'metamorphAfterSleepMillis',
-        APIFY_PERSIST_STATE_INTERVAL_MILLIS: 'persistStateIntervalMillis',
-        APIFY_TEST_PERSIST_INTERVAL_MILLIS: 'persistStateIntervalMillis', // for BC, seems to be unused
         APIFY_INPUT_KEY: 'inputKey',
         APIFY_ACTOR_ID: 'actorId',
         APIFY_ACTOR_RUN_ID: 'actorRunId',
