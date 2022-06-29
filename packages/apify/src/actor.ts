@@ -1465,7 +1465,7 @@ export interface ExitOptions {
     statusMessage?: string;
     /**
      * Amount of time, in seconds, to wait for all event handlers to finish before exiting the process.
-     * @default 5
+     * @default 30
      */
     timeoutSecs?: number;
     /** Exit code, defaults to 0 */
