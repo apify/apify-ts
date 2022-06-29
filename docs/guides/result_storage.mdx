@@ -13,7 +13,7 @@ Crawlee storage is managed by <ApiLink to="memory-storage/class/MemoryStorage">`
 
 The key-value store is used for saving and reading data records or files. Each data record is represented by a unique key and associated with a MIME content type. Key-value stores are ideal for saving screenshots of web pages, PDFs or to persist the state of crawlers.
 
-Each Crawlee project is associated with a **default key-value store**. By convention, the project input and output are stored in the default key-value store under the `INPUT` and `OUTPUT` keys respectively. Typically, both input and output are JSON files, although they could be any other format.
+Each Crawlee project run is associated with a **default key-value store**. By convention, the project input and output are stored in the default key-value store under the `INPUT` and `OUTPUT` keys respectively. Typically, both input and output are JSON files, although they could be any other format.
 
 In Crawlee, the key-value store is represented by the <ApiLink to="core/class/KeyValueStore">`KeyValueStore`</ApiLink> class. In order to simplify access to the default key-value store, Crawlee also provides <ApiLink to="core/class/KeyValueStore#getValue">`KeyValueStore.getValue()`</ApiLink> and <ApiLink to="core/class/KeyValueStore#setValue">`KeyValueStore.setValue()`</ApiLink> functions.
 
@@ -25,7 +25,7 @@ The data is stored in the directory specified by the `CRAWLEE_STORAGE_DIR` envir
 
 :::note
 
-`{STORE_ID}` is the name or the ID of the key-value store. The default key-value store has ID `default`, unless you override it by setting the `APIFY_DEFAULT_KEY_VALUE_STORE_ID` environment variable. The `{KEY}` is the key of the record and `{EXT}` corresponds to the MIME content type of the data value.
+`{STORE_ID}` is the name or the ID of the key-value store. The default key-value store has ID `default`, unless we override it by setting the `APIFY_DEFAULT_KEY_VALUE_STORE_ID` environment variable. The `{KEY}` is the key of the record and `{EXT}` corresponds to the MIME content type of the data value.
 
 :::
 
@@ -61,9 +61,9 @@ To see a real-world example of how to get the input from the key-value store, se
 
 ## Dataset
 
-Datasets are used to store structured data where each object stored has the same attributes, such as online store products or real estate offers. You can imagine a dataset as a table, where each object is a row and its attributes are columns. Dataset is an append-only storage - you can only add new records to it, but you cannot modify or remove existing records.
+Datasets are used to store structured data where each object stored has the same attributes, such as online store products or real estate offers. Dataset can be imagined as a table, where each object is a row and its attributes are columns. Dataset is an append-only storage - we can only add new records to it, but we cannot modify or remove existing records.
 
-Each Crawlee project is associated with a **default dataset**. Typically, it is used to store crawling results specific for the crawler run. Its usage is optional.
+Each Crawlee project run is associated with a **default dataset**. Typically, it is used to store crawling results specific for the crawler run. Its usage is optional.
 
 In Crawlee, the dataset is represented by the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> class. In order to simplify writes to the default dataset, Crawlee also provides the <ApiLink to="core/class/Dataset#pushData">`Dataset.pushData()`</ApiLink> function.
 
@@ -75,7 +75,7 @@ The data is stored in the directory specified by the `CRAWLEE_STORAGE_DIR` envir
 
 :::note
 
-`{DATASET_ID}` is the name or the ID of the dataset. The default dataset has ID `default`, unless you override it by setting the `APIFY_DEFAULT_DATASET_ID` environment variable. Each dataset item is stored as a separate JSON file, where `{INDEX}` is a zero-based index of the item in the dataset.
+`{DATASET_ID}` is the name or the ID of the dataset. The default dataset has ID `default`, unless we override it by setting the `APIFY_DEFAULT_DATASET_ID` environment variable. Each dataset item is stored as a separate JSON file, where `{INDEX}` is a zero-based index of the item in the dataset.
 
 :::
 

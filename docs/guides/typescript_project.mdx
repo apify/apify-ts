@@ -1,20 +1,20 @@
 ---
-id: type-script-actor
-title: TypeScript Actors
+id: type-script-project
+title: TypeScript Projects
 ---
 
 import ApiLink from '@site/src/components/ApiLink';
 
 Crawlee supports TypeScript by covering public APIs with type declarations. This
 allows writing code with auto-completion for TypeScript and JavaScript code alike.
-Besides that, actors written in TypeScript can take advantage of compile-time
+Besides that, projects written in TypeScript can take advantage of compile-time
 type-checking and avoid many coding mistakes, while providing documentation for
 functions, parameters and return values.
 
 Setting up a TypeScript project
 =============================
 
-To use TypeScript in your actors, you'll need the following prerequisites.
+To use TypeScript in our projects, we'll need the following prerequisites.
 
 1. TypeScript compiler `tsc` installed somewhere:
 
@@ -22,12 +22,12 @@ To use TypeScript in your actors, you'll need the following prerequisites.
     npm install --dev typescript
     ```
 
-    TypeScript can be a development dependency in your project, as shown above. There's no
-    need to pollute your production environment or your system's global repository
+    TypeScript can be a development dependency in our project, as shown above. There's no
+    need to pollute the production environment or the system's global repository
     with TypeScript.
 
 2. A build script invoking `tsc` and a correctly specified `main` entry point defined
-   in your `package.json`:
+   in the `package.json`:
 
    ```json
    {
@@ -38,14 +38,14 @@ To use TypeScript in your actors, you'll need the following prerequisites.
    }
    ```
 
-3. Type declarations for NodeJS, so you can take advantage of type-checking in all the features you'll use:
+3. Type declarations for NodeJS, so we can take advantage of type-checking in all the features we'll use:
 
    ```shell script
    npm install --dev @types/node
    ```
 
-4. TypeScript configuration file allowing `tsc` to understand your project layout and
-   the features used in your project:
+4. TypeScript configuration file allowing `tsc` to understand the project layout and
+   the features used in the project:
 
    ```json
    {
@@ -76,15 +76,15 @@ To use TypeScript in your actors, you'll need the following prerequisites.
    }
    ```
 
-   Place the content above inside a `tsconfig.json` in your root folder.
+   Place the content above inside a `tsconfig.json` in the root folder.
 
-   Also, if you are a VSCode user that is using JavaScript, create a `jsconfig.json` with the same content, adding `"checkJs": true` to `"compilerOptions"`, so you can enjoy using the types in your `.js` source files.
+   Also, to enjoy using the types in `.js` source files, VSCode users that are using JavaScript should create a `jsconfig.json` with the same content and add `"checkJs": true` to `"compilerOptions"`.
 
 Auto-completion
 ==============
 
-IDE auto-completion should work in most places. That's true even if you are writing
-actors in pure JavaScript. For time constraints, we left out the amendment of an
+IDE auto-completion should work in most places. That's true even for
+projects written in pure JavaScript. For time constraints, we left out the amendment of an
 internal API for the time being, and these need to be added as Crawlee developers write
 new and enhance old code.
 
@@ -102,25 +102,29 @@ As of version 1.0+, the generated typings, due to JSDoc limitations, have some p
 and parameters annotated with `any` type, therefore the settings `noImplicitAny` and `strictNullChecks`, set to `true`, may not be advised. You may try enabling them, but it might hinder development because of the need for typecasts to be able to compile, your mileage may vary.
 
 Besides the _implicit any_ errors that might occur in the code when writing in TypeScript, the
-current typings doesn't offer generics that make outputs type-safe, so you need to declare your
+current typings doesn't offer generics that make outputs type-safe, so we need to declare our
 types, as such:
 
 ```typescript
+import { KeyValueStore } from 'crawlee';
+
 interface MySchema {
     expectedParam1?: string;
     expectedParam2?: number;
 }
 
-const input: MySchema = (await Actor.getInput()) as any; // getInput returns Promise<Object<string, *>|string|Buffer|null> here
+const input: MySchema = (await KeyValueStore.getInput()) as any; // getInput returns Promise<Object<string, *>|string|Buffer|null> here
 
-if (!input?.expectedParam1) { // input is MySchema now and you can check in a type-safe way
+if (!input?.expectedParam1) { // input is MySchema now and we can check in a type-safe way
     throw new Error('Missing expectedParam1');
 }
 ```
 
-There are also other places where you need to explicitly provide your interface / type, like in Dataset iterators (`map`, `reduce`, `forEach`):
+There are also other places where we need to explicitly provide our interface/type, like in Dataset iterators (`map`, `reduce`, `forEach`):
 
 ```typescript
+import { Dataset } from 'crawlee';
+
 interface ExpectedShape {
     id: string;
     someFields: Fields[];
