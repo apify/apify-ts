@@ -5,7 +5,6 @@
  * **Example usage:**
  *
  * ```javascript
- * import { Actor } from 'apify';
  * import { launchPlaywright, playwrightUtils } from 'crawlee';
  *
  * // Navigate to https://www.example.com in Playwright with a POST request

@@ -221,8 +221,7 @@ export interface SocialHandles {
  *
  * **Example usage:**
  * ```typescript
- * import { launchPuppeteer } from '@crawlee/puppeteer';
- * import { social } from 'crawlee';
+ * import { launchPuppeteer, social } from 'crawlee';
  *
  * const browser = await launchPuppeteer();
  * const page = await browser.newPage();

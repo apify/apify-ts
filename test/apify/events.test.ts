@@ -3,16 +3,16 @@ import type { Dictionary } from '@crawlee/utils';
 import { sleep } from '@crawlee/utils';
 import { Configuration, EventType } from '@crawlee/core';
 import { Actor, PlatformEventManager } from 'apify';
-import WebSocket from 'ws';
+import { Server } from 'ws';
 
 describe('events', () => {
-    let wss: WebSocket.Server = null;
+    let wss: Server = null;
     const config = Configuration.getGlobalConfig();
     const events = new PlatformEventManager(config);
     config.useEventManager(events);
 
     beforeEach(() => {
-        wss = new WebSocket.Server({ port: 9099 });
+        wss = new Server({ port: 9099 });
         jest.useFakeTimers();
         process.env[ENV_VARS.ACTOR_EVENTS_WS_URL] = 'ws://localhost:9099/someRunId';
         process.env[ENV_VARS.TOKEN] = 'dummy';

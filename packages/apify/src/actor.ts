@@ -25,7 +25,6 @@ import {
     Configuration,
     Dataset,
     EventType,
-    KeyValueStore,
     RequestQueue,
     StorageManager,
     purgeDefaultStorages,
@@ -36,6 +35,7 @@ import { logSystemInfo, printOutdatedSdkWarning } from './utils';
 import { PlatformEventManager } from './platform_event_manager';
 import type { ProxyConfigurationOptions } from './proxy_configuration';
 import { ProxyConfiguration } from './proxy_configuration';
+import { KeyValueStore } from './key_value_store';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
