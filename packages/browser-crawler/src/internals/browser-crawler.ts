@@ -64,6 +64,8 @@ export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserFailedRequestCon
 
 export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
+export type BrowserCrawlerHandleError<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context, error: Error) => Awaitable<void>;
+
 export type BrowserCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue' | 'urls'>
 
 export type BrowserHook<
@@ -85,8 +87,11 @@ export interface BrowserCrawlerOptions<
     // Overridden with browser context
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
+    // Overridden with browser context
+    | 'errorHandler'
 > {
     launchContext?: BrowserLaunchContext<any, any>;
+
     /**
      * Function that is called to process each request.
      * It is passed an object with the following fields:
@@ -172,6 +177,29 @@ export interface BrowserCrawlerOptions<
     handlePageFunction?: BrowserCrawlerHandleRequest<Context>;
 
     /**
+     * A function to handle requests that failed less than `option.maxRequestRetries` times
+     * and would be retried by the crawler.
+     *
+     * The function receives the following object as the first argument:
+     * ```
+     * {
+     *     request: Request,
+     *     response: Response,
+     *     page: Page,
+     *     browserPool: BrowserPool,
+     *     autoscaledPool: AutoscaledPool,
+     *     session: Session,
+     *     browserController: BrowserController,
+     *     proxyInfo: ProxyInfo,
+     * }
+     * ```
+     * Where the {@link Request} instance corresponds to the failed request.
+     * Second argument is the `Error` instance
+     * represents the last error thrown during processing of the request.
+     */
+    errorHandler?: BrowserCrawlerHandleError<Context>;
+
+    /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
      * The function receives the following object as an argument:
@@ -189,7 +217,6 @@ export interface BrowserCrawlerOptions<
      * ```
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
-     *
      */
     failedRequestHandler?: BrowserCrawlerHandleFailedRequest;
 

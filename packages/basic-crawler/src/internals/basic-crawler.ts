@@ -65,6 +65,8 @@ const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
 export type RequestHandler<Context extends CrawlingContext = BasicCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
+export type ErrorHandler<Context extends CrawlingContext = BasicCrawlingContext> = (inputs: Context, error: Error) => Awaitable<void>;
+
 export type FailedRequestHandler<Inputs extends FailedRequestContext = BasicFailedRequestContext> = (inputs: Inputs) => Awaitable<void>;
 
 export interface BasicCrawlerOptions<
@@ -152,23 +154,21 @@ export interface BasicCrawlerOptions<
 
     /**
      * A function to handle requests that failed less than `option.maxRequestRetries` times
-     * and would be retried by the crawler by default.
-     * Note that if the function is user-provided, it would not reclaim the request automatically.
+     * and would be retried by the crawler.
      *
-     * The function receives the following object as an argument:
+     * The function receives the following object as the first argument:
      * ```
      * {
      *     request: Request,
-     *     error: Error,
      *     session: Session,
      *     crawler: BasicCrawler,
      * }
      * ```
-     * where the {@link Request} instance corresponds to the request to be reclaimed, and the `Error` instance
+     * where the {@link Request} instance corresponds to the request to be reclaimed.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
-     *
      */
-    preReclaimRequestHandler?: FailedRequestHandler<ErrorContext>;
+    errorHandler?: ErrorHandler<Context>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -370,7 +370,7 @@ export class BasicCrawler<
 
     protected log: Log;
     protected requestHandler!: RequestHandler<Context>;
-    protected preReclaimRequestHandler?: FailedRequestHandler<ErrorContext>;
+    protected errorHandler?: ErrorHandler<Context>;
     protected failedRequestHandler?: FailedRequestHandler<ErrorContext>;
     protected requestHandlerTimeoutMillis!: number;
     protected internalTimeoutMillis: number;
@@ -395,7 +395,7 @@ export class BasicCrawler<
         requestHandlerTimeoutSecs: ow.optional.number,
         // TODO: remove in a future release
         handleRequestTimeoutSecs: ow.optional.number,
-        preReclaimRequestHandler: ow.optional.function,
+        errorHandler: ow.optional.function,
         failedRequestHandler: ow.optional.function,
         // TODO: remove in a future release
         handleFailedRequestFunction: ow.optional.function,
@@ -442,7 +442,7 @@ export class BasicCrawler<
             handleRequestTimeoutSecs,
             requestHandlerTimeoutSecs,
 
-            preReclaimRequestHandler,
+            errorHandler,
 
             handleFailedRequestFunction,
             failedRequestHandler,
@@ -466,7 +466,7 @@ export class BasicCrawler<
             this.requestHandler = this.router;
         }
 
-        this.preReclaimRequestHandler = preReclaimRequestHandler;
+        this.errorHandler = errorHandler;
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',
@@ -956,15 +956,22 @@ export class BasicCrawler<
             throw error;
         }
 
-        // @ts-expect-error It is assignable, but TS says otherwise...
-        const castedErrorContext = crawlingContext as ErrorContext;
-        castedErrorContext.error = error;
-
         const shouldRetryRequest = !request.noRetry && request.retryCount < this.maxRequestRetries && !(error instanceof NonRetryableError);
         if (shouldRetryRequest) {
             request.retryCount++;
 
-            await this._handlePreReclaimRequestHandler(castedErrorContext, source);
+            if (this.errorHandler) {
+                await this.errorHandler(crawlingContext, error);
+            }
+
+            const { url, retryCount, id } = request;
+            // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
+            // Thus, we print the full stack trace only when CRAWLEE_VERBOSE_LOG environment variable is set to true.
+            this.log.warning(
+                `Reclaiming failed request back to the list or queue. ${!process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack}`,
+                { id, url, retryCount },
+            );
+            await source.reclaimRequest(request);
         } else {
             // If we get here, the request is either not retryable
             // or failed more than retryCount times and will not be retried anymore.
@@ -973,25 +980,11 @@ export class BasicCrawler<
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.uniqueKey);
 
-            await this._handleFailedRequestHandler(castedErrorContext); // This function prints an error message.
-        }
-    }
+            // @ts-expect-error It is assignable, but TS says otherwise...
+            const castedErrorContext = crawlingContext as ErrorContext;
+            castedErrorContext.error = error;
 
-    protected async _handlePreReclaimRequestHandler(crawlingContext: ErrorContext, source: RequestList | RequestQueue): Promise<void> {
-        if (this.preReclaimRequestHandler) {
-            await this.preReclaimRequestHandler(crawlingContext);
-        } else {
-            const { id, url, retryCount } = crawlingContext.request;
-            // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
-            // Thus, we print the full stack trace only when CRAWLEE_VERBOSE_LOG environment variable is set to true.
-            this.log.warning(
-                `Reclaiming failed request back to the list or queue. ${!process.env.CRAWLEE_VERBOSE_LOG
-                    ? crawlingContext.error
-                    : crawlingContext.error.stack
-                }`,
-                { id, url, retryCount },
-            );
-            await source.reclaimRequest(crawlingContext.request);
+            await this._handleFailedRequestHandler(castedErrorContext); // This function prints an error message.
         }
     }
 
