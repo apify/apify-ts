@@ -340,23 +340,23 @@ export class Session {
 
     /**
      * Transforms puppeteer cookie to tough-cookie.
-     * @param puppeteerCookie Cookie from puppeteer `page.cookies` method.
+     * @param cookieObject Cookie object (for instance from the `page.cookies` method).
      */
-    protected _cookieObjectToTough(puppeteerCookie: CookieObject): Cookie {
-        const isExpiresValid = puppeteerCookie.expires && typeof puppeteerCookie.expires === 'number' && puppeteerCookie.expires > 0;
-        const expires = isExpiresValid ? new Date(puppeteerCookie.expires! * 1000) : this._getDefaultCookieExpirationDate(this.maxAgeSecs);
-        const domain = typeof puppeteerCookie.domain === 'string' && puppeteerCookie.domain.startsWith('.')
-            ? puppeteerCookie.domain.slice(1)
-            : puppeteerCookie.domain;
+    protected _cookieObjectToTough(cookieObject: CookieObject): Cookie {
+        const isExpiresValid = cookieObject.expires && typeof cookieObject.expires === 'number' && cookieObject.expires > 0;
+        const expires = isExpiresValid ? new Date(cookieObject.expires! * 1000) : this._getDefaultCookieExpirationDate(this.maxAgeSecs);
+        const domain = typeof cookieObject.domain === 'string' && cookieObject.domain.startsWith('.')
+            ? cookieObject.domain.slice(1)
+            : cookieObject.domain;
 
         return new Cookie({
-            key: puppeteerCookie.name,
-            value: puppeteerCookie.value,
+            key: cookieObject.name,
+            value: cookieObject.value,
             expires,
             domain,
-            path: puppeteerCookie.path,
-            secure: puppeteerCookie.secure,
-            httpOnly: puppeteerCookie.httpOnly,
+            path: cookieObject.path,
+            secure: cookieObject.secure,
+            httpOnly: cookieObject.httpOnly,
         });
     }
 
