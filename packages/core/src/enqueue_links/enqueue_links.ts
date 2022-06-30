@@ -2,19 +2,13 @@ import { getDomain } from 'tldts';
 import ow from 'ow';
 import log from '@apify/log';
 import type { BatchAddRequestsResult, Dictionary } from '@crawlee/types';
-import type {
-    GlobInput,
-    PseudoUrlInput,
-    RegExpInput,
-    RequestTransform,
-    UrlPatternObject,
-} from './shared';
+import type { GlobInput, PseudoUrlInput, RegExpInput, RequestTransform, UrlPatternObject } from './shared';
 import {
     constructGlobObjectsFromGlobs,
     constructRegExpObjectsFromPseudoUrls,
     constructRegExpObjectsFromRegExps,
-    createRequests,
     createRequestOptions,
+    createRequests,
 } from './shared';
 import type { RequestQueue } from '../storages/request_queue';
 import type { RequestOptions } from '../request';
@@ -119,9 +113,9 @@ export interface EnqueueLinksOptions {
 
     /**
      * The strategy to use when enqueueing the urls.
-     * @default EnqueueStrategy.SameSubdomain
+     * @default EnqueueStrategy.SameHostname
      */
-    strategy?: EnqueueStrategy | 'all' | 'same-subdomain' | 'same-hostname';
+    strategy?: EnqueueStrategy | 'all' | 'same-domain' | 'same-hostname';
 }
 
 export enum EnqueueStrategy {
@@ -129,18 +123,20 @@ export enum EnqueueStrategy {
      * Matches any URLs found
      */
     All = 'all',
+
     /**
-     * Matches any URLs that have the same subdomain as the base URL.
+     * Matches any URLs that have the same hostname.
      * For example, `https://wow.example.com/hello` will be matched for a base url of `https://example.com/`, but
      * `https://example.com/hello` will not be matched.
      */
-    SameSubdomain = 'same-subdomain',
+    SameHostname = 'same-hostname',
+
     /**
-     * Matches any URLs that have the same hostname.
+     * Matches any URLs that have the same (sub-)domain as the base URL.
      * For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of
      * `https://example.com`.
      */
-    SameHostname = 'same-hostname',
+    SameDomain = 'same-domain',
 }
 
 /**
@@ -191,8 +187,8 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
         transformRequestFunction: ow.optional.function,
         strategy: ow.optional.string.oneOf([
             EnqueueStrategy.All,
-            EnqueueStrategy.SameSubdomain,
             EnqueueStrategy.SameHostname,
+            EnqueueStrategy.SameDomain,
         ]),
     }));
 
@@ -222,20 +218,20 @@ export async function enqueueLinks(options: EnqueueLinksOptions): Promise<BatchA
     }
 
     if (!urlPatternObjects.length) {
-        options.strategy ??= EnqueueStrategy.SameSubdomain;
+        options.strategy ??= EnqueueStrategy.SameHostname;
     }
 
     if (options.baseUrl) {
+        const url = new URL(options.baseUrl);
+
         switch (options.strategy) {
-            case EnqueueStrategy.SameSubdomain:
+            case EnqueueStrategy.SameHostname:
                 // We need to get the origin of the passed in domain in the event someone sets baseUrl
                 // to an url like https://example.com/deep/default/path and one of the found urls is an
                 // absolute relative path (/path/to/page)
-                urlPatternObjects.push({ glob: `${new URL(options.baseUrl).origin}/**` });
+                urlPatternObjects.push({ glob: `${url.origin}/**` });
                 break;
-            case EnqueueStrategy.SameHostname: {
-                const url = new URL(options.baseUrl);
-
+            case EnqueueStrategy.SameDomain: {
                 // Get the actual hostname from the base url
                 const baseUrlHostname = getDomain(url.hostname, { mixedInputs: false });
 
@@ -295,7 +291,7 @@ export function resolveBaseUrl({
     }
 
     // Ensure links use the same hostname
-    if (enqueueStrategy === EnqueueStrategy.SameHostname) {
+    if (enqueueStrategy === EnqueueStrategy.SameDomain) {
         const originalHostname = getDomain(originalUrlOrigin, { mixedInputs: false })!;
         const finalHostname = getDomain(finalUrlOrigin, { mixedInputs: false })!;
 

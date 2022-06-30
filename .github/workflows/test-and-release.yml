@@ -153,7 +153,7 @@ jobs:
                     GIT_USER: "noreply@apify.com:${{ secrets.GH_TOKEN }}"
                     GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-# TODO this will need adjustments, as the root package.json is no longer usable
+# TODO uncomment before final release
 # The deploy job is long but there are only 2 important parts. NPM publish
 # and triggering of docker image builds in the apify-actor-docker repo.
 #            -   name: Collect Versions For Images

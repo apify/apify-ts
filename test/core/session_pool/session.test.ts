@@ -205,7 +205,7 @@ describe('Session - testing session behaviour ', () => {
         expect(session.retireOnBlockedStatusCodes(400, customStatusCodes)).toBeFalsy();
     });
 
-    test('setPuppeteerCookies should work', () => {
+    test('setCookies should work', () => {
         const url = 'https://example.com';
         const cookies = [
             { name: 'cookie1', value: 'my-cookie' },
@@ -213,22 +213,22 @@ describe('Session - testing session behaviour ', () => {
         ];
 
         session = new Session({ sessionPool });
-        session.setPuppeteerCookies(cookies, url);
+        session.setCookies(cookies, url);
         expect(session.getCookieString(url)).toBe('cookie1=my-cookie; cookie2=your-cookie');
     });
 
-    test('setPuppeteerCookies should work for session (with expiration date: -1) cookies', () => {
+    test('setCookies should work for session (with expiration date: -1) cookies', () => {
         const url = 'https://example.com';
         const cookies = [
             { name: 'session_cookie', value: 'session-cookie-value', expires: -1 },
         ];
 
         session = new Session({ sessionPool });
-        session.setPuppeteerCookies(cookies, url);
+        session.setCookies(cookies, url);
         expect(session.getCookieString(url)).toBe('session_cookie=session-cookie-value');
     });
 
-    test('setPuppeteerCookies works with leading dots in domains', () => {
+    test('setCookies works with leading dots in domains', () => {
         const url = 'https://www.example.com';
         const cookies = [
             { name: 'cookie1', value: 'my-cookie', domain: 'abc.example.com' },
@@ -236,7 +236,7 @@ describe('Session - testing session behaviour ', () => {
         ];
 
         session = new Session({ sessionPool });
-        session.setPuppeteerCookies(cookies, url);
+        session.setCookies(cookies, url);
         expect(session.getCookieString(url)).toBe('cookie2=your-cookie');
     });
 

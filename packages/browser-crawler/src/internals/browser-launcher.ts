@@ -1,15 +1,9 @@
 import os from 'node:os';
 import fs from 'node:fs';
 import ow from 'ow';
-import { ENV_VARS } from '@apify/consts';
-import type {
-    Dictionary,
-    Constructor,
-} from '@crawlee/utils';
-import type {
-    BrowserPlugin,
-    BrowserPluginOptions,
-} from '@crawlee/browser-pool';
+import type { Dictionary, Constructor } from '@crawlee/utils';
+import type { BrowserPlugin, BrowserPluginOptions } from '@crawlee/browser-pool';
+import { Configuration } from '@crawlee/core';
 
 const DEFAULT_VIEWPORT = {
     width: 1366,
@@ -29,7 +23,7 @@ export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginO
      * If `true` and `executablePath` is not set,
      * the launcher will launch full Google Chrome browser available on the machine
      * rather than the bundled Chromium. The path to Chrome executable
-     * is taken from the `APIFY_CHROME_EXECUTABLE_PATH` environment variable if provided,
+     * is taken from the `CRAWLEE_CHROME_EXECUTABLE_PATH` environment variable if provided,
      * or defaults to the typical Google Chrome executable location specific for the operating system.
      * By default, this option is `false`.
      * @default false
@@ -109,7 +103,7 @@ export abstract class BrowserLauncher<
     /**
      * All `BrowserLauncher` parameters are passed via an launchContext object.
      */
-    constructor(launchContext: BrowserLaunchContext<LaunchOptions, Launcher>) {
+    constructor(launchContext: BrowserLaunchContext<LaunchOptions, Launcher>, readonly config = Configuration.getGlobalConfig()) {
         const {
             launcher,
             proxyUrl,
@@ -159,7 +153,7 @@ export abstract class BrowserLauncher<
             ...this.launchOptions,
         };
 
-        if (process.env.CRAWLEE_DISABLE_BROWSER_SANDBOX) {
+        if (this.config.get('disableBrowserSandbox')) {
             launchOptions.args.push('--no-sandbox');
         }
 
@@ -179,11 +173,11 @@ export abstract class BrowserLauncher<
     }
 
     protected _getDefaultHeadlessOption(): boolean {
-        return process.env[ENV_VARS.HEADLESS] === '1' && process.env[ENV_VARS.XVFB] !== '1';
+        return this.config.get('headless', false) && !this.config.get('xvfb', false);
     }
 
     protected _getChromeExecutablePath(): string {
-        return process.env[ENV_VARS.CHROME_EXECUTABLE_PATH] || this._getTypicalChromeExecutablePath();
+        return this.config.get('chromeExecutablePath', this._getTypicalChromeExecutablePath());
     }
 
     /**

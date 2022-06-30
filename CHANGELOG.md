@@ -20,7 +20,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * (internal) `Request.handledAt` is now string date in ISO format
 * (perf/internal) `Request.inProgress` and `Request.reclaimed` are now `Set`s instead of dictionaries
 * `injectUnderscore` from puppeteer utils has been removed
-* `APIFY_MEMORY_MBYTES` is no longer taken into account, use `CRAWLEE_AVAILABLE_MEMORY_RATIO` instead
 * some `AutoscaledPool` options are no longer available:
     * `cpuSnapshotIntervalSecs` and `memorySnapshotIntervalSecs` has been replaced with top level `systemInfoIntervalMillis` configuration
     * `maxUsedCpuRatio` has been moved to the top level configuration
@@ -33,6 +32,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * remove `purgeLocalStorage` helper, move purging to the storage class directly
   * `StorageClient` interface now has optional `purge` method
   * purging happens automatically via `Actor.init()` (you can opt out via `purge: false` in the options of `init/main` methods)
+* `Session#getPuppeteerCookies` and `Session#setPuppeteerCookies` have been renamed to `Session#getCookies` and `Session#setCookies` respectively.
 
 ## [2.3.2](https://github.com/apify/apify-ts/compare/v2.3.1...v2.3.2) (2022-05-05)
 

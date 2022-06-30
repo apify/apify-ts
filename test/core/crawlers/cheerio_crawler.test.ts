@@ -240,7 +240,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
         const sources = [
             { url: 'http://example.com/?q=1' },
         ];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
         const requestHandler = () => {};
 
         const cheerioCrawler = new CheerioCrawler({
@@ -249,7 +249,6 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             requestHandler,
         });
 
-        await requestList.initialize();
         await cheerioCrawler.run();
 
         // @ts-expect-error Accessing private prop
@@ -262,8 +261,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             { url: `http://${HOST}:${port}/mirror?q=%` },
             { url: `http://${HOST}:${port}/mirror?q=%cf` },
         ];
-        const requestList = new RequestList({ sources });
-        await requestList.initialize();
+        const requestList = await RequestList.open(null, sources);
         const processed: Request[] = [];
         const failed: Request[] = [];
         const requestHandler: CheerioRequestHandler = ({ $, body, request }) => {
@@ -329,7 +327,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             ];
             const processed: Request[] = [];
             const failed: Request[] = [];
-            const requestList = new RequestList({ sources });
+            const requestList = await RequestList.open(null, sources);
             const requestHandler: CheerioRequestHandler = ({ request }) => {
                 processed.push(request);
             };
@@ -352,7 +350,6 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 return '<html><head></head><body>Body</body></html>';
             };
 
-            await requestList.initialize();
             await cheerioCrawler.run();
 
             expect(processed).toHaveLength(0);
@@ -408,7 +405,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             ];
             const processed: Request[] = [];
             const failed: Request[] = [];
-            const requestList = new RequestList({ sources });
+            const requestList = await RequestList.open(null, sources);
             const requestHandler: CheerioRequestHandler = ({ request }) => {
                 processed.push(request);
             };
@@ -425,7 +422,6 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 },
             });
 
-            await requestList.initialize();
             await cheerioCrawler.run();
 
             expect(processed).toHaveLength(2);
@@ -579,10 +575,9 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         }));
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources,
         });
-        await requestList.initialize();
         const crawler = new CheerioCrawler({
             requestList,
             requestHandler: () => {
@@ -639,12 +634,12 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
     });
 
     describe('should use response encoding', () => {
-        const requestList = new RequestList({
-            sources: ['http://useless.x'],
-        });
         const html = '<html>Žluťoučký kůň</html>';
 
         test('as a fallback', async () => {
+            const requestList = await RequestList.open({
+                sources: ['http://useless.x'],
+            });
             const suggestResponseEncoding = 'windows-1250';
             const buf = iconv.encode(html, suggestResponseEncoding);
             // Ensure it's really encoded.
@@ -668,6 +663,9 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
         });
 
         test('always when forced', async () => {
+            const requestList = await RequestList.open({
+                sources: ['http://useless.x'],
+            });
             const forceResponseEncoding = 'win1250';
             const buf = iconv.encode(html, forceResponseEncoding);
             // Ensure it's really encoded.
@@ -1048,7 +1046,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
             const sourcesNew = [
                 { url: 'http://example.com/?q=1' },
             ];
-            const requestListNew = new RequestList({ sources: sourcesNew });
+            const requestListNew = await RequestList.open({ sources: sourcesNew });
             let usedSession: Session;
 
             const proxyConfiguration = new ProxyConfiguration({ proxyUrls: ['http://localhost:8080'] });
@@ -1070,7 +1068,6 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 return oldHandleRequestF.call(cheerioCrawler, opts);
             };
 
-            await requestListNew.initialize();
             await cheerioCrawler.run();
 
             expect(newUrlSpy).toBeCalledWith(usedSession.id);
@@ -1245,8 +1242,7 @@ async function getRequestListForMock(port: number, mockData: Dictionary, pathNam
             headers: { 'Content-Type': 'application/json' },
         };
     });
-    const requestList = new RequestList({ sources });
-    await requestList.initialize();
+    const requestList = await RequestList.open(null, sources);
     return requestList;
 }
 
@@ -1257,8 +1253,7 @@ async function getRequestListForMirror(port: number) {
         { url: `http://${HOST}:${port}/mirror?a=33` },
         { url: `http://${HOST}:${port}/mirror?a=43` },
     ];
-    const requestList = new RequestList({ sources });
-    await requestList.initialize();
+    const requestList = await RequestList.open(null, sources);
     return requestList;
 }
 

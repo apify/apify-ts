@@ -125,6 +125,10 @@ const crawler = new PlaywrightCrawler({
 });
  ```
 
+## Session cookie method renames
+
+Previously, if we wanted to get or add cookies for the session that would be used for the request, we had to call `session.getPuppeteerCookies()` or `session.setPuppeteerCookies()`. Since this method could be used for any of our crawlers, not just `PuppeteerCrawler`, the methods have been renamed to `session.getCookies()` and `session.setCookies()` respectively. Otherwise, their usage is exactly the same!
+
 ## Memory storage
 
 When we store some data or intermediate state (like the one `RequestQueue` holds), we now use `@crawlee/memory-storage` by default. It is an alternative to the `@apify/storage-local`, that stores the state inside memory (as opposed to SQLite database used by `@apify/storage-local`). While the state is stored in memory, it also dumps it to the file system so we can observe it, as well as respects the existing data stored in KeyValueStore (e.g. the `INPUT.json` file).
@@ -173,8 +177,8 @@ Some utilities previously available under `Apify.utils` namespace are now moved 
 One common helper that received more attention is the `enqueueLinks`. As mentioned above, it is context aware - we no longer need pass in the `requestQueue` or `page` arguments (or the cheerio handle `$`). In addition to that, it now offers 3 enqueuing strategies:
 
 * `EnqueueStrategy.All` (`'all'`): Matches any URLs found
-* `EnqueueStrategy.SameSubdomain` (`'same-subdomain'`) Matches any URLs that have the same subdomain as the base URL (default)
-* `EnqueueStrategy.SameHostname` (`'same-hostname'`) Matches any URLs that have the same hostname. For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of `https://example.com`.
+* `EnqueueStrategy.SameHostname` (`'same-hostname'`) Matches any URLs that have the same subdomain as the base URL (default)
+* `EnqueueStrategy.SameDomain` (`'same-domain'`) Matches any URLs that have the same domain name. For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of `https://example.com`.
 
 This means we can even call `enqueueLinks()` without any parameters. By default, it will go through all the links found on current page and filter only those targeting the same subdomain.
 
@@ -233,7 +237,7 @@ const crawler = new BasicCrawler({
 
 One small feature worth mentioning is the ability to handle requests with browser crawlers outside the browser. To do that, we can use a combination of `Request.skipNavigation` and `context.sendRequest()`.
 
-> **TODO** add example and link it from here
+Take a look at how to achieve this by checking out the [Skipping navigation for certain requests](../examples/skip-navigation) example!
 
 ## Logging
 

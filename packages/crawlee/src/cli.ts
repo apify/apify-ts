@@ -1,3 +1,9 @@
 #!/usr/bin/env node
 
-require('@crawlee/cli');
+// eslint-disable-next-line
+const importLocal = require('import-local');
+
+if (!importLocal(__filename)) {
+    // eslint-disable-next-line
+    require('@crawlee/cli');
+}

@@ -57,14 +57,10 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
     });
 
     test('should not accept to pages with same uniqueKey', async () => {
-        const requestList = new RequestList({
-            sources: [
-                { url: 'https://example.com/1' },
-                { url: 'https://example.com/1#same' },
-            ],
-        });
-
-        await requestList.initialize();
+        const requestList = await RequestList.open(null, [
+            { url: 'https://example.com/1' },
+            { url: 'https://example.com/1#same' },
+        ]);
 
         expect(await requestList.isEmpty()).toBe(false);
 
@@ -82,6 +78,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
     });
 
     test('must be initialized before using any of the methods', async () => {
+        // @ts-expect-error private constructor
         const requestList = new RequestList({ sources: [{ url: 'https://example.com' }] });
         const requestObj = new Request({ url: 'https://example.com' });
 
@@ -116,8 +113,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
-        const originalList = new RequestList({ sources });
-        await originalList.initialize();
+        const originalList = await RequestList.open(null, sources);
 
         const r1 = await originalList.fetchNextRequest(); // 1
         const r2 = await originalList.fetchNextRequest(); // 2
@@ -131,11 +127,10 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         await originalList.markRequestHandled(r4);
         await originalList.reclaimRequest(r5);
 
-        const newList = new RequestList({
+        const newList = await RequestList.open({
             sources: sourcesCopy,
             state: originalList.getState(),
         });
-        await newList.initialize();
 
         expect(await newList.isEmpty()).toBe(false);
         expect((await newList.fetchNextRequest()).url).toBe('https://example.com/3');
@@ -160,14 +155,12 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         spy.mockImplementationOnce(() => new Promise((resolve) => setTimeout(resolve(list1) as any, 100)) as any);
         spy.mockResolvedValueOnce(list2);
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { method: 'GET', requestsFromUrl: 'http://example.com/list-1' },
                 { method: 'POST', requestsFromUrl: 'http://example.com/list-2' },
             ],
         });
-
-        await requestList.initialize();
 
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list1[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list1[1] });
@@ -187,7 +180,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         gotScrapingSpy.mockResolvedValue({ body: listStr } as any);
 
         const regex = /(https:\/\/example.com|HTTP:\/\/google.com)/g;
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 {
                     method: 'GET',
@@ -196,8 +189,6 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
                 },
             ],
         });
-
-        await requestList.initialize();
 
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: listArr[1] });
@@ -224,11 +215,9 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
 
         gotScrapingSpy.mockResolvedValueOnce({ body: JSON.stringify(list) } as any);
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: wrongUrls.map((requestsFromUrl) => ({ requestsFromUrl })),
         });
-
-        await requestList.initialize();
 
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[0] });
         expect(await requestList.fetchNextRequest()).toMatchObject({ method: 'GET', url: list[1] });
@@ -242,7 +231,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         const spy = jest.spyOn(RequestList.prototype as any, '_downloadListOfUrls');
         spy.mockResolvedValueOnce([]);
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 {
                     method: 'GET',
@@ -250,8 +239,6 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
                 },
             ],
         });
-
-        await requestList.initialize();
 
         expect(await requestList.fetchNextRequest()).toBe(null);
 
@@ -273,7 +260,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             proxyUrls,
         });
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { requestsFromUrl: 'http://example.com/list-1' },
                 { requestsFromUrl: 'http://example.com/list-2' },
@@ -282,15 +269,13 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             proxyConfiguration,
         });
 
-        await requestList.initialize();
-
         expect(spy).not.toBeCalledWith(expect.not.objectContaining({ proxyUrl: expect.any(String) }));
 
         spy.mockRestore();
     });
 
     test('should correctly handle reclaimed pages', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'https://example.com/1' },
                 { url: 'https://example.com/2' },
@@ -300,8 +285,6 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
                 { url: 'https://example.com/6' },
             ],
         });
-
-        await requestList.initialize();
 
         //
         // Fetch first 5 urls
@@ -499,8 +482,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         };
         const optsCopy = JSON.parse(JSON.stringify(opts));
 
-        const requestList = new RequestList(opts);
-        await requestList.initialize();
+        const requestList = await RequestList.open(opts);
         expect(requestList.isStatePersisted).toBe(true);
 
         // Fetch one request and check that state is not persisted.
@@ -530,8 +512,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         // Now initiate new request list from saved state and check that it's same as state
         // of original request list.
         getValueSpy.mockResolvedValueOnce(requestList.getState());
-        const requestList2 = new RequestList(optsCopy);
-        await requestList2.initialize();
+        const requestList2 = await RequestList.open(optsCopy);
         expect(requestList2.getState()).toEqual(requestList.getState());
     });
 
@@ -551,9 +532,6 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             persistRequestsKey: PERSIST_REQUESTS_KEY,
         };
 
-        const requestList = new RequestList(opts);
-        expect(requestList.areRequestsPersisted).toBe(false);
-
         // Expect an attempt to load sources.
         getValueSpy.mockResolvedValueOnce(null);
 
@@ -562,7 +540,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             persistedRequests = value;
         });
 
-        await requestList.initialize();
+        const requestList = await RequestList.open(opts);
         expect(requestList.areRequestsPersisted).toBe(true);
 
         const opts2 = {
@@ -576,12 +554,7 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
 
         getValueSpy.mockResolvedValueOnce(persistedRequests);
 
-        const requestList2 = new RequestList(opts2);
-        expect(requestList2.areRequestsPersisted).toBe(false);
-
-        // Now initialize new request list from saved sources and check that
-        // they are same as state of original request list.
-        await requestList2.initialize();
+        const requestList2 = await RequestList.open(opts2);
         expect(requestList2.areRequestsPersisted).toBe(true);
         expect(requestList2.requests).toEqual(requestList.requests);
     });
@@ -606,15 +579,12 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         const urlsFromTxt = ['http://example.com/3', 'http://example.com/4'];
         spy.mockResolvedValueOnce(urlsFromTxt);
 
-        const requestList = new RequestList(opts);
-        expect(requestList.areRequestsPersisted).toBe(false);
-
         getValueSpy.mockResolvedValueOnce(null);
         setValueSpy.mockImplementationOnce(async (_key, value) => {
             persistedRequests = value;
         });
 
-        await requestList.initialize();
+        const requestList = await RequestList.open(opts);
         expect(requestList.areRequestsPersisted).toBe(true);
         const requests = await deserializeArray(persistedRequests);
         expect(requestList.requests).toHaveLength(5);
@@ -645,12 +615,10 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             ],
         };
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources,
             state,
         });
-
-        await requestList.initialize();
 
         // Get requests from list
         let reqs: Request[] = [];
@@ -676,11 +644,9 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             { url: 'https://www.example.com' },
         ];
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources,
         });
-
-        await requestList.initialize();
 
         expect(requestList.length()).toBe(4);
     });
@@ -694,11 +660,9 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             { url: 'https://www.example.com' },
         ];
 
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources,
         });
-
-        await requestList.initialize();
 
         const req1 = await requestList.fetchNextRequest();
         const req2 = await requestList.fetchNextRequest();
@@ -724,18 +688,17 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
         ];
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
-        let requestList = new RequestList({
+        let requestList = await RequestList.open({
             sources,
             keepDuplicateUrls: true,
         });
 
-        await requestList.initialize();
         expect(requestList.length()).toBe(4);
 
         log.setLevel(log.LEVELS.INFO);
         const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-        requestList = new RequestList({
+        requestList = await RequestList.open({
             sources: sourcesCopy.concat([
                 { url: 'https://www.example.com', uniqueKey: '123' },
                 { url: 'https://www.example.com', uniqueKey: '123' },
@@ -745,7 +708,6 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
             keepDuplicateUrls: true,
         });
 
-        await requestList.initialize();
         expect(requestList.length()).toBe(6);
         expect(warnSpy).toBeCalled();
         expect(warnSpy.mock.calls[0][0]).toMatch(`Check your sources' unique keys.`);
@@ -902,11 +864,10 @@ describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
     //     console.log(startingMemory, 'MB');
     //
     //     process.env.APIFY_LOCAL_STORAGE_DIR = 'tmp';
-    //     const rl = new RequestList({ sources, persistRequestsKey: null });
+    //     const rl = await RequestList.open({ sources, persistRequestsKey: null });
     //     const instanceMemory = getMemoryInMbytes();
     //     console.log(instanceMemory, 'MB');
     //
-    //     await rl.initialize();
     //     const initMemory = getMemoryInMbytes();
     //     console.log(initMemory, 'MB');
     // });

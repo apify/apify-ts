@@ -4,7 +4,7 @@ import type {
     BrowserCrawlingContext,
     BrowserHook,
 } from '@crawlee/browser';
-import { BrowserCrawler, Router } from '@crawlee/browser';
+import { BrowserCrawler, Configuration, Router } from '@crawlee/browser';
 import type { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
 import type { Dictionary } from '@crawlee/types';
 import ow from 'ow';
@@ -134,7 +134,7 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
     /**
      * All `PuppeteerCrawler` parameters are passed via an options object.
      */
-    constructor(options: PuppeteerCrawlerOptions = {}) {
+    constructor(options: PuppeteerCrawlerOptions = {}, override readonly config = Configuration.getGlobalConfig()) {
         ow(options, 'PuppeteerCrawlerOptions', ow.object.exactShape(PuppeteerCrawler.optionsShape));
 
         const {
@@ -149,13 +149,13 @@ export class PuppeteerCrawler extends BrowserCrawler<{ browserPlugins: [Puppetee
                 + 'Use PuppeteerCrawlerOptions.proxyConfiguration');
         }
 
-        const puppeteerLauncher = new PuppeteerLauncher(launchContext);
+        const puppeteerLauncher = new PuppeteerLauncher(launchContext, config);
 
         browserPoolOptions.browserPlugins = [
             puppeteerLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions });
+        super({ ...browserCrawlerOptions, launchContext, proxyConfiguration, browserPoolOptions }, config);
     }
 
     protected override async _runRequestHandler(context: PuppeteerCrawlingContext) {

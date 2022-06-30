@@ -1,6 +1,6 @@
 import ow from 'ow';
-import { setTimeout } from 'node:timers/promises';
 import { ENV_VARS, INTEGER_ENV_VARS } from '@apify/consts';
+import { addTimeoutToPromise } from '@apify/timeout';
 import log from '@apify/log';
 import type {
     ActorStartOptions,
@@ -22,7 +22,7 @@ import type {
     RecordOptions,
 } from '@crawlee/core';
 import {
-    Configuration,
+    Configuration as CoreConfiguration,
     Dataset,
     EventType,
     RequestQueue,
@@ -36,6 +36,7 @@ import { PlatformEventManager } from './platform_event_manager';
 import type { ProxyConfigurationOptions } from './proxy_configuration';
 import { ProxyConfiguration } from './proxy_configuration';
 import { KeyValueStore } from './key_value_store';
+import { Configuration } from './configuration';
 
 /**
  * `Apify` class serves as an alternative approach to the static helpers exported from the package. It allows to pass configuration
@@ -146,7 +147,7 @@ export class Actor<Data extends Dictionary = Dictionary> {
             let ret: T;
 
             try {
-                ret = await Configuration.storage.run(this.config, userFunc) as unknown as T;
+                ret = await userFunc() as T;
                 await this.exit(options);
             } catch (err: any) {
                 log.exception(err, err.message);
@@ -164,19 +165,22 @@ export class Actor<Data extends Dictionary = Dictionary> {
         logSystemInfo();
         printOutdatedSdkWarning();
 
+        // reset global config instance to respect APIFY_ prefixed env vars
+        CoreConfiguration.globalConfig = Configuration.getGlobalConfig();
+
         await this.eventManager.init();
 
         if (this.isAtHome()) {
             this.config.set('availableMemoryRatio', 1);
+            this.config.set('disableBrowserSandbox', true); // for browser launcher, adds `--no-sandbox` to args
             this.config.useStorageClient(this.apifyClient);
             this.config.useEventManager(this.eventManager);
-            // for browser launcher, adds `--no-sandbox` to args
-            process.env.CRAWLEE_DISABLE_BROWSER_SANDBOX = '1';
         } else if (options.storage) {
             this.config.useStorageClient(options.storage);
         }
 
         await purgeDefaultStorages(this.config);
+        Configuration.storage.enterWith(this.config);
     }
 
     /**
@@ -186,10 +190,21 @@ export class Actor<Data extends Dictionary = Dictionary> {
         options = typeof messageOrOptions === 'string' ? { ...options, statusMessage: messageOrOptions } : { ...messageOrOptions, ...options };
         options.exit ??= true;
         options.exitCode ??= EXIT_CODES.SUCCESS;
-        options.timeoutSecs ??= 5;
+        options.timeoutSecs ??= 30;
 
-        this.eventManager.emit(EventType.EXIT, options);
+        // Close the event manager and emit the final PERSIST_STATE event
         await this.eventManager.close();
+
+        // Emit the exit event
+        this.eventManager.emit(EventType.EXIT, options);
+
+        // Wait for all event listeners to be processed
+        log.debug(`Waiting for all event listeners to complete their execution (with ${options.timeoutSecs} seconds timeout)`);
+        await addTimeoutToPromise(
+            () => this.eventManager.waitForAllListenersToComplete(),
+            options.timeoutSecs * 1000,
+            `Waiting for all event listeners to complete their execution timed out after ${options.timeoutSecs} seconds`,
+        );
 
         if (options.exitCode > 0) {
             options.statusMessage ??= `Actor finished with an error (exit code ${options.exitCode})`;
@@ -201,11 +216,6 @@ export class Actor<Data extends Dictionary = Dictionary> {
 
         if (!options.exit) {
             return;
-        }
-
-        if (options.timeoutSecs > 0) {
-            log.debug(`Waiting for ${options.timeoutSecs} seconds before calling process.exit()`);
-            await setTimeout(options.timeoutSecs! * 1000);
         }
 
         process.exit(options.exitCode);
@@ -775,8 +785,8 @@ export class Actor<Data extends Dictionary = Dictionary> {
     newClient(options: ApifyClientOptions = {}): ApifyClient {
         const { storageDir, ...storageClientOptions } = this.config.get('storageClientOptions') as Dictionary;
         return new ApifyClient({
-            baseUrl: process.env[ENV_VARS.API_BASE_URL] ?? 'https://api.apify.com',
-            token: process.env[ENV_VARS.TOKEN],
+            baseUrl: this.config.get('apiBaseUrl'),
+            token: this.config.get('token'),
             ...storageClientOptions,
             ...options, // allow overriding the instance configuration
         });
@@ -1457,7 +1467,10 @@ export interface MetamorphOptions {
 export interface ExitOptions {
     /** Exit with given status message */
     statusMessage?: string;
-    /** Wait before calling exit(), defaults to 5s */
+    /**
+     * Amount of time, in seconds, to wait for all event handlers to finish before exiting the process.
+     * @default 30
+     */
     timeoutSecs?: number;
     /** Exit code, defaults to 0 */
     exitCode?: number;

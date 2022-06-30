@@ -78,22 +78,20 @@ export interface RequestListOptions {
      *     // and big websites typically have multiple sitemaps.
      *     const sitemaps = await downloadHugeSitemaps();
      *     return parseUrlsFromSitemaps(sitemaps);
-     * }
+     * };
      *
      * // Sitemaps can change in real-time, so it's important to persist
      * // the URLs we collected. Otherwise we might lose our scraping
      * // state in case of an crawler migration / failure / time-out.
-     * const requestList = new RequestList({
+     * const requestList = await RequestList.open(null, [], {
+     *     // The sourcesFunction is called now and the Requests are persisted.
+     *     // If something goes wrong and we need to start again, RequestList
+     *     // will load the persisted Requests from storage and will NOT
+     *     // call the sourcesFunction again, saving time and resources.
      *     sourcesFunction,
      *     persistStateKey: 'state-key',
      *     persistRequestsKey: 'requests-key',
      * })
-     *
-     * // The sourcesFunction is called now and the Requests are persisted.
-     * // If something goes wrong and we need to start again, RequestList
-     * // will load the persisted Requests from storage and will NOT
-     * // call the sourcesFunction again, saving time and resources.
-     * await requestList.initialize();
      * ```
      */
     sourcesFunction?: RequestListSourcesFunction;
@@ -218,23 +216,19 @@ export interface RequestListOptions {
  * **Advanced usage:**
  * ```javascript
  * // Use the constructor to get more control over the initialization.
- * const requestList = new RequestList({
- *     sources: [
- *         // Separate requests
- *         { url: 'http://www.example.com/page-1', method: 'GET', headers: { ... } },
- *         { url: 'http://www.example.com/page-2', userData: { foo: 'bar' }},
+ * const requestList = await RequestList.open(null, [
+ *     // Separate requests
+ *     { url: 'http://www.example.com/page-1', method: 'GET', headers: { ... } },
+ *     { url: 'http://www.example.com/page-2', userData: { foo: 'bar' }},
  *
- *         // Bulk load of URLs from file `http://www.example.com/my-url-list.txt`
- *         // Note that all URLs must start with http:// or https://
- *         { requestsFromUrl: 'http://www.example.com/my-url-list.txt', userData: { isFromUrl: true } },
- *     ],
- *
+ *     // Bulk load of URLs from file `http://www.example.com/my-url-list.txt`
+ *     // Note that all URLs must start with http:// or https://
+ *     { requestsFromUrl: 'http://www.example.com/my-url-list.txt', userData: { isFromUrl: true } },
+ * ], {
  *     // Persist the state to avoid re-crawling which can lead to data duplications.
  *     // Keep in mind that the sources have to be immutable or this will throw an error.
  *     persistStateKey: 'my-state',
  * });
- *
- * await requestList.initialize();
  * ```
  * @category Sources
  */
@@ -291,9 +285,11 @@ export class RequestList {
     private events: EventManager;
 
     /**
+     * To create new instance of `RequestList` we need to use `RequestList.open()` factory method.
      * @param options All `RequestList` configuration options
+     * @internal
      */
-    constructor(options: RequestListOptions = {}) {
+    private constructor(options: RequestListOptions = {}) {
         const {
             sources,
             sourcesFunction,
@@ -331,7 +327,7 @@ export class RequestList {
         this.keepDuplicateUrls = keepDuplicateUrls;
 
         // Will be empty after initialization to save memory.
-        this.sources = sources || [];
+        this.sources = sources ? [...sources] : [];
         this.sourcesFunction = sourcesFunction;
 
         // The proxy configuration used for `requestsFromUrls` requests.
@@ -342,7 +338,7 @@ export class RequestList {
      * Loads all remote sources of URLs and potentially starts periodic state persistence.
      * This function must be called before you can start using the instance in a meaningful way.
      */
-    async initialize(): Promise<void> {
+    private async initialize(): Promise<this> {
         if (this.isLoading) {
             throw new Error('RequestList sources are already loading or were loaded.');
         }
@@ -366,6 +362,8 @@ export class RequestList {
         if (this.persistStateKey) {
             this.events.on(EventType.PERSIST_STATE, this.persistState.bind(this));
         }
+
+        return this;
     }
 
     /**
@@ -474,7 +472,7 @@ export class RequestList {
             throw new Error('The state object is invalid: nextIndex must be a non-negative number.');
         }
         if (state.nextIndex > this.requests.length) {
-            throw new Error('The state object is not consistent with RequestList too few requests loaded.');
+            throw new Error('The state object is not consistent with RequestList, too few requests loaded.');
         }
         if (state.nextIndex < this.requests.length
             && this.requests[state.nextIndex].uniqueKey !== state.nextUniqueKey) {
@@ -801,10 +799,10 @@ export class RequestList {
      * const requestList = await RequestList.open('my-name', sources);
      * ```
      *
-     * @param listName
-     *   Name of the request list to be opened. Setting a name enables the `RequestList`'s state to be persisted
-     *   in the key-value store. This is useful in case of a restart or migration. Since `RequestList` is only
-     *   stored in memory, a restart or migration wipes it clean. Setting a name will enable the `RequestList`'s
+     * @param listNameOrOptions
+     *   Name of the request list to be opened, or the options object. Setting a name enables the `RequestList`'s
+     *   state to be persisted in the key-value store. This is useful in case of a restart or migration. Since `RequestList`
+     *   is only stored in memory, a restart or migration wipes it clean. Setting a name will enable the `RequestList`'s
      *   state to survive those situations and continue where it left off.
      *
      *   The name will be used as a prefix in key-value store, producing keys such as `NAME-REQUEST_LIST_STATE`
@@ -812,7 +810,7 @@ export class RequestList {
      *
      *   If `null`, the list will not be persisted and will only be stored in memory. Process restart
      *   will then cause the list to be crawled again from the beginning. We suggest always using a name.
-     * @param sources
+     * @param [sources]
      *  An array of sources of URLs for the {@link RequestList}. It can be either an array of strings,
      *  plain objects that define at least the `url` property, or an array of {@link Request} instances.
      *
@@ -831,7 +829,17 @@ export class RequestList {
      *   the {@link RequestListOptions.persistStateKey} and {@link RequestListOptions.persistRequestsKey}
      *   options and the `sources` parameter supersedes the {@link RequestListOptions.sources} option.
      */
-    static async open(listName: string | null, sources: Source[], options: RequestListOptions = {}): Promise<RequestList> {
+    static async open(listNameOrOptions: string | null | RequestListOptions, sources?: Source[], options: RequestListOptions = {}): Promise<RequestList> {
+        if (listNameOrOptions != null && typeof listNameOrOptions === 'object') {
+            options = { ...listNameOrOptions, ...options };
+            const rl = new RequestList(options);
+            await rl.initialize();
+
+            return rl;
+        }
+
+        const listName = listNameOrOptions;
+
         ow(listName, ow.optional.any(ow.string, ow.null));
         ow(sources, ow.array);
         ow(options, ow.object.is((v) => !Array.isArray(v)));

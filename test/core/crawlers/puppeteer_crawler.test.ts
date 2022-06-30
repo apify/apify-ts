@@ -1,7 +1,5 @@
-import { ENV_VARS } from '@apify/consts';
 import log from '@apify/log';
 import type {
-    PuppeteerCookie,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
     Request,
@@ -13,6 +11,7 @@ import {
     RequestQueue,
     Session,
 } from '@crawlee/puppeteer';
+import type { Cookie } from '@crawlee/types';
 import { sleep } from '@crawlee/utils';
 import { once } from 'events';
 import type { Server } from 'http';
@@ -35,8 +34,8 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
     let proxyConfiguration: ProxyConfiguration;
 
     beforeAll(async () => {
-        prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
-        process.env[ENV_VARS.HEADLESS] = '1';
+        prevEnvHeadless = process.env.CRAWLEE_HEADLESS;
+        process.env.CRAWLEE_HEADLESS = '1';
         logLevel = log.getLevel();
         log.setLevel(log.LEVELS.ERROR);
 
@@ -76,7 +75,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
 
     afterAll(async () => {
         log.setLevel(logLevel);
-        process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
+        process.env.CRAWLEE_HEADLESS = prevEnvHeadless;
         await localStorageEmulator.destroy();
 
         await Promise.all(servers.map((server) => promisify(server.close.bind(server))(true)));
@@ -95,7 +94,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
         const processed: Request[] = [];
         const failed: Request[] = [];
-        const requestListLarge = new RequestList({ sources: sourcesLarge });
+        const requestListLarge = await RequestList.open({ sources: sourcesLarge });
         const requestHandler = async ({ page, request, response }: Parameters<PuppeteerRequestHandler>[0]) => {
             await page.waitForSelector('title');
             expect(response.status()).toBe(200);
@@ -116,7 +115,6 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
             },
         });
 
-        await requestListLarge.initialize();
         await puppeteerCrawler.run();
 
         expect(puppeteerCrawler.autoscaledPool.minConcurrency).toBe(1);
@@ -327,7 +325,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
     });
 
     test('should set cookies assigned to session to page', async () => {
-        const cookies: PuppeteerCookie[] = [
+        const cookies: Cookie[] = [
             {
                 name: 'example_cookie_name',
                 domain: '127.0.0.1',
@@ -346,7 +344,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {
                     const session = new Session({ sessionPool });
-                    session.setPuppeteerCookies(cookies, serverUrl);
+                    session.setCookies(cookies, serverUrl);
                     return session;
                 },
             },
@@ -395,7 +393,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
 
     if (os.platform() !== 'darwin') {
         test('proxy per page', async () => {
-            const requestListLarge = new RequestList({
+            const requestListLarge = await RequestList.open({
                 sources: [
                     { url: `${serverUrl}/?q=1` },
                     { url: `${serverUrl}/?q=2` },
@@ -439,7 +437,6 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
                 },
             });
 
-            await requestListLarge.initialize();
             await puppeteerCrawler.run();
 
             expect(count[2]).toBeGreaterThan(0);

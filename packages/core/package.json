@@ -63,19 +63,13 @@
         "@crawlee/types": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
         "@types/tough-cookie": "^4.0.2",
+        "@vladfrangu/async_event_emitter": "^2.0.0",
+        "fs-extra": "^10.1.0",
         "minimatch": "^5.1.0",
         "ow": "^0.28.1",
         "stream-chain": "^2.2.5",
         "stream-json": "^1.7.4",
         "tldts": "^5.7.80",
         "tough-cookie": "^4.0.0"
-    },
-    "peerDependencies": {
-        "puppeteer": ">= 9.x <= 14.x"
-    },
-    "peerDependenciesMeta": {
-        "puppeteer": {
-            "optional": true
-        }
     }
 }

@@ -1,16 +1,8 @@
 import ow from 'ow';
 import type { LaunchOptions, Page, Response } from 'playwright';
 import type { BrowserPoolOptions, PlaywrightPlugin } from '@crawlee/browser-pool';
-import type {
-    BrowserCrawlerOptions,
-    BrowserCrawlingContext,
-    BrowserCrawlerHandleRequest,
-    BrowserHook,
-} from '@crawlee/browser';
-import {
-    BrowserCrawler,
-    Router,
-} from '@crawlee/browser';
+import type { BrowserCrawlerOptions, BrowserCrawlingContext, BrowserCrawlerHandleRequest, BrowserHook } from '@crawlee/browser';
+import { BrowserCrawler, Configuration, Router } from '@crawlee/browser';
 import type { Dictionary } from '@crawlee/types';
 import { Cookie } from 'tough-cookie';
 import type { PlaywrightLaunchContext } from './playwright-launcher';
@@ -193,7 +185,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
     /**
      * All `PlaywrightCrawler` parameters are passed via an options object.
      */
-    constructor(options: PlaywrightCrawlerOptions = {}) {
+    constructor(options: PlaywrightCrawlerOptions = {}, override readonly config = Configuration.getGlobalConfig()) {
         ow(options, 'PlaywrightCrawlerOptions', ow.object.exactShape(PlaywrightCrawler.optionsShape));
 
         const {
@@ -206,14 +198,13 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
             throw new Error('PlaywrightCrawlerOptions.launchContext.proxyUrl is not allowed in PlaywrightCrawler.'
                 + 'Use PlaywrightCrawlerOptions.proxyConfiguration');
         }
-        const playwrightLauncher = new PlaywrightLauncher(launchContext);
+        const playwrightLauncher = new PlaywrightLauncher(launchContext, config);
 
         browserPoolOptions.browserPlugins = [
             playwrightLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, browserPoolOptions });
-        this.launchContext = launchContext;
+        super({ ...browserCrawlerOptions, launchContext, browserPoolOptions }, config);
     }
 
     protected override async _runRequestHandler(context: PlaywrightCrawlingContext) {
@@ -227,7 +218,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
     }
 
     protected override async _applyCookies({ session, request, page }: PlaywrightCrawlingContext, preHooksCookies: string, postHooksCookies: string) {
-        const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
+        const sessionCookie = session?.getCookies(request.url) ?? [];
         const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON() as PlaywrightCookie | undefined);
         const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON() as PlaywrightCookie | undefined);
 

@@ -24,7 +24,7 @@ module.exports = {
         '^test/(.*)$': '<rootDir>/test/$1',
     },
     modulePathIgnorePatterns: [
-        'dist/package.json',
+        '<rootDir>/(.*)/dist',
         '<rootDir>/package.json',
     ],
     globals: {

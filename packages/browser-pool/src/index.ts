@@ -36,7 +36,6 @@ export {
 export type {
     BrowserController,
     BrowserControllerEvents,
-    Cookie,
 } from './abstract-classes/browser-controller';
 export type {
     CommonPage,
