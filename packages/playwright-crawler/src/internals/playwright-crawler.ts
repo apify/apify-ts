@@ -39,12 +39,12 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * Function that is called to process each request.
      *
      * The function receives the {@link PlaywrightCrawlingContext} as an argument, where:
-     * - {@link PlaywrightCrawlingContext.request} is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * - {@link PlaywrightCrawlingContext.page} is an instance of the `Playwright`
+     * - `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * - `page` is an instance of the `Playwright`
      * [`Page`](https://playwright.dev/docs/api/class-page)
-     * - {@link PlaywrightCrawlingContext.browserController} is an instance of the
+     * - `browserController` is an instance of the
      * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * - {@link PlaywrightCrawlingContext.response} is an instance of the `Playwright`
+     * - `response` is an instance of the `Playwright`
      * [`Response`](https://playwright.dev/docs/api/class-response),
      * which is the main resource response as returned by `page.goto(request.url)`.
      *
@@ -65,12 +65,12 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * Function that is called to process each request.
      *
      * The function receives the {@link PlaywrightCrawlingContext} as an argument, where:
-     * - {@link PlaywrightCrawlingContext.request} is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * - {@link PlaywrightCrawlingContext.page} is an instance of the `Playwright`
+     * - `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * - `page` is an instance of the `Playwright`
      * [`Page`](https://playwright.dev/docs/api/class-page)
-     * - {@link PlaywrightCrawlingContext.browserController} is an instance of the
+     * - `browserController` is an instance of the
      * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * - {@link PlaywrightCrawlingContext.response} is an instance of the `Playwright`
+     * - `response` is an instance of the `Playwright`
      * [`Response`](https://playwright.dev/docs/api/class-response),
      * which is the main resource response as returned by `page.goto(request.url)`.
      *

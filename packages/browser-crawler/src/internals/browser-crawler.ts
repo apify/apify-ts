@@ -92,7 +92,8 @@ export interface BrowserCrawlerOptions<
     /**
      * Function that is called to process each request.
      *
-     * The function receives the {@link BrowserCrawlingContext} as an argument, where:
+     * The function receives the {@link BrowserCrawlingContext}
+     * (actual context will be enhanced with the crawler specific properties) as an argument, where:
      * - {@link BrowserCrawlingContext.request} is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
      * - {@link BrowserCrawlingContext.page} is an instance of the `Puppeteer`
      * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or `Playwright`
@@ -120,7 +121,8 @@ export interface BrowserCrawlerOptions<
     /**
      * Function that is called to process each request.
      *
-     * The function receives the {@link BrowserCrawlingContext} as an argument, where:
+     * The function receives the {@link BrowserCrawlingContext}
+     * (actual context will be enhanced with the crawler specific properties) as an argument, where:
      * - {@link BrowserCrawlingContext.request} is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
      * - {@link BrowserCrawlingContext.page} is an instance of the `Puppeteer`
      * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or `Playwright`
@@ -151,7 +153,8 @@ export interface BrowserCrawlerOptions<
      * User-provided function that allows modifying the request object before it gets retried by the crawler.
      * It's executed before each retry for the requests that failed less than `option.maxRequestRetries` times.
      *
-     * The function receives the {@link BrowserCrawlingContext} as the first argument,
+     * The function receives the {@link BrowserCrawlingContext}
+     * (actual context will be enhanced with the crawler specific properties) as the first argument,
      * where the {@link BrowserCrawlingContext.request} corresponds to the request to be retried.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
@@ -161,7 +164,8 @@ export interface BrowserCrawlerOptions<
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the {@link BrowserCrawlingContext} as the first argument,
+     * The function receives the {@link BrowserCrawlingContext}
+     * (actual context will be enhanced with the crawler specific properties) as the first argument,
      * where the {@link BrowserCrawlingContext.request} corresponds to the failed request.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
@@ -171,7 +175,8 @@ export interface BrowserCrawlerOptions<
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the {@link BrowserCrawlingContext} as the first argument,
+     * The function receives the {@link BrowserCrawlingContext}
+     * (actual context will be enhanced with the crawler specific properties) as the first argument,
      * where the {@link BrowserCrawlingContext.request} corresponds to the failed request.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
