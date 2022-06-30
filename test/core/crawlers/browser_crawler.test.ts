@@ -80,7 +80,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
         const processed: Request[] = [];
         const failed: Request[] = [];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
         const requestHandler: PuppeteerRequestHandler = async ({ page, request, response }) => {
             await page.waitForSelector('title');
 
@@ -102,7 +102,6 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             },
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
 
         expect(browserCrawler.autoscaledPool.minConcurrency).toBe(1);
@@ -115,7 +114,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
         });
     });
     test('should teardown browser pool', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -131,13 +130,12 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
         });
         jest.spyOn(browserCrawler.browserPool, 'destroy');
 
-        await requestList.initialize();
         await browserCrawler.run();
         expect(browserCrawler.browserPool.destroy).toBeCalled();
     });
 
     test('should retire session after TimeoutError', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -160,13 +158,12 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             maxRequestRetries: 1,
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
         expect(sessionGoto.markBad).toBeCalled();
     });
 
     test('should evaluate preNavigationHooks', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -194,14 +191,13 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             ],
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
 
         expect(isEvaluated).toBeTruthy();
     });
 
     test('should evaluate postNavigationHooks', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -226,14 +222,13 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             ],
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
 
         expect(isEvaluated).toBeTruthy();
     });
 
     test('should allow modifying gotoOptions by pre navigation hooks', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -259,7 +254,6 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             ],
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
 
         expect(optionsGoto.timeout).toEqual(60000);
@@ -267,7 +261,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
 
     test('should ignore errors in Page.close()', async () => {
         for (let i = 0; i < 2; i++) {
-            const requestList = new RequestList({
+            const requestList = await RequestList.open({
                 sources: [
                     { url: 'http://example.com/?q=1' },
                 ],
@@ -293,14 +287,13 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
                     failedCalled = true;
                 },
             });
-            await requestList.initialize();
             await browserCrawler.run();
             expect(failedCalled).toBe(false);
         }
     });
 
     test('should not throw without SessionPool', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -319,7 +312,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
     });
 
     test('should correctly set session pool options', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -349,7 +342,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
 
     test.skip('should persist cookies per session', async () => {
         const name = `list-${Math.random()}`;
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             persistStateKey: name,
             persistRequestsKey: name,
             sources: [
@@ -380,7 +373,6 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             ],
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
         expect(loadedCookies).toHaveLength(4);
 
@@ -485,7 +477,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
     });
 
     test('should retire browser with session', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -517,14 +509,13 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
             maxRequestRetries: 1,
         });
 
-        await requestList.initialize();
         await browserCrawler.run();
 
         expect(called).toBeTruthy();
     });
 
     test('should allow using fingerprints from browser pool', async () => {
-        const requestList = new RequestList({
+        const requestList = await RequestList.open({
             sources: [
                 { url: 'http://example.com/?q=1' },
             ],
@@ -545,7 +536,6 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
                 expect(browserController.launchContext.fingerprint).toBeDefined();
             },
         });
-        await requestList.initialize();
 
         await browserCrawler.run();
         expect.hasAssertions();
@@ -554,7 +544,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
     describe('proxy', () => {
         let requestList: RequestList;
         beforeEach(async () => {
-            requestList = new RequestList({
+            requestList = await RequestList.open({
                 sources: [
                     { url: 'http://example.com/?q=1' },
                     { url: 'http://example.com/?q=2' },
@@ -562,7 +552,6 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
                     { url: 'http://example.com/?q=4' },
                 ],
             });
-            await requestList.initialize();
         });
 
         afterEach(() => {

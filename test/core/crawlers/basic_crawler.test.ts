@@ -67,7 +67,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
 
         const processed: { url: string }[] = [];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
         const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
             processed.push({ url: request.url });
@@ -80,7 +80,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             requestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(basicCrawler.autoscaledPool.minConcurrency).toBe(25);
@@ -175,7 +174,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             { url: 'http://example.com/3' },
         ];
         const processed: Dictionary<Request> = {};
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
@@ -196,7 +195,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             requestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(processed['http://example.com/1'].userData.foo).toBe('bar');
@@ -224,7 +222,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             noRetryRequest,
         ];
         const processed: Dictionary<Request> = {};
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
@@ -247,7 +245,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             failedRequestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(processed['http://example.com/1'].userData.foo).toBe('bar');
@@ -276,7 +273,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         const processed: Dictionary<Request> = {};
         const failed: Dictionary<Request> = {};
         const errors: Error[] = [];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const requestHandler: RequestHandler = async ({ request }) => {
             await Promise.reject(new Error('some-error'));
@@ -294,7 +291,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             failedRequestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(failed['http://example.com/1'].errorMessages).toHaveLength(4);
@@ -318,7 +314,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         ];
         const failed: Dictionary<Request> = {};
         const errors: Error[] = [];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const requestHandler: RequestHandler = async () => {
             throw new NonRetryableError('some-error');
@@ -335,7 +331,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             failedRequestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(failed['http://example.com/1'].errorMessages).toHaveLength(1);
@@ -356,7 +351,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             { url: 'http://example.com/2' },
             { url: 'http://example.com/3' },
         ];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const requestHandler: RequestHandler = async () => {
             throw new CriticalError('some-error');
@@ -370,8 +365,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             failedRequestHandler,
         });
 
-        await requestList.initialize();
-
         await expect(basicCrawler.run()).rejects.toThrow(CriticalError);
 
         expect(failedRequestHandler).not.toBeCalled();
@@ -384,7 +377,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             { url: 'http://example.com/2', label: 'FOO' }, // will fail as no FOO route or default route exists
             { url: 'http://example.com/3' }, // will fail as no default route exists
         ];
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const failedRequestHandler = jest.fn() as FailedRequestHandler;
 
@@ -394,8 +387,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         });
         const testRoute = jest.fn();
         basicCrawler.router.addHandler('TEST', testRoute);
-
-        await requestList.initialize();
 
         await expect(basicCrawler.run()).rejects.toThrow(MissingRouteError);
 
@@ -411,7 +402,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             { url: 'http://example.com/2' },
         ];
         const processed: Dictionary<Request> = {};
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
         const requestQueue = new RequestQueue({ id: 'xxx', client: Configuration.getStorageClient() });
 
         const requestHandler: RequestHandler = async ({ request }) => {
@@ -465,7 +456,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         jest.spyOn(requestQueue, 'isFinished')
             .mockResolvedValueOnce(true);
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         // 1st try
@@ -565,7 +555,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             { url: 'http://example.com/5' },
         ];
         const processed: Dictionary<Request> = {};
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open(null, sources);
 
         const requestHandler: RequestHandler = async ({ request }) => {
             await sleep(10);
@@ -588,7 +578,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             failedRequestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(processed['http://example.com/1'].userData.foo).toBe('bar');
@@ -637,8 +626,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
         const sources = Array.from(Array(10).keys(), (x) => x + 1).map((i) => ({ url: `http://example.com/${i}` }));
         const sourcesCopy = JSON.parse(JSON.stringify(sources));
-        let requestList = new RequestList({ sources });
-        await requestList.initialize();
+        let requestList = await RequestList.open({ sources });
         const requestListStub = jest.spyOn(requestList, 'handledCount').mockReturnValue(33);
 
         count = 0;
@@ -657,8 +645,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         expect(count).toBe(7);
         jest.restoreAllMocks();
 
-        requestList = new RequestList({ sources: sourcesCopy });
-        await requestList.initialize();
+        requestList = await RequestList.open({ sources: sourcesCopy });
         const listStub = jest.spyOn(requestList, 'handledCount').mockReturnValue(20);
         const queueStub = jest.spyOn(requestQueue, 'handledCount').mockResolvedValue(33);
         const addRequestStub = jest.spyOn(requestQueue, 'addRequest').mockReturnValue(Promise.resolve() as any);
@@ -687,8 +674,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
     test('should timeout after handleRequestTimeoutSecs', async () => {
         const url = 'https://example.com';
-        const requestList = new RequestList({ sources: [{ url }] });
-        await requestList.initialize();
+        const requestList = await RequestList.open({ sources: [{ url }] });
 
         const results: Request[] = [];
         const crawler = new BasicCrawler({
@@ -709,8 +695,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
     test('limits handleRequestTimeoutSecs to a valid value', async () => {
         const url = 'https://example.com';
-        const requestList = new RequestList({ sources: [{ url }] });
-        await requestList.initialize();
+        const requestList = await RequestList.open({ sources: [{ url }] });
 
         const results = [];
         const crawler = new BasicCrawler({
@@ -899,8 +884,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
     describe('Uses SessionPool', () => {
         it('should use SessionPool when useSessionPool is true ', async () => {
             const url = 'https://example.com';
-            const requestList = new RequestList({ sources: [{ url }] });
-            await requestList.initialize();
+            const requestList = await RequestList.open({ sources: [{ url }] });
             const results: Request[] = [];
 
             const crawler = new BasicCrawler({
@@ -928,8 +912,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
         it('should use pass options to sessionPool', async () => {
             const url = 'https://example.com';
-            const requestList = new RequestList({ sources: [{ url }] });
-            await requestList.initialize();
+            const requestList = await RequestList.open({ sources: [{ url }] });
 
             const crawler = new BasicCrawler({
                 requestList,
@@ -950,8 +933,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
 
         it('should destroy Session pool after it is finished', async () => {
             const url = 'https://example.com';
-            const requestList = new RequestList({ sources: [{ url }] });
-            await requestList.initialize();
+            const requestList = await RequestList.open({ sources: [{ url }] });
             events.off(EventType.PERSIST_STATE);
 
             const crawler = new BasicCrawler({

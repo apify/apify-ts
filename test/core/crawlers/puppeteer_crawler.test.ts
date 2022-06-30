@@ -94,7 +94,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
         const processed: Request[] = [];
         const failed: Request[] = [];
-        const requestListLarge = new RequestList({ sources: sourcesLarge });
+        const requestListLarge = await RequestList.open({ sources: sourcesLarge });
         const requestHandler = async ({ page, request, response }: Parameters<PuppeteerRequestHandler>[0]) => {
             await page.waitForSelector('title');
             expect(response.status()).toBe(200);
@@ -115,7 +115,6 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
             },
         });
 
-        await requestListLarge.initialize();
         await puppeteerCrawler.run();
 
         expect(puppeteerCrawler.autoscaledPool.minConcurrency).toBe(1);
@@ -394,7 +393,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
 
     if (os.platform() !== 'darwin') {
         test('proxy per page', async () => {
-            const requestListLarge = new RequestList({
+            const requestListLarge = await RequestList.open({
                 sources: [
                     { url: `${serverUrl}/?q=1` },
                     { url: `${serverUrl}/?q=2` },
@@ -438,7 +437,6 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
                 },
             });
 
-            await requestListLarge.initialize();
             await puppeteerCrawler.run();
 
             expect(count[2]).toBeGreaterThan(0);
