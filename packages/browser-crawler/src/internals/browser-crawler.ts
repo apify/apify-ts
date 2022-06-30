@@ -424,9 +424,9 @@ export abstract class BrowserCrawler<
             this.persistCookiesPerSession = false;
         }
 
-        if (launchContext?.userAgent) {
+        if (launchContext?.userAgent && browserPoolOptions.useFingerprints) {
             browserPoolOptions.useFingerprints = false;
-            this.log.info('Disabling automatic fingerprint injection because custom user agent has been provided.');
+            this.log.info('Custom user agent provided, disabling automatic browser fingerprint injection!');
         }
 
         const { preLaunchHooks = [], postLaunchHooks = [], ...rest } = browserPoolOptions;
