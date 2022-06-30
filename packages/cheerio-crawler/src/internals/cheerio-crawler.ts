@@ -6,7 +6,6 @@ import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlee/basic';
 import type {
-    FailedRequestContext,
     CrawlingContext,
     EnqueueLinksOptions,
     ProxyConfiguration,
@@ -54,13 +53,9 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioFailedRequestContext<UserData extends Dictionary = Dictionary, JSONData = Dictionary>
-    extends FailedRequestContext<CheerioCrawler<JSONData, UserData>, UserData>, CheerioCrawlingContext<UserData, JSONData> {}
+export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioCrawlingContext<JSONData>, error: Error) => Awaitable<void>;
 
-export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestContext<JSONData>) => Awaitable<void>;
-
-export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Dictionary> extends Omit<
-    BasicCrawlerOptions<CheerioCrawlingContext<UserData, JSONData>>,
+export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
     // Overridden with cheerio context
     | 'requestHandler'
     | 'handleRequestFunction'
@@ -68,6 +63,8 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
     | 'handleRequestTimeoutSecs'
+    // Overridden with cheerio context
+    | 'errorHandler'
 > {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
@@ -211,6 +208,8 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
      * For more information, see the [documentation](https://docs.apify.com/proxy).
      */
     proxyConfiguration?: ProxyConfiguration;
+
+    errorHandler?: CheerioFailedRequestHandler<JSONData>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -383,7 +382,7 @@ export interface PostResponseInputs<JSONData = Dictionary> {
 
 export type PostResponse<JSONData = Dictionary> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
-export interface CheerioCrawlingContext<UserData extends Dictionary = Dictionary, JSONData = Dictionary> extends CrawlingContext<UserData> {
+export interface CheerioCrawlingContext<JSONData extends Dictionary = Dictionary> extends CrawlingContext<JSONData> {
     /**
      * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
@@ -403,7 +402,7 @@ export interface CheerioCrawlingContext<UserData extends Dictionary = Dictionary
      * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
-    crawler: CheerioCrawler<JSONData, UserData>;
+    crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
     enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
     sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
@@ -497,10 +496,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary = Dictionary> extends BasicCrawler<
-    CheerioCrawlingContext<JSONData>,
-    CheerioFailedRequestContext<UserData, JSONData>
-> {
+export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<CheerioCrawlingContext<JSONData>> {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -671,7 +667,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             }
 
             if (this.persistCookiesPerSession) {
-            session!.setCookiesFromResponse(response);
+                session!.setCookiesFromResponse(response);
             }
 
             request.loadedUrl = response.url;
@@ -942,7 +938,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
         if (!this.supportedMimeTypes.has(type) && statusCode! < 500) {
             request.noRetry = true;
             throw new Error(`Resource ${request.url} served Content-Type ${type}, `
-                    + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);
+                + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);
         }
     }
 

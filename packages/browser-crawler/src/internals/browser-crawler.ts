@@ -1,7 +1,6 @@
 import { addTimeoutToPromise, tryCancel } from '@apify/timeout';
 import type {
     EnqueueLinksOptions,
-    FailedRequestContext,
     CrawlingContext,
     ProxyConfiguration,
     ProxyInfo,
@@ -58,13 +57,11 @@ export interface BrowserCrawlingContext<
     sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
 }
 
-export interface BrowserFailedRequestContext extends FailedRequestContext<BrowserCrawler> {}
+export type BrowserCrawlerHandleRequest<
+    Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
-export type BrowserCrawlerHandleFailedRequest = (inputs: BrowserFailedRequestContext) => Awaitable<void>;
-
-export type BrowserCrawlerHandleRequest<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context) => Awaitable<void>;
-
-export type BrowserCrawlerHandleError<Context extends BrowserCrawlingContext = BrowserCrawlingContext> = (inputs: Context, error: Error) => Awaitable<void>;
+export type BrowserCrawlerHandleFailedRequest<
+    Context extends BrowserCrawlingContext= BrowserCrawlingContext>= (inputs: Context, error: Error) => Awaitable<void>;
 
 export type BrowserCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue' | 'urls'>
 
@@ -84,10 +81,10 @@ export interface BrowserCrawlerOptions<
     // Overridden with browser context
     | 'requestHandler'
     | 'handleRequestFunction'
-    // Overridden with browser context
+
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
-    // Overridden with browser context
+
     | 'errorHandler'
 > {
     launchContext?: BrowserLaunchContext<any, any>;
@@ -197,7 +194,7 @@ export interface BrowserCrawlerOptions<
      * Second argument is the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    errorHandler?: BrowserCrawlerHandleError<Context>;
+    errorHandler?: BrowserCrawlerHandleFailedRequest<Context>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -218,7 +215,7 @@ export interface BrowserCrawlerOptions<
      * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
      * represents the last error thrown during processing of the request.
      */
-    failedRequestHandler?: BrowserCrawlerHandleFailedRequest;
+    failedRequestHandler?: BrowserCrawlerHandleFailedRequest<Context>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
@@ -241,7 +238,7 @@ export interface BrowserCrawlerOptions<
      *
      * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.
      */
-    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest;
+    handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest<Context>;
 
     /**
      * Custom options passed to the underlying [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool) constructor.
