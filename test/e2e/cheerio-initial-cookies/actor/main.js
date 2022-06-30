@@ -26,7 +26,7 @@ await Actor.main(async () => {
     const crawler = new CheerioCrawler({
         additionalMimeTypes: ['application/json'],
         preNavigationHooks: [({ session, request }) => {
-            session.setPuppeteerCookies(initialCookies, request.url);
+            session.setCookies(initialCookies, request.url);
         }],
         async requestHandler({ json }) {
             const initialCookiesLength = initialCookies.length;

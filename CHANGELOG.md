@@ -32,6 +32,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * remove `purgeLocalStorage` helper, move purging to the storage class directly
   * `StorageClient` interface now has optional `purge` method
   * purging happens automatically via `Actor.init()` (you can opt out via `purge: false` in the options of `init/main` methods)
+* `Session#getPuppeteerCookies` and `Session#setPuppeteerCookies` have been renamed to `Session#getCookies` and `Session#setCookies` respectively.
 
 ## [2.3.2](https://github.com/apify/apify-ts/compare/v2.3.1...v2.3.2) (2022-05-05)
 

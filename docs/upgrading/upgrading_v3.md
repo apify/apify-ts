@@ -125,6 +125,10 @@ const crawler = new PlaywrightCrawler({
 });
  ```
 
+## Session cookie method renames
+
+Previously, if we wanted to get or add cookies for the session that would be used for the request, we had to call `session.getPuppeteerCookies()` or `session.setPuppeteerCookies()`. Since this method could be used for any of our crawlers, not just `PuppeteerCrawler`, the methods have been renamed to `session.getCookies()` and `session.setCookies()` respectively. Otherwise, their usage is exactly the same!
+
 ## Memory storage
 
 When we store some data or intermediate state (like the one `RequestQueue` holds), we now use `@crawlee/memory-storage` by default. It is an alternative to the `@apify/storage-local`, that stores the state inside memory (as opposed to SQLite database used by `@apify/storage-local`). While the state is stored in memory, it also dumps it to the file system so we can observe it, as well as respects the existing data stored in KeyValueStore (e.g. the `INPUT.json` file).

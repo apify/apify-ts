@@ -31,7 +31,6 @@ import type {
     BrowserPoolHooks,
     BrowserPoolOptions,
     CommonPage,
-    Cookie as BrowserPoolCookie,
     InferBrowserPluginArray,
     LaunchContext,
 } from '@crawlee/browser-pool';
@@ -42,7 +41,7 @@ import {
 import type { GotOptionsInit, Response as GotResponse } from 'got-scraping';
 import ow from 'ow';
 import { Cookie } from 'tough-cookie';
-import type { BatchAddRequestsResult } from '@crawlee/types';
+import type { BatchAddRequestsResult, Cookie as CookieObject } from '@crawlee/types';
 import type { BrowserLaunchContext } from './browser-launcher';
 
 export interface BrowserCrawlingContext<
@@ -496,7 +495,7 @@ export abstract class BrowserCrawler<
                 if (this.persistCookiesPerSession) {
                     const cookies = await crawlingContext.browserController.getCookies(page);
                     tryCancel();
-                    session?.setPuppeteerCookies(cookies, request.loadedUrl!);
+                    session?.setCookies(cookies, request.loadedUrl!);
                 }
             }
 
@@ -567,7 +566,7 @@ export abstract class BrowserCrawler<
     }
 
     protected async _applyCookies({ session, request, page, browserController }: Context, preHooksCookies: string, postHooksCookies: string) {
-        const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
+        const sessionCookie = session?.getCookies(request.url) ?? [];
         const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
         const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
 
@@ -577,7 +576,7 @@ export abstract class BrowserCrawler<
                 ...sessionCookie,
                 ...parsedPreHooksCookies,
                 ...parsedPostHooksCookies,
-            ].filter((c): c is BrowserPoolCookie => typeof c !== 'undefined'),
+            ].filter((c): c is CookieObject => typeof c !== 'undefined'),
         );
     }
 

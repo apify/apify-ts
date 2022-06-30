@@ -1,6 +1,6 @@
 import { tryCancel } from '@apify/timeout';
+import type { Cookie } from '@crawlee/types';
 import type Puppeteer from './puppeteer-proxy-per-page';
-import type { Cookie } from '../abstract-classes/browser-controller';
 import { BrowserController } from '../abstract-classes/browser-controller';
 import { log } from '../logger';
 import { anonymizeProxySugar } from '../anonymize-proxy';

@@ -137,7 +137,7 @@ describe.each(StorageTestCases)('SessionPool - testing session pool - %s', (Emul
         ];
 
         const newSession = await sessionPool.getSession();
-        newSession.setPuppeteerCookies(cookies, url);
+        newSession.setCookies(cookies, url);
 
         const state = sessionPool.getState();
         expect(state).toBeInstanceOf(Object);

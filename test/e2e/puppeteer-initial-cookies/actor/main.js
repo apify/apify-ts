@@ -25,7 +25,7 @@ const mainOptions = {
 await Actor.main(async () => {
     const crawler = new PuppeteerCrawler({
         preNavigationHooks: [({ session, request }, goToOptions) => {
-            session.setPuppeteerCookies(initialCookies, request.url);
+            session.setCookies(initialCookies, request.url);
             goToOptions.waitUntil = ['networkidle2'];
         }],
         async requestHandler({ page }) {
