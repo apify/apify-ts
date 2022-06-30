@@ -91,32 +91,19 @@ export interface BrowserCrawlerOptions<
 
     /**
      * Function that is called to process each request.
-     * It is passed an object with the following fields:
      *
-     * ```
-     * {
-     *   request: Request,
-     *   response: Response,
-     *   page: Page,
-     *   session: Session,
-     *   browserController: BrowserController,
-     *   proxyInfo: ProxyInfo,
-     *   crawler: BrowserCrawler,
-     * }
-     * ```
-     *
-     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * `page` is an instance of the `Puppeteer`
+     * The function receives the {@link BrowserCrawlingContext} as an argument, where:
+     * - {@link BrowserCrawlingContext.request} is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * - {@link BrowserCrawlingContext.page} is an instance of the `Puppeteer`
      * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or `Playwright`
      * [`Page`](https://playwright.dev/docs/api/class-page)
-     * `browserPool` is an instance of the
-     * [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool),
-     * `browserController` is an instance of the
+     * - {@link BrowserCrawlingContext.browserController} is an instance of the
      * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * `response` is an instance of the `Puppeteer`
+     * - {@link BrowserCrawlingContext.response} is an instance of the `Puppeteer`
      * [`Response`](https://pptr.dev/#?product=Puppeteer&show=api-class-response) or `Playwright`
      * [`Response`](https://playwright.dev/docs/api/class-response),
      * which is the main resource response as returned by `page.goto(request.url)`.
+     *
      * The function must return a promise, which is then awaited by the crawler.
      *
      * If the function throws an exception, the crawler will try to re-crawl the
@@ -132,32 +119,19 @@ export interface BrowserCrawlerOptions<
 
     /**
      * Function that is called to process each request.
-     * It is passed an object with the following fields:
      *
-     * ```
-     * {
-     *   request: Request,
-     *   response: Response,
-     *   page: Page,
-     *   session: Session,
-     *   browserController: BrowserController,
-     *   proxyInfo: ProxyInfo,
-     *   crawler: BrowserCrawler,
-     * }
-     * ```
-     *
-     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * `page` is an instance of the `Puppeteer`
+     * The function receives the {@link BrowserCrawlingContext} as an argument, where:
+     * - {@link BrowserCrawlingContext.request} is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * - {@link BrowserCrawlingContext.page} is an instance of the `Puppeteer`
      * [`Page`](https://pptr.dev/#?product=Puppeteer&show=api-class-page) or `Playwright`
      * [`Page`](https://playwright.dev/docs/api/class-page)
-     * `browserPool` is an instance of the
-     * [`BrowserPool`](https://github.com/apify/browser-pool#BrowserPool),
-     * `browserController` is an instance of the
+     * - {@link BrowserCrawlingContext.browserController} is an instance of the
      * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * `response` is an instance of the `Puppeteer`
+     * - {@link BrowserCrawlingContext.response} is an instance of the `Puppeteer`
      * [`Response`](https://pptr.dev/#?product=Puppeteer&show=api-class-response) or `Playwright`
      * [`Response`](https://playwright.dev/docs/api/class-response),
      * which is the main resource response as returned by `page.goto(request.url)`.
+     *
      * The function must return a promise, which is then awaited by the crawler.
      *
      * If the function throws an exception, the crawler will try to re-crawl the
@@ -174,24 +148,12 @@ export interface BrowserCrawlerOptions<
     handlePageFunction?: BrowserCrawlerHandleRequest<Context>;
 
     /**
-     * A function to handle requests that failed less than `option.maxRequestRetries` times
+     * User-provided function to handle requests that failed less than `option.maxRequestRetries` times
      * and would be retried by the crawler.
      *
-     * The function receives the following object as the first argument:
-     * ```
-     * {
-     *     request: Request,
-     *     response: Response,
-     *     page: Page,
-     *     browserPool: BrowserPool,
-     *     autoscaledPool: AutoscaledPool,
-     *     session: Session,
-     *     browserController: BrowserController,
-     *     proxyInfo: ProxyInfo,
-     * }
-     * ```
-     * Where the {@link Request} instance corresponds to the failed request.
-     * Second argument is the `Error` instance
+     * The function receives the {@link BrowserCrawlingContext} as the first argument,
+     * where the {@link BrowserCrawlingContext.request} corresponds to the request to be reclaimed.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
     errorHandler?: BrowserCrawlerHandleFailedRequest<Context>;
@@ -199,20 +161,9 @@ export interface BrowserCrawlerOptions<
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     response: Response,
-     *     page: Page,
-     *     browserPool: BrowserPool,
-     *     autoscaledPool: AutoscaledPool,
-     *     session: Session,
-     *     browserController: BrowserController,
-     *     proxyInfo: ProxyInfo,
-     * }
-     * ```
-     * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * The function receives the {@link BrowserCrawlingContext} as the first argument,
+     * where the {@link BrowserCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
     failedRequestHandler?: BrowserCrawlerHandleFailedRequest<Context>;
@@ -220,20 +171,9 @@ export interface BrowserCrawlerOptions<
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     response: Response,
-     *     page: Page,
-     *     browserPool: BrowserPool,
-     *     autoscaledPool: AutoscaledPool,
-     *     session: Session,
-     *     browserController: BrowserController,
-     *     proxyInfo: ProxyInfo,
-     * }
-     * ```
-     * Where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * The function receives the {@link BrowserCrawlingContext} as the first argument,
+     * where the {@link BrowserCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      *
      * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.

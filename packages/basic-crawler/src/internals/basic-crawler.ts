@@ -68,15 +68,8 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance represents the URL to crawl.
+     * The function receives the {@link BasicCrawlingContext} as an argument,
+     * where the {@link BasicCrawlingContext.request} represents the URL to crawl.
      *
      * The function must return a promise, which is then awaited by the crawler.
      *
@@ -94,15 +87,8 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance represents the URL to crawl.
+     * The function receives the {@link BasicCrawlingContext} as an argument,
+     * where the {@link BasicCrawlingContext.request} represents the URL to crawl.
      *
      * The function must return a promise, which is then awaited by the crawler.
      *
@@ -145,18 +131,11 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     handleRequestTimeoutSecs?: number;
 
     /**
-     * A function to handle requests that failed less than `option.maxRequestRetries` times
+     * User-provided function to handle requests that failed less than `option.maxRequestRetries` times
      * and would be retried by the crawler.
      *
-     * The function receives the following object as the first argument:
-     * ```
-     * {
-     *     request: Request,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the request to be reclaimed.
+     * The function receives the {@link BasicCrawlingContext} as the first argument,
+     * where the {@link BasicCrawlingContext.request} corresponds to the request to be reclaimed.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
@@ -165,16 +144,9 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     error: Error,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * The function receives the {@link BasicCrawlingContext} as the first argument,
+     * where the {@link BasicCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
     failedRequestHandler?: FailedRequestHandler<Context>;
@@ -182,16 +154,9 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     error: Error,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * The function receives the {@link BasicCrawlingContext} as the first argument,
+     * where the {@link BasicCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      *
      * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.
