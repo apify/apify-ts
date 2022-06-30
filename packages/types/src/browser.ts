@@ -58,7 +58,7 @@ export interface Cookie {
     sourcePort?: number;
 }
 
-export interface BrowserLike {
+export interface BrowserLikeResponse {
     url(): string;
     headers(): Dictionary<string | string[]>;
 }

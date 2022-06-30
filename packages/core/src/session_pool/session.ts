@@ -1,6 +1,6 @@
 import type { Log } from '@apify/log';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import type { Dictionary, Cookie as CookieObject, BrowserLike } from '@crawlee/types';
+import type { Dictionary, Cookie as CookieObject, BrowserLikeResponse } from '@crawlee/types';
 import type { IncomingMessage } from 'node:http';
 import ow from 'ow';
 import { Cookie, CookieJar } from 'tough-cookie';
@@ -283,7 +283,7 @@ export class Session {
      *
      * It then parses and saves the cookies from the `set-cookie` header, if available.
      */
-    setCookiesFromResponse(response: IncomingMessage | BrowserLike | { headers: Dictionary<string | string[]>; url: string }) {
+    setCookiesFromResponse(response: IncomingMessage | BrowserLikeResponse | { headers: Dictionary<string | string[]>; url: string }) {
         try {
             const cookies = getCookiesFromResponse(response).filter((c) => c);
             this._setCookies(cookies, typeof response.url === 'function' ? response.url() : response.url!);
