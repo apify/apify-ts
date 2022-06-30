@@ -1,6 +1,5 @@
 import log from '@apify/log';
 import type {
-    PuppeteerCookie,
     PuppeteerGoToOptions,
     PuppeteerRequestHandler,
     Request,
@@ -12,6 +11,7 @@ import {
     RequestQueue,
     Session,
 } from '@crawlee/puppeteer';
+import type { Cookie } from '@crawlee/types';
 import { sleep } from '@crawlee/utils';
 import { once } from 'events';
 import type { Server } from 'http';
@@ -326,7 +326,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
     });
 
     test('should set cookies assigned to session to page', async () => {
-        const cookies: PuppeteerCookie[] = [
+        const cookies: Cookie[] = [
             {
                 name: 'example_cookie_name',
                 domain: '127.0.0.1',
