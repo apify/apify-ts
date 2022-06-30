@@ -233,7 +233,7 @@ const crawler = new BasicCrawler({
 
 One small feature worth mentioning is the ability to handle requests with browser crawlers outside the browser. To do that, we can use a combination of `Request.skipNavigation` and `context.sendRequest()`.
 
-> **TODO** add example and link it from here
+Take a look at how to achieve this by checking out the [Skipping navigation for certain requests](../examples/skip-navigation) example!
 
 ## Logging
 
