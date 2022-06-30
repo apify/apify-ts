@@ -5,12 +5,12 @@ const crawler = new CheerioCrawler({
     async requestHandler({ request, enqueueLinks }) {
         console.log(request.url);
         await enqueueLinks({
-            // Setting the strategy to 'same-subdomain' will enqueue all links found that are on the same subdomain and hostname
-            // as request.loadedUrl or request.url
+            // Setting the strategy to 'same-domain' will enqueue all links found that are on the
+            // same hostname as request.loadedUrl or request.url
             // highlight-next-line
-            strategy: EnqueueStrategy.SameSubdomain,
-            // Alternatively, you can pass in the string 'same-subdomain'
-            // strategy: 'same-subdomain',
+            strategy: EnqueueStrategy.SameDomain,
+            // Alternatively, you can pass in the string 'same-domain'
+            // strategy: 'same-domain',
         });
     },
 });

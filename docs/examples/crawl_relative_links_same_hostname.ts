@@ -5,8 +5,8 @@ const crawler = new CheerioCrawler({
     async requestHandler({ request, enqueueLinks }) {
         console.log(request.url);
         await enqueueLinks({
-            // Setting the strategy to 'same-subdomain' will enqueue all links found that are on the same hostname
-            // as request.loadedUrl or request.url
+            // Setting the strategy to 'same-hostname' will enqueue all links found that are on the
+            // same hostname (including subdomain) as request.loadedUrl or request.url
             // highlight-next-line
             strategy: EnqueueStrategy.SameHostname,
             // Alternatively, you can pass in the string 'same-hostname'

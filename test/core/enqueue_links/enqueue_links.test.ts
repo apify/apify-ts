@@ -372,7 +372,7 @@ describe('enqueueLinks()', () => {
             expect(enqueued).toHaveLength(0);
         });
 
-        test('correctly resolves relative URLs with default strategy of same-subdomain', async () => {
+        test('correctly resolves relative URLs with default strategy of same-hostname', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
 
@@ -409,7 +409,7 @@ describe('enqueueLinks()', () => {
             };
 
             await browserCrawlerEnqueueLinks({
-                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameHostname },
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameDomain },
                 page,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',
@@ -848,7 +848,7 @@ describe('enqueueLinks()', () => {
             expect(enqueued[7].userData).toEqual({});
         });
 
-        test('correctly resolves relative URLs with the default strategy of same-subdomain', async () => {
+        test('correctly resolves relative URLs with the default strategy of same-hostname', async () => {
             const enqueued: (Request | RequestOptions)[] = [];
             const requestQueue = new RequestQueue({ id: 'xxx', client: apifyClient });
             // @ts-expect-error Override method for testing
@@ -884,7 +884,7 @@ describe('enqueueLinks()', () => {
             };
 
             await cheerioCrawlerEnqueueLinks({
-                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameHostname },
+                options: { baseUrl: 'http://www.absolute.com/removethis/', strategy: EnqueueStrategy.SameDomain },
                 $,
                 requestQueue,
                 originalRequestUrl: 'https://example.com',

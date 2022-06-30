@@ -177,8 +177,8 @@ Some utilities previously available under `Apify.utils` namespace are now moved 
 One common helper that received more attention is the `enqueueLinks`. As mentioned above, it is context aware - we no longer need pass in the `requestQueue` or `page` arguments (or the cheerio handle `$`). In addition to that, it now offers 3 enqueuing strategies:
 
 * `EnqueueStrategy.All` (`'all'`): Matches any URLs found
-* `EnqueueStrategy.SameSubdomain` (`'same-subdomain'`) Matches any URLs that have the same subdomain as the base URL (default)
-* `EnqueueStrategy.SameHostname` (`'same-hostname'`) Matches any URLs that have the same hostname. For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of `https://example.com`.
+* `EnqueueStrategy.SameHostname` (`'same-hostname'`) Matches any URLs that have the same subdomain as the base URL (default)
+* `EnqueueStrategy.SameDomain` (`'same-domain'`) Matches any URLs that have the same domain name. For example, `https://wow.an.example.com` and `https://example.com` will both be matched for a base url of `https://example.com`.
 
 This means we can even call `enqueueLinks()` without any parameters. By default, it will go through all the links found on current page and filter only those targeting the same subdomain.
 
