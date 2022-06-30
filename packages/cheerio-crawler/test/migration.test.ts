@@ -6,8 +6,8 @@ describe('Moving from handleRequest* to requestHandler*', () => {
     let requestList: RequestList;
     let testLogger: Log;
 
-    beforeEach(() => {
-        requestList = new RequestList({ sources: [] });
+    beforeEach(async () => {
+        requestList = await RequestList.open(null, []);
         testLogger = log.child({ prefix: 'CheerioCrawler' });
     });
 

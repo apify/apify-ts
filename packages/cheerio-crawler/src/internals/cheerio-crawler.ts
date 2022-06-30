@@ -465,13 +465,10 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  *
  * ```javascript
  * // Prepare a list of URLs to crawl
- * const requestList = new RequestList({
- *   sources: [
- *       { url: 'http://www.example.com/page-1' },
- *       { url: 'http://www.example.com/page-2' },
- *   ],
- * });
- * await requestList.initialize();
+ * const requestList = await RequestList.open(null, [
+ *     { url: 'http://www.example.com/page-1' },
+ *     { url: 'http://www.example.com/page-2' },
+ * ]);
  *
  * // Crawl the URLs
  * const crawler = new CheerioCrawler({

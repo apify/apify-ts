@@ -76,7 +76,7 @@ describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
             const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
             const processed: Request[] = [];
             const failed: Request[] = [];
-            const requestListLarge = new RequestList({ sources: sourcesLarge });
+            const requestListLarge = await RequestList.open({ sources: sourcesLarge });
             const requestHandler = async ({ page, request, response }: Parameters<PlaywrightRequestHandler>[0]) => {
                 expect(response.status()).toBe(200);
                 request.userData.title = await page.title();
@@ -99,7 +99,6 @@ describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
                 },
             });
 
-            await requestListLarge.initialize();
             await playwrightCrawler.run();
 
             expect(playwrightCrawler.autoscaledPool.minConcurrency).toBe(1);
