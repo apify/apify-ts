@@ -146,11 +146,11 @@ export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<Basic
     proxyConfiguration?: ProxyConfiguration;
 
     /**
-     * User-provided function to handle requests that failed less than `option.maxRequestRetries` times
-     * and would be retried by the crawler.
+     * User-provided function that allows modifying the request object before it gets retried by the crawler.
+     * It's executed before each retry for the requests that failed less than `option.maxRequestRetries` times.
      *
      * The function receives the {@link CheerioCrawlingContext} as the first argument,
-     * where the {@link CheerioCrawlingContext.request} corresponds to the request to be reclaimed.
+     * where the {@link CheerioCrawlingContext.request} corresponds to the request to be retried.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */

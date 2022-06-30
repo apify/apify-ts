@@ -131,11 +131,11 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     handleRequestTimeoutSecs?: number;
 
     /**
-     * User-provided function to handle requests that failed less than `option.maxRequestRetries` times
-     * and would be retried by the crawler.
+     * User-provided function that allows modifying the request object before it gets retried by the crawler.
+     * It's executed before each retry for the requests that failed less than `option.maxRequestRetries` times.
      *
      * The function receives the {@link BasicCrawlingContext} as the first argument,
-     * where the {@link BasicCrawlingContext.request} corresponds to the request to be reclaimed.
+     * where the {@link BasicCrawlingContext.request} corresponds to the request to be retried.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
