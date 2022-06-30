@@ -127,7 +127,7 @@ const crawler = new PlaywrightCrawler({
 
 ## Session cookie method renames
 
-Previously, if you wanted to get or add cookies for the session that would be used for the request, you had to call `session.getPuppeteerCookies()` or `session.setPuppeteerCookies()`. Since this method could be used for any of our crawlers, not just PuppeteerCrawler, the methods have been renamed to `session.getCookies()` and `session.setCookies()` respectively. Otherwise, their usage is exactly the same!
+Previously, if we wanted to get or add cookies for the session that would be used for the request, we had to call `session.getPuppeteerCookies()` or `session.setPuppeteerCookies()`. Since this method could be used for any of our crawlers, not just `PuppeteerCrawler`, the methods have been renamed to `session.getCookies()` and `session.setCookies()` respectively. Otherwise, their usage is exactly the same!
 
 ## Memory storage
 
