@@ -5,7 +5,6 @@ import type { OptionsInit } from 'got-scraping';
 import { gotScraping } from 'got-scraping';
 import bodyParser from 'body-parser';
 import type {
-    CheerioFailedRequestContext,
     CheerioRequestHandler,
     CheerioCrawlingContext,
     PrepareRequestInputs,
@@ -1114,7 +1113,7 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 throw new Error('some error');
             };
 
-            const failedRequestHandler = (crawlingContext: CheerioFailedRequestContext) => {
+            const failedRequestHandler = (crawlingContext: CheerioCrawlingContext, error: Error) => {
                 expect(crawlingContext === prepareCrawlingContext).toEqual(true);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -1123,8 +1122,9 @@ describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
                 expect(typeof crawlingContext.response).toBe('object');
                 expect(typeof crawlingContext.contentType).toBe('object');
 
-                expect(crawlingContext.error).toBeInstanceOf(Error);
-                expect(crawlingContext.error.message).toEqual('some error');
+                expect(crawlingContext.error).toBeUndefined();
+                expect(error).toBeInstanceOf(Error);
+                expect(error.message).toEqual('some error');
             };
 
             const cheerioCrawler = new CheerioCrawler({

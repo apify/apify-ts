@@ -4,7 +4,6 @@ import type { AddressInfo } from 'net';
 import log from '@apify/log';
 import type {
     CrawlingContext,
-    ErrorHandler,
     FailedRequestHandler,
     RequestHandler } from '@crawlee/basic';
 import {
@@ -282,14 +281,14 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             throw new Error(`This is an error ${errorHandlerCalls}`);
         };
 
-        const errorHandler: ErrorHandler = async ({ request }, error) => {
+        const errorHandler: FailedRequestHandler = async ({ request }, error) => {
             expect(error.message).toBe(`This is an error ${errorHandlerCalls}`);
             errorHandlerCalls++;
             request.label = `error_${errorHandlerCalls}`;
         };
 
         const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
-            failed[request.url] = { request, error };
+            failed[request.url] = { request, error: error as Error };
             failedRequestHandlerCalls++;
         };
 
@@ -327,7 +326,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             processed[request.url] = request;
         };
 
-        const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
+        const failedRequestHandler: FailedRequestHandler = async ({ request }, error) => {
             failed[request.url] = request;
             errors.push(error);
         };
@@ -368,7 +367,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             throw new NonRetryableError('some-error');
         };
 
-        const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
+        const failedRequestHandler: FailedRequestHandler = async ({ request }, error) => {
             failed[request.url] = request;
             errors.push(error);
         };

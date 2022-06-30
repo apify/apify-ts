@@ -5,7 +5,6 @@ import puppeteer from 'puppeteer';
 import log from '@apify/log';
 import type {
     BrowserCrawler,
-    BrowserFailedRequestContext,
     BrowserCrawlingContext,
     ProxyInfo,
     PuppeteerCrawlingContext,
@@ -724,7 +723,7 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
                 throw new Error('some error');
             };
 
-            const failedRequestHandler = async (crawlingContext: BrowserFailedRequestContext) => {
+            const failedRequestHandler = async (crawlingContext: BrowserCrawlingContext, error: Error) => {
                 expect(crawlingContext).toBe(prepareCrawlingContext);
                 expect(crawlingContext.request).toBeInstanceOf(Request);
                 expect(crawlingContext.crawler.autoscaledPool).toBeInstanceOf(AutoscaledPool);
@@ -734,8 +733,9 @@ describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
                 expect((crawlingContext.crawler as BrowserCrawler).browserPool).toBeInstanceOf(BrowserPool);
                 expect(crawlingContext.hasOwnProperty('response')).toBe(true);
 
+                expect(crawlingContext.error).toBeUndefined();
                 expect(crawlingContext.error).toBeInstanceOf(Error);
-                expect(crawlingContext.error.message).toEqual('some error');
+                expect(error.message).toEqual('some error');
             };
 
             const browserCrawler = new BrowserCrawlerTest({
