@@ -271,7 +271,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         let failedRequestHandlerCalls = 0;
 
         const failed: Dictionary<{ request: Request; error: Error }> = {};
-        const requestList = new RequestList({ sources });
+        const requestList = await RequestList.open({ sources });
 
         const requestHandler: RequestHandler = async ({ request }) => {
             expect(request.label).toBe(errorHandlerCalls === 0 ? 'start' : `error_${errorHandlerCalls}`);
@@ -296,7 +296,6 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             failedRequestHandler,
         });
 
-        await requestList.initialize();
         await basicCrawler.run();
 
         expect(errorHandlerCalls).toBe(3);
