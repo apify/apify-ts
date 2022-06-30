@@ -285,7 +285,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         };
 
         const failedRequestHandler: FailedRequestHandler = async ({ request }, error) => {
-            failed[request.url] = { request, error: error as Error };
+            failed[request.url] = { request, error };
             failedRequestHandlerCalls++;
         };
 
