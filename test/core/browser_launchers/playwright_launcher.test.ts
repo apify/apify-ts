@@ -9,13 +9,12 @@ import util from 'util';
 import portastic from 'portastic';
 // @ts-expect-error no types
 import basicAuthParser from 'basic-auth-parser';
-import { ENV_VARS } from '@apify/consts';
-import { BrowserLauncher, launchPlaywright, PlaywrightLauncher } from '@crawlee/playwright';
+import { BrowserLauncher, Configuration, launchPlaywright, PlaywrightLauncher } from '@crawlee/playwright';
 
 import type { AddressInfo } from 'net';
 import type { Browser, BrowserType } from 'playwright';
 
-let prevEnvHeadless: string;
+let prevEnvHeadless: boolean;
 let proxyServer: Server;
 let proxyPort: number;
 const proxyAuth = { scheme: 'Basic', username: 'username', password: 'password' };
@@ -23,8 +22,9 @@ let wasProxyCalled = false;
 
 // Setup local proxy server for the tests
 beforeAll(() => {
-    prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
-    process.env[ENV_VARS.HEADLESS] = '1';
+    const config = Configuration.getGlobalConfig();
+    prevEnvHeadless = config.get('headless');
+    config.set('headless', true);
 
     // Find free port for the proxy
     return portastic.find({ min: 50000, max: 50099 }).then((ports: number[]) => {
@@ -59,7 +59,7 @@ beforeAll(() => {
 });
 
 afterAll(async () => {
-    process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
+    Configuration.getGlobalConfig().set('headless', prevEnvHeadless);
 
     if (proxyServer) await util.promisify(proxyServer.close).bind(proxyServer)();
 }, 5000);
@@ -112,7 +112,7 @@ describe('launchPlaywright()', () => {
 
         beforeAll(() => {
             // Test headless parameter
-            process.env[ENV_VARS.HEADLESS] = '0';
+            Configuration.getGlobalConfig().set('headless', false);
         });
 
         beforeEach(async () => {
@@ -127,7 +127,7 @@ describe('launchPlaywright()', () => {
         });
 
         afterAll(() => {
-            process.env[ENV_VARS.HEADLESS] = '1';
+            Configuration.getGlobalConfig().set('headless', true);
         });
 
         test('opens https://www.example.com via proxy with authentication', async () => {
@@ -172,11 +172,11 @@ describe('launchPlaywright()', () => {
         const target = 'test';
 
         beforeAll(() => {
-            process.env.APIFY_DEFAULT_BROWSER_PATH = target;
+            process.env.CRAWLEE_DEFAULT_BROWSER_PATH = target;
         });
 
         afterAll(() => {
-            delete process.env.APIFY_DEFAULT_BROWSER_PATH;
+            delete process.env.CRAWLEE_DEFAULT_BROWSER_PATH;
         });
 
         test('uses Apify default browser path', () => {
@@ -215,7 +215,7 @@ describe('launchPlaywright()', () => {
         });
 
         test('works without default path', async () => {
-            delete process.env.APIFY_DEFAULT_BROWSER_PATH;
+            delete process.env.CRAWLEE_DEFAULT_BROWSER_PATH;
             let browser;
             try {
                 browser = await launchPlaywright();

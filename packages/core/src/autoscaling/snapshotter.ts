@@ -87,7 +87,7 @@ type ClientSnapshot = { createdAt: Date; isOverloaded: boolean; rateLimitErrorCo
  * Memory becomes overloaded if its current use exceeds the `maxUsedMemoryRatio` option.
  * It's computed using the total memory available to the container when running on
  * the Apify platform and a quarter of total system memory when running locally.
- * Max total memory when running locally may be overridden by using the `APIFY_MEMORY_MBYTES`
+ * Max total memory when running locally may be overridden by using the `CRAWLEE_MEMORY_MBYTES`
  * environment variable.
  *
  * Event loop becomes overloaded if it slows down by more than the `maxBlockedMillis` option.
@@ -168,12 +168,16 @@ export class Snapshotter {
      * Starts capturing snapshots at configured intervals.
      */
     async start(): Promise<void> {
-        const { totalBytes } = await this._getMemoryInfo();
-        this.maxMemoryBytes = Math.ceil(totalBytes * this.config.get('availableMemoryRatio')!);
-        this.log.debug(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. Use the CRAWLEE_AVAILABLE_MEMORY_RATIO environment variable to override it.`); // eslint-disable-line max-len
+        const memoryMbytes = this.config.get('memoryMbytes', 0);
 
-        // Ensure events are initialized.
-        // await this.events.init();
+        if (memoryMbytes > 0) {
+            this.maxMemoryBytes = memoryMbytes * 1024 * 1024;
+        } else {
+            const { totalBytes } = await this._getMemoryInfo();
+            this.maxMemoryBytes = Math.ceil(totalBytes * this.config.get('availableMemoryRatio')!);
+            this.log.debug(`Setting max memory of this run to ${Math.round(this.maxMemoryBytes / 1024 / 1024)} MB. `
+                + 'Use the CRAWLEE_MEMORY_MBYTES or CRAWLEE_AVAILABLE_MEMORY_RATIO environment variable to override it.');
+        }
 
         // Start snapshotting.
         this.eventLoopInterval = betterSetInterval(this._snapshotEventLoop.bind(this), this.eventLoopSnapshotIntervalMillis);
@@ -192,7 +196,6 @@ export class Snapshotter {
         this.events.off(EventType.SYSTEM_INFO, this._snapshotMemory);
         // Allow microtask queue to unwind before stop returns.
         await new Promise((resolve) => setImmediate(resolve));
-        // await this.events.close();
     }
 
     /**

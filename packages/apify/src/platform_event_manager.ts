@@ -2,6 +2,7 @@ import { ACTOR_EVENT_NAMES, ENV_VARS } from '@apify/consts';
 import WebSocket from 'ws';
 import { EventType, EventManager } from '@crawlee/core';
 import { betterClearInterval } from '@apify/utilities';
+import { Configuration } from './configuration';
 
 /**
  * Gets an instance of a Node.js'
@@ -44,6 +45,10 @@ export class PlatformEventManager extends EventManager {
     /** Websocket connection to actor events. */
     private eventsWs?: WebSocket;
 
+    constructor(override readonly config = Configuration.getGlobalConfig()) {
+        super();
+    }
+
     /**
      * Initializes `Actor.events` event emitter by creating a connection to a websocket that provides them.
      * This is an internal function that is automatically called by `Actor.main()`.
@@ -54,7 +59,7 @@ export class PlatformEventManager extends EventManager {
         }
 
         await super.init();
-        const eventsWsUrl = process.env[ENV_VARS.ACTOR_EVENTS_WS_URL];
+        const eventsWsUrl = this.config.get('actorEventsWsUrl');
 
         // Locally there is no web socket to connect, so just print a log message.
         if (!eventsWsUrl) {

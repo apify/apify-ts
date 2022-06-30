@@ -56,8 +56,8 @@ afterAll(() => {
 
 // Setup local proxy server for the tests
 beforeAll(() => {
-    prevEnvHeadless = process.env[ENV_VARS.HEADLESS];
-    process.env[ENV_VARS.HEADLESS] = '1';
+    prevEnvHeadless = process.env.CRAWLEE_HEADLESS;
+    process.env.CRAWLEE_HEADLESS = '1';
 
     // Find free port for the proxy
     return portastic.find({ min: 50100, max: 50199 }).then((ports: number[]) => {
@@ -92,7 +92,7 @@ beforeAll(() => {
 });
 
 afterAll(async () => {
-    process.env[ENV_VARS.HEADLESS] = prevEnvHeadless;
+    process.env.CRAWLEE_HEADLESS = prevEnvHeadless;
 
     if (proxyServer) await util.promisify(proxyServer.close).bind(proxyServer)();
 }, 5000);
@@ -161,7 +161,7 @@ describe('launchPuppeteer()', () => {
         let page: Page;
 
         // Test headless parameter
-        process.env[ENV_VARS.HEADLESS] = '0';
+        process.env.CRAWLEE_HEADLESS = '0';
 
         return launchPuppeteer({
             launchOptions: { headless: true },

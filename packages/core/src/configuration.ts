@@ -1,6 +1,7 @@
-import { ENV_VARS, LOCAL_ENV_VARS } from '@apify/consts';
 import type { MemoryStorageOptions } from '@crawlee/memory-storage';
 import { MemoryStorage } from '@crawlee/memory-storage';
+import { pathExistsSync, readFileSync } from 'fs-extra';
+import { join } from 'node:path';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { EventEmitter } from 'node:events';
 import type { Dictionary, StorageClient } from '@crawlee/types';
@@ -8,7 +9,6 @@ import { entries } from './typedefs';
 import type { EventManager } from './events';
 import { LocalEventManager } from './events';
 
-// FIXME many of the options are apify specific, if they should be somewhere, its in the actor sdk
 export interface ConfigurationOptions {
     storageClient?: StorageClient;
     eventManager?: EventManager;
@@ -19,128 +19,89 @@ export interface ConfigurationOptions {
     defaultRequestQueueId?: string;
     maxUsedCpuRatio?: number;
     availableMemoryRatio?: number;
+    memoryMbytes?: number;
     persistStateIntervalMillis?: number;
     systemInfoIntervalMillis?: number;
     inputKey?: string;
-
-    metamorphAfterSleepMillis?: number;
-    actorId?: string;
-    actorRunId?: string;
-    actorTaskId?: string;
-    containerPort?: number;
-    containerUrl?: string;
-    proxyHostname?: string;
-    proxyPassword?: string;
-    proxyPort?: number;
+    headless?: boolean;
+    xvfb?: boolean;
+    chromeExecutablePath?: string;
+    defaultBrowserPath?: string;
+    disableBrowserSandbox?: boolean;
 }
 
 /**
- * `Configuration` is a value object holding the SDK configuration. We can use it in two ways:
+ * `Configuration` is a value object holding Crawlee configuration. By default, there is a
+ * global singleton instance of this class available via `Configuration.getGlobalConfig()`.
+ * Places that depend on a configurable behaviour depend on this class as have the global
+ * instance as the default value.
  *
- * 1. When using `Actor` class, we can get the instance configuration via `sdk.config`
- *     ```js
- *     import { Actor } from 'apify';
+ * ```js
+ * import { BasicCrawler, Configuration } from 'crawlee';
  *
- *     const sdk = new Actor({ token: '123' });
- *     console.log(sdk.config.get('token')); // '123'
- *     ```
- * 2. To get the global configuration (singleton instance). It will respect the environment variables.
- *     ```js
- *     import { Configuration } from 'crawlee';
+ * const config = new Configuration({ persistStateIntervalMillis: 30_000 });
+ * const crawler = new BasicCrawler({ ... }, config);
+ * ```
  *
- *     // returns the token from APIFY_TOKEN env var
- *     console.log(Configuration.getGlobalConfig().get('token'));
- *     ```
+ * The configuration provided via environment variables always takes precedence. We can also
+ * define the `crawlee.json` file in the project root directory which will serve as a baseline,
+ * so the options provided in constructor will override those.
+ *
+ * > In other words, the precedence is: crawlee.json < constructor options < environment variables.
  *
  * ## Supported Configuration Options
  *
  * Key | Environment Variable | Default Value
  * ---|---|---
- * `defaultDatasetId` | `APIFY_DEFAULT_DATASET_ID` | `'default'`
- * `defaultKeyValueStoreId` | `APIFY_DEFAULT_KEY_VALUE_STORE_ID` | `'default'`
- * `defaultRequestQueueId` | `APIFY_DEFAULT_REQUEST_QUEUE_ID` | `'default'`
- * `persistStateIntervalMillis` | `APIFY_PERSIST_STATE_INTERVAL_MILLIS` | `60e3`
+ * `memoryMbytes` | `CRAWLEE_MEMORY_MBYTES` | -
+ * `headless` | `CRAWLEE_HEADLESS` | -
+ * `defaultDatasetId` | `CRAWLEE_DEFAULT_DATASET_ID` | `'default'`
+ * `defaultKeyValueStoreId` | `CRAWLEE_DEFAULT_KEY_VALUE_STORE_ID` | `'default'`
+ * `defaultRequestQueueId` | `CRAWLEE_DEFAULT_REQUEST_QUEUE_ID` | `'default'`
+ * `persistStateIntervalMillis` | `CRAWLEE_PERSIST_STATE_INTERVAL_MILLIS` | `60e3`
  *
  * ## Advanced Configuration Options
  *
  * Key | Environment Variable | Default Value
  * ---|---|---
- * `actorId` | `APIFY_ACTOR_ID` | -
- * `actorRunId` | `APIFY_ACTOR_RUN_ID` | -
- * `actorTaskId` | `APIFY_ACTOR_TASK_ID` | -
- * `containerPort` | `APIFY_CONTAINER_PORT` | `4321`
- * `containerUrl` | `APIFY_CONTAINER_URL` | `'http://localhost:4321'`
- * `inputKey` | `APIFY_INPUT_KEY` | `'INPUT'`
- * `metamorphAfterSleepMillis` | `APIFY_METAMORPH_AFTER_SLEEP_MILLIS` | `300e3`
- * `proxyHostname` | `APIFY_PROXY_HOSTNAME` | `'proxy.apify.com'`
- * `proxyPassword` | `APIFY_PROXY_PASSWORD` | -
- * `proxyPort` | `APIFY_PROXY_PORT` | `8000`
- *
- * ## Not Supported environment variables
- *
- * - `MEMORY_MBYTES`
- * - `HEADLESS`
- * - `XVFB`
- * - `CHROME_EXECUTABLE_PATH`
+ * `inputKey` | `CRAWLEE_INPUT_KEY` | `'INPUT'`
+ * `xvfb` | `CRAWLEE_XVFB` | -
+ * `chromeExecutablePath` | `CRAWLEE_CHROME_EXECUTABLE_PATH` | -
+ * `defaultBrowserPath` | `CRAWLEE_DEFAULT_BROWSER_PATH` | -
  */
 export class Configuration {
     /**
-     * Maps environment variables to config keys (e.g. `CRAWLEE_PROXY_PORT` to `proxyPort`)
+     * Maps environment variables to config keys (e.g. `CRAWLEE_MEMORY_MBYTES` to `memoryMbytes`)
      */
-    private static ENV_MAP = {
-        // TODO prefix once we have a package name
+    protected static ENV_MAP = {
         CRAWLEE_AVAILABLE_MEMORY_RATIO: 'availableMemoryRatio',
         CRAWLEE_PURGE_ON_START: 'purgeOnStart',
-
-        APIFY_DEFAULT_DATASET_ID: 'defaultDatasetId',
-        APIFY_DEFAULT_KEY_VALUE_STORE_ID: 'defaultKeyValueStoreId',
-        APIFY_DEFAULT_REQUEST_QUEUE_ID: 'defaultRequestQueueId',
-        APIFY_METAMORPH_AFTER_SLEEP_MILLIS: 'metamorphAfterSleepMillis',
-        APIFY_PERSIST_STATE_INTERVAL_MILLIS: 'persistStateIntervalMillis',
-        APIFY_TEST_PERSIST_INTERVAL_MILLIS: 'persistStateIntervalMillis', // for BC, seems to be unused
-        APIFY_INPUT_KEY: 'inputKey',
-        APIFY_ACTOR_ID: 'actorId',
-        APIFY_ACTOR_RUN_ID: 'actorRunId',
-        APIFY_ACTOR_TASK_ID: 'actorTaskId',
-        APIFY_CONTAINER_PORT: 'containerPort',
-        APIFY_CONTAINER_URL: 'containerUrl',
-        APIFY_PROXY_HOSTNAME: 'proxyHostname',
-        APIFY_PROXY_PASSWORD: 'proxyPassword',
-        APIFY_PROXY_PORT: 'proxyPort',
-
-        // not supported, use env vars directly:
-        // APIFY_MEMORY_MBYTES: 'memoryMbytes',
-        // APIFY_HEADLESS: 'headless',
-        // APIFY_XVFB: 'xvfb',
-        // APIFY_CHROME_EXECUTABLE_PATH: 'chromeExecutablePath',
+        CRAWLEE_MEMORY_MBYTES: 'memoryMbytes',
+        CRAWLEE_DEFAULT_DATASET_ID: 'defaultDatasetId',
+        CRAWLEE_DEFAULT_KEY_VALUE_STORE_ID: 'defaultKeyValueStoreId',
+        CRAWLEE_DEFAULT_REQUEST_QUEUE_ID: 'defaultRequestQueueId',
+        CRAWLEE_INPUT_KEY: 'inputKey',
+        CRAWLEE_PERSIST_STATE_INTERVAL_MILLIS: 'persistStateIntervalMillis',
+        CRAWLEE_HEADLESS: 'headless',
+        CRAWLEE_XVFB: 'xvfb',
+        CRAWLEE_CHROME_EXECUTABLE_PATH: 'chromeExecutablePath',
+        CRAWLEE_DEFAULT_BROWSER_PATH: 'defaultBrowserPath',
+        CRAWLEE_DISABLE_BROWSER_SANDBOX: 'disableBrowserSandbox',
     };
 
-    /**
-     * Maps config keys to environment variables (e.g. `proxyPort` to `APIFY_PROXY_PORT`).
-     */
-    private static ENV_MAP_REVERSED = entries(Configuration.ENV_MAP).reduce((obj, [key, value]) => {
-        obj[value] = key;
-        return obj;
-    }, {} as Record<string, string>);
+    protected static BOOLEAN_VARS: string[] = ['purgeOnStart', 'headless', 'xvfb', 'disableBrowserSandbox'];
 
-    private static BOOLEAN_VARS: string[] = ['purgeOnStart'];
+    protected static INTEGER_VARS = ['memoryMbytes', 'persistStateIntervalMillis', 'systemInfoIntervalMillis'];
 
-    private static INTEGER_VARS = ['proxyPort', 'memoryMbytes', 'containerPort'];
-
-    private static DEFAULTS = {
-        defaultKeyValueStoreId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_KEY_VALUE_STORE_ID],
-        defaultDatasetId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_DATASET_ID],
-        defaultRequestQueueId: LOCAL_ENV_VARS[ENV_VARS.DEFAULT_REQUEST_QUEUE_ID],
+    protected static DEFAULTS = {
+        defaultKeyValueStoreId: 'default',
+        defaultDatasetId: 'default',
+        defaultRequestQueueId: 'default',
+        inputKey: 'INPUT',
         maxUsedCpuRatio: 0.95,
         availableMemoryRatio: 0.25,
         storageClientOptions: {},
         purgeOnStart: true,
-        inputKey: 'INPUT',
-        proxyHostname: LOCAL_ENV_VARS[ENV_VARS.PROXY_HOSTNAME],
-        proxyPort: +LOCAL_ENV_VARS[ENV_VARS.PROXY_PORT],
-        containerPort: +LOCAL_ENV_VARS[ENV_VARS.CONTAINER_PORT],
-        containerUrl: LOCAL_ENV_VARS[ENV_VARS.CONTAINER_URL],
-        metamorphAfterSleepMillis: 300_000,
         persistStateIntervalMillis: 60_000,
         systemInfoIntervalMillis: 60_000,
     };
@@ -151,15 +112,17 @@ export class Configuration {
      */
     static storage = new AsyncLocalStorage<Configuration>();
 
-    private options: Map<keyof ConfigurationOptions, ConfigurationOptions[keyof ConfigurationOptions]>;
-    private services = new Map<string, unknown>();
-    private static globalConfig?: Configuration;
+    protected options!: Map<keyof ConfigurationOptions, ConfigurationOptions[keyof ConfigurationOptions]>;
+    protected services = new Map<string, unknown>();
+
+    /** @internal */
+    static globalConfig?: Configuration;
 
     /**
      * Creates new `Configuration` instance with provided options. Env vars will have precedence over those.
      */
     constructor(options: ConfigurationOptions = {}) {
-        this.options = new Map(entries(options));
+        this.buildOptions(options);
 
         // Increase the global limit for event emitter memory leak warnings.
         EventEmitter.defaultMaxListeners = 50;
@@ -171,9 +134,18 @@ export class Configuration {
      * in the above section.
      */
     get<T extends keyof ConfigurationOptions, U extends ConfigurationOptions[T]>(key: T, defaultValue?: U): U {
-        // prefer env vars
-        const envKey = Configuration.ENV_MAP_REVERSED[key] ?? key;
-        const envValue = process.env[envKey];
+        // prefer env vars, always iterate through the whole map as there might be duplicate env vars for the same option
+        let envValue: string | undefined;
+
+        for (const [k, v] of entries(Configuration.ENV_MAP)) {
+            if (key === v) {
+                envValue = process.env[k];
+
+                if (envValue) {
+                    break;
+                }
+            }
+        }
 
         if (envValue != null) {
             return this._castEnvValue(key, envValue) as U;
@@ -188,7 +160,7 @@ export class Configuration {
         return (defaultValue ?? Configuration.DEFAULTS[key as keyof typeof Configuration.DEFAULTS] ?? envValue) as U;
     }
 
-    private _castEnvValue(key: keyof ConfigurationOptions, value: number | string | boolean) {
+    protected _castEnvValue(key: keyof ConfigurationOptions, value: number | string | boolean) {
         if (Configuration.INTEGER_VARS.includes(key)) {
             return +value;
         }
@@ -214,7 +186,7 @@ export class Configuration {
      * this {@link Configuration} instance. Only first call of this method will create the client, following calls will
      * return the same client instance.
      *
-     * Caching works based on the API URL and token, so calling this method with different options will return
+     * Caching works based on the `storageClientOptions`, so calling this method with different options will return
      * multiple instances, one for each variant of the options.
      * @internal
      */
@@ -270,7 +242,7 @@ export class Configuration {
     /**
      * Returns the global configuration instance. It will respect the environment variables.
      */
-    static getGlobalConfig() : Configuration {
+    static getGlobalConfig(): Configuration {
         if (Configuration.storage.getStore()) {
             return Configuration.storage.getStore()!;
         }
@@ -299,5 +271,22 @@ export class Configuration {
      */
     static resetGlobalState(): void {
         delete this.globalConfig;
+    }
+
+    protected buildOptions(options: ConfigurationOptions) {
+        // try to load configuration from crawlee.json as the baseline
+        const path = join(process.cwd(), 'crawlee.json');
+
+        if (pathExistsSync(path)) {
+            try {
+                const file = readFileSync(path);
+                const optionsFromFileConfig = JSON.parse(file.toString());
+                Object.assign(options, optionsFromFileConfig);
+            } catch {
+                // ignore
+            }
+        }
+
+        this.options = new Map(entries(options));
     }
 }

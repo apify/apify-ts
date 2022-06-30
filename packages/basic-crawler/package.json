@@ -45,7 +45,6 @@
         "access": "public"
     },
     "dependencies": {
-        "@apify/consts": "^2.0.0",
         "@apify/log": "^2.0.0",
         "@apify/timeout": "^0.3.0",
         "@apify/utilities": "^2.0.0",

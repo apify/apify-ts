@@ -14,6 +14,7 @@ import {
     handleRequestTimeout,
     validators,
     resolveBaseUrl,
+    Configuration,
 } from '@crawlee/core';
 import type {
     BasicCrawlerOptions,
@@ -356,7 +357,7 @@ export abstract class BrowserCrawler<
     /**
      * All `BrowserCrawler` parameters are passed via an options object.
      */
-    protected constructor(options: BrowserCrawlerOptions<Context> = {}) {
+    protected constructor(options: BrowserCrawlerOptions<Context> = {}, override readonly config = Configuration.getGlobalConfig()) {
         ow(options, 'BrowserCrawlerOptions', ow.object.exactShape(BrowserCrawler.optionsShape));
         const {
             navigationTimeoutSecs = 60,
@@ -382,7 +383,7 @@ export abstract class BrowserCrawler<
             ...basicCrawlerOptions,
             requestHandler: (...args) => this._runRequestHandler(...args),
             requestHandlerTimeoutSecs: navigationTimeoutSecs + requestHandlerTimeoutSecs + BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
-        });
+        }, config);
 
         this._handlePropertyNameChange({
             newName: 'requestHandler',

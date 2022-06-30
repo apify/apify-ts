@@ -5,11 +5,11 @@ import type {
     ProxyInfo as CoreProxyInfo,
 } from '@crawlee/core';
 import {
-    Configuration,
     ProxyConfiguration as CoreProxyConfiguration,
 } from '@crawlee/core';
 import { gotScraping } from 'got-scraping';
 import { Actor } from './actor';
+import { Configuration } from './configuration';
 
 // https://docs.apify.com/proxy/datacenter-proxy#username-parameters
 const MAX_SESSION_ID_LENGTH = 50;
@@ -356,7 +356,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
      * Apify Proxy can be down for a second or a minute, but this should not crash processes.
      */
     protected async _fetchStatus(): Promise<{ connected: boolean; connectionError: string; isManInTheMiddle: boolean } | undefined> {
-        const proxyStatusUrl = process.env[ENV_VARS.PROXY_STATUS_URL] ?? 'http://proxy.apify.com';
+        const proxyStatusUrl = this.config.get('proxyStatusUrl', 'http://proxy.apify.com');
         const requestOpts = {
             url: `${proxyStatusUrl}/?format=json`,
             proxyUrl: await this.newUrl(),

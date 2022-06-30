@@ -102,7 +102,7 @@ describe('getMemoryInfo()', () => {
     // TODO: check if this comment is still accurate
     // this test hangs because we launch the browser, closing is apparently not enough?
     test('works WITH child process outside the container', async () => {
-        process.env[ENV_VARS.HEADLESS] = '1';
+        process.env.CRAWLEE_HEADLESS = '1';
         isDockerSpy.mockResolvedValueOnce(false);
         freememSpy.mockReturnValueOnce(222);
         totalmemSpy.mockReturnValueOnce(333);
@@ -122,7 +122,7 @@ describe('getMemoryInfo()', () => {
             expect(data.mainProcessBytes).toBeGreaterThanOrEqual(20_000_000);
             expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
-            delete process.env[ENV_VARS.HEADLESS];
+            delete process.env.CRAWLEE_HEADLESS;
             await browser?.close();
         }
     });
@@ -130,7 +130,7 @@ describe('getMemoryInfo()', () => {
     // TODO: check if this comment is still accurate
     // this test hangs because we launch the browser, closing is apparently not enough?
     test('works WITH child process inside the container', async () => {
-        process.env[ENV_VARS.HEADLESS] = '1';
+        process.env.CRAWLEE_HEADLESS = '1';
         isDockerSpy.mockResolvedValueOnce(true);
         accessSpy.mockResolvedValueOnce();
 
@@ -161,7 +161,7 @@ describe('getMemoryInfo()', () => {
             expect(data.childProcessesBytes).toBeGreaterThanOrEqual(20_000_000);
         } finally {
             readFileSpy.mockImplementation(originalSpyImplementation);
-            delete process.env[ENV_VARS.HEADLESS];
+            delete process.env.CRAWLEE_HEADLESS;
             await browser?.close();
         }
     });

@@ -2,7 +2,7 @@ import ow from 'ow';
 import type { Browser } from 'puppeteer';
 import { PuppeteerPlugin } from '@crawlee/browser-pool';
 import type { BrowserLaunchContext } from '@crawlee/browser';
-import { BrowserLauncher } from '@crawlee/browser';
+import { BrowserLauncher, Configuration } from '@crawlee/browser';
 
 /**
  * Apify extends the launch options of Puppeteer.
@@ -43,7 +43,7 @@ export interface PuppeteerLaunchContext extends BrowserLaunchContext<PuppeteerPl
      * If `true` and `executablePath` is not set,
      * Puppeteer will launch full Google Chrome browser available on the machine
      * rather than the bundled Chromium. The path to Chrome executable
-     * is taken from the `APIFY_CHROME_EXECUTABLE_PATH` environment variable if provided,
+     * is taken from the `CRAWLEE_CHROME_EXECUTABLE_PATH` environment variable if provided,
      * or defaults to the typical Google Chrome executable location specific for the operating system.
      * By default, this option is `false`.
      * @default false
@@ -80,7 +80,10 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
     /**
      * All `PuppeteerLauncher` parameters are passed via an launchContext object.
      */
-    constructor(launchContext: PuppeteerLaunchContext = {}) {
+    constructor(
+        launchContext: PuppeteerLaunchContext = {},
+        override readonly config = Configuration.getGlobalConfig(),
+    ) {
         ow(launchContext, 'PuppeteerLauncher', ow.object.exactShape(PuppeteerLauncher.optionsShape));
 
         const {
@@ -91,7 +94,7 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
         super({
             ...browserLauncherOptions,
             launcher,
-        });
+        }, config);
 
         this.Plugin = PuppeteerPlugin;
     }
@@ -104,9 +107,9 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
  *
  * The `launchPuppeteer()` function alters the following Puppeteer options:
  *
- * - Passes the setting from the `APIFY_HEADLESS` environment variable to the `headless` option,
- *   unless it was already defined by the caller or `APIFY_XVFB` environment variable is set to `1`.
- *   Note that Apify Actor cloud platform automatically sets `APIFY_HEADLESS=1` to all running actors.
+ * - Passes the setting from the `CRAWLEE_HEADLESS` environment variable to the `headless` option,
+ *   unless it was already defined by the caller or `CRAWLEE_XVFB` environment variable is set to `1`.
+ *   Note that Apify Actor cloud platform automatically sets `CRAWLEE_HEADLESS=1` to all running actors.
  * - Takes the `proxyUrl` option, validates it and adds it to `args` as `--proxy-server=XXX`.
  *   The proxy URL must define a port number and have one of the following schemes: `http://`,
  *   `https://`, `socks4://` or `socks5://`.
@@ -127,11 +130,12 @@ export class PuppeteerLauncher extends BrowserLauncher<PuppeteerPlugin, unknown>
  * @param [launchContext]
  *   All `PuppeteerLauncher` parameters are passed via an launchContext object.
  *   If you want to pass custom `puppeteer.launch(options)` options you can use the `PuppeteerLaunchContext.launchOptions` property.
+ * @param [config]
  * @returns
  *   Promise that resolves to Puppeteer's `Browser` instance.
  */
-export async function launchPuppeteer(launchContext?: PuppeteerLaunchContext): Promise<Browser> {
-    const puppeteerLauncher = new PuppeteerLauncher(launchContext);
+export async function launchPuppeteer(launchContext?: PuppeteerLaunchContext, config = Configuration.getGlobalConfig()): Promise<Browser> {
+    const puppeteerLauncher = new PuppeteerLauncher(launchContext, config);
 
     return puppeteerLauncher.launch();
 }
