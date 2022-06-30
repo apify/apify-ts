@@ -226,8 +226,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
             playwrightLauncher.createBrowserPlugin(),
         ];
 
-        super({ ...browserCrawlerOptions, browserPoolOptions }, config);
-        this.launchContext = launchContext;
+        super({ ...browserCrawlerOptions, launchContext, browserPoolOptions }, config);
     }
 
     protected override async _runRequestHandler(context: PlaywrightCrawlingContext) {
