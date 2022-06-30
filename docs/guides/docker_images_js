@@ -25,7 +25,7 @@ RUN npm --quiet set progress=false \
 # for most source file changes.
 COPY . ./
 
-# Optionally, specify how to launch the source code of your actor.
+# Optionally, specify how to launch the source code of your crawler.
 # By default, Apify's base Docker images define the CMD instruction
 # that runs the Node.js source code using the command specified
 # in the "scripts.start" section of the package.json file.

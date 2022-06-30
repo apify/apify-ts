@@ -12,7 +12,6 @@ module.exports = {
             items: [
                 'guides/motivation',
                 'guides/quick-start',
-                'guides/apify-platform',
                 'guides/getting-started',
                 'guides/request-storage',
                 'guides/result-storage',
@@ -22,6 +21,7 @@ module.exports = {
                 'guides/type-script-project',
                 'guides/docker-images',
                 'guides/avoid-blocking',
+                'guides/apify-platform',
             ],
         },
         {

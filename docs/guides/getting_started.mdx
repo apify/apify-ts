@@ -5,35 +5,27 @@ title: Getting Started
 
 import ApiLink from '@site/src/components/ApiLink';
 
-Without the right tools, crawling and scraping the web can be difficult. At the very least, you need an HTTP client to make the necessary
-requests, but that only gets you raw HTML and sometimes not even that. Then you have to read this HTML and extract the data you're interested in. Once
-extracted, it must be stored in a machine-readable format and easily accessible for further processing, because it is the processed data that holds
-value.
+Without the right tools, crawling and scraping the web can be difficult. At the very least, we need an HTTP client to make the necessary requests, but that only gets we raw HTML and sometimes not even that. Then we have to read this HTML and extract the data we're interested in. Once extracted, it must be stored in a machine-readable format and easily accessible for further processing, because it is the processed data that holds value.
 
-Crawlee covers the process end-to-end. From crawling the web for links and scraping the raw data to storing it in various machine readable formats,
-ready for processing. With this guide in hand, you should have your own data extraction solutions up and running in a few hours.
+Crawlee covers the process end-to-end. From crawling the web for links and scraping the raw data to storing it in various machine-readable formats, ready for processing. With this guide in hand, we should have our own data extraction solutions up and running in a few hours.
 
 ## Intro
 
-The goal of this getting started guide is to provide a step-by-step introduction to all the features of Crawlee. It will walk you through
-creating the simplest of crawlers that only prints text to console, all the way up to complex systems that crawl pages, interact with them as if a real
-user were sitting in front of a real browser and output structured data.
-
-Since Crawlee is usable both locally on any computer and on the [Apify platform](../guides/apify-platform), you will be able
-to use the source code in both environments interchangeably. Nevertheless, some initial setup is still required, so choose your preferred starting
-environment and let's get into it.
+The goal of this getting started guide is to provide a step-by-step introduction to all the features of Crawlee. It will walk we through creating the simplest of crawlers that only prints text to console, all the way up to complex systems that crawl pages, interact with them as if a real user were sitting in front of a real browser and output structured data.
 
 ## Setting up locally
 
-To run Crawlee on your own computer, you need to meet the following pre-requisites first:
+To run Crawlee on our own computer, we need to meet the following pre-requisites first:
 
 1. Have Node.js version 16.0 or higher installed.
  - Visit [Node.js website](https://nodejs.org/en/download/) to download or use
 [fnm](https://github.com/Schniz/fnm)
 2. Have NPM installed.
- - NPM comes bundled with Node.js so you should already have it. If not, reinstall Node.js.
+ - NPM comes bundled with Node.js, so we should already have it. If not, reinstall Node.js.
 
-If you're not certain, confirm the prerequisites by running:
+ > Or use any other package manager of our choice.
+
+If we're not certain, confirm the prerequisites by running:
 
 ```bash
 node -v
@@ -45,20 +37,15 @@ npm -v
 
 ### Creating a new project
 
-The fastest and best way to create new projects with Crawlee is to use our own
-[Crawlee CLI](https://www.npmjs.com/package/@crawlee/cli). This command line tool allows you to create, run and manage Crawlee
-projects with ease, including their deployment to the [Apify platform](../guides/apify-platform) if you wish to run them in the
-cloud after developing them locally.
+The fastest and best way to create new projects with Crawlee is to use our own [Crawlee CLI](https://www.npmjs.com/package/@crawlee/cli). This command line tool allows we to create and run Crawlee projects with ease. We can use the `npx` utility to download and run the CLI - it is also embedded to the `crawlee` meta-package:
 
-Let's...
+> We use `npx -y` to automatically allow installing the missing `crawlee` dependency in the global scope. It won't be necessary after we have the package downloaded.
 
 ```bash
-npx crawlee create my-new-project
+npx -y crawlee create my-new-project
 ```
 
-A prompt will be shown, asking you to choose a template. Disregard the different options for now and choose the template labeled `Hello world`. The
-command will now create a new directory in your current working directory, called `my-new-project`, create a `package.json` in this folder and install
-all the necessary dependencies. It will also add example source code that you can immediately run.
+A prompt will be shown, asking we to choose a template. Disregard the different options for now and choose the template labeled `Hello world`. The command will now create a new directory in our current working directory, called `my-new-project`, create a `package.json` in this folder and install all the necessary dependencies. It will also add example source code that we can immediately run.
 
 Let's try that!
 
@@ -70,63 +57,33 @@ cd my-new-project
 npx crawlee run
 ```
 
-TODO describe purging by default and how to disable it
+We used the `crawlee run` CLI command, but all what it actually does is to call `npm run start`. We can use the `--script` or `-s` option to specify what script we want to run instead of the default `start`:
 
 ```bash
-npx crawlee run --no-purge
-````
+npx crawlee run --script=start:prod
+```
 
-> The `-p` flag is great to remember, because it stands for `--purge` and it clears out your persistent storages before starting the actor.
-> `INPUT.json` and named storages are kept. Whenever you're just restarting your actor and you're not interested in the data of the previous run, you
-> should use `apify run -p` to prevent the old state from messing with your current run. If this is confusing, don't worry. You'll learn about
-> storages and `INPUT.json` soon.
+:::info Purging of storages
 
-You should start seeing log messages in the terminal as the system boots up and after a second, a Chromium browser window should pop up. In the
-window, you'll see quickly changing pages and back in the terminal, you should see the titles (contents of the `<title>` HTML tags) of the pages
-printed.
+Another option of the `crawlee run` command is the control over purging: `--purge` and more importantly `--no-purge`, as purging is enabled by default. To understand what those are about, we first need to talk about the concept of storages in Crawlee. There are 3 types of a storage we can use: <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>, <ApiLink to="core/class/KeyValueStore">`KeyValueStore`</ApiLink> and <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. Crawlee is using the first two for storing the runtime data about current crawl, and the third one is for storing the results.
 
-You can always terminate the crawl with a keypress in the terminal:
+When Crawlee stores some state, it uses a storage - by default a <ApiLink to="memory-storage/class/MemoryStorage">`MemoryStorage`</ApiLink>, which - contrary to its name - will also store the state in JSON files, so we can observe it easily. This state is being purged automatically when we run the crawler, and with the `--no-purge` flag we can disable this behaviour and reuse the state we already have.
+
+More about storages and purging can be found in [Request Storage guide](./request-storage).
+
+:::
+
+We should start seeing log messages in the terminal as the system boots up and after a second, a Chromium browser window should pop up. In the window, we'll see quickly changing pages and back in the terminal, we should see the titles (contents of the `<title>` HTML tags) of the pages printed.
+
+We can always terminate the crawl with a keypress in the terminal:
 
 ```bash
 CTRL+C
 ```
 
-Did you see all that? If you did, congratulations! You're ready to go!
-
-## Setting up on the Apify Platform
-
-Maybe you don't have Node.js installed and don't want the hassle. Or you can't install anything on your computer because you're using one provided by your company. Or perhaps you'd just prefer to start working in the cloud right away. Well, no worries, we've got you covered.
-
-The [Apify platform](../guides/apify-platform) is the foundational product of
-[Apify](https://apify.com). It's a serverless cloud computing platform, specifically designed for any web automation jobs,
-that may include crawling and scraping, but really works amazingly for any batch jobs and long-running tasks.
-
-It comes with a free account, so let's go to our [sign-up page](https://console.apify.com/sign-up) and create one, if you
-haven't already. Don't forget to verify your email. Without it, you won't be able to run any projects.
-
-Once you're in, you might be prompted by our in-app help to walk through a step-by-step guide to some of our new features. Feel free to finish that,
-if you'd like, but once you're done, click on the **Actors** tab in the left menu. To read more about **Actors**, see:
-[What is an actor](../guides/apify-platform#what-is-an-actor)
-
-### Creating a new project
-
-In the page that shows after clicking on Actors in the left menu, choose **Create new**. Give it a name in the form that opens, let's say,
-`my-new-actor`. Disregard all the available options for now and save your changes.
-
-Now click on the **Sources** tab at the top. Disregard the version and environment variables inputs for now and proceed directly to **Source code**.
-This is where you develop the actor, if you choose not to do it locally. Just press **Run** below the **Source code** panel. It will automatically
-build and run the example source code. You should start seeing log messages that represent the build and after the build is complete, the log messages of
-the running actor. Feel free to check out the other **Run** tabs, such as **Info**, where you can find useful information about the run, or
-**Key-value-store**, where the actor's **INPUT** and **OUTPUT** are stored.
-
-Good job. You're now ready to run your own source code on the Apify Platform. For more information, visit the
-[Actor documentation page](https://docs.apify.com/actor), where you'll find everything about the platform's various
-options.
-
 ## First crawler
 
-Whether you've chosen to develop locally or in the cloud, it's time to start writing some actual source code. But before we do, let's just briefly
-introduce all Crawlee classes necessary to make it happen.
+Whether we've chosen to develop locally or in the cloud, it's time to start writing some actual source code. But before we do, let's just briefly introduce all Crawlee classes necessary to make it happen.
 
 ### The general idea
 
@@ -144,13 +101,13 @@ A representation of the pre-existing list is an instance of the <ApiLink to="cor
 
 &#8203;<ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink> on the other hand, represents a dynamic queue of `Request`s. One that can be updated at runtime by adding more pages - `Request`s to process. This allows the crawler to open one page, extract interesting URLs, such as links to other pages on the same domain, add them to the queue (called _enqueuing_) and repeat this process to build a queue of tens of thousands or more URLs while knowing only a single one at the beginning.
 
-`RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Request`s = "pages to crawl" to the crawlers. At least one of them always needs to be provided while setting up. You can also use both at the same time, if you wish.
+`RequestList` and `RequestQueue` are essential for the crawler's operation. There is no other way to supply `Request`s = "pages to crawl" to the crawlers. At least one of them always needs to be provided while setting up. We can also use both at the same time, if we wish.
 
 ### The What - `requestHandler`
 
-The `requestHandler` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from the page, processing the data, saving it, calling APIs, doing calculations and whatever else you need it to do.
+The `requestHandler` is the brain of the crawler. It tells it what to do at each and every page it visits. Generally it handles extraction of data from the page, processing the data, saving it, calling APIs, doing calculations and whatever else we need it to do.
 
-The `requestHandler` is provided by you, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
+The `requestHandler` is provided by we, the user, and invoked automatically by the crawler for each `Request` from either the `RequestList` or `RequestQueue`. It always receives a single argument and that is a plain `Object`. Its properties change depending on the crawler class used, but it always includes at least the `request` property, which represents the currently crawled `Request` instance (i.e. the URL the crawler is visiting and related metadata) and the `autoscaledPool` property, which is an instance of the <ApiLink to="core/class/AutoscaledPool">`AutoscaledPool`</ApiLink> class and we'll talk about it in detail later.
 
 ```ts
 // The object received as a single argument by the requestHandler
@@ -175,7 +132,7 @@ const requestQueue = await RequestQueue.open();
 await requestQueue.addRequests(['https://apify.com']);
 ```
 
-> If you're not familiar with the `async` and `await` keywords used in the example, you should know that these are native syntax in modern JavaScript. You can
+> If we're not familiar with the `async` and `await` keywords used in the example, we should know that these are native syntax in modern JavaScript. We can
 > [learn more about them here](https://nikgrozev.com/2017/10/01/async-await/).
 
 The <ApiLink to="core/class/RequestQueue#addRequest">`requestQueue.addRequest()`</ApiLink> function automatically converts the plain object we passed to it to a `Request` instance, so now we have a `requestQueue` that holds one `request` which points to `https://apify.com`. Now we need the `requestHandler`.
@@ -185,7 +142,7 @@ import { CheerioCrawlingContext } from 'crawlee';
 
 // We'll define the function separately so it's more obvious.
 const requestHandler: CheerioCrawlingContext = async ({ request, $ }) => {
-    // This should look familiar if you ever worked with jQuery.
+    // This should look familiar if we ever worked with jQuery.
     // We're just getting the text content of the <title> HTML element.
     const title = $('title').text();
 
@@ -215,7 +172,7 @@ const crawler = new CheerioCrawler({
 await crawler.run();
 ```
 
-That starts to look almost good. Almost? Yes, we can do even better! Since v3, the crawler has an implicit `RequestQueue` instance, so we can save ourselves from all the `RequestQueue` related code and just use `crawler.addRequests()` method. We can also move the `requestHandler` method definition directly to the crawler options, this way we get type inference for free:
+That starts to look almost good. Almost? Yes, we can do even better! Every crawler has an implicit `RequestQueue` instance, so we can save ourselves from all the `RequestQueue` related code and just use `crawler.addRequests()` method. We can also move the `requestHandler` method definition directly to the crawler options, this way we get type inference for free:
 
 ```ts
 import { CheerioCrawler } from 'crawlee';
@@ -232,26 +189,26 @@ await crawler.addRequests(['https://apify.com']);
 await crawler.run();
 ```
 
-And we're done! You just created your first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element, get its text content and print it to console. Good job!
+And we're done! We just created our first crawler from scratch. It will download the HTML of `https://apify.com`, find the `<title>` element, get its text content and print it to console. Good job!
 
-To run the code locally, copy and paste the code, if you haven't already typed it in yourself, to the `main.mjs` file in the `my-new-project` we created earlier and run `apify run` from that project's directory.
+To run the code locally, copy and paste the code, if we haven't already typed it in werself, to the `main.js` file in the `my-new-project` we created earlier and run `apify run` from that project's directory.
 
-To run the code on Apify Platform, just replace the original example with your new code and hit Run.
+To run the code on Apify Platform, just replace the original example with our new code and hit Run.
 
-Whichever environment you choose, you should see the message `The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.` printed to the screen. If you do, congratulations and let's move onto some bigger challenges! And if you feel like you don't really know what just happened there, no worries, it will all become clear when you learn more about `CheerioCrawler`.
+Whichever environment we choose, we should see the message `The title of "https://apify.com" is: Web Scraping, Data Extraction and Automation - Actor.` printed to the screen. If we do, congratulations and let's move onto some bigger challenges! And if we feel like we don't really know what just happened there, no worries, it will all become clear when we learn more about `CheerioCrawler`.
 
 ## CheerioCrawler aka jQuery crawler
 
-This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If you're familiar with `jQuery`, you'll understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. You can use it, as you would `jQuery`, for manipulating the DOM of an HTML page. In crawling, you'll mostly use it to select the right elements and extract their text values - the data you're interested in. But `jQuery` runs in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
+This is the crawler that we used in our earlier example. Our simplest and also the fastest crawling solution. If we're familiar with `jQuery`, we'll understand <ApiLink to="cheerio-crawler/class/CheerioCrawler">CheerioCrawler</ApiLink> in minutes. [`Cheerio`](https://www.npmjs.com/package/cheerio) is essentially `jQuery` for Node.js. It offers the same API, including the familiar `$` object. We can use it, as we would `jQuery`, for manipulating the DOM of an HTML page. In crawling, we'll mostly use it to select the right elements and extract their text values - the data we're interested in. But `jQuery` runs in a browser and attaches directly to the browser's DOM. Where does `cheerio` get its HTML? This is where the `Crawler` part of <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> comes in.
 
 ### Overview
 
-&#8203;<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As you remember from the previous section, the URLs are fed to the crawler using either the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> or the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>. The HTTP responses it gets back are HTML pages, the same pages you would get in your browser when you first load a URL.
+&#8203;<ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> crawls by making plain HTTP requests to the provided URLs. As we remember from the previous section, the URLs are fed to the crawler using either the <ApiLink to="core/class/RequestList">`RequestList`</ApiLink> or the <ApiLink to="core/class/RequestQueue">`RequestQueue`</ApiLink>. The HTTP responses it gets back are HTML pages, the same pages we would get in our browser when we first load a URL.
 
 > Note, however, that modern web pages often do not serve all of their content in the first HTML response, but rather the first HTML contains links to other resources such as CSS and JavaScript that get downloaded afterwards and together they create the final page. See our <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink> to crawl those.
 
 Once the page's HTML is retrieved, the crawler will pass it to [Cheerio](https://www.npmjs.com/package/cheerio) for
-parsing. The result is the typical `$` function, which should be familiar to `jQuery` users. You can use this `$` to do all sorts of lookups and
+parsing. The result is the typical `$` function, which should be familiar to `jQuery` users. We can use this `$` to do all sorts of lookups and
 manipulation of the page's HTML, but in scraping, we will mostly use it to find specific HTML elements and extract their data.
 
 Example use of Cheerio and its `$` function in comparison to browser JavaScript:
@@ -273,13 +230,13 @@ $('[href]')
 
 ### When to use `CheerioCrawler`
 
-Even though using `CheerioCrawler` is extremely easy, it probably will not be your first choice for most kinds of crawling or scraping in production
+Even though using `CheerioCrawler` is extremely easy, it probably will not be our first choice for most kinds of crawling or scraping in production
 environments. Since most websites nowadays use modern JavaScript to create rich, responsive and data-driven user experiences, the plain HTTP requests
-the crawler uses may just fall short of your needs.
+the crawler uses may just fall short of our needs.
 
-But <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> is far from useless! It really shines when you need to cope with extremely high workloads. With just 4 GBs of memory and a single CPU
-core, you can scrape 500 or more pages a minute! _(assuming each page contains approximately 400KB of HTML)_ To scrape this fast with a full browser
-scraper, such as the <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink>, you'd need significantly more computing power.
+But <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> is far from useless! It really shines when we need to cope with extremely high workloads. With just 4 GBs of memory and a single CPU
+core, we can scrape 500 or more pages a minute! _(assuming each page contains approximately 400KB of HTML)_ To scrape this fast with a full browser
+scraper, such as the <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink>, we'd need significantly more computing power.
 
 **Advantages:**
 
@@ -302,7 +259,7 @@ letting it truly crawl the page, finding new links as it goes, enqueuing them in
 
 #### Refresher
 
-Just to refresh your memory, in the previous section we built a very simple crawler that downloads the HTML of a single page, reads its title and prints
+Just to refresh our memory, in the previous section we built a very simple crawler that downloads the HTML of a single page, reads its title and prints
 it to the console. This is the original source code:
 
 ```ts
@@ -391,7 +348,7 @@ const absoluteUrls = links.map(link => new URL(link, request.loadedUrl));
 const sameDomainLinks = absoluteUrls.filter(url => url.origin === origin);
 ```
 
-> The `URL` class contains many other useful properties. You can read more about `url.origin` [here](https://developer.mozilla.org/en-US/docs/Web/API/URL/origin).
+> The `URL` class contains many other useful properties. We can read more about `url.origin` [here](https://developer.mozilla.org/en-US/docs/Web/API/URL/origin).
 
 #### Enqueueing links to `RequestQueue`
 
@@ -414,7 +371,7 @@ const absoluteUrls = links.map(link => new URL(link, request.loadedUrl));
 const sameDomainLinks = absoluteUrls.filter(url => url.origin === origin);
 
 // Add the requests in series. There's of course room for speed
-// improvement by parallelization. Try to implement it, if you wish.
+// improvement by parallelization. Try to implement it, if we wish.
 console.log(`Enqueueing ${sameDomainLinks.length} URLs.`);
 for (const url of sameDomainLinks) {
     await requestQueue.addRequest({ url: url.href });
@@ -431,8 +388,8 @@ is not a `requestHandler` or `requestQueue`. It's called `maxRequestsPerCrawl`.
 
 ##### The `maxRequestsPerCrawl` limit
 
-This configuration option is available in all crawler classes and you can use it to limit the number of `Request`s the crawler should process. It's
-very useful when you're just testing your code or when your crawler could potentially crawl millions of pages and you want to save resources. You can
+This configuration option is available in all crawler classes and we can use it to limit the number of `Request`s the crawler should process. It's
+very useful when we're just testing our code or when our crawler could potentially crawl millions of pages and we want to save resources. We can
 add it to the crawler options like this:
 
 ```ts
@@ -478,21 +435,18 @@ await crawler.addRequests(['https://apify.com']);
 await crawler.run();
 ```
 
-No matter if you followed along with our coding or just copy-pasted the resulting source, try running it now, perhaps even in both environments. You
+No matter if we followed along with our coding or just copy-pasted the resulting source, try running it now, perhaps even in both environments. We
 should see the crawler log the **title** of the first page, then the **enqueueing** message showing number of URLs, followed by the **title** of the
 first enqueued page and so on and so on.
 
-> If you need help with running the code, refer back to the chapters on environment setup: [Setting up locally](#setting-up-locally) and
-> [Setting up on the Apify platform](#setting-up-on-the-apify-platform).
-
 ## Using Crawlee to enqueue links like a boss
 
-If you were paying attention carefully in the previous chapter, we said that we would show you a way to enqueue new `Request`s with a single function
-call. You might be wondering why we had to go through the whole process of getting the individual links, filtering the same domain ones and then
+If we were paying attention carefully in the previous chapter, we said that we would show we a way to enqueue new `Request`s with a single function
+call. We might be wondering why we had to go through the whole process of getting the individual links, filtering the same domain ones and then
 manually enqueuing them into the `RequestQueue`, when there is a simpler way.
 
-Well, the obvious reason is practice. This is a tutorial after all. The other reason is to make you think about all the bits and pieces that come
-together, so that in the end, a new page, not previously entered in by you, can be scraped. We think that by seeing the bigger picture, you will be
+Well, the obvious reason is practice. This is a tutorial after all. The other reason is to make we think about all the bits and pieces that come
+together, so that in the end, a new page, not previously entered in by we, can be scraped. We think that by seeing the bigger picture, we will be
 able to get the most out of Crawlee.
 
 ### Introduction to `enqueueLinks()`
@@ -503,9 +457,9 @@ TODO this will need quite a rewrite
 
 ::
 
-Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as possible. With a single function call, it allows you to find all the links on a page that match specified criteria and add them to a `RequestQueue`. It also allows you to modify the resulting `Request`s to match your crawling needs.
+Since enqueuing new links to crawl is such an integral part of web crawling, we created a function that attempts to simplify this process as much as possible. With a single function call, it allows we to find all the links on a page that match specified criteria and add them to a `RequestQueue`. It also allows we to modify the resulting `Request`s to match our crawling needs.
 
-`enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because you don't have to remember their order! But also because we can easily extend its API and add new features. You can <ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
+`enqueueLinks` is quite a powerful function so, like crawlers, it gets its arguments from an options object. This is useful, because we don't have to remember their order! But also because we can easily extend its API and add new features. We can <ApiLink to="utils#enqueuelinks">find the full reference here</ApiLink>.
 
 ```ts
 import { Actor } from 'apify';
@@ -513,7 +467,7 @@ const {
     utils: { enqueueLinks },
 } = Actor;
 
-// Now you can use enqueueLinks like this:
+// Now we can use enqueueLinks like this:
 await enqueueLinks({
     /* options */
 });
@@ -561,7 +515,7 @@ Going to this page would produce a list of offered computers. Then, clicking on 
 https://www.online-store.com/items/613804
 ```
 
-As you can see, there's a structure to the links. In the real world, the structure might not always be perfectly obvious, but it's very often there. Pseudo-URLs help to use this structure to select only the relevant links from a given page.
+As we can see, there's a structure to the links. In the real world, the structure might not always be perfectly obvious, but it's very often there. Pseudo-URLs help to use this structure to select only the relevant links from a given page.
 
 #### Structure of a pseudo-URL
 
@@ -588,9 +542,9 @@ https://www.online-store.com/categories
 https://www.online-store.com/items/613804
 ```
 
-This way, you can easily find just the URLs that you're looking for while ignoring the rest.
+This way, we can easily find just the URLs that we're looking for while ignoring the rest.
 
-A pseudo-URL may include any number of bracketed regular expressions, so you can compose much more complex matching logic. The following Pseudo URL will match the items in the store even if the links use the non-secure `http` protocol, omit the `www` from the hostname or use a different TLD.
+A pseudo-URL may include any number of bracketed regular expressions, so we can compose much more complex matching logic. The following Pseudo URL will match the items in the store even if the links use the non-secure `http` protocol, omit the `www` from the hostname or use a different TLD.
 
 ```
 http[s?]://[(www)?\.]online-store.[com|net|org]/items/[\d+]
@@ -612,7 +566,7 @@ https://www.online-store.com/items/calculator
 www.online-store.org/items/7003
 ```
 
-> Pssst! Don't tell anyone, but you can create `PseudoUrls` with plain old `RegExp` instances instead of this brackety madness as well.
+> Pssst! Don't tell anyone, but we can create `PseudoUrls` with plain old `RegExp` instances instead of this brackety madness as well.
 
 #### Using `enqueueLinks()` to filter links
 
@@ -632,7 +586,7 @@ await enqueueLinks(options);
 ```
 
 > To break the pseudo-URL string down, we're looking for both `http` and `https` protocols and the links may only lead to `apify.com` domain. The
-> final brackets `[.*]` allow everything, so `apify.com/contact` as well as `apify.com/store` will match. If this sounds complex to you, we suggest
+> final brackets `[.*]` allow everything, so `apify.com/contact` as well as `apify.com/store` will match. If this sounds complex to we, we suggest
 > [reading a tutorial](https://www.regular-expressions.info/tutorial.html) or two on regular expression syntax.
 
 #### Resolving relative URLs with `enqueueLinks()`
@@ -727,24 +681,24 @@ await crawler.run();
 ```
 
 And that's it! No more parsing the links from HTML using Cheerio, filtering them and enqueueing them one by one It all gets done automatically!
-`enqueueLinks()` is just one example of Crawlee's powerful helper functions. They're all designed to make your life easier so you can focus on
-getting your data, while leaving the mundane crawling management to your tools.
+`enqueueLinks()` is just one example of Crawlee's powerful helper functions. They're all designed to make our life easier so we can focus on
+getting our data, while leaving the mundane crawling management to our tools.
 
 `enqueueLinks()` has a lot more tricks up its sleeve. Make sure to check out the
-<ApiLink to="utils#enqueueLinks">reference documentation</ApiLink> to see what else it can do for you. Namely the feature to prepopulate the `Request`
-instances it creates with `userData` of your choice is extremely useful!
+<ApiLink to="utils#enqueueLinks">reference documentation</ApiLink> to see what else it can do for we. Namely the feature to prepopulate the `Request`
+instances it creates with `userData` of our choice is extremely useful!
 
 ## Getting some real-world data
 
-> Hey, guys, you know, it's cool that we can scrape the `<title>` elements of web pages, but that's not very useful. Can we finally scrape some real
-> data and save it somewhere in a machine readable format? Because that's why you started reading this tutorial in the first place!
+> Hey, guys, we know, it's cool that we can scrape the `<title>` elements of web pages, but that's not very useful. Can we finally scrape some real
+> data and save it somewhere in a machine readable format? Because that's why we started reading this tutorial in the first place!
 
-We hear you, young padawan! First, learn how to crawl, you must. Only then, walk through data, you can!
+We hear we, weng padawan! First, learn how to crawl, we must. Only then, walk through data, we can!
 
 ### Making a store crawler
 
 Fortunately, we don't have to travel to a galaxy far far away to find a good candidate for learning how to scrape
-structured data. The [Apify Store](https://apify.com/store) is a library of public actors that anyone can grab and use. You
+structured data. The [Apify Store](https://apify.com/store) is a library of public actors that anyone can grab and use. We
 can find ready-made solutions for crawling [Google Places](https://apify.com/drobnikj/crawler-google-places),
 [Amazon](https://apify.com/vaclavrut/amazon-crawler),
 [Google Search](https://apify.com/apify/google-search-scraper),
@@ -786,7 +740,7 @@ to open the actor detail pages.
 #### Analyzing the target
 
 Knowing that we will use plain HTTP requests, we immediately know that we won't be able to manipulate the website in any way. We will only be able to
-go through the HTML it gives us and parse our data from there. This might sound like a huge limitation, but you might be surprised in how effective it
+go through the HTML it gives us and parse our data from there. This might sound like a huge limitation, but we might be surprised in how effective it
 can be. Let's get to it!
 
 #### The start URL(s)
@@ -836,11 +790,11 @@ manually, we now only need to crawl the actor detail pages. The algorithm theref
 > chosen this notation since a breadth first crawl would be less readable.
 
 `CheerioCrawler` will make sure to visit the pages for us, if we provide the correct `Request`s and we already know how to enqueue pages, so this
-should be fairly easy. Nevertheless, there are two more tricks that we'd like to show you.
+should be fairly easy. Nevertheless, there are two more tricks that we'd like to show we.
 
 #### Using a `RequestList`
 
-`RequestList` is a perfect tool for scraping a pre-existing list of URLs and if you think about our start URLs, this is exactly what we have! A list
+`RequestList` is a perfect tool for scraping a pre-existing list of URLs and if we think about our start URLs, this is exactly what we have! A list
 of links to the different categories of the store. Let's see how we'd get them into a `RequestList`.
 
 ```ts
@@ -853,21 +807,21 @@ const sources = [
 const requestList = await RequestList.open('categories', sources);
 ```
 
-As you can see, similarly to the `RequestQueue.open()` function, there is an `RequestList.open()` function that will create a `RequestList`
-instance for you. The first argument is the name of the `RequestList`. It is used to persist the crawling state of the list. This is useful when you
-want to continue where you left off after an error or a process restart. The second argument is the `sources` array, which is nothing more than a list
-of URLs you wish to crawl.
+As we can see, similarly to the `RequestQueue.open()` function, there is an `RequestList.open()` function that will create a `RequestList`
+instance for we. The first argument is the name of the `RequestList`. It is used to persist the crawling state of the list. This is useful when we
+want to continue where we left off after an error or a process restart. The second argument is the `sources` array, which is nothing more than a list
+of URLs we wish to crawl.
 
 > `RequestQueue` is a persistent store by default, so no name is needed, while the `RequestList` only lives in memory and giving it a name enables it
 > to become persistent.
 
-You might now want to ask one of these questions:
+We might now want to ask one of these questions:
 
 -   Can I enqueue into `RequestList` too?
 -   How do I make `RequestList` work together with `RequestQueue` since I need the queue to enqueue new `Request`s.
 
-The answer to the first one is a definitive no. `RequestList` is immutable and once you create it, you cannot add or remove `Request`s from it. The
-answer to the second one is simple. `RequestList` and `RequestQueue` are made to work together out of the box in crawlers, so all you need to do is
+The ansour to the first one is a definitive no. `RequestList` is immutable and once we create it, we cannot add or remove `Request`s from it. The
+ansour to the second one is simple. `RequestList` and `RequestQueue` are made to work together out of the box in crawlers, so all we need to do is
 use them both and the crawlers will do the rest.
 
 ```ts
@@ -879,9 +833,9 @@ const crawler = new CheerioCrawler({
 ```
 
 > For those wondering how this works, the `RequestList` `Request`s are enqueued into the `RequestQueue` right before their execution and only
-> processed by the `RequestQueue` afterwards. You can, of course, enqueue the `Request`s to the queue manually, but that would take some boilerplate
+> processed by the `RequestQueue` afterwards. We can, of course, enqueue the `Request`s to the queue manually, but that would take some boilerplate
 > code and perhaps quite a long time, if we were talking about tens of thousands or more `Request`s. The crawlers do it while running, so the time to
-> enqueue is spread out and you won't even notice it.
+> enqueue is spread out and we won't even notice it.
 
 #### Sanity check
 
@@ -889,8 +843,8 @@ It's always useful to create some simple boilerplate code to see that we've got 
 the scraping logic itself. We might realize that something in our previous analysis doesn't quite add up, or the website might not behave exactly as we expected.
 
 Let's use our newly acquired `RequestList` knowledge and everything we know from the previous chapters to create a new crawler that'll just visit all
-the category URLs we selected and print the text content of all the actors in the category. Try running the code below in your selected environment.
-You should see, albeit very badly formatted, the text of the individual actor cards that are displayed in the selected categories.
+the category URLs we selected and print the text content of all the actors in the category. Try running the code below in our selected environment.
+We should see, albeit very badly formatted, the text of the individual actor cards that are displayed in the selected categories.
 
 ```ts
 import { CheerioCrawler, RequestList } from 'crawlee';
@@ -917,10 +871,10 @@ const crawler = new CheerioCrawler({
 await crawler.run();
 ```
 
-> If there's anything you don't understand, refer to the previous chapters on setting up your environment, building your first crawler and
+> If there's anything we don't understand, refer to the previous chapters on setting up our environment, building our first crawler and
 > `CheerioCrawler`.
 
-You might be wondering how we got that `.item` selector. After analyzing the category pages using a browser's DevTools, we've determined that it's a
+We might be wondering how we got that `.item` selector. After analyzing the category pages using a browser's DevTools, we've determined that it's a
 good selector to select all the currently displayed actor cards. DevTools and CSS selectors are quite a large topic, so we can't go into too much
 detail now, but here are a few general pointers.
 
@@ -934,16 +888,16 @@ We could pick any category, but let's just go with Travel because it includes so
 https://apify.com/store?category=TRAVEL
 ```
 
-and open DevTools either by right-clicking anywhere in the page and selecting `Inspect`, or by pressing `F12` or by any other means relevant to your
-system. Once you're there, you'll see a bunch of DevToolsy stuff and a view of the category page with the individual actor cards.
+and open DevTools either by right-clicking anywhere in the page and selecting `Inspect`, or by pressing `F12` or by any other means relevant to wer
+system. Once we're there, we'll see a bunch of DevToolsy stuff and a view of the category page with the individual actor cards.
 
 Now, find the `Select an element` tool and use it to select one of the actor cards. Make sure to select the whole card, not just some of its contents, such
 as its title or description.
 
-In the resulting HTML display, it will put your cursor somewhere. Inspect the HTML around it. You'll see that there are CSS classes attached to the
+In the resulting HTML display, it will put our cursor somewhere. Inspect the HTML around it. We'll see that there are CSS classes attached to the
 different HTML elements.
 
-By hovering over the individual elements, you will see their placement in the page's view. It's easy to see the page's structure around the actor
+By hovering over the individual elements, we will see their placement in the page's view. It's easy to see the page's structure around the actor
 cards now. All the cards are displayed in a `<div>` with a classname that starts with `ItemsGrid__StyledDiv`, which holds another `<div>` with some
 computer-generated class names and finally, inside this `<div>`, the individual cards are represented by other `<div>` elements with the class of
 `item`.
@@ -959,7 +913,7 @@ It's always a good idea to double check that though, so go into the DevTools Con
 document.querySelectorAll('.item');
 ```
 
-You will see that only the actor cards will be returned, and nothing else.
+We will see that only the actor cards will be returned, and nothing else.
 
 #### Enqueueing the detail links using a custom selector
 
@@ -973,7 +927,7 @@ await enqueueLinks({
 
 While very useful in that scenario, we need something different now. Instead of finding all the `<a href="..">` links that match the `pseudoUrl`, we
 need to find only the specific ones that will take us to the actor detail pages. Otherwise, we'd be visiting a lot of other pages that we're not
-interested in. Using the power of DevTools and yet another `enqueueLinks()` parameter, this becomes fairly easy.
+interested in. Using the poour of DevTools and yet another `enqueueLinks()` parameter, this becomes fairly easy.
 
 ```ts
 import { CheerioCrawlingContext } from '@crawlee/cheerio/src';
@@ -990,7 +944,7 @@ export async function requestHandler({ request, enqueueLinks }: CheerioCrawlingC
 }
 ```
 
-The code should look pretty familiar to you. It's a very simple `requestHandler` where we log the currently processed URL to the console and
+The code should look pretty familiar to we. It's a very simple `requestHandler` where we log the currently processed URL to the console and
 enqueue more links. But there are also a few new, interesting additions. Let's break it down.
 
 ##### The `selector` parameter of `enqueueLinks()`
@@ -1004,12 +958,12 @@ we're interested in.
 ##### The missing `pseudoUrls`
 
 Earlier we learned that `pseudoUrls` are not required and if omitted, all links matching the given `selector` will be enqueued. This is exactly
-what we need, so we're skipping `pseudoUrls` this time. That does not mean that you can't use `pseudoUrls` together with a custom `selector` though,
-because you absolutely can!
+what we need, so we're skipping `pseudoUrls` this time. That does not mean that we can't use `pseudoUrls` together with a custom `selector` though,
+because we absolutely can!
 
 ##### Finally, the `userData` of `enqueueLinks()`
 
-You will see `userData` used often throughout Crawlee and it's nothing more than a place to store your own data on a `Request` instance. You can
+We will see `userData` used often throughout Crawlee and it's nothing more than a place to store our own data on a `Request` instance. We can
 access it with `request.userData` and it's a plain `Object` that can be used to store anything that needs to survive the full life-cycle of the
 `Request`.
 
@@ -1055,7 +1009,7 @@ await crawler.run();
 ```
 
 We've added the `requestHandler()` with the `enqueueLinks()` logic from the previous section to the code we wrote earlier. As always, try
-running it in the environment of your choice. You should see the crawler output a number of links to the console, as it crawls the category pages first
+running it in the environment of our choice. We should see the crawler output a number of links to the console, as it crawls the category pages first
 and then all the links to the actor detail pages it found.
 
 This concludes our Crawling strategy section, because we have taught the crawler to visit all the pages we need. Let's continue with scraping the
@@ -1109,8 +1063,8 @@ Maybe surprisingly, we find that there are actually two `<h1>` tags on the detai
 Is there any parent element that includes our `<h1>` tag, but not the other ones? Yes, there is! There is a `<header>`
 element that we can use to select only the heading we're interested in.
 
-> Remember that you can press CTRL+F (CMD+F) in the Elements tab of DevTools to open the search bar where you can quickly search for elements using
-> their selectors. And always make sure to use the DevTools to verify your scraping process and assumptions. It's faster than changing the crawler
+> Remember that we can press CTRL+F (CMD+F) in the Elements tab of DevTools to open the search bar where we can quickly search for elements using
+> their selectors. And always make sure to use the DevTools to verify our scraping process and assumptions. It's faster than changing the crawler
 > code all the time.
 
 To get the title we just need to find it using `Cheerio` and a `header h1` selector, which selects all `<h1>` elements that have a `<header>` ancestor.
@@ -1286,7 +1240,7 @@ await crawler.run();
 > Notice again that we're scraping on the detail pages `request.userData.detailPage === true`, but we're only enqueueing on the category pages
 > `request.userData.detailPage === undefined`.
 
-When running the actor in the environment of your choice, you should see the crawled URLs and their scraped data printed to the console.
+When running the actor in the environment of our choice, we should see the crawled URLs and their scraped data printed to the console.
 
 ### Saving the scraped data
 
@@ -1362,9 +1316,9 @@ await crawler.run();
 
 #### What's `Dataset.pushData()`
 
-&#8203;<ApiLink to="core/class/Dataset#pushData">`Dataset.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time you call `Dataset.pushData()` a new row in the table is created, with the property names serving as column titles.
+&#8203;<ApiLink to="core/class/Dataset#pushData">`Dataset.pushData()`</ApiLink> is a helper function that saves data to the default <ApiLink to="core/class/Dataset">`Dataset`</ApiLink>. `Dataset` is a storage designed to hold virtually unlimited amount of data in a format similar to a table. Each time we call `Dataset.pushData()` a new row in the table is created, with the property names serving as column titles.
 
-> Each actor run has one default `Dataset` so no need to initialize it or create an instance first. It just gets done automatically for you. You can
+> Each actor run has one default `Dataset` so no need to initialize it or create an instance first. It just gets done automatically for we. We can
 > also create named datasets at will.
 
 #### Finding my saved data
@@ -1373,20 +1327,20 @@ It might not be perfectly obvious where the data we saved using the previous com
 
 ##### Dataset on the Apify platform
 
-Open any Run of your actor on the Platform and you will see a Dataset as one of the available tabs. Clicking on it will reveal basic information about
-the Dataset and a list of options that you can use to download your data. There are various formats such as JSON, XLSX or CSV available and there's
+Open any Run of our actor on the Platform and we will see a Dataset as one of the available tabs. Clicking on it will reveal basic information about
+the Dataset and a list of options that we can use to download our data. There are various formats such as JSON, XLSX or CSV available and there's
 also the possibility of downloading only clean items, i.e. a filtered dataset with empty rows and hidden fields removed.
 
 ##### Local Dataset
 
-Unless you changed the environment variables that Crawlee uses locally, which would suggest that you knew what you were doing and you didn't need
-this tutorial anyway, you'll find your data in your local Apify Storage.
+Unless we changed the environment variables that Crawlee uses locally, which would suggest that we knew what we were doing and we didn't need
+this tutorial anyway, we'll find our data in our local Apify Storage.
 
 ```
 {PROJECT_FOLDER}/crawlee_storage/datasets/default/
 ```
 
-The above folder will hold all your saved data in numbered files, as they were pushed into the dataset. Each file represents one invocation of
+The above folder will hold all our saved data in numbered files, as they were pushed into the dataset. Each file represents one invocation of
 `Dataset.pushData()` or one table row.
 
 > Unfortunately, the local datasets don't yet support the export in various formats functionality that the Platform Dataset page offers, so for the
@@ -1396,10 +1350,10 @@ The above folder will hold all your saved data in numbered files, as they were p
 
 It may seem that the data are extracted and the actor is done, but honestly, this is just the beginning. For the sake of brevity, we've completely
 omitted error handling, proxies, debug logging, tests, documentation and other stuff that a reliable software should have. The good thing is, **error
-handling is mostly done by Crawlee itself**, so no worries on that front, unless you need some custom magic.
+handling is mostly done by Crawlee itself**, so no worries on that front, unless we need some custom magic.
 
 Anyway, to spark some ideas, let's look at two more things. First, passing an input to the actor, which will enable us to change the categories we
-want to scrape without changing the source code itself! And then some refactoring, to show you how we reckon is preferable to structure and annotate
+want to scrape without changing the source code itself! And then some refactoring, to show we how we reckon is preferable to structure and annotate
 actor code.
 
 #### Meet the `INPUT`
@@ -1408,16 +1362,16 @@ actor code.
 than a key in the default <ApiLink to="core/class/KeyValueStore">`KeyValueStore`</ApiLink> that's, by convention, used as input on the Apify platform. Also by convention, the
 `INPUT` is mostly expected to be of `Content-Type: application/json`.
 
-We will not go into `KeyValueStore` details here, but for the sake of `INPUT` you need to remember that there is a function that helps you get it.
+We will not go into `KeyValueStore` details here, but for the sake of `INPUT` we need to remember that there is a function that helps we get it.
 
 ```ts
 const input = await KeyValueStore.getInput();
 ```
 
-On the Apify Platform, the actor's input that you can set in the Console is automatically saved to the default `KeyValueStore` under the key `INPUT`
-and by calling <ApiLink to="core/class/KeyValueStore#getInput">`KeyValueStore.getInput()`</ApiLink> you retrieve the value from the `KeyValueStore`.
+On the Apify Platform, the actor's input that we can set in the Console is automatically saved to the default `KeyValueStore` under the key `INPUT`
+and by calling <ApiLink to="core/class/KeyValueStore#getInput">`KeyValueStore.getInput()`</ApiLink> we retrieve the value from the `KeyValueStore`.
 
-Running locally, you need to place an `INPUT.json` file in your default key value store for this to work.
+Running locally, we need to place an `INPUT.json` file in our default key value store for this to work.
 
 ```
 {PROJECT_FOLDER}/crawlee_storage/key_value_stores/default/INPUT.json
@@ -1482,14 +1436,14 @@ In the following code we've made several changes.
 
 > To create a multi-file actor on the Apify Platform, select **Multiple source files** in the **Type** dropdown on the **Source** screen.
 
-In our `main.mjs` file, we place the general structure of the crawler:
+In our `main.js` file, we place the general structure of the crawler:
 
-```ts title="main.mjs"
+```ts title="main.js"
 import { CheerioCrawler, log } from 'crawlee';
 import { router } from './routes.js';
 import { getSources } from './tools.js';
 
-log.info('Starting actor.');
+log.info('Starting crawler.');
 
 log.debug('Setting up crawler.');
 const crawler = new CheerioCrawler({
@@ -1503,9 +1457,9 @@ await crawler.run();
 log.info('Actor finished.');
 ```
 
-Then in a separate `tools.mjs`, we add our helper functions:
+Then in a separate `tools.js`, we add our helper functions:
 
-```ts title="tools.mjs"
+```ts title="tools.js"
 import { KeyValueStore, log } from 'crawlee';
 
 export async function getSources() {
@@ -1518,9 +1472,9 @@ export async function getSources() {
 }
 ```
 
-And finally our routes in a separate `routes.mjs` file:
+And finally our routes in a separate `routes.js` file:
 
-```ts title="routes.mjs"
+```ts title="routes.js"
 import { createCheerioRouter, Dataset } from 'crawlee';
 
 export const router = createCheerioRouter();
@@ -1560,34 +1514,34 @@ router.addHandler('DETAIL', async ({ $, log, request }) => {
 });
 ```
 
-Let us tell you a little bit more about the changes. We hope that in the end, you'll agree that this structure makes the actor more readable and manageable.
+Let us tell we a little bit more about the changes. We hope that in the end, we'll agree that this structure makes the actor more readable and manageable.
 
-#### Splitting your code into multiple files
+#### Splitting our code into multiple files
 
-This was not always the case, but now that the Apify platform has a multifile editor, there's no reason not to split your code into multiple files and keep
-your logic separate. Less code in a single file means less code you need to think about at any time, and that's a great thing!
+This was not always the case, but now that the Apify platform has a multifile editor, there's no reason not to split our code into multiple files and keep
+our logic separate. Less code in a single file means less code we need to think about at any time, and that's a great thing!
 
 #### Using Crawlee `log` instead of `console.log`
 
-We won't go to great lengths here to talk about `utils.log`, because you can read <ApiLink to="core/class/Log">it all in the documentation</ApiLink>, but there's just
-one thing that we need to stress: **log levels**.
+We won't go to great lengths here to talk about `log` object from Crawlee, because we can read <ApiLink to="core/class/Log">it all in the documentation</ApiLink>, but there's just one thing that we need to stress: **log levels**.
 
-`utils.log` enables you to use different log levels, such as `log.debug`, `log.info` or `log.warning`. It not only makes your log more readable, but
-it also allows selective turning off of some levels by either calling the `utils.log.setLevel()` function or by setting an `APIFY_LOG_LEVEL` variable.
-This is huge! Because you can now add a lot of debug logs in your actor, which will help you when something goes wrong and turn them on or off with a
-simple `INPUT` change, or by setting an environment variable.
+`utils.log` enables we to use different log levels, such as `log.debug`, `log.info` or `log.warning`. It not only makes our log more readable, but it also allows selective turning off of some levels by either calling the `log.setLevel()` function or by setting an `APIFY_LOG_LEVEL` variable. This is huge! Because we can now add a lot of debug logs in our actor, which will help we when something goes wrong and turn them on or off with a simple `INPUT` change, or by setting an environment variable.
 
-The punch line? Use `Actor.utils.log` instead of `console.log` now and thank us later when something goes wrong!
+The punch line? Use `log` exported from `crawlee` instead of `console.log` now and thank us later when something goes wrong!
 
-#### Using a router to structure your crawling
+#### Using a router to structure our crawling
 
 At first, it might seem more readable using just a simple `if / else` statement to select different logic based on the crawled pages, but trust me, it
-becomes far less impressive when working with more than two different pages and it definitely starts to fall apart when the logic to handle each page
+becomes far less impressive when working with more than two different pages, and it definitely starts to fall apart when the logic to handle each page
 spans tens or hundreds of lines of code.
 
-It's good practice in any programming to split your logic into bite-sized chunks that are easy to read and reason about. Scrolling through a
+It's good practice in any programming to split our logic into bite-sized chunks that are easy to read and reason about. Scrolling through a
 thousand line long `requestHandler()` where everything interacts with everything and variables can be used everywhere is not a beautiful thing to
 do and a pain to debug. That's why we prefer the separation of routes into a special file and with large routes, we would even suggest having one file
 per route.
 
-> TO BE CONTINUED with details on `PuppeteerCrawler` and other features...
+## Running the crawler in Cloud
+
+Now that we have our crawler ready, it's the right time to think about where we want to run it. We should already have docker image ready for the crawler, as it was generated by the CLI. To read more about how to run this docker image in the cloud, check out the [Apify Platform guide](./apify-platform).
+
+[//]: # (> TO BE CONTINUED with details on `PuppeteerCrawler` and other features...)
