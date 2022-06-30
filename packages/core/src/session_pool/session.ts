@@ -1,18 +1,14 @@
 import type { Log } from '@apify/log';
 import { cryptoRandomObjectId } from '@apify/utilities';
-import type { Cookie as BrowserPoolCookie } from '@crawlee/browser-pool';
-import type { Dictionary } from '@crawlee/types';
+import type { Dictionary, Cookie as CookieObject, BrowserLike } from '@crawlee/types';
 import type { IncomingMessage } from 'node:http';
 import ow from 'ow';
-import type { HTTPResponse, Protocol } from 'puppeteer';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { STATUS_CODES_BLOCKED } from '../constants';
 import { log as defaultLog } from '../log';
 import { EVENT_SESSION_RETIRED } from './events';
 import { SessionPool } from './session_pool';
 import { getCookiesFromResponse } from './session_utils';
-
-export type PuppeteerCookie = Protocol.Network.Cookie | BrowserPoolCookie;
 
 // CONSTANTS
 const DEFAULT_SESSION_MAX_AGE_SECS = 3000;
@@ -167,7 +163,7 @@ export class Session {
         this.maxUsageCount = maxUsageCount;
         this.sessionPool = sessionPool;
 
-        this._puppeteerCookieToTough = this._puppeteerCookieToTough.bind(this);
+        this._cookieObjectToTough = this._cookieObjectToTough.bind(this);
     }
 
     /**
@@ -287,7 +283,7 @@ export class Session {
      *
      * It then parses and saves the cookies from the `set-cookie` header, if available.
      */
-    setCookiesFromResponse(response: IncomingMessage | HTTPResponse | { headers: Dictionary<string | string[]>; url: string }) {
+    setCookiesFromResponse(response: IncomingMessage | BrowserLike | { headers: Dictionary<string | string[]>; url: string }) {
         try {
             const cookies = getCookiesFromResponse(response).filter((c) => c);
             this._setCookies(cookies, typeof response.url === 'function' ? response.url() : response.url!);
@@ -311,8 +307,8 @@ export class Session {
      * ]
      * ```
      */
-    setPuppeteerCookies(cookies: PuppeteerCookie[], url: string) {
-        const normalizedCookies = cookies.map(this._puppeteerCookieToTough);
+    setCookies(cookies: CookieObject[], url: string) {
+        const normalizedCookies = cookies.map(this._cookieObjectToTough);
         this._setCookies(normalizedCookies, url);
     }
 
@@ -320,7 +316,7 @@ export class Session {
      * Returns cookies in a format compatible with puppeteer and ready to be used with `page.setCookie`.
      * @param url website url. Only cookies stored for this url will be returned
      */
-    getPuppeteerCookies(url: string): PuppeteerCookie[] {
+    getCookies(url: string): CookieObject[] {
         const cookies = this.cookieJar.getCookiesSync(url);
         return cookies.map(this._toughCookieToPuppeteer);
     }
@@ -346,7 +342,7 @@ export class Session {
      * Transforms puppeteer cookie to tough-cookie.
      * @param puppeteerCookie Cookie from puppeteer `page.cookies` method.
      */
-    protected _puppeteerCookieToTough(puppeteerCookie: PuppeteerCookie): Cookie {
+    protected _cookieObjectToTough(puppeteerCookie: CookieObject): Cookie {
         const isExpiresValid = puppeteerCookie.expires && typeof puppeteerCookie.expires === 'number' && puppeteerCookie.expires > 0;
         const expires = isExpiresValid ? new Date(puppeteerCookie.expires! * 1000) : this._getDefaultCookieExpirationDate(this.maxAgeSecs);
         const domain = typeof puppeteerCookie.domain === 'string' && puppeteerCookie.domain.startsWith('.')
@@ -369,7 +365,7 @@ export class Session {
      * @param toughCookie Cookie from CookieJar
      * @return Cookie from Puppeteer
      */
-    protected _toughCookieToPuppeteer(toughCookie: Cookie): PuppeteerCookie {
+    protected _toughCookieToPuppeteer(toughCookie: Cookie): CookieObject {
         return {
             name: toughCookie.key,
             value: toughCookie.value,
@@ -379,7 +375,7 @@ export class Session {
             path: toughCookie.path,
             secure: toughCookie.secure,
             httpOnly: toughCookie.httpOnly,
-        } as PuppeteerCookie;
+        } as CookieObject;
     }
 
     /**

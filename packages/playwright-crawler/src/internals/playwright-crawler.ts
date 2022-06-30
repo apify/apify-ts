@@ -240,7 +240,7 @@ export class PlaywrightCrawler extends BrowserCrawler<{ browserPlugins: [Playwri
     }
 
     protected override async _applyCookies({ session, request, page }: PlaywrightCrawlingContext, preHooksCookies: string, postHooksCookies: string) {
-        const sessionCookie = session?.getPuppeteerCookies(request.url) ?? [];
+        const sessionCookie = session?.getCookies(request.url) ?? [];
         const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON() as PlaywrightCookie | undefined);
         const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON() as PlaywrightCookie | undefined);
 

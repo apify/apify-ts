@@ -345,7 +345,7 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
             sessionPoolOptions: {
                 createSessionFunction: (sessionPool) => {
                     const session = new Session({ sessionPool });
-                    session.setPuppeteerCookies(cookies, serverUrl);
+                    session.setCookies(cookies, serverUrl);
                     return session;
                 },
             },

@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import { TypedEmitter } from 'tiny-typed-emitter';
 import { tryCancel } from '@apify/timeout';
+import type { Cookie } from '@crawlee/types';
 import { BROWSER_CONTROLLER_EVENTS } from '../events';
 import type { LaunchContext } from '../launch-context';
 import { log } from '../logger';
@@ -19,64 +20,6 @@ export interface BrowserControllerEvents<
 > {
     [BROWSER_CONTROLLER_EVENTS.BROWSER_CLOSED]:
         (controller: BrowserController<Library, LibraryOptions, LaunchResult, NewPageOptions, NewPageResult>) => void;
-}
-
-export interface Cookie {
-    /**
-     * Cookie name.
-     */
-    name: string;
-    /**
-     * Cookie value.
-     */
-    value: string;
-    /**
-     * The request-URI to associate with the setting of the cookie. This value can affect the
-     * default domain, path, source port, and source scheme values of the created cookie.
-     */
-    url?: string;
-    /**
-     * Cookie domain.
-     */
-    domain?: string;
-    /**
-     * Cookie path.
-     */
-    path?: string;
-    /**
-     * True if cookie is secure.
-     */
-    secure?: boolean;
-    /**
-     * True if cookie is http-only.
-     */
-    httpOnly?: boolean;
-    /**
-     * Cookie SameSite type.
-     */
-    sameSite?: 'Strict' | 'Lax' | 'None';
-    /**
-     * Cookie expiration date, session cookie if not set
-     */
-    expires?: number;
-    /**
-     * Cookie Priority.
-     */
-    priority?: 'Low' | 'Medium' | 'High';
-    /**
-     * True if cookie is SameParty.
-     */
-    sameParty?: boolean;
-    /**
-     * Cookie source scheme type.
-     */
-    sourceScheme?: 'Unset' | 'NonSecure' | 'Secure';
-    /**
-     * Cookie source port. Valid values are {-1, [1, 65535]}, -1 indicates an unspecified port.
-     * An unspecified port value allows protocol clients to emulate legacy cookie scope for the port.
-     * This is a temporary ability and it will be removed in the future.
-     */
-    sourcePort?: number;
 }
 
 /**

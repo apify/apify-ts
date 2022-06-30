@@ -71,13 +71,5 @@
         "stream-json": "^1.7.4",
         "tldts": "^5.7.80",
         "tough-cookie": "^4.0.0"
-    },
-    "peerDependencies": {
-        "puppeteer": ">= 9.x <= 14.x"
-    },
-    "peerDependenciesMeta": {
-        "puppeteer": {
-            "optional": true
-        }
     }
 }
