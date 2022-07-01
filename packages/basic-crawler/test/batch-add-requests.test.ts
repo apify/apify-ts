@@ -1,8 +1,8 @@
 import { BasicCrawler } from '@crawlee/basic';
-import { SingleStorageCase } from '../../../test/shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 
-describe.each(SingleStorageCase)('BasicCrawler#addRequests with big batch sizes - %s', (Emulator) => {
-    const localStorageEmulator = new Emulator();
+describe('BasicCrawler#addRequests with big batch sizes', () => {
+    const localStorageEmulator = new MemoryStorageEmulator();
 
     beforeEach(async () => {
         await localStorageEmulator.init();
