@@ -65,17 +65,12 @@ export async function getMemoryInfo(): Promise<MemoryInfo> {
         // reported in bytes
         mainProcessBytes = process.memoryUsage().rss;
 
-        // TODO this is quite ugly, let's introduce some local variables
         // https://stackoverflow.com/a/55914335/129415
-        childProcessesBytes = +execSync('cat /proc/meminfo')
-            .toString()
-            .split(/[\n: ]/)
-            .filter((val) => val.trim())[19]
-            * 1000 // meminfo reports in kb, not bytes
-            // the total used memory is reported by meminfo
-            // subtract memory used by the main node process
-            // in order to infer memory used by any child processes
-            - mainProcessBytes;
+        const memInfo = execSync('cat /proc/meminfo').toString();
+        const values = memInfo.split(/[\n: ]/).filter((val) => val.trim());
+        // /proc/meminfo reports in kb, not bytes, the total used memory is reported by meminfo
+        // subtract memory used by the main node process in order to infer memory used by any child processes
+        childProcessesBytes = +values[19] * 1000 - mainProcessBytes;
     } else {
         // Query both root and child processes
         const processes = await psTreePromised(process.pid, true);

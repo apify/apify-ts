@@ -104,7 +104,7 @@ export class PuppeteerController extends BrowserController<typeof Puppeteer> {
         const browserProcess = this.browser.process();
 
         if (!browserProcess) {
-            // TODO: LOG browser was connected using the `puppeteer.connect` method no browser to kill.
+            log.debug('Browser was connected using the `puppeteer.connect` method no browser to kill.');
             return;
         }
 
@@ -118,8 +118,8 @@ export class PuppeteerController extends BrowserController<typeof Puppeteer> {
         try {
             await this.browser.close();
             clearTimeout(timeout);
-        } catch (e) {
-            // TODO: LOG Browser was already killed.
+        } catch (error) {
+            log.debug('Browser was already killed.', { error });
         }
     }
 

@@ -1,3 +1,4 @@
+import type { Dictionary } from '@crawlee/types';
 import type { load } from 'cheerio';
 import cheerio from 'cheerio';
 
@@ -38,19 +39,10 @@ const BLOCK_TAGS_REGEX = /^(p|h1|h2|h3|h4|h5|h6|ol|ul|li|pre|address|blockquote|
 export function htmlToText(htmlOrCheerioElement: string | CheerioRoot): string {
     if (!htmlOrCheerioElement) return '';
 
-    // TODO: Add support for "html" being a Cheerio element, otherwise the only way
-    //  to use it is e.g. htmlToText($('p').html())) which is inefficient
-    //  Also, it seems this doesn't work well in CheerioScraper, e.g. htmlToText($)
-    //  produces really text with a lot of HTML elements in it. Let's just deprecate this sort of usage,
-    //  and make the parameter "htmlOrCheerioElement"
     const $ = typeof htmlOrCheerioElement === 'function' ? htmlOrCheerioElement : cheerio.load(htmlOrCheerioElement, { decodeEntities: true });
     let text = '';
 
-    // TODO: the type for elems is very annoying to work with.
-    //  The correct type is Node[] from cheerio but it needs a lot more casting in each branch, or alternatively,
-    //  use the is* methods from domhandler (isText, isTag, isComment, etc.)
-    // @ts-expect-error
-    const process = (elems) => {
+    const process = (elems: Dictionary) => {
         const len = elems ? elems.length : 0;
         for (let i = 0; i < len; i++) {
             const elem = elems[i];
@@ -60,7 +52,7 @@ export function htmlToText(htmlOrCheerioElement: string | CheerioRoot): string {
                 if (elem.parent && elem.parent.tagName === 'pre') compr = elem.data;
                 else compr = elem.data.replace(/\s+/g, ' ');
                 // If text is empty or ends with a whitespace, don't add the leading whitepsace
-                if (compr.startsWith(' ') && /(^|\s)$/.test(text)) compr = compr.substr(1);
+                if (compr.startsWith(' ') && /(^|\s)$/.test(text)) compr = compr.substring(1);
                 text += compr;
             } else if (elem.type === 'comment' || SKIP_TAGS_REGEX.test(elem.tagName)) {
                 // Skip comments and special elements
