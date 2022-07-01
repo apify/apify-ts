@@ -190,7 +190,7 @@ export interface EnqueueLinksByClickingElementsOptions {
  * **Example usage**
  *
  * ```javascript
- * await Actor.utils.puppeteer.enqueueLinksByClickingElements({
+ * await utils.puppeteer.enqueueLinksByClickingElements({
  *   page,
  *   requestQueue,
  *   selector: 'a.product-detail',

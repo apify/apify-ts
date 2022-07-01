@@ -1,3 +1,4 @@
+import type { Dictionary } from '@crawlee/types';
 // eslint isn't compatible with `import type`
 import type Puppeteer from './puppeteer-proxy-per-page';
 import type { Browser, Target, BrowserContext } from './puppeteer-proxy-per-page';
@@ -75,10 +76,14 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
             }
         });
 
-        const newPage = browser.newPage.bind(browser);
+        const boundMethods = (['newPage', 'close', 'userAgent', 'createIncognitoBrowserContext', 'version'] as const)
+            .reduce((map, method) => {
+                map[method] = browser[method]?.bind(browser);
+                return map;
+            }, {} as Dictionary);
 
         browser = new Proxy(browser, {
-            get: (target, property: keyof typeof browser) => {
+            get: (target, property: keyof typeof browser, receiver) => {
                 if (property === 'newPage') {
                     return (async (...args: Parameters<BrowserContext['newPage']>) => {
                         let page: Puppeteer.Page;
@@ -104,7 +109,7 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
                                 throw error;
                             }
                         } else {
-                            page = await newPage(...args);
+                            page = await boundMethods.newPage(...args);
                         }
 
                         /*
@@ -128,7 +133,11 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
                     });
                 }
 
-                return target[property];
+                if (property in boundMethods) {
+                    return boundMethods[property];
+                }
+
+                return Reflect.get(target, property, receiver);
             },
         });
 
@@ -171,10 +180,7 @@ export class PuppeteerPlugin extends BrowserPlugin<typeof Puppeteer> {
         */
     }
 
-    protected _isChromiumBasedBrowser(launchContext: LaunchContext<typeof Puppeteer>): boolean {
-        const { launchOptions } = launchContext as any;
-        // @ts-expect-error cannot find .product on this.library
-        const browserName = launchOptions.product || this.library.product!;
-        return browserName === 'chrome';
+    protected _isChromiumBasedBrowser(_launchContext: LaunchContext<typeof Puppeteer>): boolean {
+        return true;
     }
 }
