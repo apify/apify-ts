@@ -67,7 +67,7 @@ export interface WorkerData {
     requestQueuesDirectory: string;
 }
 
-export type WorkerReceivedMessage = WorkerUpdateMetadataMessage | WorkerUpdateEntriesMessage;
+export type WorkerReceivedMessage = WorkerUpdateMetadataMessage | WorkerUpdateEntriesMessage | WorkerDeleteEntryMessage;
 
 export type WorkerUpdateMetadataMessage =
     | MetadataUpdate<'datasets', storage.DatasetInfo>
@@ -77,7 +77,9 @@ export type WorkerUpdateMetadataMessage =
 export type WorkerUpdateEntriesMessage =
     | EntriesUpdate<'datasets', [string, storage.Dictionary][]>
     | EntriesUpdate<'keyValueStores', KeyValueStoreItemData>
-    | EntriesUpdate<'requestQueues', InternalRequest[]>;
+    | EntriesUpdate<'requestQueues', InternalRequest>;
+
+export type WorkerDeleteEntryMessage = EntryDelete<'requestQueues'>;
 
 type EntityType = 'datasets' | 'keyValueStores' | 'requestQueues';
 
@@ -97,6 +99,17 @@ interface EntriesUpdate<Type extends EntityType, DataType> {
     entityDirectory: string;
     data: DataType;
     writeMetadata: boolean;
+}
+
+interface EntryDelete<Type extends EntityType> {
+    entityType: Type;
+    id: string;
+    action: 'delete-entry';
+    entityDirectory: string;
+    writeMetadata: boolean;
+    data: {
+        id: string;
+    };
 }
 
 interface KeyValueStoreItemData {

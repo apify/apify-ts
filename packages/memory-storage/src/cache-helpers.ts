@@ -261,7 +261,7 @@ export async function findRequestQueueByPossibleId(client: MemoryStorage, entryN
     let modifiedAt = new Date();
     let pendingRequestCount = 0;
     let handledRequestCount = 0;
-    let entries: InternalRequest[] = [];
+    const entries: InternalRequest[] = [];
 
     for await (const entry of directoryEntries) {
         if (entry.isFile()) {
@@ -280,11 +280,10 @@ export async function findRequestQueueByPossibleId(client: MemoryStorage, entryN
 
                     break;
                 }
-                case 'entries.json': {
-                    entries = JSON.parse(await readFile(resolve(requestQueueDir, entry.name), 'utf8')) as InternalRequest[];
-                    break;
+                default: {
+                    const request = JSON.parse(await readFile(resolve(requestQueueDir, entry.name), 'utf8')) as InternalRequest;
+                    entries.push(request);
                 }
-                default:
             }
         }
     }
