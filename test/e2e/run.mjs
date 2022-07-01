@@ -4,14 +4,15 @@ import { once } from 'node:events';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'node:worker_threads';
 import { colors, getApifyToken, clearPackages, clearStorage, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
+import { execSync } from 'node:child_process';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
 process.env.APIFY_LOG_LEVEL = '0'; // switch off logs for better test results visibility
 process.env.APIFY_HEADLESS = '1'; // run browser in headless mode (default on platform)
-process.env.APIFY_TOKEN = process.env.APIFY_TOKEN ?? await getApifyToken();
-process.env.APIFY_CONTAINER_URL = process.env.APIFY_CONTAINER_URL ?? 'http://127.0.0.1';
-process.env.APIFY_CONTAINER_PORT = process.env.APIFY_CONTAINER_PORT ?? '8000';
+process.env.APIFY_TOKEN ??= await getApifyToken();
+process.env.APIFY_CONTAINER_URL ??= 'http://127.0.0.1';
+process.env.APIFY_CONTAINER_PORT ??= '8000';
 
 /**
  * Depending on STORAGE_IMPLEMENTATION the workflow of the tests slightly differs:
@@ -33,6 +34,8 @@ async function run() {
     if (!['LOCAL', 'MEMORY', 'PLATFORM'].includes(process.env.STORAGE_IMPLEMENTATION)) {
         throw new Error(`Unknown storage provided: '${process.env.STORAGE_IMPLEMENTATION}'`);
     }
+
+    execSync(`npm install -G @apify/storage-local`, { stdio: 'inherit' });
 
     console.log(`Running E2E tests with storage implementation '${process.env.STORAGE_IMPLEMENTATION}'`);
 
