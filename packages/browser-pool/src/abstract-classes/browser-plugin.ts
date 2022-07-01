@@ -64,7 +64,7 @@ export interface BrowserPluginOptions<LibraryOptions> {
      * Path to a User Data Directory, which stores browser session data like cookies and local storage.
      */
     userDataDir?: string;
-};
+}
 
 export type CreateLaunchContextOptions<
     Library extends CommonLibrary,
@@ -88,15 +88,10 @@ export abstract class BrowserPlugin<
     NewPageResult = UnwrapPromise<ReturnType<LaunchResult['newPage']>>,
 > {
     name = this.constructor.name;
-
     library: Library;
-
     launchOptions: LibraryOptions;
-
     proxyUrl?: string;
-
     userDataDir?: string;
-
     useIncognitoPages: boolean;
 
     constructor(library: Library, options: BrowserPluginOptions<LibraryOptions> = {}) {

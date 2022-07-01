@@ -186,7 +186,7 @@ describe('Plugins', () => {
                         // Exclude loopback interface from proxy bypass list,
                         // so the request to localhost goes through proxy.
                         // This way there's no need for a 3rd party server.
-                        '--proxy-bypass-list=<-loopback>',
+                        '--proxy-bypass-list="<-loopback>"',
                     ],
                 },
             });
@@ -194,7 +194,7 @@ describe('Plugins', () => {
             browser = await plugin.launch(context);
 
             const page = await browser.newPage();
-            const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
+            const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`, { timeout: 5_000 });
 
             const text = await response.text();
 
@@ -214,7 +214,7 @@ describe('Plugins', () => {
                         // Exclude loopback interface from proxy bypass list,
                         // so the request to localhost goes through proxy.
                         // This way there's no need for a 3rd party server.
-                        '--proxy-bypass-list=<-loopback>',
+                        '--proxy-bypass-list="<-loopback>"',
                     ],
                 },
             });
@@ -222,7 +222,7 @@ describe('Plugins', () => {
             browser = await plugin.launch(context);
 
             const page = await browser.newPage();
-            const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
+            const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`, { timeout: 5_000 });
 
             const text = await response.text();
 
@@ -301,7 +301,7 @@ describe('Plugins', () => {
                 proxyBypassList: ['<-loopback>'],
             });
 
-            const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
+            const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`, { timeout: 5_000 });
             const text = await response!.text();
 
             // FAILING. It should give 127.0.0.3 for all platforms.
@@ -331,7 +331,7 @@ describe('Plugins', () => {
                         // Exclude loopback interface from proxy bypass list,
                         // so the request to localhost goes through proxy.
                         // This way there's no need for a 3rd party server.
-                        '--proxy-bypass-list=<-loopback>',
+                        '--proxy-bypass-list="<-loopback>"',
                     ],
                 } : undefined;
 
@@ -344,7 +344,7 @@ describe('Plugins', () => {
                 expect(context.launchOptions!.proxy!.server).toEqual(proxyUrl);
 
                 const page = await browser.newPage();
-                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
+                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`, { timeout: 5_000 });
                 const text = await response!.text();
 
                 expect(text).toBe('127.0.0.2');
@@ -361,7 +361,7 @@ describe('Plugins', () => {
                         // Exclude loopback interface from proxy bypass list,
                         // so the request to localhost goes through proxy.
                         // This way there's no need for a 3rd party server.
-                        '--proxy-bypass-list=<-loopback>',
+                        '--proxy-bypass-list="<-loopback>"',
                     ],
                 } : undefined;
 
@@ -373,7 +373,7 @@ describe('Plugins', () => {
                 browser = await plugin.launch(context);
 
                 const page = await browser.newPage();
-                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
+                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`, { timeout: 5_000 });
                 const text = await response!.text();
 
                 expect(text).toBe('127.0.0.3');
@@ -402,7 +402,7 @@ describe('Plugins', () => {
                     },
                 });
 
-                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
+                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`, { timeout: 5_000 });
                 const text = await response!.text();
 
                 expect(text).toBe('127.0.0.3');
