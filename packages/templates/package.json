@@ -42,7 +42,7 @@
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
         "compile": "tsc -p tsconfig.build.json && gen-esm-wrapper ./dist/index.js ./dist/index.mjs",
-        "copy": "ts-node -T ../../scripts/copy.ts && node ./scripts/copy-templates.mjs"
+        "copy": "node ./scripts/copy-templates.mjs && ts-node -T ../../scripts/copy.ts"
     },
     "publishConfig": {
         "access": "public"
