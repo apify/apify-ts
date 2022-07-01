@@ -94,14 +94,15 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
         const sourcesCopy = JSON.parse(JSON.stringify(sourcesLarge));
         const processed: Request[] = [];
         const failed: Request[] = [];
+        const asserts: boolean[] = [];
         const requestListLarge = await RequestList.open({ sources: sourcesLarge });
         const requestHandler = async ({ page, request, response }: Parameters<PuppeteerRequestHandler>[0]) => {
             await page.waitForSelector('title');
-            expect(response.status()).toBe(200);
+            asserts.push(response.status() === 200);
             request.userData.title = await page.title();
             processed.push(request);
-            expect(response.request().headers()['user-agent']).not.toMatch(/headless/i);
-            await expect(page.evaluate(() => window.navigator.webdriver)).resolves.toBeFalsy();
+            asserts.push(!response.request().headers()['user-agent'].match(/headless/i));
+            asserts.push(!(await page.evaluate(() => window.navigator.webdriver)));
         };
 
         const puppeteerCrawler = new PuppeteerCrawler({
@@ -120,6 +121,10 @@ describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
         expect(puppeteerCrawler.autoscaledPool.minConcurrency).toBe(1);
         expect(processed).toHaveLength(6);
         expect(failed).toHaveLength(0);
+
+        for (const assert of asserts) {
+            expect(assert).toBeTruthy();
+        }
 
         processed.forEach((request, id) => {
             expect(request.url).toEqual(sourcesCopy[id].url);

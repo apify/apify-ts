@@ -218,18 +218,22 @@ export async function blockRequests(page: Page, options: BlockRequestsOptions = 
 
     const patternsToBlock = [...urlPatterns, ...extraUrlPatterns];
 
-    // @ts-expect-error using private `_client` property
-    await page._client.send('Network.setBlockedURLs', { urls: patternsToBlock });
+    if (page._client instanceof Function) {
+        await page._client().send('Network.setBlockedURLs', { urls: patternsToBlock });
+    } else {
+        // @ts-expect-error for older puppeteer (<14.4)
+        await page._client.send('Network.setBlockedURLs', { urls: patternsToBlock });
+    }
 }
 
 /**
  * `blockResources()` has a high impact on performance in recent versions of Puppeteer.
- * Until this resolves, please use `Actor.utils.puppeteer.blockRequests()`.
+ * Until this resolves, please use `utils.puppeteer.blockRequests()`.
  * @deprecated
  */
 export const blockResources = async (page: Page, resourceTypes = ['stylesheet', 'font', 'image', 'media']) => {
-    log.deprecated('Actor.utils.puppeteer.blockResources() has a high impact on performance in recent versions of Puppeteer. '
-        + 'Until this resolves, please use Actor.utils.puppeteer.blockRequests()');
+    log.deprecated('utils.puppeteer.blockResources() has a high impact on performance in recent versions of Puppeteer. '
+        + 'Until this resolves, please use utils.puppeteer.blockRequests()');
     await addInterceptRequestHandler(page, async (request) => {
         const type = request.resourceType();
         if (resourceTypes.includes(type)) await request.abort();
@@ -258,7 +262,7 @@ export async function cacheResponses(page: Page, cache: Dictionary<Partial<Respo
     ow(cache, ow.object);
     ow(responseUrlRules, ow.array.ofType(ow.any(ow.string, ow.regExp)));
 
-    log.deprecated('Actor.utils.puppeteer.cacheResponses() has a high impact on performance '
+    log.deprecated('utils.puppeteer.cacheResponses() has a high impact on performance '
         + 'in recent versions of Puppeteer so it\'s use is discouraged until this issue resolves.');
 
     await addInterceptRequestHandler(page, async (request) => {
