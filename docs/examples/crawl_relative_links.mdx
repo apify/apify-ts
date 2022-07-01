@@ -9,8 +9,8 @@ import CodeBlock from '@theme/CodeBlock';
 import ApiLink from '@site/src/components/ApiLink';
 
 import AllLinksSource from '!!raw-loader!./crawl_relative_links_all.ts';
+import SameDomainSource from '!!raw-loader!./crawl_relative_links_same_domain.ts';
 import SameHostnameSource from '!!raw-loader!./crawl_relative_links_same_hostname.ts';
-import SameSubdomainSource from '!!raw-loader!./crawl_relative_links_same_subdomain.ts';
 
 When crawling a website, you may encounter different types of links present that you may want to crawl.
 To facilitate the easy crawling of such links, we provide the `enqueueLinks()` method on the crawler context, which will
@@ -63,7 +63,7 @@ or `./relative/example` will all be matched by this strategy.
 :::
 
 <CodeBlock className="language-js">
-	{SameHostnameSource}
+	{SameDomainSource}
 </CodeBlock>
 
 </TabItem>
@@ -87,7 +87,7 @@ will all be matched by this strategy, while `https://other-subdomain.example.com
 :::
 
 <CodeBlock className="language-js">
-	{SameSubdomainSource}
+	{SameHostnameSource}
 </CodeBlock>
 
 </TabItem>
