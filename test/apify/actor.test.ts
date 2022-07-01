@@ -6,7 +6,7 @@ import type { WebhookUpdateData } from 'apify-client';
 import { ActorClient, ApifyClient, RunClient, TaskClient } from 'apify-client';
 import { Configuration, EventType, Dataset, KeyValueStore, RequestList, StorageManager } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
-import { StorageTestCases } from '../shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 
 const getEmptyEnv = () => {
     return {
@@ -45,8 +45,8 @@ const setEnv = (env: ApifyEnv) => {
     if (env.memoryMbytes) process.env.APIFY_MEMORY_MBYTES = env.memoryMbytes.toString();
 };
 
-describe.each(StorageTestCases)('Actor - %s', (Emulator) => {
-    const localStorageEmulator = new Emulator();
+describe('Actor', () => {
+    const localStorageEmulator = new MemoryStorageEmulator();
 
     beforeEach(async () => {
         await localStorageEmulator.init();

@@ -13,15 +13,15 @@ import {
 } from '@crawlee/playwright';
 import type { Server } from 'http';
 import type { AddressInfo } from 'net';
-import { StorageTestCases } from 'test/shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 import { startExpressAppPromise } from '../../shared/_helper';
 
 if (os.platform() === 'win32') jest.setTimeout(2 * 60 * 1e3);
 
-describe.each(StorageTestCases)('PlaywrightCrawler - %s', (Emulator) => {
+describe('PlaywrightCrawler', () => {
     let prevEnvHeadless: string;
     let logLevel: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
     let requestList: RequestList;
 
     const HOSTNAME = '127.0.0.1';

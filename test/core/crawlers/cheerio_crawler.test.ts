@@ -29,7 +29,7 @@ import iconv from 'iconv-lite';
 import type { AddressInfo } from 'net';
 import path from 'path';
 import { Readable } from 'stream';
-import { StorageTestCases } from 'test/shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 
 const HOST = '127.0.0.1';
 
@@ -168,11 +168,11 @@ afterEach(() => {
 });
 
 /* eslint-disable no-underscore-dangle */
-describe.each(StorageTestCases)('CheerioCrawler - %s', (Emulator) => {
+describe('CheerioCrawler', () => {
     let logLevel: number;
     let server: Server;
     let port: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
 
     beforeAll(async () => {
         logLevel = log.getLevel();

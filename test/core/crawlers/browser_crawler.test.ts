@@ -22,8 +22,8 @@ import {
 import { Actor } from 'apify';
 import { gotScraping } from 'got-scraping';
 import { sleep } from '@crawlee/utils';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 import { BrowserCrawlerTest } from './basic_browser_crawler';
-import { StorageTestCases } from '../../shared/test-cases';
 
 jest.mock('got-scraping', () => {
     const original: typeof import('got-scraping') = jest.requireActual('got-scraping');
@@ -39,10 +39,10 @@ afterAll(() => {
     jest.unmock('got-scraping');
 });
 
-describe.each(StorageTestCases)('BrowserCrawler - %s', (Emulator) => {
+describe('BrowserCrawler', () => {
     let prevEnvHeadless: string;
     let logLevel: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
     let puppeteerPlugin: PuppeteerPlugin;
 
     beforeAll(async () => {

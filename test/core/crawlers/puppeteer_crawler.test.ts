@@ -19,14 +19,14 @@ import { createServer } from 'http';
 import type { AddressInfo } from 'net';
 import os from 'os';
 import type { Server as ProxyChainServer } from 'proxy-chain';
-import { StorageTestCases } from 'test/shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 import { promisify } from 'util';
 import { createProxyServer } from '../create-proxy-server';
 
-describe.each(StorageTestCases)('PuppeteerCrawler - %s', (Emulator) => {
+describe('PuppeteerCrawler', () => {
     let prevEnvHeadless: string;
     let logLevel: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
     let requestList: RequestList;
     let servers: ProxyChainServer[];
     let target: Server;

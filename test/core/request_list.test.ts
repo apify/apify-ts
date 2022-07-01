@@ -2,7 +2,7 @@ import log from '@apify/log';
 import { Configuration, deserializeArray, EventType, KeyValueStore, ProxyConfiguration, Request, RequestList } from '@crawlee/core';
 import { sleep } from '@crawlee/utils';
 import { gotScraping } from 'got-scraping';
-import { StorageTestCases } from '../shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 
 /**
  * Stand-in for underscore.js shuffle (weird, but how else?)
@@ -36,9 +36,9 @@ afterAll(() => {
     jest.unmock('got-scraping');
 });
 
-describe.each(StorageTestCases)('RequestList - %s', (Emulator) => {
+describe('RequestList', () => {
     let ll: number;
-    const emulator = new Emulator();
+    const emulator = new MemoryStorageEmulator();
     const events = Configuration.getEventManager();
 
     beforeAll(() => {

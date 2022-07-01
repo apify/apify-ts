@@ -6,7 +6,7 @@ import type { AddressInfo } from 'net';
 import { Request, launchPlaywright, playwrightUtils } from '@crawlee/playwright';
 import type { Browser } from 'playwright';
 import { chromium } from 'playwright';
-import { StorageTestCases } from 'test/shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 import { startExpressAppPromise } from '../shared/_helper';
 
 const HOSTNAME = '127.0.0.1';
@@ -36,9 +36,9 @@ afterAll(() => {
     server.close();
 });
 
-describe.each(StorageTestCases)('Apify.utils.playwright - %s', (Emulator) => {
+describe('Apify.utils.playwright', () => {
     let ll: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
 
     beforeAll(async () => {
         ll = log.getLevel();

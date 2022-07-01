@@ -21,12 +21,12 @@ import {
 import express from 'express';
 import type { Dictionary } from '@crawlee/utils';
 import { sleep } from '@crawlee/utils';
-import { SingleStorageCase } from '../../shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 import { startExpressAppPromise } from '../../shared/_helper';
 
-describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
+describe('BasicCrawler', () => {
     let logLevel: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
     const events = Configuration.getEventManager();
 
     const HOSTNAME = '127.0.0.1';

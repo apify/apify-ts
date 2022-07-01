@@ -1,14 +1,14 @@
 import { Statistics, Configuration, EventType } from '@crawlee/core';
 import type { Dictionary } from '@crawlee/utils';
-import { StorageTestCases } from 'test/shared/test-cases';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 
-describe.each(StorageTestCases)('Statistics - %s', (Emulator) => {
+describe('Statistics', () => {
     const getPerMinute = (jobCount: number, totalTickMillis: number) => {
         return Math.round(jobCount / (totalTickMillis / 1000 / 60));
     };
 
     let stats: Statistics;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
     const events = Configuration.getEventManager();
 
     beforeAll(async () => {

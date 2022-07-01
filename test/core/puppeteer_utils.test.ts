@@ -6,8 +6,8 @@ import type { Dictionary } from '@crawlee/utils';
 import type { Browser, Page, ResponseForRequest } from 'puppeteer';
 import type { Server } from 'http';
 import type { AddressInfo } from 'net';
+import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
 import { startExpressAppPromise } from '../shared/_helper';
-import { StorageTestCases } from '../shared/test-cases';
 
 const HOSTNAME = '127.0.0.1';
 let port: number;
@@ -36,9 +36,9 @@ afterAll(() => {
     server.close();
 });
 
-describe.each(StorageTestCases)('utils.puppeteer - %s', (Emulator) => {
+describe('utils.puppeteer', () => {
     let ll: number;
-    const localStorageEmulator = new Emulator();
+    const localStorageEmulator = new MemoryStorageEmulator();
 
     beforeAll(async () => {
         ll = log.getLevel();
