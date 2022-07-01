@@ -23,29 +23,23 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
     { browserPlugins: [PlaywrightPlugin] }
 > {
     /**
+     * The same options as used by {@link launchPlaywright}.
+     */
+    launchContext?: PlaywrightLaunchContext;
+
+    /**
      * Function that is called to process each request.
-     * It is passed an object with the following fields:
      *
-     * ```
-     * {
-     *   request: Request,
-     *   response: Response,
-     *   page: Page,
-     *   session: Session,
-     *   browserController: BrowserController,
-     *   proxyInfo: ProxyInfo,
-     *   crawler: PlaywrightCrawler,
-     * }
-     * ```
-     *
-     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * `page` is an instance of the `Playwright`
+     * The function receives the {@link PlaywrightCrawlingContext} as an argument, where:
+     * - `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * - `page` is an instance of the `Playwright`
      * [`Page`](https://playwright.dev/docs/api/class-page)
-     * `browserController` is an instance of the
+     * - `browserController` is an instance of the
      * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * `response` is an instance of the `Playwright`
+     * - `response` is an instance of the `Playwright`
      * [`Response`](https://playwright.dev/docs/api/class-response),
      * which is the main resource response as returned by `page.goto(request.url)`.
+     *
      * The function must return a promise, which is then awaited by the crawler.
      *
      * If the function throws an exception, the crawler will try to re-crawl the
@@ -61,28 +55,17 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
 
     /**
      * Function that is called to process each request.
-     * It is passed an object with the following fields:
      *
-     * ```
-     * {
-     *   request: Request,
-     *   response: Response,
-     *   page: Page,
-     *   session: Session,
-     *   browserController: BrowserController,
-     *   proxyInfo: ProxyInfo,
-     *   crawler: PlaywrightCrawler,
-     * }
-     * ```
-     *
-     * `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
-     * `page` is an instance of the `Playwright`
+     * The function receives the {@link PlaywrightCrawlingContext} as an argument, where:
+     * - `request` is an instance of the {@link Request} object with details about the URL to open, HTTP method etc.
+     * - `page` is an instance of the `Playwright`
      * [`Page`](https://playwright.dev/docs/api/class-page)
-     * `browserController` is an instance of the
+     * - `browserController` is an instance of the
      * [`BrowserController`](https://github.com/apify/browser-pool#browsercontroller),
-     * `response` is an instance of the `Playwright`
+     * - `response` is an instance of the `Playwright`
      * [`Response`](https://playwright.dev/docs/api/class-response),
      * which is the main resource response as returned by `page.goto(request.url)`.
+     *
      * The function must return a promise, which is then awaited by the crawler.
      *
      * If the function throws an exception, the crawler will try to re-crawl the
@@ -129,11 +112,6 @@ export interface PlaywrightCrawlerOptions extends BrowserCrawlerOptions<
      * ```
      */
     postNavigationHooks?: PlaywrightHook[];
-
-    /**
-     * The same options as used by {@link launchPlaywright}.
-     */
-    launchContext?: PlaywrightLaunchContext;
 }
 
 /**

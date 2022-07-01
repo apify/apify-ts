@@ -264,6 +264,48 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
         expect(await requestList.isEmpty()).toBe(true);
     });
 
+    test('should use errorHandler', async () => {
+        const sources = [{ url: 'http://example.com/', label: 'start' }];
+
+        let errorHandlerCalls = 0;
+        let failedRequestHandlerCalls = 0;
+
+        const failed: Dictionary<{ request: Request; error: Error }> = {};
+        const requestList = await RequestList.open({ sources });
+
+        const requestHandler: RequestHandler = async ({ request }) => {
+            expect(request.label).toBe(errorHandlerCalls === 0 ? 'start' : `error_${errorHandlerCalls}`);
+            throw new Error(`This is an error ${errorHandlerCalls}`);
+        };
+
+        const errorHandler: FailedRequestHandler = async ({ request }, error) => {
+            expect(error.message).toBe(`This is an error ${errorHandlerCalls}`);
+            errorHandlerCalls++;
+            request.label = `error_${errorHandlerCalls}`;
+        };
+
+        const failedRequestHandler: FailedRequestHandler = async ({ request }, error) => {
+            failed[request.url] = { request, error };
+            failedRequestHandlerCalls++;
+        };
+
+        const basicCrawler = new BasicCrawler({
+            requestList,
+            requestHandler,
+            errorHandler,
+            failedRequestHandler,
+        });
+
+        await basicCrawler.run();
+
+        expect(errorHandlerCalls).toBe(3);
+        expect(failedRequestHandlerCalls).toBe(1);
+        expect(Object.values(failed)).toHaveLength(1);
+        expect(failed['http://example.com/'].request.label).not.toBe('start');
+        expect(failed['http://example.com/'].request.label).toBe('error_3');
+        expect(failed['http://example.com/'].error.message).toEqual('This is an error 3');
+    });
+
     test('should allow to handle failed requests', async () => {
         const sources = [
             { url: 'http://example.com/1' },
@@ -280,7 +322,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             processed[request.url] = request;
         };
 
-        const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
+        const failedRequestHandler: FailedRequestHandler = async ({ request }, error) => {
             failed[request.url] = request;
             errors.push(error);
         };
@@ -320,7 +362,7 @@ describe.each(SingleStorageCase)('BasicCrawler - %s', (Emulator) => {
             throw new NonRetryableError('some-error');
         };
 
-        const failedRequestHandler: FailedRequestHandler = async ({ request, error }) => {
+        const failedRequestHandler: FailedRequestHandler = async ({ request }, error) => {
             failed[request.url] = request;
             errors.push(error);
         };

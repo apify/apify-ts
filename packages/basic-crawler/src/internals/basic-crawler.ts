@@ -6,7 +6,6 @@ import type {
     AutoscaledPoolOptions,
     EnqueueLinksOptions,
     EventManager,
-    FailedRequestContext,
     FinalStatistics,
     ProxyInfo,
     QueueOperationInfo,
@@ -47,8 +46,6 @@ export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> 
     sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
 }
 
-export interface BasicFailedRequestContext<UserData extends Dictionary = Dictionary> extends FailedRequestContext<BasicCrawler, UserData> {}
-
 /** @internal */
 export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'requestQueue'>
 
@@ -65,24 +62,14 @@ const SAFE_MIGRATION_WAIT_MILLIS = 20000;
 
 export type RequestHandler<Context extends CrawlingContext = BasicCrawlingContext> = (inputs: Context) => Awaitable<void>;
 
-export type FailedRequestHandler<Inputs extends FailedRequestContext = BasicFailedRequestContext> = (inputs: Inputs) => Awaitable<void>;
+export type FailedRequestHandler<Context extends CrawlingContext = BasicCrawlingContext> = (inputs: Context, error: Error) => Awaitable<void>;
 
-export interface BasicCrawlerOptions<
-    Context extends CrawlingContext = BasicCrawlingContext,
-    ErrorContext extends FailedRequestContext = BasicFailedRequestContext
-> {
+export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCrawlingContext> {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance represents the URL to crawl.
+     * The function receives the {@link BasicCrawlingContext} as an argument,
+     * where the {@link BasicCrawlingContext.request} represents the URL to crawl.
      *
      * The function must return a promise, which is then awaited by the crawler.
      *
@@ -100,15 +87,8 @@ export interface BasicCrawlerOptions<
     /**
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance represents the URL to crawl.
+     * The function receives the {@link BasicCrawlingContext} as an argument,
+     * where the {@link BasicCrawlingContext.request} represents the URL to crawl.
      *
      * The function must return a promise, which is then awaited by the crawler.
      *
@@ -151,40 +131,37 @@ export interface BasicCrawlerOptions<
     handleRequestTimeoutSecs?: number;
 
     /**
-     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     * User-provided function that allows modifying the request object before it gets retried by the crawler.
+     * It's executed before each retry for the requests that failed less than `option.maxRequestRetries` times.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     error: Error,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * The function receives the {@link BasicCrawlingContext} as the first argument,
+     * where the {@link BasicCrawlingContext.request} corresponds to the request to be retried.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
-    failedRequestHandler?: FailedRequestHandler<ErrorContext>;
+    errorHandler?: FailedRequestHandler<Context>;
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     request: Request,
-     *     error: Error,
-     *     session: Session,
-     *     crawler: BasicCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     * The function receives the {@link BasicCrawlingContext} as the first argument,
+     * where the {@link BasicCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
+     * represents the last error thrown during processing of the request.
+     */
+    failedRequestHandler?: FailedRequestHandler<Context>;
+
+    /**
+     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     *
+     * The function receives the {@link BasicCrawlingContext} as the first argument,
+     * where the {@link BasicCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      *
      * @deprecated `handleFailedRequestFunction` has been renamed to `failedRequestHandler` and will be removed in a future version.
      */
-    handleFailedRequestFunction?: FailedRequestHandler<ErrorContext>;
+    handleFailedRequestFunction?: FailedRequestHandler<Context>;
 
     /**
      * Indicates how many times the request is retried if {@link requestHandler} fails.
@@ -298,10 +275,7 @@ export interface BasicCrawlerOptions<
  * ```
  * @category Crawlers
  */
-export class BasicCrawler<
-    Context extends CrawlingContext = BasicCrawlingContext,
-    ErrorContext extends FailedRequestContext = BasicFailedRequestContext,
-> {
+export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext> {
     private static readonly CRAWLEE_STATE_KEY = 'CRAWLEE_STATE';
 
     /**
@@ -347,7 +321,8 @@ export class BasicCrawler<
 
     protected log: Log;
     protected requestHandler!: RequestHandler<Context>;
-    protected failedRequestHandler?: FailedRequestHandler<ErrorContext>;
+    protected errorHandler?: FailedRequestHandler<Context>;
+    protected failedRequestHandler?: FailedRequestHandler<Context>;
     protected requestHandlerTimeoutMillis!: number;
     protected internalTimeoutMillis: number;
     protected maxRequestRetries: number;
@@ -371,6 +346,7 @@ export class BasicCrawler<
         requestHandlerTimeoutSecs: ow.optional.number,
         // TODO: remove in a future release
         handleRequestTimeoutSecs: ow.optional.number,
+        errorHandler: ow.optional.function,
         failedRequestHandler: ow.optional.function,
         // TODO: remove in a future release
         handleFailedRequestFunction: ow.optional.function,
@@ -391,7 +367,7 @@ export class BasicCrawler<
     /**
      * All `BasicCrawler` parameters are passed via an options object.
      */
-    constructor(options: BasicCrawlerOptions<Context, ErrorContext> = {}, readonly config = Configuration.getGlobalConfig()) {
+    constructor(options: BasicCrawlerOptions<Context> = {}, readonly config = Configuration.getGlobalConfig()) {
         ow(options, 'BasicCrawlerOptions', ow.object.exactShape(BasicCrawler.optionsShape));
 
         const {
@@ -417,6 +393,8 @@ export class BasicCrawler<
             handleRequestTimeoutSecs,
             requestHandlerTimeoutSecs,
 
+            errorHandler,
+
             handleFailedRequestFunction,
             failedRequestHandler,
         } = options;
@@ -438,6 +416,8 @@ export class BasicCrawler<
         if (!this.requestHandler) {
             this.requestHandler = this.router;
         }
+
+        this.errorHandler = errorHandler;
 
         this._handlePropertyNameChange({
             newName: 'failedRequestHandler',
@@ -930,13 +910,18 @@ export class BasicCrawler<
         const shouldRetryRequest = !request.noRetry && request.retryCount < this.maxRequestRetries && !(error instanceof NonRetryableError);
         if (shouldRetryRequest) {
             request.retryCount++;
+
+            await this.errorHandler?.(crawlingContext, error);
+
             const { url, retryCount, id } = request;
             // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
             // Thus, we print the full stack trace only when CRAWLEE_VERBOSE_LOG environment variable is set to true.
+            const message = !process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack;
             this.log.warning(
-                `Reclaiming failed request back to the list or queue. ${!process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack}`,
+                `Reclaiming failed request back to the list or queue. ${message}`,
                 { id, url, retryCount },
             );
+
             await source.reclaimRequest(request);
         } else {
             // If we get here, the request is either not retryable
@@ -946,24 +931,18 @@ export class BasicCrawler<
             await source.markRequestHandled(request);
             this.stats.failJob(request.id || request.uniqueKey);
 
-            // @ts-expect-error It is assignable, but TS says otherwise...
-            const castedErrorContext = crawlingContext as ErrorContext;
-            castedErrorContext.error = error;
-
-            await this._handleFailedRequestHandler(castedErrorContext); // This function prints an error message.
+            await this._handleFailedRequestHandler(crawlingContext, error); // This function prints an error message.
         }
     }
 
-    protected async _handleFailedRequestHandler(crawlingContext: ErrorContext): Promise<void> {
+    protected async _handleFailedRequestHandler(crawlingContext: Context, error: Error): Promise<void> {
         if (this.failedRequestHandler) {
-            await this.failedRequestHandler(crawlingContext);
+            await this.failedRequestHandler(crawlingContext, error);
         } else {
             const { id, url, method, uniqueKey } = crawlingContext.request;
+            const message = error instanceof TimeoutError && !process.env.CRAWLEE_VERBOSE_LOG ? error.message : error.stack;
             this.log.error(
-                `Request failed and reached maximum retries. ${crawlingContext.error instanceof TimeoutError && !process.env.CRAWLEE_VERBOSE_LOG
-                    ? crawlingContext.error.message
-                    : crawlingContext.error.stack
-                }`,
+                `Request failed and reached maximum retries. ${message}`,
                 { id, url, method, uniqueKey },
             );
         }

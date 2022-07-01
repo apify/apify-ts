@@ -19,15 +19,3 @@ export interface CrawlingContext<UserData extends Dictionary = Dictionary> exten
     proxyInfo?: ProxyInfo;
     log: Log;
 }
-
-export interface FailedRequestContext<Crawler = unknown, UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
-    /**
-     * The Error thrown by `requestHandler`.
-     */
-    error: Error;
-
-    /**
-     * Current crawler instance.
-     */
-    crawler: Crawler;
-}

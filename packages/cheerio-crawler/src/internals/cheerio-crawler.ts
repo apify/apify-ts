@@ -6,7 +6,6 @@ import {
     BASIC_CRAWLER_TIMEOUT_BUFFER_SECS,
 } from '@crawlee/basic';
 import type {
-    FailedRequestContext,
     CrawlingContext,
     EnqueueLinksOptions,
     ProxyConfiguration,
@@ -54,69 +53,35 @@ const CHEERIO_OPTIMIZED_AUTOSCALED_POOL_OPTIONS = {
     },
 };
 
-export interface CheerioFailedRequestContext<UserData extends Dictionary = Dictionary, JSONData = Dictionary>
-    extends FailedRequestContext<CheerioCrawler<JSONData, UserData>, UserData>, CheerioCrawlingContext<UserData, JSONData> {}
+export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioCrawlingContext<JSONData>, error: Error) => Awaitable<void>;
 
-export type CheerioFailedRequestHandler<JSONData = Dictionary> = (inputs: CheerioFailedRequestContext<JSONData>) => Awaitable<void>;
-
-export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Dictionary> extends Omit<
-    BasicCrawlerOptions<CheerioCrawlingContext<UserData, JSONData>>,
+export interface CheerioCrawlerOptions<JSONData = Dictionary> extends Omit<BasicCrawlerOptions<CheerioCrawlingContext<JSONData>>,
     // Overridden with cheerio context
     | 'requestHandler'
     | 'handleRequestFunction'
-    // Overridden with cheerio context
+
     | 'failedRequestHandler'
     | 'handleFailedRequestFunction'
     | 'handleRequestTimeoutSecs'
+
+    | 'errorHandler'
 > {
     /**
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *   // The Cheerio object's function with the parsed HTML.
-     *   $: Cheerio,
+     * The function receives the {@link CheerioCrawlingContext} as an argument,
+     * where the {@link CheerioCrawlingContext.request} instance represents the URL to crawl.
      *
-     *   // The request body of the web page, whose type depends on the content type.
-     *   body: String|Buffer,
-     *
-     *   // The parsed object from JSON for responses with the "application/json" content types.
-     *   // For other content types it's null.
-     *   json: Object,
-     *
-     *   // Request object with details of the requested web page
-     *   request: Request,
-     *
-     *   // Parsed Content-Type HTTP header: { type, encoding }
-     *   contentType: Object,
-     *
-     *   // An instance of Node's http.IncomingMessage object,
-     *   response: Object,
-     *
-     *   // Session object, useful to work around anti-scraping protections
-     *   session: Session
-     *
-     *   // ProxyInfo object with information about currently used proxy
-     *   proxyInfo: ProxyInfo
-     *
-     *   // The running cheerio crawler instance.
-     *   crawler: CheerioCrawler
-     * }
-     * ```
-     *
-     * Type of `body` depends on the `Content-Type` header of the web page:
+     * Type of {@link CheerioCrawlingContext.body} depends on the `Content-Type` header of the web page:
      * - String for `text/html`, `application/xhtml+xml`, `application/xml` MIME content types
      * - Buffer for others MIME content types
      *
      * Parsed `Content-Type` header using
      * [content-type package](https://www.npmjs.com/package/content-type)
-     * is stored in `contentType`.
+     * is stored in {@link CheerioCrawlingContext.contentType}`.
      *
      * Cheerio is available only for HTML and XML content types.
-     *
-     * With the {@link Request} object representing the URL to crawl.
      *
      * If the function returns, the returned promise is awaited by the crawler.
      *
@@ -135,50 +100,18 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
      * User-provided function that performs the logic of the crawler. It is called for each page
      * loaded and parsed by the crawler.
      *
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *   // The Cheerio object's function with the parsed HTML.
-     *   $: Cheerio,
+     * The function receives the {@link CheerioCrawlingContext} as an argument,
+     * where the {@link CheerioCrawlingContext.request} instance represents the URL to crawl.
      *
-     *   // The request body of the web page, whose type depends on the content type.
-     *   body: String|Buffer,
-     *
-     *   // The parsed object from JSON for responses with the "application/json" content types.
-     *   // For other content types it's null.
-     *   json: Object,
-     *
-     *   // Request object with details of the requested web page
-     *   request: Request,
-     *
-     *   // Parsed Content-Type HTTP header: { type, encoding }
-     *   contentType: Object,
-     *
-     *   // An instance of Node's http.IncomingMessage object,
-     *   response: Object,
-     *
-     *   // Session object, useful to work around anti-scraping protections
-     *   session: Session
-     *
-     *   // ProxyInfo object with information about currently used proxy
-     *   proxyInfo: ProxyInfo
-     *
-     *   // The running cheerio crawler instance.
-     *   crawler: CheerioCrawler
-     * }
-     * ```
-     *
-     * Type of `body` depends on the `Content-Type` header of the web page:
+     * Type of {@link CheerioCrawlingContext.body} depends on the `Content-Type` header of the web page:
      * - String for `text/html`, `application/xhtml+xml`, `application/xml` MIME content types
      * - Buffer for others MIME content types
      *
      * Parsed `Content-Type` header using
      * [content-type package](https://www.npmjs.com/package/content-type)
-     * is stored in `contentType`.
+     * is stored in {@link CheerioCrawlingContext.contentType}`.
      *
      * Cheerio is available only for HTML and XML content types.
-     *
-     * With the {@link Request} object representing the URL to crawl.
      *
      * If the function returns, the returned promise is awaited by the crawler.
      *
@@ -213,23 +146,22 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
     proxyConfiguration?: ProxyConfiguration;
 
     /**
+     * User-provided function that allows modifying the request object before it gets retried by the crawler.
+     * It's executed before each retry for the requests that failed less than `option.maxRequestRetries` times.
+     *
+     * The function receives the {@link CheerioCrawlingContext} as the first argument,
+     * where the {@link CheerioCrawlingContext.request} corresponds to the request to be retried.
+     * Second argument is the `Error` instance that
+     * represents the last error thrown during processing of the request.
+     */
+    errorHandler?: CheerioFailedRequestHandler<JSONData>;
+
+    /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     error: Error,
-     *     request: Request,
-     *     session: Session,
-     *     $: Cheerio,
-     *     body: String|Buffer,
-     *     json: Object,
-     *     contentType: Object,
-     *     response: Object,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: CheerioCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     *
+     * The function receives the {@link CheerioCrawlingContext} as the first argument,
+     * where the {@link CheerioCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      *
      * See [source code](https://github.com/apify/apify-ts/blob/master/src/crawlers/cheerio_crawler.js#L13)
@@ -239,22 +171,10 @@ export interface CheerioCrawlerOptions<UserData = Dictionary, JSONData = Diction
 
     /**
      * A function to handle requests that failed more than `option.maxRequestRetries` times.
-     * The function receives the following object as an argument:
-     * ```
-     * {
-     *     error: Error,
-     *     request: Request,
-     *     session: Session,
-     *     $: Cheerio,
-     *     body: String|Buffer,
-     *     json: Object,
-     *     contentType: Object,
-     *     response: Object,
-     *     proxyInfo: ProxyInfo,
-     *     crawler: CheerioCrawler,
-     * }
-     * ```
-     * where the {@link Request} instance corresponds to the failed request, and the `Error` instance
+     *
+     * The function receives the {@link CheerioCrawlingContext} as the first argument,
+     * where the {@link CheerioCrawlingContext.request} corresponds to the failed request.
+     * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      *
      * See [source code](https://github.com/apify/apify-ts/blob/master/src/crawlers/cheerio_crawler.js#L13)
@@ -383,7 +303,7 @@ export interface PostResponseInputs<JSONData = Dictionary> {
 
 export type PostResponse<JSONData = Dictionary> = (inputs: PostResponseInputs<JSONData>) => Awaitable<void>;
 
-export interface CheerioCrawlingContext<UserData extends Dictionary = Dictionary, JSONData = Dictionary> extends CrawlingContext<UserData> {
+export interface CheerioCrawlingContext<JSONData extends Dictionary = Dictionary> extends CrawlingContext<JSONData> {
     /**
      * The [Cheerio](https://cheerio.js.org/) object with parsed HTML.
      */
@@ -403,7 +323,7 @@ export interface CheerioCrawlingContext<UserData extends Dictionary = Dictionary
      * Parsed `Content-Type header: { type, encoding }`.
      */
     contentType: { type: string; encoding: string };
-    crawler: CheerioCrawler<JSONData, UserData>;
+    crawler: CheerioCrawler<JSONData>;
     response: IncomingMessage;
     enqueueLinks: (options?: CheerioCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
     sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
@@ -494,10 +414,7 @@ export type CheerioCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'urls'
  * ```
  * @category Crawlers
  */
-export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary = Dictionary> extends BasicCrawler<
-    CheerioCrawlingContext<JSONData>,
-    CheerioFailedRequestContext<UserData, JSONData>
-> {
+export class CheerioCrawler<JSONData = Dictionary> extends BasicCrawler<CheerioCrawlingContext<JSONData>> {
     /**
      * A reference to the underlying {@link ProxyConfiguration} class that manages the crawler's proxies.
      * Only available if used by the crawler.
@@ -668,7 +585,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
             }
 
             if (this.persistCookiesPerSession) {
-            session!.setCookiesFromResponse(response);
+                session!.setCookiesFromResponse(response);
             }
 
             request.loadedUrl = response.url;
@@ -939,7 +856,7 @@ export class CheerioCrawler<JSONData = Dictionary, UserData extends Dictionary =
         if (!this.supportedMimeTypes.has(type) && statusCode! < 500) {
             request.noRetry = true;
             throw new Error(`Resource ${request.url} served Content-Type ${type}, `
-                    + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);
+                + `but only ${Array.from(this.supportedMimeTypes).join(', ')} are allowed. Skipping resource.`);
         }
     }
 
