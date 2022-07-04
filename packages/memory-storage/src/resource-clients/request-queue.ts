@@ -187,7 +187,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         existingQueueById.requests.set(requestModel.id, requestModel);
         existingQueueById.pendingRequestCount += requestModel.orderNo === null ? 1 : 0;
         existingQueueById.updateTimestamps(true);
-        existingQueueById.updateItems();
+        existingQueueById.updateItem(requestModel);
 
         return {
             requestId: requestModel.id,
@@ -239,10 +239,10 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
                 wasAlreadyHandled: false,
                 wasAlreadyPresent: false,
             });
+            existingQueueById.updateItem(requestModel);
         }
 
         existingQueueById.updateTimestamps(true);
-        existingQueueById.updateItems();
 
         return result;
     }
@@ -297,7 +297,7 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
 
         existingQueueById.pendingRequestCount += handledCountAdjustment;
         existingQueueById.updateTimestamps(true);
-        existingQueueById.updateItems();
+        existingQueueById.updateItem(requestModel);
 
         return {
             requestId: requestModel.id,
@@ -319,7 +319,14 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
             existingQueueById.requests.delete(id);
             existingQueueById.pendingRequestCount -= request.orderNo ? 1 : 0;
             existingQueueById.updateTimestamps(true);
-            existingQueueById.updateItems();
+            sendWorkerMessage({
+                action: 'delete-entry',
+                data: { id },
+                entityType: 'requestQueues',
+                entityDirectory: existingQueueById.requestQueueDirectory,
+                id: existingQueueById.name ?? existingQueueById.id,
+                writeMetadata: existingQueueById.client.writeMetadata,
+            });
         }
     }
 
@@ -357,10 +364,10 @@ export class RequestQueueClient extends BaseClient implements storage.RequestQue
         });
     }
 
-    private updateItems() {
+    private updateItem(item: InternalRequest) {
         sendWorkerMessage({
             action: 'update-entries',
-            data: [...this.requests.values()],
+            data: item,
             entityType: 'requestQueues',
             entityDirectory: this.requestQueueDirectory,
             id: this.name ?? this.id,

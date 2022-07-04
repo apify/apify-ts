@@ -2,7 +2,7 @@ import log from '@apify/log';
 import { ensureDir } from 'fs-extra';
 import { rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import type { WorkerReceivedMessage, WorkerUpdateEntriesMessage, WorkerUpdateMetadataMessage } from '../utils';
+import type { WorkerDeleteEntryMessage, WorkerReceivedMessage, WorkerUpdateEntriesMessage, WorkerUpdateMetadataMessage } from '../utils';
 
 const workerLog = log.child({ prefix: 'MemoryStorageWorker' });
 
@@ -13,6 +13,9 @@ export async function handleMessage(message: WorkerReceivedMessage) {
             break;
         case 'update-entries':
             await updateItems(message);
+            break;
+        case 'delete-entry':
+            await deleteEntry(message);
             break;
         default:
             // We're keeping this to make eslint happy + in the event we add a new action without adding checks for it
@@ -43,8 +46,8 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
 
     switch (message.entityType) {
         case 'requestQueues': {
-            // Write the entries to the file
-            const filePath = resolve(dir, 'entries.json');
+            // Write the entry to the file
+            const filePath = resolve(dir, `${message.data.id}.json`);
             await writeFile(filePath, JSON.stringify(message.data, null, '\t'));
             break;
         }
@@ -98,6 +101,24 @@ async function updateItems(message: WorkerUpdateEntriesMessage) {
                 }
                 default:
             }
+
+            break;
+        }
+        default:
+    }
+}
+
+async function deleteEntry(message: WorkerDeleteEntryMessage) {
+    // Ensure the directory for the entity exists
+    const dir = message.entityDirectory;
+    await ensureDir(dir);
+
+    switch (message.entityType) {
+        case 'requestQueues': {
+            // Write the entry to the file
+            const filePath = resolve(dir, `${message.data.id}.json`);
+
+            await rm(filePath, { force: true });
 
             break;
         }
