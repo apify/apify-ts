@@ -1,5 +1,4 @@
 import { BasicCrawler, ProxyConfiguration } from 'crawlee';
-import { gotScraping } from 'got-scraping';
 
 const proxyConfiguration = new ProxyConfiguration({ /* opts */ });
 
@@ -8,7 +7,7 @@ const crawler = new BasicCrawler({
     useSessionPool: true,
     // Overrides default Session pool configuration.
     sessionPoolOptions: { maxPoolSize: 100 },
-    async requestHandler({ request, session }) {
+    async requestHandler({ request, session, sendRequest }) {
         const { url } = request;
         const requestOptions = {
             url,
@@ -25,7 +24,7 @@ const crawler = new BasicCrawler({
         let response;
 
         try {
-            response = await gotScraping(requestOptions);
+            response = await sendRequest();
         } catch (e) {
             if (e === 'SomeNetworkError') {
                 // If a network error happens, such as timeout, socket hangup, etc.
