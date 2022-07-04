@@ -8,7 +8,6 @@ import type {
     EventManager,
     FinalStatistics,
     ProxyInfo,
-    QueueOperationInfo,
     Request,
     RequestList,
     RequestOptions,
@@ -36,13 +35,13 @@ import {
 } from '@crawlee/core';
 import type { GotOptionsInit, OptionsOfTextResponseBody, Response as GotResponse } from 'got-scraping';
 import { gotScraping } from 'got-scraping';
-import type { ProcessedRequest, Dictionary, Awaitable } from '@crawlee/types';
+import type { ProcessedRequest, Dictionary, Awaitable, BatchAddRequestsResult } from '@crawlee/types';
 import { chunk, sleep } from '@crawlee/utils';
 import ow, { ArgumentError } from 'ow';
 
 export interface BasicCrawlingContext<UserData extends Dictionary = Dictionary> extends CrawlingContext<UserData> {
     crawler: BasicCrawler;
-    enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<QueueOperationInfo[]>;
+    enqueueLinks: (options: BasicCrawlerEnqueueLinksOptions) => Promise<BatchAddRequestsResult>;
     sendRequest: (overrideOptions?: Partial<GotOptionsInit>) => Promise<GotResponse<string>>;
 }
 
@@ -772,7 +771,9 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
         this.stats.startJob(statisticsId);
 
         // Shared crawling context
-        // @ts-expect-error It is assignable, but TS says otherwise...
+        // @ts-expect-error
+        // All missing properties properties (that extend CrawlingContext) are set dynamically,
+        // but TS does not know that, so otherwise it would throw when compiling.
         const crawlingContext: Context = {
             id: cryptoRandomObjectId(10),
             crawler: this,
@@ -785,7 +786,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
                     requestQueue: await this.getRequestQueue(),
                 });
             },
-            sendRequest: async (overrideOptions?: Partial<GotOptionsInit>) => {
+            sendRequest: async (overrideOptions?: GotOptionsInit) => {
                 return gotScraping({
                     url: request!.url,
                     method: request!.method,

@@ -233,6 +233,160 @@ const crawler = new BasicCrawler({
 });
 ```
 
+### How does `sendRequest` work?
+
+The `sendRequest` function looks like this:
+
+```ts
+async sendRequest(overrideOptions?: GotOptionsInit) => {
+    return gotScraping({
+        url: request.url,
+        method: request.method,
+        body: request.payload,
+        headers: request.headers,
+        proxyUrl: crawlingContext.proxyInfo?.url,
+        sessionToken: session,
+        responseType: 'text',
+        ...overrideOptions,
+        retry: {
+            limit: 0,
+            ...overrideOptions?.retry,
+        },
+        cookieJar: {
+            getCookieString: (url: string) => session!.getCookieString(url),
+            setCookie: (rawCookie: string, url: string) => session!.setCookie(rawCookie, url),
+            ...overrideOptions?.cookieJar,
+        },
+    });
+}
+```
+
+Let's describe what are the options for.
+
+The `url`, `method`, `body` and `headers` options are classic HTTP things we want to send over. You probably know them already.
+The `proxyUrl` option needs to be set, otherwise we would leak our real IP - we don't want that.
+The `sessionToken` is used as a key when generating browser fingerprint. This way, when performing requests on the same session, `user-agent` stays the same.
+By default we fetch HTML websites. That means we receive it via plaintext. Hence we set `responseType` to `'text'`. However you might want JSON, like in the example above.
+Got, in order to manage cookies, uses a `cookieJar`. It's an object that enables easy cookie management with just two functions that come from `session`.
+Last but not least, `retry.limit` is set to `0`. This is because `crawlee` has its own (complicated enough) retry management.
+
+For more info please refer to the Got [documentation](https://github.com/sindresorhus/got#documentation).
+
+### Removed options
+
+The `useInsecureHttpParser` option has been removed. It's permanently set to `true` in order to better mimic browsers' behavior.
+
+Got Scraping automatically performs protocol negotiation, hence we removed the `useHttp2` option. It's set to `true` - 100% of browsers nowadays are capable of HTTP/2 requests. Oh, more and more of the web is using it too!
+
+### Renamed options
+
+In the `requestAsBrowser` approach, some of the options were named differently. Here's a list of renamed options:
+
+#### `payload`
+
+This options represents the body to send. It could be a `string` or a `Buffer`. However there is no `payload` option anymore. You need to use `body` instead. Or, if you wish to send JSON, `json`. Here's an example:
+
+```ts
+// Before:
+await Apify.utils.requestAsBrowser({ …, payload: 'Hello, world!' });
+await Apify.utils.requestAsBrowser({ …, payload: Buffer.from('c0ffe', 'hex') });
+await Apify.utils.requestAsBrowser({ …, json: { hello: 'world' } });
+
+// After:
+await gotScraping({ …, body: 'Hello, world!' });
+await gotScraping({ …, body: Buffer.from('c0ffe', 'hex') });
+await gotScraping({ …, json: { hello: 'world' } });
+```
+
+#### `ignoreSslErrors`
+
+It has been renamed to `https.rejectUnauthorized`. By default it's set to `false` for covenience. However, if you want to make sure the connection is secure, you can do the following:
+
+```ts
+// Before:
+await Apify.utils.requestAsBrowser({ …, ignoreSslErrors: false });
+
+// After:
+await gotScraping({ …, https: { rejectUnauthorized: true } });
+```
+
+Please note: the meanings are opposite! So we needed to invert the values as well.
+
+#### `header-generator` options
+
+`useMobileVersion`, `languageCode` and `countryCode` no longer exist. Instead, you need to use `headerGeneratorOptions` directly:
+
+```ts
+// Before:
+await Apify.utils.requestAsBrowser({
+    …,
+    useMobileVersion: true,
+    languageCode: 'en',
+    countryCode: 'US',
+});
+
+// After:
+await gotScraping({
+    …,
+    headerGeneratorOptions: {
+        devices: ['mobile'], // or ['desktop']
+        locales: ['en-US'],
+    },
+});
+```
+
+#### `timeoutSecs`
+
+In order to set a timeout, use `timeout.request` (which is **milliseconds** now).
+
+```ts
+// Before:
+await Apify.utils.requestAsBrowser({
+    …,
+    timeoutSecs: 30,
+});
+
+// After:
+await gotScraping({
+    …,
+    timeout: {
+        request: 30 * 1000,
+    },
+});
+```
+
+#### `throwOnHttpErrors`
+
+`throwOnHttpErrors` → `throwHttpErrors`. This options throws on unsuccessful HTTP status codes, for example `404`. By default, it's set to `false`.
+
+#### `decodeBody`
+
+`decodeBody` → `decompress`. This options decompresses the body. Defaults to `true` - please do not change this or websites will break (unless you know what you're doing!).
+
+#### `abortFunction`
+
+This function used to make the promise throw on specific responses, if it returned `true`. However it wasn't that useful.
+
+You probably want to cancel the request instead, which you can do in the following way:
+
+```ts
+const promise = gotScraping(…);
+
+promise.on('request', request => {
+    // Please note this is not a Got Request instance, but a ClientRequest one.
+    // https://nodejs.org/api/http.html#class-httpclientrequest
+
+    if (request.protocol !== 'https:') {
+        // Unsecure request, abort.
+        promise.cancel();
+
+        // If you set `isStream` to `true`, please use `stream.destroy()` instead.
+    }
+});
+
+const response = await promise;
+```
+
 ## Handling requests outside of browser
 
 One small feature worth mentioning is the ability to handle requests with browser crawlers outside the browser. To do that, we can use a combination of `Request.skipNavigation` and `context.sendRequest()`.
