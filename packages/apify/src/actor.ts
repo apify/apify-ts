@@ -481,6 +481,25 @@ export class Actor<Data extends Dictionary = Dictionary> {
     }
 
     /**
+     * Sets the status message for the current actor run.
+     *
+     * @param options
+     * @returns The return value is the Run object.
+     * For more information, see the [Actor Runs](https://docs.apify.com/api/v2#/reference/actor-runs/) API endpoints.
+     * @ignore
+     */
+    async setStatusMessage(message: string): Promise<ClientActorRun> {
+        ow(message, ow.string);
+
+        const runId = this.config.get('actorRunId')!;
+        if (!runId) {
+            throw new Error(`Environment variable ${ENV_VARS.ACTOR_RUN_ID} is not set!`);
+        }
+
+        return this.apifyClient.run(runId).setStatusMessage(message);
+    }
+
+    /**
      * Stores an object or an array of objects to the default {@link Dataset} of the current actor run.
      *
      * This is just a convenient shortcut for {@link Dataset.pushData}.
@@ -1049,6 +1068,17 @@ export class Actor<Data extends Dictionary = Dictionary> {
      */
     static async addWebhook(options: WebhookOptions): Promise<Webhook | undefined> {
         return Actor.getDefaultInstance().addWebhook(options);
+    }
+
+    /**
+     * Sets the status message for the current actor run.
+     *
+     * @param options
+     * @returns The return value is the Run object.
+     * For more information, see the [Actor Runs](https://docs.apify.com/api/v2#/reference/actor-runs/) API endpoints.
+     */
+    static async setStatusMessage(message: string): Promise<ClientActorRun> {
+        return Actor.getDefaultInstance().setStatusMessage(message);
     }
 
     /**
