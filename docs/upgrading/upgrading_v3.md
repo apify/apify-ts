@@ -312,11 +312,9 @@ await gotScraping({ …, https: { rejectUnauthorized: true } });
 
 Please note: the meanings are opposite! So we needed to invert the values as well.
 
-#### `useMobileVersion`
-#### `languageCode`
-#### `countryCode`
+#### `header-generator` options
 
-Instead, you need to use `headerGeneratorOptions`:
+`useMobileVersion`, `languageCode` and `countryCode` no longer exist. Instead, you need to use `headerGeneratorOptions` directly:
 
 ```ts
 // Before:
@@ -339,7 +337,7 @@ await gotScraping({
 
 #### `timeoutSecs`
 
-In order to set a timeout, use `timeout.request` (which is milliseconds now !!!).
+In order to set a timeout, use `timeout.request` (which is **milliseconds** now).
 
 ```ts
 // Before:
