@@ -831,17 +831,18 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
             session?.markGood();
         } catch (err) {
             try {
-                await this._timeoutAndRetry(
+                await addTimeoutToPromise(
                     () => this._requestFunctionErrorHandler(err as Error, crawlingContext, source),
                     this.internalTimeoutMillis,
                     `Handling request failure of ${request.url} (${request.id}) timed out after ${this.internalTimeoutMillis / 1e3} seconds.`,
                 );
-            } catch (secondaryError) {
-                this.log.exception(secondaryError as Error, 'runTaskFunction error handler threw an exception. '
-                    + 'This places the crawler and its underlying storages into an unknown state and crawling will be terminated. '
-                    + 'This may have happened due to an internal error of Apify\'s API or due to a misconfigured crawler. '
-                    + 'If you are sure that there is no error in your code, selecting "Restart on error" in the actor\'s settings'
-                    + 'will make sure that the run continues where it left off, if programmed to handle restarts correctly.');
+            } catch (secondaryError: any) {
+                if (!secondaryError.triggeredFromUserHandler) {
+                    const apifySpecific = process.env.APIFY_IS_AT_HOME
+                        ? `This may have happened due to an internal error of Apify's API or due to a misconfigured crawler.` : '';
+                    this.log.exception(secondaryError as Error, 'An exception occurred during handling of failed request. '
+                        + `This places the crawler and its underlying storages into an unknown state and crawling will be terminated. ${apifySpecific}`);
+                }
                 throw secondaryError;
             }
         } finally {
@@ -912,12 +913,12 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
         if (shouldRetryRequest) {
             request.retryCount++;
 
-            await this.errorHandler?.(crawlingContext, error);
+            await this._tagUserHandlerError(() => this.errorHandler?.(crawlingContext, error));
 
             const { url, retryCount, id } = request;
             // We don't want to see the stack trace in the logs by default, when we are going to retry the request.
             // Thus, we print the full stack trace only when CRAWLEE_VERBOSE_LOG environment variable is set to true.
-            const message = !process.env.CRAWLEE_VERBOSE_LOG ? error : error.stack;
+            const message = process.env.CRAWLEE_VERBOSE_LOG ? error.stack : error;
             this.log.warning(
                 `Reclaiming failed request back to the list or queue. ${message}`,
                 { id, url, retryCount },
@@ -936,17 +937,27 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
         }
     }
 
+    protected async _tagUserHandlerError<T>(cb: () => unknown): Promise<T> {
+        try {
+            return await cb() as T;
+        } catch (e: any) {
+            Object.defineProperty(e, 'triggeredFromUserHandler', { value: true });
+            throw e;
+        }
+    }
+
     protected async _handleFailedRequestHandler(crawlingContext: Context, error: Error): Promise<void> {
         if (this.failedRequestHandler) {
-            await this.failedRequestHandler(crawlingContext, error);
-        } else {
-            const { id, url, method, uniqueKey } = crawlingContext.request;
-            const message = error instanceof TimeoutError && !process.env.CRAWLEE_VERBOSE_LOG ? error.message : error.stack;
-            this.log.error(
-                `Request failed and reached maximum retries. ${message}`,
-                { id, url, method, uniqueKey },
-            );
+            await this._tagUserHandlerError(() => this.failedRequestHandler?.(crawlingContext, error));
+            return;
         }
+
+        const { id, url, method, uniqueKey } = crawlingContext.request;
+        const message = error instanceof TimeoutError && !process.env.CRAWLEE_VERBOSE_LOG ? error.message : error.stack;
+        this.log.error(
+            `Request failed and reached maximum retries. ${message}`,
+            { id, url, method, uniqueKey },
+        );
     }
 
     /**
