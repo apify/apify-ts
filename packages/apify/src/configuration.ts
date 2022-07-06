@@ -24,20 +24,27 @@ export interface ConfigurationOptions extends CoreConfigurationOptions {
  * `Configuration` is a value object holding the SDK configuration. We can use it in two ways:
  *
  * 1. When using `Actor` class, we can get the instance configuration via `sdk.config`
- *   ```js
- *   import { Actor } from 'apify';
  *
- *   const sdk = new Actor({ token: '123' });
- *   console.log(sdk.config.get('token')); // '123'
- *   const crawler = new BasicCrawler({ ... }, config);
- *   ```
+ *    ```javascript
+ *    import { Actor } from 'apify';
+ *    import { BasicCrawler } from 'crawlee';
+ *
+ *    const sdk = new Actor({ token: '123' });
+ *    console.log(sdk.config.get('token')); // '123'
+ *
+ *    const crawler = new BasicCrawler({
+ *        // ... crawler options
+ *    }, sdk.config);
+ *    ```
+ *
  * 2. To get the global configuration (singleton instance). It will respect the environment variables.
- *   ```js
- *   import { BasicCrawler, Configuration } from 'crawlee';
  *
- *   const config = new Configuration({ persistStateIntervalMillis: 30_000 });
- *   const crawler = new BasicCrawler({ ... }, config);
- *   ```
+ *    ```javascript
+ *    import { BasicCrawler, Configuration } from 'crawlee';
+ *
+ *    const config = new Configuration({ persistStateIntervalMillis: 30_000 });
+ *    const crawler = new BasicCrawler({ ... }, config);
+ *    ```
  *
  * ## Supported Configuration Options
  *
