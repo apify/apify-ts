@@ -5,6 +5,13 @@ title: Apify Platform
 
 import ApiLink from '@site/src/components/ApiLink';
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import MainSource from '!!raw-loader!./apify_platform_main.ts';
+import InitExitSource from '!!raw-loader!./apify_platform_init_exit.ts';
+
 Apify is a [platform](https://apify.com) built to serve large-scale and high-performance web scraping
 and automation needs. It provides easy access to [compute instances (Actors)](#what-is-an-actor),
 convenient [request](../guides/request-storage) and [result](../guides/result-storage) storages, [proxies](../guides/proxy-management),
@@ -16,8 +23,12 @@ While we think that the Apify platform is super cool, and you should definitely 
 [free account](https://console.apify.com/sign-up), **Crawlee is and will always be open source**,
 runnable locally or on any cloud infrastructure.
 
-> Note that we do not test Crawlee in other cloud environments such as Lambda or on specific
-> architectures such as Raspberry PI. We strive to make it work, but there are no guarantees.
+:::note
+
+We do not test Crawlee in other cloud environments such as Lambda or on specific
+architectures such as Raspberry PI. We strive to make it work, but there are no guarantees.
+
+:::
 
 ## Logging into Apify platform from Crawlee
 
@@ -27,7 +38,7 @@ either by utilizing [Apify CLI](https://github.com/apify/apify-cli) or with envi
 variables.
 
 Once you provide credentials to your scraper, you will be able to use all the Apify platform
-features of Crawlee, such as calling actors, saving to cloud storages, using Apify proxies,
+features, such as calling actors, saving to cloud storages, using Apify proxies,
 setting up webhooks and so on.
 
 ### Log in with CLI
@@ -38,12 +49,6 @@ scraper using the CLI, your credentials will automatically be added.
 ```bash
 npm install -g apify-cli
 apify login -t YOUR_API_TOKEN
-```
-
-In your project folder:
-
-```bash
-apify run -p
 ```
 
 ### Log in with environment variables
@@ -67,6 +72,63 @@ and removing duplicates from a large dataset.
 Actors can be shared in the [Apify Store](https://apify.com/store) so that other people can use them.
 But don't worry, if you share your actor in the store and somebody uses it, it runs under their account,
 not yours.
+
+## Running an actor locally
+
+First let's create a boilerplate of the new actor. We could use Apify CLI and just run:
+
+```bash
+apify create my-hello-world
+```
+
+The CLI will prompt us to select a project boilerplate template - let's pick "Hello world". The tool will create a directory called `my-hello-world` with a Node.js project files. We can run the actor as follows:
+
+```bash
+cd my-hello-world
+apify run
+```
+
+## Running Crawlee code as an actor
+
+For running the Crawlee code as an actor on the [Apify platform](https://apify.com/actors) we should either:
+- wrap it into <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function;
+- or use a combination of <ApiLink to="apify/class/Actor#init">`Actor.init()`</ApiLink> and <ApiLink to="apify/class/Actor#exit">`Actor.exit()`</ApiLink> functions.
+
+Let's look at the `CheerioCrawler` example from the [Quick Start](../guides/quick-start) guide:
+
+<Tabs>
+    <TabItem value="main" label="Using Actor.main()" default>
+        <CodeBlock language="js">
+            {MainSource}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="init_exit" label="Using Actor.init() and Actor.exit()">
+        <CodeBlock language="js">
+            {InitExitSource}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+Note that we could also run our actor (that is using Crawlee) locally with Apify CLI. We could start it via the following command in our project folder:
+
+```bash
+apify run -p
+```
+
+## Deploying an actor to Apify platform
+
+Now (assuming we are already logged in to our Apify account) we can easily deploy our code to the Apify platform by running:
+
+```bash
+apify push
+```
+
+Our script will be uploaded to the Apify platform and built there so that it can be run. For more information, view the
+[Apify Actor](https://docs.apify.com/cli) documentation.
+
+## Usage on Apify platform
+
+We can also develop our actor in an online code editor directly on the platform (we'll need an Apify Account). Let's go to the [Actors](https://console.apify.com/actors) page in the app, click *Create new* and then go to the *Source* tab and start writing our code or paste one of the examples from the Examples section.
 
 **Related links**
 
