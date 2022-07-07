@@ -204,6 +204,55 @@ so in most cases, we don't need to touch it. We should use it when, for some rea
 we need access to Apify Proxy, but not access to Apify API, or when we need access to
 proxy from a different account than our token represents.
 
+## Proxy management
+
+In addition to our own proxy servers and proxy servers acquired from
+third-party providers used together with Crawlee, we can also rely on [Apify Proxy](https://apify.com/proxy)
+for our scraping needs.
+
+If we are already subscribed to Apify Proxy, we can start using them immediately in only a few lines of code (for local usage we first we should be [logged in](#logging-into-apify-platform-from-crawlee) to our Apify account.
+
+```javascript
+import { Actor } from 'apify';
+
+const proxyConfiguration = await Actor.createProxyConfiguration();
+const proxyUrl = await proxyConfiguration.newUrl();
+```
+
+Note that unlike with Crawlee, we shouldn't use the constructor to create <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> instance. For using Apify Proxy we should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function instead.
+
+### Apify Proxy vs. Own proxies
+
+The `ProxyConfiguration` class covers both Apify Proxy and custom proxy URLs so that
+we can easily switch between proxy providers, however, some features of the class
+are available only to Apify Proxy users, mainly because Apify Proxy is what
+one would call a super-proxy. It's not a single proxy server, but an API endpoint
+that allows connection through millions of different IP addresses. So the class
+essentially has two modes: Apify Proxy or Own (third party) proxy.
+
+The difference is easy to remember.
+- If we're using our own proxies - we should create an instance with the ProxyConfiguration <ApiLink to="core/class/ProxyConfiguration#constructor">`constructor`</ApiLink> function based on the provided <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink>.
+- If we are planning to use Apify Proxy - we should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function - <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of our custom proxy URLs, whereas all the other options are there to configure Apify Proxy.
+
+### Apify Proxy Configuration
+
+With Apify Proxy, we can select specific proxy groups to use, or countries to connect from.
+This allows us to get better proxy performance after some initial research.
+
+```javascript
+import { Actor } from 'apify';
+
+const proxyConfiguration = await Actor.createProxyConfiguration({
+    groups: ['RESIDENTIAL'],
+    countryCode: 'US',
+});
+const proxyUrl = await proxyConfiguration.newUrl();
+```
+
+Now our crawlers will use only Residential proxies from the US. Note that we must first get access
+to a proxy group before We are able to use it. We can check proxy groups available to us
+in the [proxy dashboard](https://console.apify.com/proxy).
+
 **Related links**
 
 - [Apify platform storage documentation](https://docs.apify.com/storage)
@@ -211,3 +260,4 @@ proxy from a different account than our token represents.
 - [Key-value stores API reference](https://apify.com/docs/api/v2#/reference/key-value-stores)
 - [Datasets API reference](https://docs.apify.com/api/v2#/reference/datasets)
 - [Request queues API reference](https://docs.apify.com/api/v2#/reference/request-queues)
+- [Apify Proxy docs](https://docs.apify.com/proxy)
