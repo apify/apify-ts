@@ -130,12 +130,12 @@ Now (assuming we are already logged in to our Apify account) we can easily deplo
 apify push
 ```
 
-Our script will be uploaded to the Apify platform and built there so that it can be run. For more information, view the
+Our script will be uploaded to and built on the Apify platform so that it can be run there. For more information, view the
 [Apify Actor](https://docs.apify.com/cli) documentation.
 
 ## Usage on Apify platform
 
-We can also develop our actor in an online code editor directly on the platform (we'll need an Apify Account). Let's go to the [Actors](https://console.apify.com/actors) page in the app, click *Create new* and then go to the *Source* tab and start writing our code or paste one of the examples from the Examples section.
+We can also develop our actor in an online code editor directly on the platform (we'll need an Apify Account). Let's go to the [Actors](https://console.apify.com/actors) page in the app, click *Create new* and then go to the *Source* tab and start writing our code or paste one of the examples from the [Examples](../examples) section.
 
 ## Storages
 
@@ -145,10 +145,18 @@ There are several things worth mentioning here.
 2. In order to open the storage, we shouldn't use the storage classes, but instead use the Actor class. Thus, instead of <ApiLink to="core/class/KeyValueStore#open">`KeyValueStore.open()`</ApiLink>, <ApiLink to="core/class/Dataset#open">`Dataset.open()`</ApiLink> and <ApiLink to="core/class/RequestQueue#open">`RequestQueue.open()`</ApiLink>, we could use <ApiLink to="apify/class/Actor#openKeyValueStore">`Actor.openKeyValueStore()`</ApiLink>, <ApiLink to="apify/class/Actor#openDataset">`Actor.openDataset()`</ApiLink> and <ApiLink to="apify/class/Actor#openRequestQueue">`Actor.openRequestQueue()`</ApiLink> respectively. Using each of these methods allows us to pass the <ApiLink to="apify/interface/OpenStorageOptions">`OpenStorageOptions`</ApiLink> as a second argument, which has only one optional property: <ApiLink to="apify/interface/OpenStorageOptions#forceCloud">`forceCloud`</ApiLink>. If set to `true` - cloud storage will be used instead of the folder on the local disk.
 3. When the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> is stored on the `Apify platform`, we can export its data to the following formats: HTML, JSON, CSV, Excel, XML and RSS. The datasets are displayed on the actor run details page and in the [Storage](https://console.apify.com/storage) section in the Apify Console. The actual data is exported using the [Get dataset items](https://apify.com/docs/api/v2#/reference/datasets/item-collection/get-items) Apify API endpoint. This way you can easily share the crawling results.
 
+**Related links**
+
+- [Apify platform storage documentation](https://docs.apify.com/storage)
+- [View storage in Apify Console](https://console.apify.com/storage)
+- [Key-value stores API reference](https://apify.com/docs/api/v2#/reference/key-value-stores)
+- [Datasets API reference](https://docs.apify.com/api/v2#/reference/datasets)
+- [Request queues API reference](https://docs.apify.com/api/v2#/reference/request-queues)
+
 ## Important environment variables
 
-The following environment variables have large impact on the way Apify works and its behavior
-can be changed significantly by setting or unsetting them.
+The following environment variables have large impact on the way Actors work, and their behavior
+can be changed significantly by setting or unsetting these vars.
 
 ### `APIFY_TOKEN`
 
@@ -219,7 +227,7 @@ const proxyConfiguration = await Actor.createProxyConfiguration();
 const proxyUrl = await proxyConfiguration.newUrl();
 ```
 
-Note that unlike with Crawlee, we shouldn't use the constructor to create <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> instance. For using Apify Proxy we should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function instead.
+Note that unlike using proxy in Crawlee, we shouldn't use the constructor to create <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> instance. For using Apify Proxy we should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function instead.
 
 ### Apify Proxy vs. Own proxies
 
@@ -255,9 +263,4 @@ in the [proxy dashboard](https://console.apify.com/proxy).
 
 **Related links**
 
-- [Apify platform storage documentation](https://docs.apify.com/storage)
-- [View storage in Apify Console](https://console.apify.com/storage)
-- [Key-value stores API reference](https://apify.com/docs/api/v2#/reference/key-value-stores)
-- [Datasets API reference](https://docs.apify.com/api/v2#/reference/datasets)
-- [Request queues API reference](https://docs.apify.com/api/v2#/reference/request-queues)
 - [Apify Proxy docs](https://docs.apify.com/proxy)
