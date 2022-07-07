@@ -42,8 +42,7 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests([r1, r2, r3]);
-    await crawler.run();
+    await crawler.run([r1, r2, r3]);
 
     await Actor.pushData({ requestCounter, navigationCounter });
 }, mainOptions);

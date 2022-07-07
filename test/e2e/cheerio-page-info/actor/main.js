@@ -40,6 +40,5 @@ await Actor.main(async () => {
         requestHandler: router,
     });
 
-    await crawler.addRequests([{ url: 'https://apify.com/apify', userData: { label: 'START' } }]);
-    await crawler.run();
+    await crawler.run([{ url: 'https://apify.com/apify', userData: { label: 'START' } }]);
 }, mainOptions);

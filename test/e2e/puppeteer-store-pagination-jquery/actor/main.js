@@ -49,6 +49,5 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests([{ url: 'https://apify.com/store', userData: { label: 'START' } }]);
-    await crawler.run();
+    await crawler.run([{ url: 'https://apify.com/store', userData: { label: 'START' } }]);
 }, mainOptions);

@@ -26,9 +26,8 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests(Array.from(
+    await crawler.run(Array.from(
         { length: 5 },
         (_, i) => ({ url: 'https://api.apify.com/v2/browser-info', uniqueKey: `${i}` }),
     ));
-    await crawler.run();
 }, mainOptions);

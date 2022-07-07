@@ -56,7 +56,6 @@ crawler.router.addHandler('DETAIL', async ({ log, page, request: { url } }) => {
     await Actor.pushData({ url, uniqueIdentifier, title, description, modifiedDate, runCount });
 });
 
-await crawler.addRequests([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
-await crawler.run();
+await crawler.run([{ url: 'https://apify.com/store?page=1', userData: { label: 'START' } }]);
 
 await Actor.exit({ exit: Actor.isAtHome() });

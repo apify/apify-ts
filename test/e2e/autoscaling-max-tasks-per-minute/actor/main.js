@@ -24,6 +24,5 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests(['https://example.com/1', 'https://example.com/2']);
-    await crawler.run();
+    await crawler.run(['https://example.com/1', 'https://example.com/2']);
 }, mainOptions);

@@ -527,9 +527,19 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
 
     /**
      * Runs the crawler. Returns a promise that gets resolved once all the requests are processed.
+     * We can use the `requests` parameter to enqueue the initial requests - it is a shortcut for
+     * running `crawler.addRequests()` before the `crawler.run()`.
+     *
+     * @param [requests] The requests to add
+     * @param [options] Options for the request queue
      */
-    async run(): Promise<FinalStatistics> {
+    async run(requests?: (string | Request | RequestOptions)[], options?: CrawlerAddRequestsOptions): Promise<FinalStatistics> {
         await purgeDefaultStorages();
+
+        if (requests) {
+            await this.addRequests(requests, options);
+        }
+
         await this._init();
         await this.stats.startCapturing();
 

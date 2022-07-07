@@ -44,6 +44,5 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests(['https://api.apify.com/v2/browser-info']);
-    await crawler.run();
+    await crawler.run(['https://api.apify.com/v2/browser-info']);
 }, mainOptions);
