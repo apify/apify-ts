@@ -153,10 +153,15 @@ There are several things worth mentioning here.
 - [Datasets API reference](https://docs.apify.com/api/v2#/reference/datasets)
 - [Request queues API reference](https://docs.apify.com/api/v2#/reference/request-queues)
 
-## Important environment variables
+## Environment variables
 
-The following environment variables have large impact on the way Actors work, and their behavior
-can be changed significantly by setting or unsetting these vars.
+The following are some additional environment variables specific to Apify platform. More Crawlee specific environment variables could be found in the [Environment Variables](../guides/environment-variables) guide.
+
+:::note
+
+It's important to notice that `CRAWLEE_` environment variables don't need to be replaced with `APIFY_` ones respected by Apify platform. E.g. if we have `CRAWLEE_DEFAULT_DATASET_ID` set in our project, and then we push our code to the Apify platform as an Actor - this variable would still be respected by the Actor/platform.
+
+:::
 
 ### `APIFY_TOKEN`
 
@@ -186,24 +191,6 @@ import { Actor } from 'apify';
 const localDataset = await Actor.openDataset('my-local-data');
 const remoteDataset = await Actor.openDataset('my-remote-data', { forceCloud: true });
 ```
-
-:::note
-
-It's important to notice that `CRAWLEE_` environment variables don't need to be replaced with `APIFY_` ones while running first locally and then on the platform. E.g. if we have `CRAWLEE_DEFAULT_DATASET_ID` set in our project, and then we push it to the Apify platform as an Actor - this variable would still be respected by the Actor/platform.
-
-:::
-
-## Convenience environment variables
-
-The next group includes env vars that can help achieve certain goals without having to change
-our code, such as temporarily switching log level to DEBUG.
-
-### `APIFY_LOG_LEVEL`
-
-Specifies the minimum log level, which can be one of the following values (in order of severity):
-`DEBUG`, `INFO`, `WARNING` and `ERROR`. By default, the log level is set to `INFO`,
-which means that `DEBUG` messages are not printed to console. See the <ApiLink to="core/class/Log">`utils.log`</ApiLink>
-namespace for logging utilities.
 
 ### `APIFY_PROXY_PASSWORD`
 
