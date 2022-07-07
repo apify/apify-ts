@@ -1,5 +1,5 @@
-import { Actor } from 'apify'
-import { CheerioCrawler } from "@crawlee/cheerio";
+import { Actor } from 'apify';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.init();
 
