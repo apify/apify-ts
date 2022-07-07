@@ -199,7 +199,7 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     /**
      * The maximum number of requests per minute the crawler should run.
      * By default, this is set to `Infinity`, but you can pass any positive, non-zero integer.
-     * Shortcut for the {@link AutoscaledPool} `maxTasksPerMinute` option.
+     * Shortcut for the {@link AutoscaledPoolOptions.maxTasksPerMinute} option.
      */
     maxRequestsPerMinute?: number;
 
