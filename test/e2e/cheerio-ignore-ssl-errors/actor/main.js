@@ -27,6 +27,5 @@ await Actor.main(async () => {
         },
     });
 
-    await crawler.addRequests([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
-    await crawler.run();
+    await crawler.run([{ url: 'https://badssl.com', userData: { label: 'START' } }]);
 }, mainOptions);

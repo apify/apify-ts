@@ -244,9 +244,7 @@ export class RequestQueue {
             ? requestLike
             : new Request(requestLike);
 
-        // TODO we dont need to hash the cache key probably
         const cacheKey = getRequestId(request.uniqueKey);
-        // const cacheKey = request.uniqueKey;
         const cachedInfo = this.requestsCache.get(cacheKey);
 
         if (cachedInfo) {
@@ -329,9 +327,7 @@ export class RequestQueue {
         const requestsToAdd = new Map<string, Request>();
 
         for (const request of requests) {
-            // TODO we dont need to hash the cache key probably
             const cacheKey = getCachedRequestId(request.uniqueKey);
-            // const cacheKey = request.uniqueKey;
             const cachedInfo = this.requestsCache.get(cacheKey);
 
             if (cachedInfo) {

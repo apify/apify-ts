@@ -479,7 +479,7 @@ export class BrowserPool<
         pageOptions: PageOptions = {} as PageOptions,
         proxyUrl?: string,
     ) {
-        // TODO This is needed for concurrent newPage calls to wait for the browser launch.
+        // This is needed for concurrent newPage calls to wait for the browser launch.
         // It's not ideal though, we need to come up with a better API.
         // eslint-disable-next-line dot-notation -- accessing private property
         await browserController['isActivePromise'];
@@ -508,8 +508,7 @@ export class BrowserPool<
             this.pageIds.set(page, pageId);
             this.pageToBrowserController.set(page, browserController);
 
-            // TODO if you synchronously trigger a lot of page launches, browser
-            //  will not get retired soon enough. Not sure if it's a problem, let's monitor it.
+            // if you synchronously trigger a lot of page launches, browser will not get retired soon enough. Not sure if it's a problem, let's monitor it.
             if (browserController.totalPages >= this.retireBrowserAfterPageCount) {
                 this.retireBrowserController(browserController);
             }
@@ -523,7 +522,7 @@ export class BrowserPool<
         await this._executeHooks(this.postPageCreateHooks, page, browserController);
         tryCancel();
 
-        this.emit(BROWSER_POOL_EVENTS.PAGE_CREATED, page); // @TODO: CONSIDER renaming this event.
+        this.emit(BROWSER_POOL_EVENTS.PAGE_CREATED, page);
 
         return page;
     }

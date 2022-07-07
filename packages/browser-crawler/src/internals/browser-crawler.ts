@@ -477,7 +477,7 @@ export abstract class BrowserCrawler<
 
             if (session) session.markGood();
         } finally {
-            page.close().catch((error: Error) => this.log.debug('Error while closing page', { error }));
+            await page.close().catch((error: Error) => this.log.debug('Error while closing page', { error }));
         }
     }
 
@@ -525,7 +525,7 @@ export abstract class BrowserCrawler<
         try {
             crawlingContext.response = await this._navigationHandler(crawlingContext, gotoOptions) ?? undefined;
         } catch (error) {
-            this._handleNavigationTimeout(crawlingContext, error as Error);
+            await this._handleNavigationTimeout(crawlingContext, error as Error);
 
             throw error;
         }
@@ -552,19 +552,20 @@ export abstract class BrowserCrawler<
     /**
      * Marks session bad in case of navigation timeout.
      */
-    protected _handleNavigationTimeout(crawlingContext: Context, error: Error): void {
+    protected async _handleNavigationTimeout(crawlingContext: Context, error: Error): Promise<void> {
         const { session } = crawlingContext;
 
         if (error && error.constructor.name === 'TimeoutError') {
             handleRequestTimeout({ session, errorMessage: error.message });
         }
+
+        await crawlingContext.page.close();
     }
 
     protected abstract _navigationHandler(crawlingContext: Context, gotoOptions: GoToOptions): Promise<Context['response'] | null | undefined>;
 
     /**
      * Should be overridden in case of different automation library that does not support this response API.
-     * @todo: This can be also done as a postNavigation hook except the loadedUrl marking.
      */
     protected async _responseHandler(crawlingContext: Context): Promise<void> {
         const { response, session, request, page } = crawlingContext;
