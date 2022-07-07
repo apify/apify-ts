@@ -311,8 +311,7 @@ export class ProxyConfiguration extends CoreProxyConfiguration {
      * Checks if Apify Token is provided in env and gets the password via API and sets it to env
      */
     protected async _setPasswordIfToken(): Promise<void> {
-        const storageClientOptions = this.config.get('storageClientOptions') ?? {};
-        const token = process.env[ENV_VARS.TOKEN] ?? storageClientOptions.token;
+        const token = this.config.get('token');
 
         if (token) {
             const { proxy } = await Actor.apifyClient.user().get();
