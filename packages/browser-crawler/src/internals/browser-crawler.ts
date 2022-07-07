@@ -566,7 +566,6 @@ export abstract class BrowserCrawler<
 
     /**
      * Should be overridden in case of different automation library that does not support this response API.
-     * @todo: This can be also done as a postNavigation hook except the loadedUrl marking.
      */
     protected async _responseHandler(crawlingContext: Context): Promise<void> {
         const { response, session, request, page } = crawlingContext;
