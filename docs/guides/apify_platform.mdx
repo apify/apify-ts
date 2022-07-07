@@ -54,12 +54,22 @@ apify login -t OUR_API_TOKEN
 ### Log in with environment variables
 
 Alternatively, we can always provide credentials to our scraper
-by setting the [`APIFY_TOKEN`](../guides/environment-variables#apify_token) environment
+by setting the [`APIFY_TOKEN`](#apify_token) environment
 variable to our API token.
 
-> There's also the [`APIFY_PROXY_PASSWORD`](../guides/environment-variables#apify_proxy_password)
-> environment variable. Crawlee automatically infers that from our token, but it can be useful
+> There's also the [`APIFY_PROXY_PASSWORD`](#apify_proxy_password)
+> environment variable. Actor automatically infers that from our token, but it can be useful
 > when we need to access proxies from a different account than our token represents.
+
+### Log in with Configuration
+
+Another option is to use the <ApiLink to="apify/class/Configuration">`Configuration`</ApiLink> instance and set our api token there.
+
+```javascript
+import { Actor } from 'apify';
+
+const sdk = new Actor({ token: 'our_api_token' });
+```
 
 ## What is an actor
 
