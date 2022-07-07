@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { EventEmitter } from 'node:events';
 import type { Dictionary, StorageClient } from '@crawlee/types';
+import log, { LogLevel } from '@apify/log';
 import { entries } from './typedefs';
 import type { EventManager } from './events';
 import { LocalEventManager } from './events';
@@ -28,6 +29,7 @@ export interface ConfigurationOptions {
     chromeExecutablePath?: string;
     defaultBrowserPath?: string;
     disableBrowserSandbox?: boolean;
+    logLevel?: LogLevel | LogLevel[keyof LogLevel];
 }
 
 /**
@@ -54,6 +56,7 @@ export interface ConfigurationOptions {
  * Key | Environment Variable | Default Value
  * ---|---|---
  * `memoryMbytes` | `CRAWLEE_MEMORY_MBYTES` | -
+ * `logLevel` | `CRAWLEE_LOG_LEVEL` | -
  * `headless` | `CRAWLEE_HEADLESS` | -
  * `defaultDatasetId` | `CRAWLEE_DEFAULT_DATASET_ID` | `'default'`
  * `defaultKeyValueStoreId` | `CRAWLEE_DEFAULT_KEY_VALUE_STORE_ID` | `'default'`
@@ -87,6 +90,7 @@ export class Configuration {
         CRAWLEE_CHROME_EXECUTABLE_PATH: 'chromeExecutablePath',
         CRAWLEE_DEFAULT_BROWSER_PATH: 'defaultBrowserPath',
         CRAWLEE_DISABLE_BROWSER_SANDBOX: 'disableBrowserSandbox',
+        CRAWLEE_LOG_LEVEL: 'logLevel',
     };
 
     protected static BOOLEAN_VARS: string[] = ['purgeOnStart', 'headless', 'xvfb', 'disableBrowserSandbox'];
@@ -126,6 +130,14 @@ export class Configuration {
 
         // Increase the global limit for event emitter memory leak warnings.
         EventEmitter.defaultMaxListeners = 50;
+
+        // set the log level to support CRAWLEE_ prefixed env var too
+        const logLevel = this.get('logLevel');
+
+        if (logLevel) {
+            const level = Number.isFinite(+logLevel) ? +logLevel : LogLevel[String(logLevel).toUpperCase() as unknown as LogLevel];
+            log.setLevel(level as LogLevel);
+        }
     }
 
     /**
