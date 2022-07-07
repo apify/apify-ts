@@ -29,7 +29,7 @@ This controls how many total requests can be made per minute. It counts the amou
 
 ## `minConcurrency` and `maxConcurrency`
 
-These control how many parallel requests can be run at any time. By default, crawlers will start with one parallel request at a time and scale up over time to a maximum of 1000 requests at a time.
+These control how many parallel requests can be run at any time. By default, crawlers will start with one parallel request at a time and scale up over time to a maximum of 200 requests at a time.
 
 :::caution Don't set `minConcurrency` too high!
 
@@ -72,12 +72,6 @@ We can think of this as the point where the autoscaling pool can attempt to scal
 ### `scaleUpStepRatio` and `scaleDownStepRatio`
 
 These values define the fractional amount of desired concurrency to be added or subtracted as the autoscaling pool scales up or down. Both of these values default to `0.05`.
-
-:::caution
-
-If you're planning on modifying these, make sure the value you set is not `0`, and that it is positive!
-
-:::
 
 Every time the autoscaled pool attempts to scale up or down, this value will be added or subtracted from the current concurrency, and, based on the [`desiredConcurrencyRatio`](#desiredconcurrencyratio) and [`maxConcurrency`](#minconcurrency-and-maxconcurrency), determines how many requests can run concurrently.
 
