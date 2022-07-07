@@ -1,6 +1,7 @@
 ---
 id: scaling-crawlers
-title: Scaling your crawlers
+title: Scaling our crawlers
+description: To infinity and beyond!...within limits
 ---
 
 import ApiLink from '@site/src/components/ApiLink';
@@ -11,22 +12,22 @@ import MinMaxConcurrencySource from '!!raw-loader!./scaling_crawlers_minMaxConcu
 import MaxRequestsPerMinuteSource from '!!raw-loader!./scaling_crawlers_maxRequestsPerMinute.ts';
 import AutoscaledPoolOptionsSource from '!!raw-loader!./scaling_crawlers_autoscaledPoolOptions.ts';
 
-As you build your crawler, you might want to control how many requests you do to the website at a time. We provide several options to fine tune how many parallel requests should be made at a time, how many requests should be done per minute, and how should scaling up and down happen based on the system resources available.
+As we build our crawler, we might want to control how many requests we do to the website at a time. Crawlee provides several options to fine tune how many parallel requests should be made at any time, how many requests should be done per minute, and how should scaling up and down happen based on the system resources available.
 
 :::tip
 
-All of these options are available on all crawlers we provide, but for this guide we'll be using the <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>. You can see all options that are available <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions">`here`</ApiLink>
+All of these options are available on all crawlers Crawlee provides, but for this guide we'll be using the <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>. We can see all options that are available <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions">`here`</ApiLink>
 :::
 
 ## `minConcurrency` and `maxConcurrency`
 
-These control how many parallel requests can be run at a time. By default, crawlers will start with one parallel request at a time and scale up over time to a maximum of 1000 requests at a time.
+These control how many parallel requests can be run at any time. By default, crawlers will start with one parallel request at a time and scale up over time to a maximum of 1000 requests at a time.
 
 :::caution Don't set `minConcurrency` too high!
 
-Setting this option too high compared to the available system resources will make your crawler run extremely slow or might even crash.
+Setting this option too high compared to the available system resources will make our crawler run extremely slow or might even crash.
 
-We recommend you leave it at the default value we set and let the crawlers scale up and down automatically based on available resources instead.
+It's recommended to leave it at the default value that is provided and letting the crawler scale up and down automatically based on available resources instead.
 
 :::
 
@@ -36,7 +37,7 @@ We recommend you leave it at the default value we set and let the crawlers scale
 
 ## `maxRequestsPerMinute`
 
-This controls how many total requests can be made per minute. It counts the amount of requests done every second, to ensure there is not a burst of requests at the `maxConcurrency` limit followed by a long period of waiting. By default, it is set to `Infinity` which means the crawler will keep going up to the `maxConcurrency`. You should set this if you want your crawler to work at full throughput, but also not keep hitting the website you're crawling with non-stop requests.
+This controls how many total requests can be made per minute. It counts the amount of requests done every second, to ensure there is not a burst of requests at the `maxConcurrency` limit followed by a long period of waiting. By default, it is set to `Infinity` which means the crawler will keep going up to the `maxConcurrency`. We would set this if we wanted our crawler to work at full throughput, but also not keep hitting the website we're crawling with non-stop requests.
 
 <CodeBlock language="js">
 	{MaxRequestsPerMinuteSource}
@@ -44,15 +45,15 @@ This controls how many total requests can be made per minute. It counts the amou
 
 ## Advanced configurations
 
-While the options above should be enough for most users, if you want to get super deep into the configuration of the autoscaling pool (the internal utility we've created to help us allow crawlers to scale up and down), you can do so through the <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions#autoscaledPoolOptions">`autoscaledPoolOptions`</ApiLink> object available on crawler options.
+While the options above should be enough for most users, if we wanted to get super deep into the configuration of the autoscaling pool (the internal utility in Crawlee that helps us allow crawlers to scale up and down), we can do so through the <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions#autoscaledPoolOptions">`autoscaledPoolOptions`</ApiLink> object available on crawler options.
 
 :::danger Complex options up ahead!
 
-This section is super advanced and, unless you test your changes extensively and know what you're doing, it's better to leave these options to the default configurations we provide, as they are most likely going to work for you without much fuss.
+This section is super advanced and, unless we test the changes extensively and know what we're doing, it's better to leave these options to the default configurations provided, as they are most likely going to work for us without much fuss.
 
 :::
 
-With that warning aside, if you're feeling adventurous, this is how you would pass these options when using a crawler:
+With that warning aside, if we're feeling adventurous, this is how we would pass these options when using a crawler:
 
 <CodeBlock language="js">
 	{AutoscaledPoolOptionsSource}
@@ -66,15 +67,15 @@ This option specifies the amount of requests that should be running in parallel 
 
 The minimum ratio of concurrency to reach before more scaling up is allowed (a number between `0` and `1`). By default, it is set to `0.95`.
 
-You can think of this as the point where the autoscaling pool can attempt to scale up (or down), monitor if there's any changes, and correct them if necessary.
+We can think of this as the point where the autoscaling pool can attempt to scale up (or down), monitor if there's any changes, and correct them if necessary.
 
 ### `scaleUpStepRatio` and `scaleDownStepRatio`
 
-These values define the fractional amount of desired concurrency to be added or subtracted as the autoscaling pool scsles up or down. Both of these values default to `0.05`.
+These values define the fractional amount of desired concurrency to be added or subtracted as the autoscaling pool scales up or down. Both of these values default to `0.05`.
 
 :::caution
 
-If you're planning on modifying these, make sure your fractional amounts are not `0`, and that are positive!
+If we're planning on modifying these, make sure the value we set is not `0`, and that it is positive!
 
 :::
 
@@ -92,34 +93,34 @@ Changing this has no effect for requests that are fired immediately after the pr
 
 ### `loggingIntervalSecs`
 
-This option lets you control how often the autoscaled pool should log its current state (the current concurrency ratio, desired ratios, if the system is overloaded and so on).
+This option lets us control how often the autoscaled pool should log its current state (the current concurrency ratio, desired ratios, if the system is overloaded and so on).
 
-You can disable logging altogether by setting this to `null`. By default, it is set to `60` seconds.
+We can disable logging altogether by setting this to `null`. By default, it is set to `60` seconds.
 
 ### `autoscaleIntervalSecs`
 
-This option lets you control how often the autoscaling pool should check if it can and should scale up or down. This value is represented in seconds, and defaults to `10`.
+This option lets us control how often the autoscaling pool should check if it can and should scale up or down. This value is represented in seconds, and defaults to `10`.
 
 :::tip
 
-We recommend you keep this value between `5` and `20` seconds.
+It's recommended we keep this value between `5` and `20` seconds.
 
 :::
 
-:::caution Be careful with how low, or high, you set this option
+:::caution Be careful with how low, or high, we set this option
 
-Setting this option to a value that's too low might have a severe impact on your crawling performance. And, in reverse, setting this to a value that's too high might mean you leave performance on the table that could've been used for crawling more requests instead.
+Setting this option to a value that's too low might have a severe impact on our crawling performance. And, in reverse, setting this to a value that's too high might mean we leave performance on the table that could've been used for crawling more requests instead.
 
-With that said, if you configure this alongside [`scaleUpStepRatio` and `scaleDownStepRatio`](#scaleupstepratio-and-scaledownstepratio), you can make your crawlers scale up at a slower interval, but with more requests at a time when it does.
+With that said, if we configure this alongside [`scaleUpStepRatio` and `scaleDownStepRatio`](#scaleupstepratio-and-scaledownstepratio), we could make our crawler scale up at a slower interval, but with more requests at a time when it does.
 
 :::
 
 ### `maxTasksPerMinute`
 
-This controls how many total requests can be made per minute. It counts the amount of requests done every second, to ensure there is not a burst of requests at the `maxConcurrency` limit followed by a long period of waiting. By default, it is set to `Infinity` which means the crawler will keep going up to the `maxConcurrency`. You should set this if you want your crawler to work at full throughput, but also not keep hitting the website you're crawl with non-stop requests.
+This controls how many total requests can be made per minute. It counts the amount of requests done every second, to ensure there is not a burst of requests at the `maxConcurrency` limit followed by a long period of waiting. By default, it is set to `Infinity` which means the crawler will keep going up to the `maxConcurrency`. We would set this if we wanted our crawler to work at full throughput, but also not keep hitting the website we're crawl with non-stop requests.
 
 :::info
 
-This option can be set by specifying [`maxRequestsPerMinute`](#maxrequestsperminute) in your crawler options too, as it is a shortcut for visibility and ease of access.
+This option can be set by specifying [`maxRequestsPerMinute`](#maxrequestsperminute) in our crawler options too, as it is a shortcut for visibility and ease of access.
 
 :::
