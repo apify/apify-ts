@@ -1,5 +1,5 @@
-import { Actor } from 'apify'
-import { CheerioCrawler } from "@crawlee/cheerio";
+import { Actor } from 'apify';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.main(async () => {
     const crawler = new CheerioCrawler({
@@ -20,9 +20,6 @@ await Actor.main(async () => {
         },
     });
 
-    // Choose the first URL to open.
-    await crawler.addRequests([{ url: 'https://www.iana.org/' }]);
-
-    // Start the crawler.
-    await crawler.run();
+    // Enqueue the initial request and run the crawler
+    await crawler.run(['https://www.iana.org/']);
 });

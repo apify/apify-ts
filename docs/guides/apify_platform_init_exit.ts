@@ -1,5 +1,5 @@
-import { Actor } from 'apify'
-import { CheerioCrawler } from "@crawlee/cheerio";
+import { Actor } from 'apify';
+import { CheerioCrawler } from 'crawlee';
 
 await Actor.init();
 
@@ -21,10 +21,7 @@ const crawler = new CheerioCrawler({
     },
 });
 
-// Choose the first URL to open.
-await crawler.addRequests([{ url: 'https://www.iana.org/' }]);
-
-// Start the crawler.
-await crawler.run();
+// Enqueue the initial request and run the crawler
+await crawler.run(['https://www.iana.org/']);
 
 await Actor.exit();
