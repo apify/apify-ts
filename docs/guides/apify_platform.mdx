@@ -19,7 +19,7 @@ convenient [request](../guides/request-storage) and [result](../guides/result-st
 and [more](https://docs.apify.com/), accessible through a [web interface](https://console.apify.com)
 or an [API](https://docs.apify.com/api).
 
-While we think that the Apify platform is super cool, and you should definitely sign up for a
+While we think that the Apify platform is super cool, and it's definitely worth signing up for a
 [free account](https://console.apify.com/sign-up), **Crawlee is and will always be open source**,
 runnable locally or on any cloud infrastructure.
 
@@ -32,46 +32,46 @@ architectures such as Raspberry PI. We strive to make it work, but there are no 
 
 ## Logging into Apify platform from Crawlee
 
-To access your [Apify account](https://console.apify.com/sign-up) from Crawlee, you must provide
-credentials - [your API token](https://console.apify.com/account#/integrations). You can do that
+To access our [Apify account](https://console.apify.com/sign-up) from Crawlee, we must provide
+credentials - [our API token](https://console.apify.com/account#/integrations). We can do that
 either by utilizing [Apify CLI](https://github.com/apify/apify-cli) or with environment
 variables.
 
-Once you provide credentials to your scraper, you will be able to use all the Apify platform
+Once we provide credentials to our scraper, we will be able to use all the Apify platform
 features, such as calling actors, saving to cloud storages, using Apify proxies,
 setting up webhooks and so on.
 
 ### Log in with CLI
 
-Apify CLI allows you to log in to your Apify account on your computer. If you then run your
-scraper using the CLI, your credentials will automatically be added.
+Apify CLI allows us to log in to our Apify account on our computer. If we then run our
+scraper using the CLI, our credentials will automatically be added.
 
 ```bash
 npm install -g apify-cli
-apify login -t YOUR_API_TOKEN
+apify login -t OUR_API_TOKEN
 ```
 
 ### Log in with environment variables
 
-If you prefer not to use Apify CLI, you can always provide credentials to your scraper
+Alternatively, we can always provide credentials to our scraper
 by setting the [`APIFY_TOKEN`](../guides/environment-variables#apify_token) environment
-variable to your API token.
+variable to our API token.
 
 > There's also the [`APIFY_PROXY_PASSWORD`](../guides/environment-variables#apify_proxy_password)
-> environment variable. Crawlee automatically infers that from your token, but it can be useful
-> when you need to access proxies from a different account than your token represents.
+> environment variable. Crawlee automatically infers that from our token, but it can be useful
+> when we need to access proxies from a different account than our token represents.
 
 ## What is an actor
 
-When you deploy your script to the Apify platform, it becomes an [actor](https://apify.com/actors).
+When we deploy our script to the Apify platform, it becomes an [actor](https://apify.com/actors).
 An actor is a serverless microservice that accepts an input and produces an output. It can run for
 a few seconds, hours or even infinitely. An actor can perform anything from a simple action such
 as filling out a web form or sending an email, to complex operations such as crawling an entire website
 and removing duplicates from a large dataset.
 
 Actors can be shared in the [Apify Store](https://apify.com/store) so that other people can use them.
-But don't worry, if you share your actor in the store and somebody uses it, it runs under their account,
-not yours.
+But don't worry, if we share our actor in the store and somebody uses it, it runs under their account,
+not ours.
 
 **Related links**
 
@@ -143,7 +143,7 @@ There are several things worth mentioning here.
 
 1. Compared to Crawlee, in order to simplify access to the default <ApiLink to="core/class/KeyValueStore">`Key-Value Store`</ApiLink> and <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> we don't need to use the helper functions of storage classes, but instead, we could use <ApiLink to="apify/class/Actor#getValue">`Actor.getValue()`</ApiLink>, <ApiLink to="apify/class/Actor#setValue">`Actor.setValue()`</ApiLink> for the default `Key-Value Store` and <ApiLink to="apify/class/Actor#pushData">`Actor.pushData()`</ApiLink> for the default `Dataset` directly.
 2. In order to open the storage, we shouldn't use the storage classes, but instead use the Actor class. Thus, instead of <ApiLink to="core/class/KeyValueStore#open">`KeyValueStore.open()`</ApiLink>, <ApiLink to="core/class/Dataset#open">`Dataset.open()`</ApiLink> and <ApiLink to="core/class/RequestQueue#open">`RequestQueue.open()`</ApiLink>, we could use <ApiLink to="apify/class/Actor#openKeyValueStore">`Actor.openKeyValueStore()`</ApiLink>, <ApiLink to="apify/class/Actor#openDataset">`Actor.openDataset()`</ApiLink> and <ApiLink to="apify/class/Actor#openRequestQueue">`Actor.openRequestQueue()`</ApiLink> respectively. Using each of these methods allows us to pass the <ApiLink to="apify/interface/OpenStorageOptions">`OpenStorageOptions`</ApiLink> as a second argument, which has only one optional property: <ApiLink to="apify/interface/OpenStorageOptions#forceCloud">`forceCloud`</ApiLink>. If set to `true` - cloud storage will be used instead of the folder on the local disk.
-3. When the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> is stored on the `Apify platform`, we can export its data to the following formats: HTML, JSON, CSV, Excel, XML and RSS. The datasets are displayed on the actor run details page and in the [Storage](https://console.apify.com/storage) section in the Apify Console. The actual data is exported using the [Get dataset items](https://apify.com/docs/api/v2#/reference/datasets/item-collection/get-items) Apify API endpoint. This way you can easily share the crawling results.
+3. When the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> is stored on the `Apify platform`, we can export its data to the following formats: HTML, JSON, CSV, Excel, XML and RSS. The datasets are displayed on the actor run details page and in the [Storage](https://console.apify.com/storage) section in the Apify Console. The actual data is exported using the [Get dataset items](https://apify.com/docs/api/v2#/reference/datasets/item-collection/get-items) Apify API endpoint. This way we can easily share the crawling results.
 
 **Related links**
 
@@ -168,7 +168,7 @@ or to run an actor on the Apify platform. We can find our API token on the
 
 > `CRAWLEE_STORAGE_DIR` env variable description could be found in [Environment Variables](../guides/environment-variables#crawlee_storage_dir) guide.
 
-By combining the env vars in various ways, we can greatly influence the crawler's behavior.
+By combining the env vars in various ways, we can greatly influence the actor's behavior.
 
 | Env Vars                                | API | Storages         |
 | --------------------------------------- | --- | ---------------- |
@@ -181,6 +181,8 @@ features and our data will be stored locally by default. If we want to access pl
 we can use the `{ forceCloud: true }` option in their respective functions.
 
 ```js
+import { Actor } from 'apify';
+
 const localDataset = await Actor.openDataset('my-local-data');
 const remoteDataset = await Actor.openDataset('my-remote-data', { forceCloud: true });
 ```
@@ -194,7 +196,7 @@ It's important to notice that `CRAWLEE_` environment variables don't need to be 
 ## Convenience environment variables
 
 The next group includes env vars that can help achieve certain goals without having to change
-your code, such as temporarily switching log level to DEBUG.
+our code, such as temporarily switching log level to DEBUG.
 
 ### `APIFY_LOG_LEVEL`
 
