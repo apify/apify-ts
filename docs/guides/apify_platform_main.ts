@@ -2,10 +2,7 @@ import { Actor } from 'apify'
 import { CheerioCrawler } from "@crawlee/cheerio";
 
 await Actor.main(async () => {
-    const proxyConfiguration = await Actor.createProxyConfiguration();
-
     const crawler = new CheerioCrawler({
-        proxyConfiguration,
         async requestHandler({ request, $, enqueueLinks }) {
             const { url } = request;
 
