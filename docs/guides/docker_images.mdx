@@ -27,23 +27,6 @@ Browsers are pretty big, so we try to provide a wide variety of images to suit t
 - [`apify/actor-node-playwright-firefox`](#actor-node-playwright-firefox)
 - [`apify/actor-node-playwright-webkit`](#actor-node-playwright-webkit)
 
-## Example Dockerfile
-
-To use our images, it's necessary to have a [`Dockerfile`](https://docs.docker.com/engine/reference/builder/). We can either use this example, or bootstrap our projects with the [Apify CLI](./getting_started.mdx#creating-a-new-project) which automatically copies the correct Dockerfile into our project folder.
-
-<Tabs>
-    <TabItem value="js" label="For JavaScript Projects">
-        <CodeBlock language="dockerfile">
-            {jsDockerSource}
-        </CodeBlock>
-    </TabItem>
-    <TabItem value="ts" label="For TypeScript Projects">
-        <CodeBlock language="dockerfile">
-            {tsDockerSource}
-        </CodeBlock>
-    </TabItem>
-</Tabs>
-
 ## Versioning
 
 Each image is tagged with up to 2 version tags, depending on the type of the image. One for Node.js version and second for pre-installed web automation library version. If we use the image name without a version tag, we'll always get the latest available version.
@@ -116,7 +99,9 @@ We should also be careful when installing new dependencies. Nothing prevents us 
 
 When we use only what we need, we'll be rewarded with reasonable build and start times.
 
-## actor-node
+## Apify Docker Images
+
+### actor-node
 
 This is the smallest image we have based on Alpine Linux. It does not include any browsers, and it's therefore best used with <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>. It benefits from lightning fast builds and container startups.
 
@@ -126,7 +111,7 @@ This is the smallest image we have based on Alpine Linux. It does not include an
 FROM apify/actor-node:16
 ```
 
-## actor-node-puppeteer-chrome
+### actor-node-puppeteer-chrome
 
 This image includes Puppeteer (Chromium) and the Chrome browser. It can be used with <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> and <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink>, but **NOT** with <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>.
 
@@ -136,7 +121,7 @@ The image supports XVFB by default, so we can run both `headless` and `headful` 
 FROM apify/actor-node-puppeteer-chrome:16
 ```
 
-## actor-node-playwright
+### actor-node-playwright
 
 A very large and slow image that can run all Playwright browsers: Chromium, Chrome, Firefox, WebKit. Everything is installed. If we need to develop or test with multiple browsers, this is the image to choose, but in most cases, it's better to use the specialized images below.
 
@@ -144,7 +129,7 @@ A very large and slow image that can run all Playwright browsers: Chromium, Chro
 FROM apify/actor-node-playwright:16
 ```
 
-## actor-node-playwright-chrome
+### actor-node-playwright-chrome
 
 Similar to [`actor-node-puppeteer-chrome`](#actor-node-puppeteer-chrome), but for Playwright. We can run <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink> and <ApiLink to="playwright-crawler/class/PlaywrightCrawler">`PlaywrightCrawler`</ApiLink>, but **NOT** <ApiLink to="puppeteer-crawler/class/PuppeteerCrawler">`PuppeteerCrawler`</ApiLink>.
 
@@ -156,7 +141,7 @@ The image supports XVFB by default, so we can run both `headless` and `headful` 
 FROM apify/actor-node-playwright-chrome:16
 ```
 
-## actor-node-playwright-firefox
+### actor-node-playwright-firefox
 
 Same idea as [`actor-node-playwright-chrome`](#actor-node-playwright-chrome), but with Firefox
 pre-installed.
@@ -165,7 +150,7 @@ pre-installed.
 FROM apify/actor-node-playwright-firefox:16
 ```
 
-## actor-node-playwright-webkit
+### actor-node-playwright-webkit
 
 Same idea as [`actor-node-playwright-chrome`](#actor-node-playwright-chrome), but with WebKit
 pre-installed.
@@ -173,3 +158,20 @@ pre-installed.
 ```dockerfile
 FROM apify/actor-node-playwright-webkit:16
 ```
+
+## Example Dockerfile
+
+To use the above images, it's necessary to have a [`Dockerfile`](https://docs.docker.com/engine/reference/builder/). We can either use this example, or bootstrap our projects with the [Apify CLI](./getting_started.mdx#creating-a-new-project) which automatically copies the correct Dockerfile into our project folder.
+
+<Tabs>
+    <TabItem value="js" label="For JavaScript Projects">
+        <CodeBlock language="dockerfile">
+            {jsDockerSource}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="ts" label="For TypeScript Projects">
+        <CodeBlock language="dockerfile">
+            {tsDockerSource}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
