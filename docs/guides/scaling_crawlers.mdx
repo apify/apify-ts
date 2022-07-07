@@ -1,7 +1,7 @@
 ---
 id: scaling-crawlers
 title: Scaling our crawlers
-description: To infinity and beyond!...within limits
+description: To infinity and beyond! ...within limits
 ---
 
 import ApiLink from '@site/src/components/ApiLink';
@@ -12,11 +12,11 @@ import MinMaxConcurrencySource from '!!raw-loader!./scaling_crawlers_minMaxConcu
 import MaxRequestsPerMinuteSource from '!!raw-loader!./scaling_crawlers_maxRequestsPerMinute.ts';
 import AutoscaledPoolOptionsSource from '!!raw-loader!./scaling_crawlers_autoscaledPoolOptions.ts';
 
-As we build our crawler, we might want to control how many requests we do to the website at a time. Crawlee provides several options to fine tune how many parallel requests should be made at any time, how many requests should be done per minute, and how should scaling up and down happen based on the system resources available.
+As we build our crawler, we might want to control how many requests we do to the website at a time. Crawlee provides several options to fine tune how many parallel requests should be made at any time, how many requests should be done per minute, and how should scaling work based on the available system resources.
 
 :::tip
 
-All of these options are available on all crawlers Crawlee provides, but for this guide we'll be using the <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>. We can see all options that are available <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions">`here`</ApiLink>
+All of these options are available on all crawlers Crawlee provides, but for this guide we'll be using the <ApiLink to="cheerio-crawler/class/CheerioCrawler">`CheerioCrawler`</ApiLink>. We can see all options that are available <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions">`here`</ApiLink>.
 :::
 
 ## `minConcurrency` and `maxConcurrency`
@@ -43,13 +43,13 @@ This controls how many total requests can be made per minute. It counts the amou
 	{MaxRequestsPerMinuteSource}
 </CodeBlock>
 
-## Advanced configurations
+## Advanced options
 
 While the options above should be enough for most users, if we wanted to get super deep into the configuration of the autoscaling pool (the internal utility in Crawlee that helps us allow crawlers to scale up and down), we can do so through the <ApiLink to="cheerio-crawler/interface/CheerioCrawlerOptions#autoscaledPoolOptions">`autoscaledPoolOptions`</ApiLink> object available on crawler options.
 
 :::danger Complex options up ahead!
 
-This section is super advanced and, unless we test the changes extensively and know what we're doing, it's better to leave these options to the default configurations provided, as they are most likely going to work for us without much fuss.
+This section is super advanced and, unless you test the changes extensively and know what you're doing, it's better to leave these options to their defaults, as they are most likely going to work fine without much fuss.
 
 :::
 
