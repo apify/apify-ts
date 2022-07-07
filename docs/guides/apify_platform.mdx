@@ -145,6 +145,65 @@ There are several things worth mentioning here.
 2. In order to open the storage, we shouldn't use the storage classes, but instead use the Actor class. Thus, instead of <ApiLink to="core/class/KeyValueStore#open">`KeyValueStore.open()`</ApiLink>, <ApiLink to="core/class/Dataset#open">`Dataset.open()`</ApiLink> and <ApiLink to="core/class/RequestQueue#open">`RequestQueue.open()`</ApiLink>, we could use <ApiLink to="apify/class/Actor#openKeyValueStore">`Actor.openKeyValueStore()`</ApiLink>, <ApiLink to="apify/class/Actor#openDataset">`Actor.openDataset()`</ApiLink> and <ApiLink to="apify/class/Actor#openRequestQueue">`Actor.openRequestQueue()`</ApiLink> respectively. Using each of these methods allows us to pass the <ApiLink to="apify/interface/OpenStorageOptions">`OpenStorageOptions`</ApiLink> as a second argument, which has only one optional property: <ApiLink to="apify/interface/OpenStorageOptions#forceCloud">`forceCloud`</ApiLink>. If set to `true` - cloud storage will be used instead of the folder on the local disk.
 3. When the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> is stored on the `Apify platform`, we can export its data to the following formats: HTML, JSON, CSV, Excel, XML and RSS. The datasets are displayed on the actor run details page and in the [Storage](https://console.apify.com/storage) section in the Apify Console. The actual data is exported using the [Get dataset items](https://apify.com/docs/api/v2#/reference/datasets/item-collection/get-items) Apify API endpoint. This way you can easily share the crawling results.
 
+## Important environment variables
+
+The following environment variables have large impact on the way Apify works and its behavior
+can be changed significantly by setting or unsetting them.
+
+### `APIFY_TOKEN`
+
+The API token for our Apify account. It is used to access the Apify API, e.g. to access cloud storage
+or to run an actor on the Apify platform. We can find our API token on the
+[Account - Integrations](https://console.apify.com/account#/integrations) page.
+
+### Combinations of `APIFY_TOKEN` and `CRAWLEE_STORAGE_DIR`
+
+> `CRAWLEE_STORAGE_DIR` env variable description could be found in [Environment Variables](../guides/environment-variables#crawlee_storage_dir) guide.
+
+By combining the env vars in various ways, we can greatly influence the crawler's behavior.
+
+| Env Vars                                | API | Storages         |
+| --------------------------------------- | --- | ---------------- |
+|  none OR `CRAWLEE_STORAGE_DIR`          | no  | local            |
+| `APIFY_TOKEN`                           | yes | Apify platform   |
+| `APIFY_TOKEN` AND `CRAWLEE_STORAGE_DIR` | yes | local + platform |
+
+When using both `APIFY_TOKEN` and `CRAWLEE_STORAGE_DIR`, we can use all the Apify platform
+features and our data will be stored locally by default. If we want to access platform storages,
+we can use the `{ forceCloud: true }` option in their respective functions.
+
+```js
+const localDataset = await Actor.openDataset('my-local-data');
+const remoteDataset = await Actor.openDataset('my-remote-data', { forceCloud: true });
+```
+
+:::note
+
+It's important to notice that `CRAWLEE_` environment variables don't need to be replaced with `APIFY_` ones while running first locally and then on the platform. E.g. if we have `CRAWLEE_DEFAULT_DATASET_ID` set in our project, and then we push it to the Apify platform as an Actor - this variable would still be respected by the Actor/platform.
+
+:::
+
+## Convenience environment variables
+
+The next group includes env vars that can help achieve certain goals without having to change
+your code, such as temporarily switching log level to DEBUG.
+
+### `APIFY_LOG_LEVEL`
+
+Specifies the minimum log level, which can be one of the following values (in order of severity):
+`DEBUG`, `INFO`, `WARNING` and `ERROR`. By default, the log level is set to `INFO`,
+which means that `DEBUG` messages are not printed to console. See the <ApiLink to="core/class/Log">`utils.log`</ApiLink>
+namespace for logging utilities.
+
+### `APIFY_PROXY_PASSWORD`
+
+Optional password to [Apify Proxy](https://docs.apify.com/proxy) for IP address rotation.
+Assuming Apify Account was already created, we can find the password on the [Proxy page](https://console.apify.com/proxy)
+in the Apify Console. The password is automatically inferred using the `APIFY_TOKEN` env var,
+so in most cases, we don't need to touch it. We should use it when, for some reason,
+we need access to Apify Proxy, but not access to Apify API, or when we need access to
+proxy from a different account than our token represents.
+
 **Related links**
 
 - [Apify platform storage documentation](https://docs.apify.com/storage)
