@@ -20,6 +20,7 @@ module.exports = {
                 'guides/session-management',
                 'guides/type-script-project',
                 'guides/docker-images',
+                'guides/scaling-crawlers',
                 'guides/avoid-blocking',
                 'guides/apify-platform',
             ],

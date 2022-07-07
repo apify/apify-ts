@@ -197,7 +197,14 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     maxConcurrency?: number;
 
     /**
-     * Basic crawler will initialize the  {@link SessionPool} with the corresponding `sessionPoolOptions`.
+     * The maximum number of requests per minute the crawler should run.
+     * By default, this is set to `Infinity`, but you can pass any positive, non-zero integer.
+     * Shortcut for the {@link AutoscaledPool} `maxTasksPerMinute` option.
+     */
+    maxRequestsPerMinute?: number;
+
+    /**
+     * Basic crawler will initialize the {@link SessionPool} with the corresponding `sessionPoolOptions`.
      * The session instance will be than available in the `requestHandler`.
      */
     useSessionPool?: boolean;
@@ -358,6 +365,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
         // AutoscaledPool shorthands
         minConcurrency: ow.optional.number,
         maxConcurrency: ow.optional.number,
+        maxRequestsPerMinute: ow.optional.number.integerOrInfinite.positive.greaterThanOrEqual(1),
 
         // internal
         log: ow.optional.object,
@@ -381,6 +389,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
             // AutoscaledPool shorthands
             minConcurrency,
             maxConcurrency,
+            maxRequestsPerMinute,
 
             // internal
             log = defaultLog.child({ prefix: this.constructor.name }),
@@ -478,9 +487,10 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
 
         const { isFinishedFunction } = autoscaledPoolOptions;
 
-        const basicCrawlerAutoscaledPoolConfiguration = {
+        const basicCrawlerAutoscaledPoolConfiguration: Partial<AutoscaledPoolOptions> = {
             minConcurrency,
             maxConcurrency,
+            maxTasksPerMinute: maxRequestsPerMinute,
             runTaskFunction: this._runTaskFunction.bind(this),
             isTaskReadyFunction: async () => {
                 if (isMaxPagesExceeded()) {

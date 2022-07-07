@@ -1,4 +1,4 @@
-import { CheerioCrawler, Dataset } from "@crawlee/cheerio";
+import { CheerioCrawler, Dataset } from '@crawlee/cheerio';
 
 const crawler = new CheerioCrawler({
     async requestHandler({ request, $, enqueueLinks }) {
