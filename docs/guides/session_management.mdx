@@ -1,6 +1,7 @@
 ---
 id: session-management
 title: Session Management
+description: How to manage your cookies, proxy IP rotations and more
 ---
 
 import ApiLink from '@site/src/components/ApiLink';
@@ -15,7 +16,7 @@ import PlaywrightSource from '!!raw-loader!./session_management_playwright.ts';
 import PuppeteerSource from '!!raw-loader!./session_management_puppeteer.ts';
 import StandaloneSource from '!!raw-loader!./session_management_standalone.ts';
 
-​<ApiLink to="core/class/SessionPool">`SessionPool`</ApiLink> is a class that allows us to handle the rotation of proxy IP addresses along with cookies and other custom settings in Crawlee.
+&#8203;<ApiLink to="core/class/SessionPool">`SessionPool`</ApiLink> is a class that allows us to handle the rotation of proxy IP addresses along with cookies and other custom settings in Crawlee.
 
 The main benefit of using Session pool is that we can filter out blocked or non-working proxies,
 so our actor does not retry requests over known blocked/non-working proxies.
