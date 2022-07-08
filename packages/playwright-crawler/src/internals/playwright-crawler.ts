@@ -1,6 +1,6 @@
 import ow from 'ow';
 import type { LaunchOptions, Page, Response } from 'playwright';
-import type { BrowserPoolOptions, PlaywrightPlugin } from '@crawlee/browser-pool';
+import type { BrowserPoolOptions, PlaywrightController, PlaywrightPlugin } from '@crawlee/browser-pool';
 import type { BrowserCrawlerOptions, BrowserCrawlingContext, BrowserCrawlerHandleRequest, BrowserHook } from '@crawlee/browser';
 import { BrowserCrawler, Configuration, Router } from '@crawlee/browser';
 import type { Dictionary } from '@crawlee/types';
@@ -10,7 +10,6 @@ import { PlaywrightLauncher } from './playwright-launcher';
 import type { DirectNavigationOptions, PlaywrightContextUtils } from './utils/playwright-utils';
 import { gotoExtended, registerUtilsToContext } from './utils/playwright-utils';
 
-export type PlaywrightController = ReturnType<PlaywrightPlugin['_createController']>;
 export type PlaywrightCrawlingContext<UserData extends Dictionary = Dictionary> =
     BrowserCrawlingContext<Page, Response, PlaywrightController, UserData> & PlaywrightContextUtils;
 export type PlaywrightHook = BrowserHook<PlaywrightCrawlingContext, PlaywrightGotoOptions>;

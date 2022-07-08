@@ -5,7 +5,7 @@ import type {
     BrowserHook,
 } from '@crawlee/browser';
 import { BrowserCrawler, Configuration, Router } from '@crawlee/browser';
-import type { BrowserPoolOptions, PuppeteerPlugin } from '@crawlee/browser-pool';
+import type { BrowserPoolOptions, PuppeteerController, PuppeteerPlugin } from '@crawlee/browser-pool';
 import type { Dictionary } from '@crawlee/types';
 import ow from 'ow';
 import type { HTTPResponse, LaunchOptions, Page } from 'puppeteer';
@@ -14,7 +14,6 @@ import { PuppeteerLauncher } from './puppeteer-launcher';
 import type { DirectNavigationOptions, PuppeteerContextUtils } from './utils/puppeteer_utils';
 import { gotoExtended, registerUtilsToContext } from './utils/puppeteer_utils';
 
-export type PuppeteerController = ReturnType<PuppeteerPlugin['_createController']>;
 export type PuppeteerCrawlingContext<UserData extends Dictionary = Dictionary> =
     BrowserCrawlingContext<Page, HTTPResponse, PuppeteerController, UserData> & PuppeteerContextUtils;
 export type PuppeteerHook = BrowserHook<PuppeteerCrawlingContext, PuppeteerGoToOptions>;
