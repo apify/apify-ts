@@ -53,20 +53,6 @@ function Features() {
                 </div>
                 <div className="col col--2"></div>
             </div>
-            <div className="row">
-                <div className="col col--4">
-                    <h2>Powerful tools</h2>
-                    <p>
-                        All the crawlers are automatically scaled based on available system resources using the AutoscaledPool class.
-                        When you run your code on the Apify Platform, you can also take advantage of a pool of proxies to avoid detection.
-                        For data storage, you can use the Dataset, KeyValueStore and RequestQueue classes.
-                    </p>
-                </div>
-                <div className="col col--2"></div>
-                <div className="col col--6">
-                    <img src={require('../../static/img/source_code.png').default} style={{ border: '1px solid white' }} className={clsx(styles.hideSmall)} />
-                </div>
-            </div>
         </section>
     );
 }

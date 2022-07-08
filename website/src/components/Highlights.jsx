@@ -10,7 +10,7 @@ const FeatureList = [
             <>
                 JavaScript is the language of the web. Crawlee builds on popular tools like <a href="https://www.npmjs.com/package/playwright">Playwright</a>, {' '}
                 <a href="https://www.npmjs.com/package/puppeteer">Puppeteer</a> and <a href='https://www.npmjs.com/package/cheerio'>cheerio</a>,
-                to deliver large-scale high-performance web scraping and crawling of any website.
+                to deliver large-scale high-performance web scraping and crawling of any website. Works best with <b>TypeScript</b>!
             </>
         ),
     },
@@ -34,6 +34,44 @@ const FeatureList = [
             </>
         ),
     },
+    {
+        title: 'Powerful tools',
+        Svg: require('../../static/img/system.svg').default,
+        description: (
+            <>
+                All the crawlers are automatically scaled based on available system resources using the <code>AutoscaledPool</code> class.
+                With <code>ProxyConfiguration</code>, we can set up multiple proxies and rotate through them automatically.
+                For data storage, you can use the <code>Dataset</code>, <code>KeyValueStore</code> and <code>RequestQueue</code> classes.
+            </>
+        ),
+    },
+    {
+        title: 'Generated fingerprints',
+        Svg: require('../../static/img/system.svg').default,
+        description: (
+            <>
+                Never get blocked with unique fingerprints for browsers generated based on real world data.
+            </>
+        ),
+    },
+    {
+        title: 'Browser like requests from Node.js',
+        Svg: require('../../static/img/system.svg').default,
+        description: (
+            <>
+                Crawl using HTTP requests as if they were from browsers, using auto-generated headers based on real browsers and their TLS fingerprints.
+            </>
+        ),
+    },
+    // {
+    //     title: '',
+    //     Svg: require('../../static/img/system.svg').default,
+    //     description: (
+    //         <>
+    //
+    //         </>
+    //     ),
+    // },
 ];
 
 function Feature({ Svg, title, description }) {
