@@ -45,7 +45,7 @@ export interface AutoscaledPoolOptions {
 
     /**
      * The maximum number of tasks running in parallel.
-     * @default 1000
+     * @default 200
      */
     maxConcurrency?: number;
 
@@ -58,7 +58,7 @@ export interface AutoscaledPoolOptions {
 
     /**
      * Minimum level of desired concurrency to reach before more scaling up is allowed.
-     * @default 0.95
+     * @default 0.90
      */
     desiredConcurrencyRatio?: number;
 
@@ -217,27 +217,27 @@ export class AutoscaledPool {
             runTaskFunction: ow.function,
             isFinishedFunction: ow.function,
             isTaskReadyFunction: ow.function,
-            maxConcurrency: ow.optional.number,
-            minConcurrency: ow.optional.number,
-            desiredConcurrency: ow.optional.number,
-            desiredConcurrencyRatio: ow.optional.number,
-            scaleUpStepRatio: ow.optional.number,
-            scaleDownStepRatio: ow.optional.number,
-            maybeRunIntervalSecs: ow.optional.number,
-            loggingIntervalSecs: ow.any(ow.number, ow.nullOrUndefined),
-            autoscaleIntervalSecs: ow.optional.number,
-            taskTimeoutSecs: ow.optional.number,
+            maxConcurrency: ow.optional.number.integer.greaterThanOrEqual(1),
+            minConcurrency: ow.optional.number.integer.greaterThanOrEqual(1),
+            desiredConcurrency: ow.optional.number.integer.greaterThanOrEqual(1),
+            desiredConcurrencyRatio: ow.optional.number.greaterThan(0).lessThan(1),
+            scaleUpStepRatio: ow.optional.number.greaterThan(0).lessThan(1),
+            scaleDownStepRatio: ow.optional.number.greaterThan(0).lessThan(1),
+            maybeRunIntervalSecs: ow.optional.number.greaterThan(0),
+            loggingIntervalSecs: ow.any(ow.number.greaterThan(0), ow.nullOrUndefined),
+            autoscaleIntervalSecs: ow.optional.number.greaterThan(0),
+            taskTimeoutSecs: ow.optional.number.greaterThanOrEqual(0),
             systemStatusOptions: ow.optional.object,
             snapshotterOptions: ow.optional.object,
             log: ow.optional.object,
-            maxTasksPerMinute: ow.optional.number.integerOrInfinite.positive.greaterThanOrEqual(1),
+            maxTasksPerMinute: ow.optional.number.integerOrInfinite.greaterThanOrEqual(1),
         }));
 
         const {
             runTaskFunction,
             isFinishedFunction,
             isTaskReadyFunction,
-            maxConcurrency = 1000,
+            maxConcurrency = 200,
             minConcurrency = 1,
             desiredConcurrency,
             desiredConcurrencyRatio = 0.90,
@@ -308,7 +308,7 @@ export class AutoscaledPool {
      * If you're not sure, just keep the default value and the concurrency will scale up automatically.
      */
     set minConcurrency(value: number) {
-        ow(value, ow.number);
+        ow(value, ow.optional.number.integer.greaterThanOrEqual(1));
         this._minConcurrency = value;
     }
 
@@ -323,7 +323,7 @@ export class AutoscaledPool {
      * Sets the maximum number of tasks running in parallel.
      */
     set maxConcurrency(value: number) {
-        ow(value, ow.number);
+        ow(value, ow.optional.number.integer.greaterThanOrEqual(1));
         this._maxConcurrency = value;
     }
 
@@ -340,7 +340,7 @@ export class AutoscaledPool {
      * in parallel if there's large enough supply of tasks.
      */
     set desiredConcurrency(value: number) {
-        ow(value, ow.number);
+        ow(value, ow.optional.number.integer.greaterThanOrEqual(1));
         this._desiredConcurrency = value;
     }
 
