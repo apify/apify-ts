@@ -284,7 +284,7 @@ Previously, you were able to have a browser pool that would mix Puppeteer and Pl
 
 :::info Confused?
 
-All this disallows is mixing Puppeteer with Playwright for example. You can still create pools that use multiple Playwright plugins, each with a different launcher.
+As an example, this change disallows a pool to mix Puppeteer with Playwright. You can still create pools that use multiple Playwright plugins, each with a different launcher if you want!
 
 :::
 
