@@ -19,7 +19,7 @@ Moreover, the Crawlee library is published as several packages under `@crawlee` 
 - `@crawlee/core`: the base for all the crawler implementations, also contains things like `Request`, `RequestQueue`, `RequestList` or `Dataset` classes
 - `@crawlee/basic`: exports `BasicCrawler`
 - `@crawlee/cheerio`: exports `CheerioCrawler`
-- `@crawlee/browser`: exports `BrowserCrawler`
+- `@crawlee/browser`: exports `BrowserCrawler` (which is used for creating `@crawlee/playwright` and `@crawlee/puppeteer`)
 - `@crawlee/playwright`: exports `PlaywrightCrawler`
 - `@crawlee/puppeteer`: exports `PuppeteerCrawler`
 - `@crawlee/memory-storage`: `@apify/storage-local` alternative
@@ -386,6 +386,16 @@ promise.on('request', request => {
 
 const response = await promise;
 ```
+
+## Removal of browser pool plugin mixing
+
+Previously, you were able to have a browser pool that would mix Puppeteer and Playwright plugins (or even your own custom plugins if you've built any). As of this version, that is no longer allowed, and creating such a browser pool will cause an error to be thrown (it's expected that all plugins that will be used are of the same type).
+
+:::info Confused?
+
+As an example, this change disallows a pool to mix Puppeteer with Playwright. You can still create pools that use multiple Playwright plugins, each with a different launcher if you want!
+
+:::
 
 ## Handling requests outside of browser
 

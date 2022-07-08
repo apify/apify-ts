@@ -35,6 +35,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `Session#getPuppeteerCookies` and `Session#setPuppeteerCookies` have been renamed to `Session#getCookies` and `Session#setCookies` respectively.
 * The default `maxConcurrency` for AutoscaledPool has been lowered to 200 from 1000.
   * This means the default `maxConcurrency` for all crawlers is also 200 now.
+* For BrowserPool users, you can no longer mix and match different browser plugin types (for example you can no longer have a pool with puppeteer and playwright plugins in it). Instead, it's expected that all plugins present will match the same class as the first plugin provided.
 
 ## [2.3.2](https://github.com/apify/apify-ts/compare/v2.3.1...v2.3.2) (2022-05-05)
 

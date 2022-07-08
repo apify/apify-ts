@@ -220,7 +220,7 @@ export interface BrowserPoolHooks<
  * import playwright from 'playwright';
  *
  * const browserPool = new BrowserPool({
- *     browserPlugins: [ new PlaywrightPlugin(playwright.chromium)],
+ *     browserPlugins: [new PlaywrightPlugin(playwright.chromium)],
  *     preLaunchHooks: [(pageId, launchContext) => {
  *         // do something before a browser gets launched
  *         launchContext.launchOptions.headless = false;
@@ -327,6 +327,20 @@ export class BrowserPool<
             fingerprintOptions = {},
         } = options;
 
+        const firstPluginConstructor = browserPlugins[0].constructor as typeof BrowserPlugin;
+
+        for (let i = 1; i < browserPlugins.length; i++) {
+            const providedPlugin = browserPlugins[i];
+
+            if (!(providedPlugin instanceof firstPluginConstructor)) {
+                const firstPluginName = firstPluginConstructor.name;
+                const providedPluginName = (providedPlugin as BrowserPlugin).constructor.name;
+
+                // eslint-disable-next-line max-len
+                throw new Error(`Browser plugin at index ${i} (${providedPluginName}) is not an instance of the same plugin as the first plugin provided (${firstPluginName}).`);
+            }
+        }
+
         this.browserPlugins = browserPlugins as unknown as BrowserPlugins;
         this.maxOpenPagesPerBrowser = maxOpenPagesPerBrowser;
         this.retireBrowserAfterPageCount = retireBrowserAfterPageCount;
@@ -415,12 +429,11 @@ export class BrowserPool<
      *         new PlaywrightPlugin(playwright.chromium),
      *         new PlaywrightPlugin(playwright.firefox),
      *         new PlaywrightPlugin(playwright.webkit),
-     *         new PuppeteerPlugin(puppeteer),
      *     ]
      * });
      *
      * const pages = await browserPool.newPageWithEachPlugin();
-     * const [chromiumPage, firefoxPage, webkitPage, puppeteerPage] = pages;
+     * const [chromiumPage, firefoxPage, webkitPage] = pages;
      * ```
      */
     async newPageWithEachPlugin(
@@ -761,6 +774,7 @@ export class BrowserPool<
         ];
         this.postPageCreateHooks = [
             createPostPageCreateHook(this.fingerprintInjector!),
+            ...this.postPageCreateHooks,
         ];
     }
 }

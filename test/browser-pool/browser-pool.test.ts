@@ -1,5 +1,4 @@
 /* eslint-disable dot-notation -- Accessing private properties */
-import type { AddressInfo } from 'net';
 import http from 'http';
 import { promisify } from 'util';
 import type { Server as ProxyChainServer } from 'proxy-chain';
@@ -8,15 +7,12 @@ import puppeteer from 'puppeteer';
 import playwright from 'playwright';
 import { addTimeoutToPromise } from '@apify/timeout';
 import type { BrowserFingerprintWithHeaders } from 'fingerprint-generator';
-import type { PrePageCreateHook } from '../../packages/browser-pool/src/browser-pool';
 import { BrowserPool } from '../../packages/browser-pool/src/browser-pool';
 import { PuppeteerPlugin } from '../../packages/browser-pool/src/puppeteer/puppeteer-plugin';
 import { PlaywrightPlugin } from '../../packages/browser-pool/src/playwright/playwright-plugin';
 import { BROWSER_POOL_EVENTS } from '../../packages/browser-pool/src/events';
 import type { BrowserController } from '../../packages/browser-pool/src/abstract-classes/browser-controller';
-import type { PlaywrightController } from '../../packages/browser-pool/src/playwright/playwright-controller';
 import { BrowserName, OperatingSystemsName } from '../../packages/browser-pool/src/fingerprinting/types';
-import type { PuppeteerController } from '../../packages/browser-pool/src/puppeteer/puppeteer-controller';
 import { createProxyServer } from './browser-plugins/create-proxy-server';
 
 const fingerprintingMatrix: [string, PlaywrightPlugin | PuppeteerPlugin][] = [
@@ -58,15 +54,16 @@ const fingerprintingMatrix: [string, PlaywrightPlugin | PuppeteerPlugin][] = [
     ],
 ];
 // Tests could be generated from this blueprint for each plugin
-describe('BrowserPool', () => {
-    const puppeteerPlugin = new PuppeteerPlugin(puppeteer);
-    const playwrightPlugin = new PlaywrightPlugin(playwright.chromium); // chromium is faster than firefox and webkit
-    let browserPool: BrowserPool<{ browserPlugins: [typeof puppeteerPlugin, typeof playwrightPlugin]; closeInactiveBrowserAfterSecs: 2 }>;
+describe.each([
+    ['Puppeteer', new PuppeteerPlugin(puppeteer)],
+    ['Playwright', new PlaywrightPlugin(playwright.chromium)], // Chromium is faster than firefox and webkit
+])('BrowserPool - %s', (_, plugin) => {
+    let browserPool: BrowserPool<{ browserPlugins: [typeof plugin]; closeInactiveBrowserAfterSecs: 2 }>;
 
     beforeEach(async () => {
         jest.clearAllMocks();
         browserPool = new BrowserPool({
-            browserPlugins: [puppeteerPlugin, playwrightPlugin],
+            browserPlugins: [plugin],
             closeInactiveBrowserAfterSecs: 2,
         });
     });
@@ -158,52 +155,9 @@ describe('BrowserPool', () => {
             browserPool.retireAllBrowsers();
         });
 
-        test('proxy sugar syntax', async () => {
-            const pool = new BrowserPool({
-                browserPlugins: [
-                    new PuppeteerPlugin(puppeteer, {
-                        useIncognitoPages: true,
-                    }),
-                    new PlaywrightPlugin(playwright.chromium, {
-                        useIncognitoPages: true,
-                    }),
-                ],
-            });
-
-            const options = {
-                proxyUrl: `http://foo:bar@127.0.0.3:${protectedProxy.port}`,
-                pageOptions: {
-                    proxy: {
-                        bypass: '<-loopback>',
-                    },
-                    proxyBypassList: ['<-loopback>'],
-                },
-            };
-
-            const pages = await pool.newPageWithEachPlugin([
-                options,
-                options,
-            ]);
-
-            for (const page of pages) {
-                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
-                const content = await response!.text();
-
-                // Fails on Windows.
-                // See https://github.com/puppeteer/puppeteer/issues/7698
-                if (process.platform !== 'win32') {
-                    expect(content).toBe('127.0.0.3');
-                }
-
-                await page.close();
-            }
-
-            await pool.destroy();
-        });
-
         test('should open new page in incognito context', async () => {
             const browserPoolIncognito = new BrowserPool({
-                browserPlugins: [new PlaywrightPlugin(playwright.chromium, { useIncognitoPages: true })] as const,
+                browserPlugins: [new PlaywrightPlugin(playwright.chromium, { useIncognitoPages: true })],
                 closeInactiveBrowserAfterSecs: 2,
             });
 
@@ -214,82 +168,15 @@ describe('BrowserPool', () => {
             expect(page.context().pages()).toHaveLength(1);
         });
 
-        test('should open page in correct browser plugin', async () => {
-            let page = await browserPool.newPage({
-                browserPlugin: playwrightPlugin,
-            });
-
-            let controller = browserPool.getBrowserControllerByPage(page)!;
-            expect(controller.launchContext.browserPlugin).toBe(playwrightPlugin);
-
-            page = await browserPool.newPage({
-                browserPlugin: puppeteerPlugin,
-            });
-
-            controller = browserPool.getBrowserControllerByPage(page)!;
-            expect(controller.launchContext.browserPlugin).toBe(puppeteerPlugin);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
-        });
-
-        test('should loop through plugins round-robin', async () => {
-            const correctPluginOrder = [
-                puppeteerPlugin,
-                playwrightPlugin,
-                puppeteerPlugin,
-            ];
-
-            const pagePromises = correctPluginOrder.map(() => {
-                return browserPool.newPage();
-            });
-            const pages = await Promise.all(pagePromises);
-
-            expect(pages).toHaveLength(correctPluginOrder.length);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
-            pages.forEach((page, idx) => {
-                const controller = browserPool.getBrowserControllerByPage(page)!;
-                const { browserPlugin } = controller.launchContext;
-                const correctPlugin = correctPluginOrder[idx];
-                expect(browserPlugin).toBe(correctPlugin);
-            });
-        });
-
         test('should open new page in new browser', async () => {
-            jest.spyOn(puppeteerPlugin, 'launch');
-            jest.spyOn(playwrightPlugin, 'launch');
+            jest.spyOn(plugin, 'launch');
 
             await browserPool.newPage();
             await browserPool.newPageInNewBrowser();
             await browserPool.newPageInNewBrowser();
 
             expect(browserPool.activeBrowserControllers.size).toBe(3);
-            expect(puppeteerPlugin.launch).toHaveBeenCalledTimes(2);
-            expect(playwrightPlugin.launch).toHaveBeenCalledTimes(1);
-        });
-
-        test('newPageWithEachPlugin should open all pages', async () => {
-            const [puppeteerPage, playwrightPage] = await browserPool.newPageWithEachPlugin();
-            const puppeteerController = browserPool.getBrowserControllerByPage(puppeteerPage)!;
-            const playwrightController = browserPool.getBrowserControllerByPage(playwrightPage)!;
-            expect(puppeteerController.launchContext.browserPlugin).toBe(puppeteerPlugin);
-            expect(playwrightController.launchContext.browserPlugin).toBe(playwrightPlugin);
-        });
-
-        test('newPageWithEachPlugin should open in existing browsers', async () => {
-            jest.spyOn(puppeteerPlugin, 'launch');
-            jest.spyOn(playwrightPlugin, 'launch');
-
-            // launch 2 browsers
-            await browserPool.newPage();
-            await browserPool.newPage();
-            expect(puppeteerPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(playwrightPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
-
-            // Open more pages
-            await browserPool.newPageWithEachPlugin();
-            expect(puppeteerPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(playwrightPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
+            expect(plugin.launch).toHaveBeenCalledTimes(3);
         });
 
         test('should correctly override page close', async () => {
@@ -347,13 +234,13 @@ describe('BrowserPool', () => {
             // @ts-expect-error Private function
             jest.spyOn(browserPool, '_launchBrowser');
 
-            const usePuppeteer = {
-                browserPlugin: puppeteerPlugin,
+            const usePlugin = {
+                browserPlugin: plugin,
             };
 
             await Promise.all([
-                browserPool.newPage(usePuppeteer),
-                browserPool.newPage(usePuppeteer),
+                browserPool.newPage(usePlugin),
+                browserPool.newPage(usePlugin),
             ]);
 
             expect(browserPool.activeBrowserControllers.size).toBe(2);
@@ -521,75 +408,6 @@ describe('BrowserPool', () => {
                         browserController.launchContext.useIncognitoPages ? {} : undefined,
                     );
                 });
-
-                test('should allow changing pageOptions', async () => {
-                    const hook: PrePageCreateHook<PlaywrightController | PuppeteerController> = (_pageId, _controller, pageOptions) => {
-                        if (!pageOptions) {
-                            expect(false).toBe(true);
-                            return;
-                        }
-
-                        const newOptions = {
-                            // Puppeteer options
-                            proxyServer: `http://127.0.0.3:${protectedProxy.port}`,
-                            proxyUsername: 'foo',
-                            proxyPassword: 'bar',
-                            proxyBypassList: ['<-loopback>'],
-
-                            // Playwright options
-                            proxy: {
-                                server: `http://127.0.0.3:${protectedProxy.port}`,
-                                username: 'foo',
-                                password: 'bar',
-                                bypass: '<-loopback>',
-                            },
-                        };
-
-                        Object.assign(pageOptions, newOptions);
-                    };
-
-                    const pool = new BrowserPool({
-                        browserPlugins: [
-                            new PlaywrightPlugin(playwright.chromium, {
-                                useIncognitoPages: true,
-                                launchOptions: {
-                                    args: [
-                                        // Exclude loopback interface from proxy bypass list,
-                                        // so the request to localhost goes through proxy.
-                                        // This way there's no need for a 3rd party server.
-                                        '--proxy-bypass-list=<-loopback>',
-                                    ],
-                                },
-                            }),
-                            new PuppeteerPlugin(puppeteer, {
-                                useIncognitoPages: true,
-                            }),
-                        ],
-                        prePageCreateHooks: [
-                            hook,
-                        ],
-                    });
-
-                    try {
-                        const pages = await pool.newPageWithEachPlugin();
-                        for (const page of pages) {
-                            try {
-                                const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
-                                const content = await response!.text();
-
-                                // Fails on Windows.
-                                // See https://github.com/puppeteer/puppeteer/issues/7698
-                                if (process.platform !== 'win32') {
-                                    expect(content).toBe('127.0.0.3');
-                                }
-                            } finally {
-                                await page.close();
-                            }
-                        }
-                    } finally {
-                        await pool.destroy();
-                    }
-                });
             });
 
             describe('postPageCreateHooks', () => {
@@ -641,13 +459,13 @@ describe('BrowserPool', () => {
             });
 
             describe('default browser automation masking', () => {
-                describe.each(fingerprintingMatrix)('%s', (_name, plugin) => {
+                describe.each(fingerprintingMatrix)('%s', (_name, fingerprintPlugin) => {
                     let browserPoolWithDefaults: BrowserPool;
                     let page: any;
 
                     beforeEach(async () => {
                         browserPoolWithDefaults = new BrowserPool({
-                            browserPlugins: [plugin],
+                            browserPlugins: [fingerprintPlugin],
                             closeInactiveBrowserAfterSecs: 2,
                         });
                         page = await browserPoolWithDefaults.newPage();
@@ -671,13 +489,13 @@ describe('BrowserPool', () => {
             });
 
             describe('fingerprinting', () => {
-                describe.each(fingerprintingMatrix)('%s', (_name, plugin) => {
+                describe.each(fingerprintingMatrix)('%s', (_name, fingerprintPlugin) => {
                     let browserPoolWithFP: BrowserPool;
                     let page: any;
 
                     beforeEach(async () => {
                         browserPoolWithFP = new BrowserPool({
-                            browserPlugins: [plugin],
+                            browserPlugins: [fingerprintPlugin],
                             closeInactiveBrowserAfterSecs: 2,
                             useFingerprints: true,
                         });
