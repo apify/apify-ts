@@ -82,7 +82,7 @@ describe.each([
                 // Fails on Windows.
                 // See https://github.com/puppeteer/puppeteer/issues/7698
                 if (process.platform !== 'win32') {
-                    expect(content).toBe('127.0.0.3');
+                    expect(content).toBe('127.0.0.2');
                 }
             } finally {
                 await page.close();
