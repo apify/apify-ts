@@ -4,13 +4,10 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { setTimeout } from 'node:timers/promises';
-import { promisify } from 'node:util';
-import { exec as execCallback } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import fs from 'fs-extra';
-import { Actor } from '../../packages/apify/dist/index.mjs';
+import { Actor } from 'apify';
 import { URL_NO_COMMAS_REGEX } from '../../packages/utils/dist/index.mjs';
-
-const exec = promisify(execCallback);
 
 export const SKIPPED_TEST_CLOSE_CODE = 404;
 
@@ -72,7 +69,7 @@ export async function runActor(dirName, memory = 4096) {
 
     if (process.env.STORAGE_IMPLEMENTATION === 'PLATFORM') {
         await copyPackages(dirName);
-        await exec('npx -y apify-cli push', { cwd: dirName });
+        execSync('npx -y apify-cli push', { cwd: dirName });
 
         const actorName = await getActorName(dirName);
         const client = Actor.newClient();
@@ -135,6 +132,7 @@ async function copyPackages(dirName) {
     // We don't need to copy the following packages
     delete dependencies['@apify/storage-local'];
     delete dependencies['deep-equal'];
+    delete dependencies.apify;
     delete dependencies.puppeteer;
     delete dependencies.playwright;
 

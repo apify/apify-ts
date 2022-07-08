@@ -3,7 +3,6 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "apify": ["packages/apify/src"],
             "crawlee": ["packages/crawlee/src"],
             "@crawlee/basic": ["packages/basic-crawler/src"],
             "@crawlee/browser": ["packages/browser-crawler/src"],

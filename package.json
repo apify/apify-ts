@@ -73,6 +73,7 @@
         "@types/ws": "^7.4.7",
         "@typescript-eslint/eslint-plugin": "5.27.1",
         "@typescript-eslint/parser": "5.27.1",
+        "apify": "^3.0.0-beta.74",
         "basic-auth-parser": "^0.0.2",
         "body-parser": "^1.20.0",
         "commitlint": "^17.0.2",
