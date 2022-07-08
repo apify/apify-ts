@@ -71,18 +71,22 @@ function Features() {
     );
 }
 
-const example = `import { PuppeteerCrawler } from 'crawlee';
+const example = `import { PlaywrightCrawler, Dataset } from 'crawlee';
 
-const crawler = new PuppeteerCrawler();
+const crawler = new PlaywrightCrawler();
 
 crawler.router.addDefaultHandler(async ({ request, page, enqueueLinks }) => {
     const title = await page.title();
-    console.log(\`Title of $\{request.url}: $\{title}\`);
+    console.log(\`Title of $\{request.loadedUrl} is '$\{title}'\`);
+
+    // save some results
+    await Dataset.pushData({ title, url: request.loadedUrl });
+
+    // enqueue all links targeting the same hostname
     await enqueueLinks();
 });
 
-await crawler.addRequests(['https://www.iana.org/']);
-await crawler.run();
+await crawler.run(['https://www.iana.org/']);
 `;
 
 function ActorExample() {

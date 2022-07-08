@@ -8,6 +8,7 @@ module.exports = {
     tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js',
     url: 'https://crawlee.dev',
     baseUrl: '/',
+    trailingSlash: false,
     organizationName: 'apify',
     projectName: 'apify-ts',
     scripts: ['/js/custom.js'],

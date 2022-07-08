@@ -32,7 +32,7 @@
     "bugs": {
         "url": "https://github.com/apify/apify-ts/issues"
     },
-    "homepage": "https://apify.github.io/apify-ts/",
+    "homepage": "https://crawlee.dev",
     "scripts": {
         "postinstall": "npx husky install",
         "prepublishOnly": "turbo run copy",

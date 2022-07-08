@@ -1,5 +1,5 @@
 <h1 align="center">
-    <a href="https://apify.github.io/apify-ts/">
+    <a href="https://crawlee.dev">
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/apify/apify-ts/master/website/static/img/crawlee-dark.svg?sanitize=true">
           <img alt="Crawlee" src="https://raw.githubusercontent.com/apify/apify-ts/master/website/static/img/crawlee-light.svg?sanitize=true" width="500">
@@ -16,16 +16,9 @@
     <a href="https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml"><img src="https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml/badge.svg?branch=master" alt="Build Status" style="max-width: 100%;"></a>
 </p>
 
-Crawlee simplifies the development of web crawlers, scrapers, data extractors and web automation jobs.
-It provides tools to manage and automatically scale a pool of headless browsers,
-to maintain queues of URLs to crawl, store crawling results to a local filesystem or into the cloud,
-rotate proxies and much more.
-Crawlee is available as the [`crawlee`](https://www.npmjs.com/package/crawlee) NPM package.
-It can be used either stand-alone in your own applications
-or in [actors](https://docs.apify.com/actor)
-running on the [Apify Cloud](https://apify.com/).
+Crawlee simplifies the development of web crawlers, scrapers, data extractors and web automation jobs. It provides tools to manage and automatically scale a pool of headless browsers, to maintain queues of URLs to crawl, store crawling results to a local filesystem or into the cloud, rotate proxies and much more. Crawlee is available as the [`crawlee`](https://www.npmjs.com/package/crawlee) NPM package. It can be used either stand-alone in your own applications or in [actors](https://docs.apify.com/actor) running on the [Apify Cloud](https://apify.com/).
 
-**View full documentation, guides and examples on the [Crawlee project website](https://apify.github.io/apify-ts/)**
+**View full documentation, guides and examples on the [Crawlee project website](https://crawlee.dev)**
 
 > Would you like to work with us on Crawlee or similar projects? [We are hiring!](https://apify.com/jobs#senior-node.js-engineer)
 
@@ -46,29 +39,29 @@ The goal of Crawlee is to fill this gap and provide a toolbox for generic web sc
 
 Crawlee is available as the [`crawlee`](https://www.npmjs.com/package/crawlee) NPM package and is also available via `@crawlee/*` packages. It provides the following tools:
 
-- [`CheerioCrawler`](https://apify.github.io/apify-ts/api/cheerio-crawler/class/CheerioCrawler) - Enables the parallel crawling of a large number of web pages using the [cheerio](https://www.npmjs.com/package/cheerio) HTML parser. This is the most efficient web crawler, but it does not work on websites that require JavaScript. Available also under `@crawlee/cheerio` package.
+- [`CheerioCrawler`](https://crawlee.dev/api/cheerio-crawler/class/CheerioCrawler) - Enables the parallel crawling of a large number of web pages using the [cheerio](https://www.npmjs.com/package/cheerio) HTML parser. This is the most efficient web crawler, but it does not work on websites that require JavaScript. Available also under `@crawlee/cheerio` package.
 
-- [`PuppeteerCrawler`](https://apify.github.io/apify-ts/api/puppeteer-crawler/class/PuppeteerCrawler) - Enables the parallel crawling of a large number of web pages using the headless Chrome browser and [Puppeteer](https://github.com/puppeteer/puppeteer). The pool of Chrome browsers is automatically scaled up and down based on available system resources. Available also under `@crawlee/puppeteer` package.
+- [`PuppeteerCrawler`](https://crawlee.dev/api/puppeteer-crawler/class/PuppeteerCrawler) - Enables the parallel crawling of a large number of web pages using the headless Chrome browser and [Puppeteer](https://github.com/puppeteer/puppeteer). The pool of Chrome browsers is automatically scaled up and down based on available system resources. Available also under `@crawlee/puppeteer` package.
 
-- [`PlaywrightCrawler`](https://apify.github.io/apify-ts/api/playwright-crawler/class/PlaywrightCrawler) - Unlike `PuppeteerCrawler` you can use [Playwright](https://github.com/microsoft/playwright) to manage almost any headless browser. It also provides a cleaner and more mature interface while keeping the ease of use and advanced features. Available also under `@crawlee/playwright` package.
+- [`PlaywrightCrawler`](https://crawlee.dev/api/playwright-crawler/class/PlaywrightCrawler) - Unlike `PuppeteerCrawler` you can use [Playwright](https://github.com/microsoft/playwright) to manage almost any headless browser. It also provides a cleaner and more mature interface while keeping the ease of use and advanced features. Available also under `@crawlee/playwright` package.
 
-- [`BasicCrawler`](https://apify.github.io/apify-ts/api/basic-crawler/class/BasicCrawler) - Provides a simple framework for the parallel crawling of web pages whose URLs are fed either from a static list or from a dynamic queue of URLs. This class serves as a base for the more specialized crawlers above. Available also under `@crawlee/basic` package.
+- [`BasicCrawler`](https://crawlee.dev/api/basic-crawler/class/BasicCrawler) - Provides a simple framework for the parallel crawling of web pages whose URLs are fed either from a static list or from a dynamic queue of URLs. This class serves as a base for the more specialized crawlers above. Available also under `@crawlee/basic` package.
 
-- [`RequestList`](https://apify.github.io/apify-ts/api/core/class/RequestList) - Represents a list of URLs to crawl. The URLs can be passed in code or in a text file hosted on the web. The list persists its state so that crawling can resume when the Node.js process restarts. Available also under `@crawlee/core` package.
+- [`RequestList`](https://crawlee.dev/api/core/class/RequestList) - Represents a list of URLs to crawl. The URLs can be passed in code or in a text file hosted on the web. The list persists its state so that crawling can resume when the Node.js process restarts. Available also under `@crawlee/core` package.
 
-- [`RequestQueue`](https://apify.github.io/apify-ts/api/core/class/RequestQueue) - Represents a queue of URLs to crawl, which is stored either in memory, on a local filesystem, or in the [Apify Cloud](https://apify.com). The queue is used for deep crawling of websites, where you start with several URLs and then recursively follow links to other pages. The data structure supports both breadth-first and depth-first crawling orders. Available also under `@crawlee/core` package.
+- [`RequestQueue`](https://crawlee.dev/api/core/class/RequestQueue) - Represents a queue of URLs to crawl, which is stored either in memory, on a local filesystem, or in the [Apify Cloud](https://apify.com). The queue is used for deep crawling of websites, where you start with several URLs and then recursively follow links to other pages. The data structure supports both breadth-first and depth-first crawling orders. Available also under `@crawlee/core` package.
 
-- [`Dataset`](https://apify.github.io/apify-ts/api/core/class/Dataset) - Provides a store for structured data and enables their export to formats like JSON, JSONL, CSV, XML, Excel or HTML. The data is stored on a local filesystem or in the Apify Cloud. Datasets are useful for storing and sharing large tabular crawling results, such as a list of products or real estate offers. Available also under `@crawlee/core` package.
+- [`Dataset`](https://crawlee.dev/api/core/class/Dataset) - Provides a store for structured data and enables their export to formats like JSON, JSONL, CSV, XML, Excel or HTML. The data is stored on a local filesystem or in the Apify Cloud. Datasets are useful for storing and sharing large tabular crawling results, such as a list of products or real estate offers. Available also under `@crawlee/core` package.
 
-- [`KeyValueStore`](https://apify.github.io/apify-ts/api/core/class/KeyValueStore) - A simple key-value store for arbitrary data records or files, along with their MIME content type. It is ideal for saving screenshots of web pages, PDFs or to persist the state of your crawlers. The data is stored on a local filesystem or in the Apify Cloud. Available also under `@crawlee/core` package.
+- [`KeyValueStore`](https://crawlee.dev/api/core/class/KeyValueStore) - A simple key-value store for arbitrary data records or files, along with their MIME content type. It is ideal for saving screenshots of web pages, PDFs or to persist the state of your crawlers. The data is stored on a local filesystem or in the Apify Cloud. Available also under `@crawlee/core` package.
 
-- [`AutoscaledPool`](https://apify.github.io/apify-ts/api/core/class/AutoscaledPool) - Runs asynchronous background tasks, while automatically adjusting the concurrency based on free system memory and CPU usage. This is useful for running web scraping tasks at the maximum capacity of the system. Available also under `@crawlee/core` package.
+- [`AutoscaledPool`](https://crawlee.dev/api/core/class/AutoscaledPool) - Runs asynchronous background tasks, while automatically adjusting the concurrency based on free system memory and CPU usage. This is useful for running web scraping tasks at the maximum capacity of the system. Available also under `@crawlee/core` package.
 
-Additionally, the package provides various helper functions to simplify running your code on the Apify Cloud and thus take advantage of its pool of proxies, job scheduler, data storage, etc. For more information, see the [Crawlee Programmer's Reference](https://apify.github.io/apify-ts/).
+Additionally, the package provides various helper functions to simplify running your code on the Apify Cloud and thus take advantage of its pool of proxies, job scheduler, data storage, etc. For more information, see the [Crawlee Programmer's Reference](https://crawlee.dev).
 
 ## Quick Start
 
-This short tutorial will set you up to start using Crawlee in a minute or two. If you want to learn more, proceed to the [Getting Started](https://apify.github.io/apify-ts/docs/guides/getting-started) tutorial that will take you step by step through creating your first scraper.
+This short tutorial will set you up to start using Crawlee in a minute or two. If you want to learn more, proceed to the [Getting Started](https://crawlee.dev/docs/guides/getting-started) tutorial that will take you step by step through creating your first scraper.
 
 ### Local stand-alone usage
 
@@ -80,32 +73,32 @@ npm install crawlee playwright
 
 > Neither `playwright` nor `puppeteer` are bundled with Crawlee to reduce install size and allow greater flexibility. That's why we install it with NPM. You can choose one, both, or neither.
 
-Run the following example to perform a recursive crawl of a website using Playwright. For more examples showcasing various features of Crawlee, [see the Examples section of the documentation](https://apify.github.io/apify-ts/docs/examples/crawl-multiple-urls).
+Run the following example to perform a recursive crawl of a website using Playwright. For more examples showcasing various features of Crawlee, [see the Examples section of the documentation](https://crawlee.dev/docs/examples/crawl-multiple-urls).
 
 ```javascript
-import { PlaywrightCrawler } from 'crawlee';
+import { PlaywrightCrawler, Dataset } from 'crawlee';
 
-const crawler = new PlaywrightCrawler({
-    async requestHandler({ request, page, enqueueLinks }) {
-        // Extract HTML title of the page.
-        const title = await page.title();
-        console.log(`Title of ${request.url}: ${title}`);
+const crawler = new PlaywrightCrawler();
 
-        // Add URLs from the same subdomain.
-        await enqueueLinks();
-    },
+crawler.router.addDefaultHandler(async ({ request, page, enqueueLinks }) => {
+    const title = await page.title();
+    console.log(`Title of ${request.loadedUrl} is '${title}'`);
+
+    // save some results
+    await Dataset.pushData({ title, url: request.loadedUrl });
+
+    // enqueue all links targeting the same hostname
+    await enqueueLinks();
 });
 
-// Choose the first URL to open and run the crawler.
-await crawler.addRequests(['https://www.iana.org/']);
-await crawler.run();
+await crawler.run(['https://www.iana.org/']);
 ```
 
 When you run the example, you should see Crawlee automating a Chrome browser.
 
-![Chrome Scrape](https://apify.github.io/apify-ts/img/chrome_scrape.gif)
+![Chrome Scrape](https://crawlee.dev/img/chrome_scrape.gif)
 
-By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this directory via `CRAWLEE_STORAGE_DIR` env var. For details, see [Environment variables](https://apify.github.io/apify-ts/docs/guides/environment-variables), [Request storage](https://apify.github.io/apify-ts/docs/guides/request-storage) and [Result storage](https://apify.github.io/apify-ts/docs/guides/result-storage).
+By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this directory via `CRAWLEE_STORAGE_DIR` env var. For details, see [Environment variables](https://crawlee.dev/docs/guides/environment-variables), [Request storage](https://crawlee.dev/docs/guides/request-storage) and [Result storage](https://crawlee.dev/docs/guides/result-storage).
 
 ### Local usage with Crawlee command-line interface (CLI)
 
@@ -146,7 +139,7 @@ apify push
 Your script will be uploaded to the Apify platform and built there so that it can be run. For more information, view the
 [Apify Actor](https://docs.apify.com/cli) documentation.
 
-You can also develop your web scraping project in an online code editor directly on the [Apify platform](https://apify.github.io/apify-ts/docs/guides/apify-platform). You'll need to have an Apify Account. Go to [Actors](https://console.apify.com/actors), page in the Apify Console, click <i>Create new</i> and then go to the <i>Source</i> tab and start writing your code or paste one of the examples from the Examples section.
+You can also develop your web scraping project in an online code editor directly on the [Apify platform](https://crawlee.dev/docs/guides/apify-platform). You'll need to have an Apify Account. Go to [Actors](https://console.apify.com/actors), page in the Apify Console, click <i>Create new</i> and then go to the <i>Source</i> tab and start writing your code or paste one of the examples from the Examples section.
 
 For more information, view the [Apify actors quick start guide](https://docs.apify.com/actor/quick-start).
 

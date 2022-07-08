@@ -42,7 +42,7 @@
     "bugs": {
         "url": "https://github.com/apify/apify-ts/issues"
     },
-    "homepage": "https://apify.github.io/apify-ts/",
+    "homepage": "https://crawlee.dev",
     "scripts": {
         "build": "npm run clean && npm run compile && npm run copy",
         "clean": "rimraf ./dist",
