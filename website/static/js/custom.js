@@ -1,6 +1,6 @@
 function load() {
     const versions = document.querySelectorAll('.navbar .dropdown ul a');
-    const basePath = '/apify-ts';
+    const basePath = '';
     const types = [`${basePath}/docs/next`, `${basePath}/docs`];
     let i = 0;
 

@@ -6,11 +6,11 @@ const { externalLinkProcessor } = require('./tools/utils/externalLink');
 module.exports = {
     title: 'Crawlee',
     tagline: 'The scalable web crawling, scraping and automation library for JavaScript/Node.js',
-    url: 'https://apify.github.io',
-    baseUrl: '/apify-ts/',
+    url: 'https://crawlee.dev',
+    baseUrl: '/',
     organizationName: 'apify',
     projectName: 'apify-ts',
-    scripts: ['/apify-ts/js/custom.js'],
+    scripts: ['/js/custom.js'],
     favicon: 'img/favicon.ico',
     customFields: {
         markdownOptions: {
