@@ -148,7 +148,7 @@ module.exports = {
                     ],
                 },
                 {
-                    href: 'https://github.com/apify/apify-js',
+                    href: 'https://github.com/apify/apify-ts',
                     label: 'GitHub',
                     title: 'View on GitHub',
                     position: 'right',
@@ -204,7 +204,7 @@ module.exports = {
                         },
                         {
                             label: 'Stack Overflow',
-                            href: 'https://stackoverflow.com/questions/tagged/apify',
+                            href: 'https://stackoverflow.com/questions/tagged/crawlee',
                         },
                         {
                             label: 'Twitter',
@@ -233,7 +233,7 @@ module.exports = {
                         },
                         {
                             html: createHref(
-                                'https://github.com/apify/apify-js',
+                                'https://github.com/apify/apify-ts',
                                 'GitHub',
                             ),
                         },
@@ -249,8 +249,8 @@ module.exports = {
             },
         },
         algolia: {
-            appId: 'N8EOCSBQGH',
-            apiKey: '03b4b90877515c89fcd2decba22634f3',
+            appId: 'UXG5NIR52R',
+            apiKey: '83302bb4196d8377aa5b3526c6d904fb', // search only (public) API key
             indexName: 'apify_sdk',
             algoliaOptions: {
                 facetFilters: ['version:VERSION'],
