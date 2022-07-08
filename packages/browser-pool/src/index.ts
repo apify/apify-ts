@@ -54,3 +54,9 @@ export type {
     GetFingerprintReturn,
 } from './fingerprinting/types';
 export type { InferBrowserPluginArray } from './utils';
+export type {
+    PuppeteerController,
+} from './puppeteer/puppeteer-controller';
+export type {
+    PlaywrightController,
+} from './playwright/playwright-controller';
