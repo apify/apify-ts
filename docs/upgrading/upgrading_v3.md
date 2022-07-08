@@ -272,27 +272,17 @@ Last but not least, `retry.limit` is set to `0`. This is because `crawlee` has i
 
 For more info please refer to the Got [documentation](https://github.com/sindresorhus/got#documentation).
 
-## Removed options
+### Removed options
 
 The `useInsecureHttpParser` option has been removed. It's permanently set to `true` in order to better mimic browsers' behavior.
 
 Got Scraping automatically performs protocol negotiation, hence we removed the `useHttp2` option. It's set to `true` - 100% of browsers nowadays are capable of HTTP/2 requests. Oh, more and more of the web is using it too!
 
-### Browser pool plugin mixing
-
-Previously, you were able to have a browser pool that would mix Puppeteer and Playwright plugins (or even your own custom plugins if you've built any). As of this version, that is no longer allowed, and creating such a browser pool will cause an error to be thrown (it's expected that all plugins that will be used are of the same type).
-
-:::info Confused?
-
-As an example, this change disallows a pool to mix Puppeteer with Playwright. You can still create pools that use multiple Playwright plugins, each with a different launcher if you want!
-
-:::
-
-## Renamed options
+### Renamed options
 
 In the `requestAsBrowser` approach, some of the options were named differently. Here's a list of renamed options:
 
-### `payload`
+#### `payload`
 
 This options represents the body to send. It could be a `string` or a `Buffer`. However there is no `payload` option anymore. You need to use `body` instead. Or, if you wish to send JSON, `json`. Here's an example:
 
@@ -308,7 +298,7 @@ await gotScraping({ …, body: Buffer.from('c0ffe', 'hex') });
 await gotScraping({ …, json: { hello: 'world' } });
 ```
 
-### `ignoreSslErrors`
+#### `ignoreSslErrors`
 
 It has been renamed to `https.rejectUnauthorized`. By default it's set to `false` for covenience. However, if you want to make sure the connection is secure, you can do the following:
 
@@ -322,7 +312,7 @@ await gotScraping({ …, https: { rejectUnauthorized: true } });
 
 Please note: the meanings are opposite! So we needed to invert the values as well.
 
-### `header-generator` options
+#### `header-generator` options
 
 `useMobileVersion`, `languageCode` and `countryCode` no longer exist. Instead, you need to use `headerGeneratorOptions` directly:
 
@@ -345,7 +335,7 @@ await gotScraping({
 });
 ```
 
-### `timeoutSecs`
+#### `timeoutSecs`
 
 In order to set a timeout, use `timeout.request` (which is **milliseconds** now).
 
@@ -365,15 +355,15 @@ await gotScraping({
 });
 ```
 
-### `throwOnHttpErrors`
+#### `throwOnHttpErrors`
 
 `throwOnHttpErrors` → `throwHttpErrors`. This options throws on unsuccessful HTTP status codes, for example `404`. By default, it's set to `false`.
 
-### `decodeBody`
+#### `decodeBody`
 
 `decodeBody` → `decompress`. This options decompresses the body. Defaults to `true` - please do not change this or websites will break (unless you know what you're doing!).
 
-### `abortFunction`
+#### `abortFunction`
 
 This function used to make the promise throw on specific responses, if it returned `true`. However it wasn't that useful.
 
@@ -396,6 +386,16 @@ promise.on('request', request => {
 
 const response = await promise;
 ```
+
+## Removal of browser pool plugin mixing
+
+Previously, you were able to have a browser pool that would mix Puppeteer and Playwright plugins (or even your own custom plugins if you've built any). As of this version, that is no longer allowed, and creating such a browser pool will cause an error to be thrown (it's expected that all plugins that will be used are of the same type).
+
+:::info Confused?
+
+As an example, this change disallows a pool to mix Puppeteer with Playwright. You can still create pools that use multiple Playwright plugins, each with a different launcher if you want!
+
+:::
 
 ## Handling requests outside of browser
 
