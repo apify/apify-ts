@@ -95,7 +95,7 @@ function ActorExample() {
             <h2>Try it out</h2>
             <p>Install Crawlee into a Node.js project. You must have Node.js 16 or higher installed.</p>
             <CodeBlock className="language-bash">
-                npm install crawlee puppeteer
+                npm install crawlee playwright
             </CodeBlock>
             <p>Copy the following code into a file in the project, for example <code>main.mjs</code>:</p>
             <CodeBlock className="language-typescript">
