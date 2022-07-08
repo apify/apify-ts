@@ -336,12 +336,8 @@ export class BrowserPool<
                 const firstPluginName = firstPluginConstructor.name;
                 const providedPluginName = (providedPlugin as BrowserPlugin).constructor.name;
 
-                throw new Error(
-                    [
-                        `Browser plugin at index ${i} (${providedPluginName}) is not an instance of the same plugin`,
-                        `as the first plugin provided (${firstPluginName}).`,
-                    ].join(' '),
-                );
+                // eslint-disable-next-line max-len
+                throw new Error(`Browser plugin at index ${i} (${providedPluginName}) is not an instance of the same plugin as the first plugin provided (${firstPluginName}).`);
             }
         }
 
