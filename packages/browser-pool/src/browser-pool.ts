@@ -327,6 +327,24 @@ export class BrowserPool<
             fingerprintOptions = {},
         } = options;
 
+        const firstPluginConstructor = browserPlugins[0].constructor as typeof BrowserPlugin;
+
+        for (let i = 1; i < browserPlugins.length; i++) {
+            const providedPlugin = browserPlugins[i];
+
+            if (!(providedPlugin instanceof firstPluginConstructor)) {
+                const firstPluginName = firstPluginConstructor.name;
+                const providedPluginName = (providedPlugin as BrowserPlugin).constructor.name;
+
+                throw new Error(
+                    [
+                        `Browser plugin at index ${i} (${providedPluginName}) is not an instance of the same plugin`,
+                        `as the first plugin provided (${firstPluginName}).`,
+                    ].join(' '),
+                );
+            }
+        }
+
         this.browserPlugins = browserPlugins as unknown as BrowserPlugins;
         this.maxOpenPagesPerBrowser = maxOpenPagesPerBrowser;
         this.retireBrowserAfterPageCount = retireBrowserAfterPageCount;
