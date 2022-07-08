@@ -113,8 +113,9 @@ interface MySchema {
     expectedParam2?: number;
 }
 
-// getInput returns Promise<Object<string, *>|string|Buffer|null> here
-const input: MySchema = (await KeyValueStore.getInput()) as any;
+// getInput returns Promise<Dictionary | string | Buffer | null> by default,
+// we can narrow that via its generic type argument
+const input = await KeyValueStore.getInput<MySchema>();
 
 if (!input?.expectedParam1) { // input is MySchema now and we can check in a type-safe way
     throw new Error('Missing expectedParam1');

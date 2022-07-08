@@ -215,7 +215,7 @@ await result.waitForAllRequestsToBeAdded;
 
 ## Less verbose error logging
 
-Previously an error thrown from inside request handler resulted in full error object being logged. With crawlee, we log only the error message as a warning as long as we know the request will be retried. If you want to enable verbose logging as in v2, use `CRAWLEE_VERBOSE_LOG` env var.
+Previously an error thrown from inside request handler resulted in full error object being logged. With Crawlee, we log only the error message as a warning as long as we know the request will be retried. If you want to enable verbose logging like in v2, use the `CRAWLEE_VERBOSE_LOG` env var.
 
 ## Removal of `requestAsBrowser`
 

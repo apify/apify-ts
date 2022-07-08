@@ -12,7 +12,6 @@ FROM apify/actor-node:16
 COPY --from=builder /usr/src/app/package.json ./
 COPY --from=builder /usr/src/app/README.md ./
 COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/apify.json ./apify.json
 COPY --from=builder /usr/src/app/INPUT_SCHEMA.json ./INPUT_SCHEMA.json
 
 # install only prod deps
