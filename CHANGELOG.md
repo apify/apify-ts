@@ -21,8 +21,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * (perf/internal) `Request.inProgress` and `Request.reclaimed` are now `Set`s instead of dictionaries
 * `injectUnderscore` from puppeteer utils has been removed
 * some `AutoscaledPool` options are no longer available:
-    * `cpuSnapshotIntervalSecs` and `memorySnapshotIntervalSecs` has been replaced with top level `systemInfoIntervalMillis` configuration
-    * `maxUsedCpuRatio` has been moved to the top level configuration
+  * `cpuSnapshotIntervalSecs` and `memorySnapshotIntervalSecs` has been replaced with top level `systemInfoIntervalMillis` configuration
+  * `maxUsedCpuRatio` has been moved to the top level configuration
 * `ProxyConfiguration.newUrlFunction` can be async. `.newUrl()` and `.newProxyInfo()` now return promises.
 * stealth mode has been removed in favour of fingerprints and fingerprints are now enabled by default
 * `prepareRequestFunction` and `postResponseFunction` options are removed, use navigation hooks instead
@@ -33,6 +33,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `StorageClient` interface now has optional `purge` method
   * purging happens automatically via `Actor.init()` (you can opt out via `purge: false` in the options of `init/main` methods)
 * `Session#getPuppeteerCookies` and `Session#setPuppeteerCookies` have been renamed to `Session#getCookies` and `Session#setCookies` respectively.
+* The default `maxConcurrency` for AutoscaledPool has been lowered to 200 from 1000.
+  * This means the default `maxConcurrency` for all crawlers is also 200 now.
 
 ## [2.3.2](https://github.com/apify/apify-ts/compare/v2.3.1...v2.3.2) (2022-05-05)
 
