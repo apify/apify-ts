@@ -58,15 +58,16 @@ const fingerprintingMatrix: [string, PlaywrightPlugin | PuppeteerPlugin][] = [
     ],
 ];
 // Tests could be generated from this blueprint for each plugin
-describe('BrowserPool', () => {
-    const puppeteerPlugin = new PuppeteerPlugin(puppeteer);
-    const playwrightPlugin = new PlaywrightPlugin(playwright.chromium); // chromium is faster than firefox and webkit
-    let browserPool: BrowserPool<{ browserPlugins: [typeof puppeteerPlugin, typeof playwrightPlugin]; closeInactiveBrowserAfterSecs: 2 }>;
+describe.each([
+    ['Puppeteer', new PuppeteerPlugin(puppeteer)],
+    ['Playwright', new PlaywrightPlugin(playwright.chromium)], // Chromium is faster than firefox and webkit
+])('BrowserPool - %s', (_, plugin) => {
+    let browserPool: BrowserPool<{ browserPlugins: [typeof plugin]; closeInactiveBrowserAfterSecs: 2 }>;
 
     beforeEach(async () => {
         jest.clearAllMocks();
         browserPool = new BrowserPool({
-            browserPlugins: [puppeteerPlugin, playwrightPlugin],
+            browserPlugins: [plugin],
             closeInactiveBrowserAfterSecs: 2,
         });
     });
@@ -214,82 +215,15 @@ describe('BrowserPool', () => {
             expect(page.context().pages()).toHaveLength(1);
         });
 
-        test('should open page in correct browser plugin', async () => {
-            let page = await browserPool.newPage({
-                browserPlugin: playwrightPlugin,
-            });
-
-            let controller = browserPool.getBrowserControllerByPage(page)!;
-            expect(controller.launchContext.browserPlugin).toBe(playwrightPlugin);
-
-            page = await browserPool.newPage({
-                browserPlugin: puppeteerPlugin,
-            });
-
-            controller = browserPool.getBrowserControllerByPage(page)!;
-            expect(controller.launchContext.browserPlugin).toBe(puppeteerPlugin);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
-        });
-
-        test('should loop through plugins round-robin', async () => {
-            const correctPluginOrder = [
-                puppeteerPlugin,
-                playwrightPlugin,
-                puppeteerPlugin,
-            ];
-
-            const pagePromises = correctPluginOrder.map(() => {
-                return browserPool.newPage();
-            });
-            const pages = await Promise.all(pagePromises);
-
-            expect(pages).toHaveLength(correctPluginOrder.length);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
-            pages.forEach((page, idx) => {
-                const controller = browserPool.getBrowserControllerByPage(page)!;
-                const { browserPlugin } = controller.launchContext;
-                const correctPlugin = correctPluginOrder[idx];
-                expect(browserPlugin).toBe(correctPlugin);
-            });
-        });
-
         test('should open new page in new browser', async () => {
-            jest.spyOn(puppeteerPlugin, 'launch');
-            jest.spyOn(playwrightPlugin, 'launch');
+            jest.spyOn(plugin, 'launch');
 
             await browserPool.newPage();
             await browserPool.newPageInNewBrowser();
             await browserPool.newPageInNewBrowser();
 
             expect(browserPool.activeBrowserControllers.size).toBe(3);
-            expect(puppeteerPlugin.launch).toHaveBeenCalledTimes(2);
-            expect(playwrightPlugin.launch).toHaveBeenCalledTimes(1);
-        });
-
-        test('newPageWithEachPlugin should open all pages', async () => {
-            const [puppeteerPage, playwrightPage] = await browserPool.newPageWithEachPlugin();
-            const puppeteerController = browserPool.getBrowserControllerByPage(puppeteerPage)!;
-            const playwrightController = browserPool.getBrowserControllerByPage(playwrightPage)!;
-            expect(puppeteerController.launchContext.browserPlugin).toBe(puppeteerPlugin);
-            expect(playwrightController.launchContext.browserPlugin).toBe(playwrightPlugin);
-        });
-
-        test('newPageWithEachPlugin should open in existing browsers', async () => {
-            jest.spyOn(puppeteerPlugin, 'launch');
-            jest.spyOn(playwrightPlugin, 'launch');
-
-            // launch 2 browsers
-            await browserPool.newPage();
-            await browserPool.newPage();
-            expect(puppeteerPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(playwrightPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
-
-            // Open more pages
-            await browserPool.newPageWithEachPlugin();
-            expect(puppeteerPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(playwrightPlugin.launch).toHaveBeenCalledTimes(1);
-            expect(browserPool.activeBrowserControllers.size).toBe(2);
+            expect(plugin.launch).toHaveBeenCalledTimes(3);
         });
 
         test('should correctly override page close', async () => {
@@ -347,13 +281,13 @@ describe('BrowserPool', () => {
             // @ts-expect-error Private function
             jest.spyOn(browserPool, '_launchBrowser');
 
-            const usePuppeteer = {
-                browserPlugin: puppeteerPlugin,
+            const usePlugin = {
+                browserPlugin: plugin,
             };
 
             await Promise.all([
-                browserPool.newPage(usePuppeteer),
-                browserPool.newPage(usePuppeteer),
+                browserPool.newPage(usePlugin),
+                browserPool.newPage(usePlugin),
             ]);
 
             expect(browserPool.activeBrowserControllers.size).toBe(2);
@@ -641,13 +575,13 @@ describe('BrowserPool', () => {
             });
 
             describe('default browser automation masking', () => {
-                describe.each(fingerprintingMatrix)('%s', (_name, plugin) => {
+                describe.each(fingerprintingMatrix)('%s', (_name, fingerprintPlugin) => {
                     let browserPoolWithDefaults: BrowserPool;
                     let page: any;
 
                     beforeEach(async () => {
                         browserPoolWithDefaults = new BrowserPool({
-                            browserPlugins: [plugin],
+                            browserPlugins: [fingerprintPlugin],
                             closeInactiveBrowserAfterSecs: 2,
                         });
                         page = await browserPoolWithDefaults.newPage();
@@ -671,13 +605,13 @@ describe('BrowserPool', () => {
             });
 
             describe('fingerprinting', () => {
-                describe.each(fingerprintingMatrix)('%s', (_name, plugin) => {
+                describe.each(fingerprintingMatrix)('%s', (_name, fingerprintPlugin) => {
                     let browserPoolWithFP: BrowserPool;
                     let page: any;
 
                     beforeEach(async () => {
                         browserPoolWithFP = new BrowserPool({
-                            browserPlugins: [plugin],
+                            browserPlugins: [fingerprintPlugin],
                             closeInactiveBrowserAfterSecs: 2,
                             useFingerprints: true,
                         });

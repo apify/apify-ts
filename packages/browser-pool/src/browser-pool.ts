@@ -220,7 +220,7 @@ export interface BrowserPoolHooks<
  * import playwright from 'playwright';
  *
  * const browserPool = new BrowserPool({
- *     browserPlugins: [ new PlaywrightPlugin(playwright.chromium)],
+ *     browserPlugins: [new PlaywrightPlugin(playwright.chromium)],
  *     preLaunchHooks: [(pageId, launchContext) => {
  *         // do something before a browser gets launched
  *         launchContext.launchOptions.headless = false;
@@ -429,12 +429,11 @@ export class BrowserPool<
      *         new PlaywrightPlugin(playwright.chromium),
      *         new PlaywrightPlugin(playwright.firefox),
      *         new PlaywrightPlugin(playwright.webkit),
-     *         new PuppeteerPlugin(puppeteer),
      *     ]
      * });
      *
      * const pages = await browserPool.newPageWithEachPlugin();
-     * const [chromiumPage, firefoxPage, webkitPage, puppeteerPage] = pages;
+     * const [chromiumPage, firefoxPage, webkitPage] = pages;
      * ```
      */
     async newPageWithEachPlugin(
@@ -775,6 +774,7 @@ export class BrowserPool<
         ];
         this.postPageCreateHooks = [
             createPostPageCreateHook(this.fingerprintInjector!),
+            ...this.postPageCreateHooks,
         ];
     }
 }
