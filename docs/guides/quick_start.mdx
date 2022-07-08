@@ -14,14 +14,14 @@ import CheerioSource from '!!raw-loader!./quick_start_cheerio.ts';
 import PlaywrightSource from '!!raw-loader!./quick_start_playwright.ts';
 import PuppeteerSource from '!!raw-loader!./quick_start_puppeteer.ts';
 
-This short tutorial will set you up to start using Crawlee in a minute or two.
-If you want to learn more, proceed to the [Getting Started](../guides/getting-started)
-tutorial that will take you step by step through creating your first scraper.
+This short tutorial will set us up to start using Crawlee in a minute or two,
+while [Getting Started](../guides/getting-started) is a comprehensive step-by-step guide for creating the first scraper.
+So let's check out this page first and then proceed to the latter to learn more.
 
 ## Local stand-alone usage
 
 Crawlee requires [Node.js](https://nodejs.org/en/) 16 or later.
-Add Crawlee to any Node.js project by running:
+It can be added to any Node.js project by running:
 
 <Tabs groupId="quick_start">
 <TabItem value="cheerio" label="CheerioCrawler" default>
@@ -49,7 +49,7 @@ Add Crawlee to any Node.js project by running:
 </TabItem>
 </Tabs>
 
-Run the following example to perform a recursive crawl of a website using:
+We could run the following example to perform a recursive crawl of a website using:
 
 <Tabs groupId="quick_start">
     <TabItem value="cheerio" label="CheerioCrawler" default>
@@ -63,7 +63,7 @@ Run the following example to perform a recursive crawl of a website using:
     </TabItem>
 </Tabs>
 
-When you run the example, you should see Crawlee automating the data extraction process.
+When we run the example, we should see Crawlee automating the data extraction process.
 
 <Tabs groupId="quick_start">
 <TabItem value="cheerio" label="CheerioCrawler" default>
@@ -91,22 +91,35 @@ Add PlaywrightCrawler gif here.
 </TabItem>
 </Tabs>
 
-By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this behavior by setting the `CRAWLEE_STORAGE_DIR` environment variable. For details, see [Environment variables](../guides/environment-variables), [Request storage](../guides/request-storage) and [Result storage](../guides/result-storage).
+By default, Crawlee stores data to `./crawlee_storage` in the current working directory. We can override this behavior by setting the `CRAWLEE_STORAGE_DIR` environment variable.
 
-For more examples showcasing various features of Crawlee, see the [Examples](../examples) section of the documentation.
+More examples showcasing various features of Crawlee could be found in [Examples](../examples) section of the documentation.
+
+**Related links**
+
+- [Environment variables](../guides/environment-variables)
+- [Request storage](../guides/request-storage)
+- [Result storage](../guides/result-storage)
 
 ## Local usage with Crawlee command-line interface (CLI)
 
-To create a boilerplate of your project, you can use the [Crawlee command-line interface (CLI)](https://...) tool by running:
+To create a boilerplate of our project, we can use the [Crawlee CLI](https://www.npmjs.com/package/@crawlee/cli) tool by running:
 
 ```bash
-npx crawlee create my-hello-world
+npx crawlee create my-cheerio-crawler
 ```
 
-The CLI will prompt you to select a project boilerplate template - just pick "Hello world". The tool will create a directory called `my-hello-world` with a Node.js project files. You can run the project as follows:
+The CLI will prompt us to select a project boilerplate template - let's just pick `Crawlee cheerio template [ts]`. The tool will create a directory called `my-cheerio-crawler` with a Node.js project files. We can run the project as follows:
 
 ```bash
-cd my-hello-world
+cd my-cheerio-crawler
+crawlee run
+```
+
+Or even:
+
+```bash
+cd my-cheerio-crawler
 npm start
 ```
 

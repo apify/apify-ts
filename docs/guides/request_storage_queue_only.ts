@@ -27,8 +27,6 @@ const crawler = new PuppeteerCrawler({
     },
 });
 
-// Add the initial sources array to the request queue.
-await crawler.addRequests(sources);
-
-// Run the crawler
-await crawler.run();
+// Add the initial sources array to the request queue
+// and run the crawler
+await crawler.run(sources);

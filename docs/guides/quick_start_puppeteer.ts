@@ -18,8 +18,5 @@ const crawler = new PuppeteerCrawler({
     },
 });
 
-// Choose the first URL to open.
-await crawler.addRequests([{ url: 'https://www.iana.org/' }]);
-
-// Start the crawler.
-await crawler.run();
+// Enqueue the initial request and run the crawler.
+await crawler.run(['https://www.iana.org/']);
