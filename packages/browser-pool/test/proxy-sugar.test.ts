@@ -36,7 +36,7 @@ describe.each([
         });
 
         const options = {
-            proxyUrl: `http://foo:bar@127.0.0.1:${protectedProxy.port}`,
+            proxyUrl: `http://foo:bar@127.0.0.2:${protectedProxy.port}`,
             pageOptions: {
                 proxy: {
                     bypass: '<-loopback>',
@@ -47,7 +47,7 @@ describe.each([
 
         const page = await pool.newPage(options);
 
-        const response = await page.goto(`http://127.0.0.2:${(target.address() as AddressInfo).port}`);
+        const response = await page.goto(`http://127.0.0.1:${(target.address() as AddressInfo).port}`);
         const content = await response!.text();
 
         // Fails on Windows.
