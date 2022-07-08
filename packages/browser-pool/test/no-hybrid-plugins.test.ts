@@ -10,7 +10,7 @@ describe('Hybrid BrowserPool plugins should not be allowed', () => {
         ).toThrowError();
     });
 
-    test('providing three different Playwright plugins should not throw an error', () => {
+    test('providing multiple different Playwright plugins should not throw an error', () => {
         expect(() => new BrowserPool({
             browserPlugins: [new PlaywrightPlugin(playwright.chromium), new PlaywrightPlugin(playwright.firefox)],
         })).not.toThrowError();
