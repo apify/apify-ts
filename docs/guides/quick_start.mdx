@@ -14,6 +14,8 @@ import CheerioSource from '!!raw-loader!./quick_start_cheerio.ts';
 import PlaywrightSource from '!!raw-loader!./quick_start_playwright.ts';
 import PuppeteerSource from '!!raw-loader!./quick_start_puppeteer.ts';
 
+import CheerioLog from '!!raw-loader!./quick_start_cheerio.log';
+
 This short tutorial will set us up to start using Crawlee in a minute or two,
 while [Getting Started](../guides/getting-started) is a comprehensive step-by-step guide for creating the first scraper.
 So let's check out this page first and then proceed to the latter to learn more.
@@ -67,18 +69,17 @@ When we run the example, we should see Crawlee automating the data extraction pr
 
 <Tabs groupId="quick_start">
 <TabItem value="cheerio" label="CheerioCrawler" default>
-
-[//]: # (TODO: Add CheerioCrawler gif here.)
-![Chrome Scrape](/img/chrome_scrape.gif)
-
+We should only see the logs in our terminal as no browser is used:
+<CodeBlock language="log">{CheerioLog}</CodeBlock>
 </TabItem>
 <TabItem value="playwright" label="PlaywrightCrawler">
+Besides the logs, we should also see Crawlee automating the browser:
 
-[//]: # (TODO: Add PlaywrightCrawler gif here.)
 ![Chrome Scrape](/img/chrome_scrape.gif)
 
 </TabItem>
 <TabItem value="puppeteer" label="PuppeteerCrawler">
+Besides the logs, we should also see Crawlee automating the browser:
 
 ![Chrome Scrape](/img/chrome_scrape.gif)
 
