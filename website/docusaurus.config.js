@@ -57,9 +57,6 @@ module.exports = {
                 changelogs: true,
                 packages: [
                     {
-                        path: 'packages/apify',
-                    },
-                    {
                         path: 'packages/core',
                     },
                     {
