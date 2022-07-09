@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
 import { readdir } from 'node:fs/promises';
 import { isMainThread, Worker, workerData } from 'node:worker_threads';
-import { colors, getApifyToken, clearPackages, clearStorage, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
 import { execSync } from 'node:child_process';
+import { colors, getApifyToken, clearPackages, clearStorage, SKIPPED_TEST_CLOSE_CODE } from './tools.mjs';
 
 const basePath = dirname(fileURLToPath(import.meta.url));
 
@@ -35,7 +35,7 @@ async function run() {
         throw new Error(`Unknown storage provided: '${process.env.STORAGE_IMPLEMENTATION}'`);
     }
 
-    execSync(`npm install -G @apify/storage-local`, { stdio: 'inherit' });
+    execSync(`npm install --location=global @apify/storage-local`, { stdio: 'inherit' });
 
     console.log(`Running E2E tests with storage implementation '${process.env.STORAGE_IMPLEMENTATION}'`);
 

@@ -490,7 +490,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
         const basicCrawlerAutoscaledPoolConfiguration: Partial<AutoscaledPoolOptions> = {
             minConcurrency,
             maxConcurrency,
-            maxTasksPerMinute: maxRequestsPerMinute,
+            maxTasksPerMinute: maxRequestsPerMinute ?? autoscaledPoolOptions?.maxTasksPerMinute,
             runTaskFunction: this._runTaskFunction.bind(this),
             isTaskReadyFunction: async () => {
                 if (isMaxPagesExceeded()) {
