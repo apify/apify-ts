@@ -1,5 +1,5 @@
 ---
-id: type-script-project
+id: typescript-project
 title: TypeScript Projects
 description: Stricter, safer, and better development experience
 ---
@@ -47,8 +47,7 @@ To use TypeScript in our projects, we'll need the following prerequisites:
         "compilerOptions": {
             "module": "ES2022",
             "target": "ES2022",
-            "outDir": "dist",
-            "lib": ["DOM"]
+            "outDir": "dist"
         },
         "include": [
             "./src/**/*"
@@ -59,6 +58,8 @@ To use TypeScript in our projects, we'll need the following prerequisites:
     Place the content above inside a `tsconfig.json` in the root folder.
 
     Also, to enjoy using the types in `.js` source files, VSCode users that are using JavaScript should create a `jsconfig.json` with the same content and add `"checkJs": true` to `"compilerOptions"`.
+
+    > If we want to use one of the browser crawlers, we will also need to add `"lib": ["DOM"]` to the compiler options.
 
 ### Running the project with `ts-node`
 
