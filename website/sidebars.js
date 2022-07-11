@@ -23,6 +23,7 @@ module.exports = {
                 'guides/type-script-project',
                 'guides/docker-images',
                 'guides/apify-platform',
+                'guides/got-scraping',
             ],
         },
         {

@@ -1,0 +1,181 @@
+---
+id: got-scraping
+title: Got Scraping guide
+---
+
+## Intro
+
+If you're using Basic Crawler, you have to send requests manually. In order to do this, you need to call `sendRequest()` like this:
+
+```ts
+const crawler = new BasicCrawler({
+    async requestHandler({ sendRequest, log }) {
+        const res = await sendRequest();
+        log.info('received body', res.body);
+    },
+});
+```
+
+It uses [`got-scraping`](https://github.com/apify/got-scraping) under the hood.
+Got Scraping is a [Got](https://github.com/sindresorhus/got) extension developed to mimic browser requests, so there's a high chance we'll open the webpage.
+
+## `sendRequest` API
+
+```ts
+async sendRequest(overrideOptions?: GotOptionsInit) => {
+    return gotScraping({
+        url: request.url,
+        method: request.method,
+        body: request.payload,
+        headers: request.headers,
+        proxyUrl: crawlingContext.proxyInfo?.url,
+        sessionToken: session,
+        responseType: 'text',
+        ...overrideOptions,
+        retry: {
+            limit: 0,
+            ...overrideOptions?.retry,
+        },
+        cookieJar: {
+            getCookieString: (url: string) => session!.getCookieString(url),
+            setCookie: (rawCookie: string, url: string) => session!.setCookie(rawCookie, url),
+            ...overrideOptions?.cookieJar,
+        },
+    });
+}
+```
+
+### `url`
+
+By default, it's the URL of current task. However you can override this with a `string` or a `URL` instance if necessary.
+
+See the [Got documentation](https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#url) for more details.
+
+### `method`
+
+By default, it's the HTTP method of current task. Possible values are `'GET', 'POST', 'HEAD', 'PUT', 'PATCH', 'DELETE'`.
+
+See the [Got documentation](https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#method) for more details.
+
+### `body`
+
+By default, it's the HTTP payload of current task.
+
+See the [Got documentation](https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#body) for more details.
+
+### `headers`
+
+By default, it's the HTTP headers of current task. It's an object with `string` values.
+
+See the [Got documentation](https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#headers) for more details.
+
+### `proxyUrl`
+
+It's a string represeting the proxy server in the format of `protocol://username:password@hostname:port`.
+
+For example, an Apify proxy server looks like this: `http://auto:password@proxy.apify.com:8000`.
+
+Basic Crawler does not have the concept of a session or proxy, therefore you need to manually pass the `proxyUrl` option:
+
+```ts
+const crawler = new BasicCrawler({
+    async requestHandler({ sendRequest, log }) {
+        const res = await sendRequest({
+            proxyUrl: 'http://auto:password@proxy.apify.com:8000',
+        });
+        log.info('received body', res.body);
+    },
+});
+```
+
+We use proxies to hide our real IP address.
+
+See the [Got Scraping documentation](https://github.com/apify/got-scraping#proxyurl) for more details.
+
+### `sessionToken`
+
+It's a non-primitive object used as a key when generating browser fingerprint. Fingerprints with the same token don't change.
+This can be used to retain the `user-agent` header when using the same Apify Session.
+
+See the [Got Scraping documentation](https://github.com/apify/got-scraping#sessiontoken) for more details.
+
+### `responseType`
+
+This option defines how the response should be parsed.
+
+By default we fetch HTML websites - that is plaintext. Hence we set `responseType` to `'text'`. However JSON is possible as well:
+
+```ts
+const crawler = new BasicCrawler({
+    async requestHandler({ sendRequest, log }) {
+        const res = await sendRequest({ responseType: 'json' });
+        log.info('received body', res.body);
+    },
+});
+```
+
+See the [Got documentation](https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#responsetype) for more details.
+
+### `cookieJar`
+
+Got, in order to manage cookies, uses a `cookieJar`. It's an object with an interface of a [`tough-cookie` package](https://github.com/salesforce/tough-cookie).
+
+Example:
+
+```ts
+import { CookieJar } from 'tough-cookie';
+
+const cookieJar = new CookieJar();
+
+const crawler = new BasicCrawler({
+    async requestHandler({ sendRequest, log }) {
+        const res = await sendRequest({ cookieJar });
+        log.info('received body', res.body);
+    },
+});
+```
+
+See the [Got documentation](https://github.com/sindresorhus/got/blob/main/documentation/2-options.md#cookiejar) for more details.
+See the [Tough Cookie documentation](https://github.com/salesforce/tough-cookie#cookiejarstore-options) for more details.
+
+### `retry.limit`
+
+This option specifes the maximum number of Got retries.
+
+By default, `retry.limit` is set to `0`. This is because `crawlee` has its own (complicated enough) retry management.
+
+We suggest that you do not change this value for stability reasons.
+
+### `useHeaderGenerator`
+
+It's a boolean for whether to generate browser headers. By default it's set to `true`, and we recommend keeping this for better results.
+
+### `headerGeneratorOptions`
+
+This option represents an object how to generate browser fingerprint. Example:
+
+```ts
+const crawler = new BasicCrawler({
+    async requestHandler({ sendRequest, log }) {
+        const res = await sendRequest({
+            headerGeneratorOptions: {
+                devices: ['mobile', 'desktop'],
+                locales: ['en-US'],
+                operatingSystems: ['windows', 'macos', 'android', 'ios'],
+                browsers: ['chrome', 'edge', 'firefox', 'safari'],
+            },
+        });
+        log.info('received body', res.body);
+    },
+});
+```
+
+See [`HeaderGeneratorOptions` documentation](https://apify.github.io/fingerprint-suite/api/fingerprint-generator/interface/HeaderGeneratorOptions/) for more details.
+
+### More
+
+For more info please refer to:
+
+- [Got documentation](https://github.com/sindresorhus/got#documentation)
+- [Got Scraping documentation](https://github.com/apify/got-scraping)
+- [Header Generator documentation](https://apify.github.io/fingerprint-suite/docs/guides/fingerprint-generator/)

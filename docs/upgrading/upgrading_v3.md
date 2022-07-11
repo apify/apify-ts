@@ -233,44 +233,9 @@ const crawler = new BasicCrawler({
 });
 ```
 
-### How does `sendRequest` work?
+### How to use `sendRequest()`?
 
-The `sendRequest` function looks like this:
-
-```ts
-async sendRequest(overrideOptions?: GotOptionsInit) => {
-    return gotScraping({
-        url: request.url,
-        method: request.method,
-        body: request.payload,
-        headers: request.headers,
-        proxyUrl: crawlingContext.proxyInfo?.url,
-        sessionToken: session,
-        responseType: 'text',
-        ...overrideOptions,
-        retry: {
-            limit: 0,
-            ...overrideOptions?.retry,
-        },
-        cookieJar: {
-            getCookieString: (url: string) => session!.getCookieString(url),
-            setCookie: (rawCookie: string, url: string) => session!.setCookie(rawCookie, url),
-            ...overrideOptions?.cookieJar,
-        },
-    });
-}
-```
-
-Let's describe what are the options for.
-
-The `url`, `method`, `body` and `headers` options are classic HTTP things we want to send over. You probably know them already.
-The `proxyUrl` option needs to be set, otherwise we would leak our real IP - we don't want that.
-The `sessionToken` is used as a key when generating browser fingerprint. This way, when performing requests on the same session, `user-agent` stays the same.
-By default we fetch HTML websites. That means we receive it via plaintext. Hence we set `responseType` to `'text'`. However you might want JSON, like in the example above.
-Got, in order to manage cookies, uses a `cookieJar`. It's an object that enables easy cookie management with just two functions that come from `session`.
-Last but not least, `retry.limit` is set to `0`. This is because `crawlee` has its own (complicated enough) retry management.
-
-For more info please refer to the Got [documentation](https://github.com/sindresorhus/got#documentation).
+See [the Got Scraping guide](../guides/got_scraping.mdx).
 
 ### Removed options
 
