@@ -1,20 +1,14 @@
 ---
-id: type-script-project
+id: typescript-project
 title: TypeScript Projects
 description: Stricter, safer, and better development experience
 ---
 
-import ApiLink from '@site/src/components/ApiLink';
-
-Crawlee supports TypeScript by covering public APIs with type declarations. This
-allows writing code with auto-completion for TypeScript and JavaScript code alike.
-Besides that, projects written in TypeScript can take advantage of compile-time
-type-checking and avoid many coding mistakes, while providing documentation for
-functions, parameters and return values.
+Crawlee is built with TypeScript, which means it provides the type definition directly in the package. This allows writing code with auto-completion for TypeScript and JavaScript code alike. Besides that, projects written in TypeScript can take advantage of compile-time type-checking and avoid many coding mistakes, while providing documentation for functions, parameters and return values. It will also help with refactoring a lot, and ensuring the least amount of bugs will sneak through.
 
 ## Setting up a TypeScript project
 
-To use TypeScript in our projects, we'll need the following prerequisites.
+To use TypeScript in our projects, we'll need the following prerequisites:
 
 1. TypeScript compiler `tsc` installed somewhere:
 
@@ -22,19 +16,16 @@ To use TypeScript in our projects, we'll need the following prerequisites.
     npm install --dev typescript
     ```
 
-    TypeScript can be a development dependency in our project, as shown above. There's no
-    need to pollute the production environment or the system's global repository
-    with TypeScript.
+    TypeScript can be a development dependency in our project, as shown above. There's no need to pollute the production environment or the system's global repository with TypeScript.
 
-2. A build script invoking `tsc` and a correctly specified `main` entry point defined
-   in the `package.json`:
+2. A build script invoking `tsc` and a correctly specified `main` entry point defined in the `package.json` (pointing to the built code):
 
     ```json
     {
         "scripts": {
-            "build": "tsc -p tsconfig.json"
+            "build": "tsc"
         },
-        "main": "build/main.js"
+        "main": "dist/main.js"
     }
     ```
 
@@ -44,33 +35,23 @@ To use TypeScript in our projects, we'll need the following prerequisites.
     npm install --dev @types/node
     ```
 
-4. TypeScript configuration file allowing `tsc` to understand the project layout and
-   the features used in the project:
+4. TypeScript configuration file allowing `tsc` to understand the project layout and the features used in the project:
 
-    ```json
+    > We are extending the [`@apify/tsconfig`](https://github.com/apify/apify-tsconfig), it contains [the set of rules](https://github.com/apify/apify-tsconfig/blob/main/tsconfig.json) we believe are worth following.
+
+    > To be able to use feature called [Top level await](https://blog.saeloun.com/2021/11/25/ecmascript-top-level-await.html), we will need to set the `module` and `target` compiler options to `ES2022` or above. This will make the project compile to [ECMAScript Modules](https://nodejs.org/api/esm.html).
+
+    ```json title="tsconfig.json"
     {
+        "extends": "@apify/tsconfig",
         "compilerOptions": {
-            "target": "es2019",
-            "module": "commonjs",
-            "moduleResolution": "node",
-            "strict": true,
-            "noImplicitAny": false,
-            "strictNullChecks": false,
-            "lib": [
-                "DOM",
-                "DOM.Iterable",
-                "ES2015",
-                "ES2016",
-                "ES2018",
-                "ES2019.Object",
-                "ES2018.AsyncIterable",
-                "ES2020.String",
-                "ES2019.Array"
-            ],
-            "rootDir": "src/",
-            "outDir": "build/"
+            "module": "ES2022",
+            "target": "ES2022",
+            "outDir": "dist"
         },
-        "include": ["src/"]
+        "include": [
+            "./src/**/*"
+        ]
     }
     ```
 
@@ -78,59 +59,89 @@ To use TypeScript in our projects, we'll need the following prerequisites.
 
     Also, to enjoy using the types in `.js` source files, VSCode users that are using JavaScript should create a `jsconfig.json` with the same content and add `"checkJs": true` to `"compilerOptions"`.
 
-## Auto-completion
+    > If we want to use one of the browser crawlers, we will also need to add `"lib": ["DOM"]` to the compiler options.
 
-IDE auto-completion should work in most places. That's true even for
-projects written in pure JavaScript. For time constraints, we left out the amendment of an
-internal API for the time being, and these need to be added as Crawlee developers write
-new and enhance old code.
+### Running the project with `ts-node`
 
-## SDK Documentation
+During development, it's handy to run the project directly instead of compiling the TypeScript code to JavaScript every time. We can use `ts-node` for that, just install it as a dev dependency and add a new NPM script:
 
-SDK documentation has grown a lot. There is a new API Reference section **Type definitions**
-that holds documentation for all constructible types, function parameters and
-return types, in Crawlee.
+```shell script
+npm install --dev ts-node
+```
 
-## Caveats
+> As mentioned above, our project will be compiled to use ES Modules. Because of this, we need to use the `ts-node-esm` binary.
 
-As of version 1.0+, the generated typings, due to JSDoc limitations, have some properties
-and parameters annotated with `any` type, therefore the settings `noImplicitAny` and `strictNullChecks`, set to `true`, may not be advised. They could be enabled, but it might hinder development because of the need for typecasts to be able to compile, and thus our mileage may vary.
+> We use the `-T` or `--transpileOnly` flag, this means the code will **not** be type-checked, which results in faster compilation. If you don't mind the added time and want to do the type checking, just remove this flag.
 
-Besides the _implicit any_ errors that might occur in the code when writing in TypeScript, the
-current typings doesn't offer generics that make outputs type-safe, so we need to declare our
-types, as such:
-
-```typescript
-import { KeyValueStore } from 'crawlee';
-
-interface MySchema {
-    expectedParam1?: string;
-    expectedParam2?: number;
-}
-
-// getInput returns Promise<Dictionary | string | Buffer | null> by default,
-// we can narrow that via its generic type argument
-const input = await KeyValueStore.getInput<MySchema>();
-
-if (!input?.expectedParam1) {
-    // input is MySchema now and we can check in a type-safe way
-    throw new Error('Missing expectedParam1');
+```json title="package.json"
+{
+    "scripts": {
+        "start:dev": "ts-node-esm -T src/main.ts"
+    }
 }
 ```
 
-There are other places where we need to explicitly provide our interface/type, like in Dataset iterators (`map`, `reduce`, `forEach`):
+### Running in production
 
-```typescript
-import { Dataset } from 'crawlee';
+To run the project in production, we first need to compile it via build script. After that, we will have the compiled JavaScript code in the `dist`, and we can use `node dist/main.js` to run it.
 
-interface ExpectedShape {
-    id: string;
-    someFields: Fields[];
+```json title="package.json"
+{
+    "scripts": {
+        "start:prod": "node dist/main.js"
+    }
 }
+```
 
-const dataset = await Dataset.open();
-await dataset.forEach((item: ExpectedShape) => {
-    // deal with item.id / item.someFields
-    // otherwise item is "any"
-});
+## Docker build
+
+For `Dockerfile` we recommend using multi-stage build, so we don't install the dev dependencies like TypeScript in the final image:
+
+```dockerfile title="Dockerfile"
+# using multistage build, as we need dev deps to build the TS source code
+FROM apify/actor-node:16 AS builder
+
+# copy all files, install all dependencies (including dev deps) and build the project
+COPY . ./
+RUN npm install --include=dev \
+    && npm run build
+
+# create final image
+FROM apify/actor-node:16
+# copy only necessary files
+COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/dist ./dist
+
+# install only prod deps
+RUN npm --quiet set progress=false \
+    && npm install --only=prod --no-optional
+
+# run compiled code
+CMD npm run start:prod
+```
+
+### Putting it all together
+
+Let's wrap it up to. In addition to the scripts we described above, we also need to set the `type: 'module'` in the `package.json` to be able to use the Top level await described above. For convenience, we will have 3 `start` scripts, the default one will be an alias to `start:dev`, which is our `ts-node` script that does not require compilation (nor type checking). The production script (`start:prod`) is then used in the `Dockerfile`, after explicit `npm run build` call.
+
+```json title="package.json"
+{
+    "name": "my-crawlee-project",
+    "type": "module",
+    "main": "dist/main.js",
+    "dependencies": {
+        "crawlee": "3.0.0"
+    },
+    "devDependencies": {
+        "@apify/tsconfig": "^0.1.0",
+        "ts-node": "^10.8.0",
+        "typescript": "^4.7.4"
+    },
+    "scripts": {
+        "start": "npm run start:dev",
+        "start:prod": "node dist/main.js",
+        "start:dev": "ts-node-esm -T src/main.ts",
+        "build": "tsc"
+    }
+}
 ```
