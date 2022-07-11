@@ -473,7 +473,7 @@ export class KeyValueStore {
  */
 export interface KeyConsumer {
     /**
-     * @param key Current {KeyValue} key being processed.
+     * @param key Current {@link KeyValueStore} key being processed.
      * @param index Position of the current key in {@link KeyValueStore}.
      * @param info Information about the current {@link KeyValueStore} entry.
      * @param info.size Size of the value associated with the current key in bytes.

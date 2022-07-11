@@ -474,7 +474,7 @@ export interface DatasetConsumer<Data> {
 
     /**
      * @param item Current {@link Dataset} entry being processed.
-     * @param index Position of current {Dataset} entry.
+     * @param index Position of current {@link Dataset} entry.
      */
     (item: Data, index: number): Awaitable<void>;
 
@@ -488,7 +488,7 @@ export interface DatasetMapper<Data, R> {
     /**
      * User-function used in the `Dataset.map()` API.
      * @param item Current {@link Dataset} entry being processed.
-     * @param index Position of current {Dataset} entry.
+     * @param index Position of current {@link Dataset} entry.
      */
     (item: Data, index: number): Awaitable<R>;
 
@@ -502,7 +502,7 @@ export interface DatasetReducer<T, Data> {
     /**
      * @param memo Previous state of the reduction.
      * @param item Current {@link Dataset} entry being processed.
-     * @param index Position of current {Dataset} entry.
+     * @param index Position of current {@link Dataset} entry.
      */
     (memo: T, item: Data, index: number): Awaitable<T>;
 

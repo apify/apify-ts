@@ -51,7 +51,7 @@ export interface Cookie {
      */
     sourceScheme?: 'Unset' | 'NonSecure' | 'Secure';
     /**
-     * Cookie source port. Valid values are {-1, [1, 65535]}, -1 indicates an unspecified port.
+     * Cookie source port. Valid values are `-1` or `1-65535`, `-1` indicates an unspecified port.
      * An unspecified port value allows protocol clients to emulate legacy cookie scope for the port.
      * This is a temporary ability and it will be removed in the future.
      */

@@ -1,4 +1,5 @@
 import { log, enqueueLinks } from '@crawlee/core';
+import { social } from '@crawlee/utils';
 import { puppeteerUtils } from '@crawlee/puppeteer';
 import { playwrightUtils } from '@crawlee/playwright';
 
@@ -15,4 +16,5 @@ export const utils = {
     playwright: playwrightUtils,
     log,
     enqueueLinks,
+    social,
 };
