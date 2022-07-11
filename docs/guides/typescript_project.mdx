@@ -4,7 +4,7 @@ title: TypeScript Projects
 description: Stricter, safer, and better development experience
 ---
 
-Crawlee is TypeScript native library, it provides the type definition directly in the package. This allows writing code with auto-completion for TypeScript and JavaScript code alike. Besides that, projects written in TypeScript can take advantage of compile-time type-checking and avoid many coding mistakes, while providing documentation for functions, parameters and return values. It will also help with refactoring a lot.
+Crawlee is built with TypeScript, which means it provides the type definition directly in the package. This allows writing code with auto-completion for TypeScript and JavaScript code alike. Besides that, projects written in TypeScript can take advantage of compile-time type-checking and avoid many coding mistakes, while providing documentation for functions, parameters and return values. It will also help with refactoring a lot, and ensuring the least amount of bugs will sneak through.
 
 ## Setting up a TypeScript project
 
@@ -18,14 +18,14 @@ To use TypeScript in our projects, we'll need the following prerequisites:
 
     TypeScript can be a development dependency in our project, as shown above. There's no need to pollute the production environment or the system's global repository with TypeScript.
 
-2. A build script invoking `tsc` and a correctly specified `main` entry point defined in the `package.json`:
+2. A build script invoking `tsc` and a correctly specified `main` entry point defined in the `package.json` (pointing to the built code):
 
     ```json
     {
         "scripts": {
             "build": "tsc"
         },
-        "main": "build/main.js"
+        "main": "dist/main.js"
     }
     ```
 
@@ -127,6 +127,7 @@ Let's wrap it up to. In addition to the scripts we described above, we also need
 {
     "name": "my-crawlee-project",
     "type": "module",
+    "main": "dist/main.js",
     "dependencies": {
         "crawlee": "3.0.0"
     },
