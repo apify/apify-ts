@@ -19,7 +19,6 @@ import {
     Session,
     STATUS_CODES_BLOCKED,
 } from '@crawlee/puppeteer';
-import { Actor } from 'apify';
 import { gotScraping } from 'got-scraping';
 import { sleep } from '@crawlee/utils';
 import { MemoryStorageEmulator } from 'test/shared/MemoryStorageEmulator';
@@ -557,85 +556,87 @@ describe('BrowserCrawler', () => {
             requestList = null;
         });
 
-        test('browser should launch with correct proxyUrl', async () => {
-            process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-            const status = { connected: true };
-            const fakeCall = async () => {
-                return { body: status } as never;
-            };
+        // TODO move to actor sdk tests before splitting the repos
+        // test('browser should launch with correct proxyUrl', async () => {
+        //     process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
+        //     const status = { connected: true };
+        //     const fakeCall = async () => {
+        //         return { body: status } as never;
+        //     };
+        //
+        //     // @ts-expect-error FIXME
+        //     const stub = gotScrapingSpy.mockImplementation(fakeCall);
+        //     const proxyConfiguration = await Actor.createProxyConfiguration();
+        //     const generatedProxyUrl = new URL(await proxyConfiguration.newUrl()).href.slice(0, -1);
+        //     let browserProxy;
+        //
+        //     const browserCrawler = new BrowserCrawlerTest({
+        //         browserPoolOptions: {
+        //             browserPlugins: [puppeteerPlugin],
+        //             postLaunchHooks: [(pageId, browserController) => {
+        //                 browserProxy = browserController.launchContext.proxyUrl;
+        //             }],
+        //         },
+        //         useSessionPool: false,
+        //         persistCookiesPerSession: false,
+        //         navigationTimeoutSecs: 1,
+        //         requestList,
+        //         maxRequestsPerCrawl: 1,
+        //         maxRequestRetries: 0,
+        //         requestHandler: async () => {},
+        //         proxyConfiguration,
+        //     });
+        //     await browserCrawler.run();
+        //     delete process.env[ENV_VARS.PROXY_PASSWORD];
+        //
+        //     expect(browserProxy).toEqual(generatedProxyUrl);
+        //
+        //     stub.mockClear();
+        // });
 
-            // @ts-expect-error FIXME
-            const stub = gotScrapingSpy.mockImplementation(fakeCall);
-            const proxyConfiguration = await Actor.createProxyConfiguration();
-            const generatedProxyUrl = new URL(await proxyConfiguration.newUrl()).href.slice(0, -1);
-            let browserProxy;
-
-            const browserCrawler = new BrowserCrawlerTest({
-                browserPoolOptions: {
-                    browserPlugins: [puppeteerPlugin],
-                    postLaunchHooks: [(pageId, browserController) => {
-                        browserProxy = browserController.launchContext.proxyUrl;
-                    }],
-                },
-                useSessionPool: false,
-                persistCookiesPerSession: false,
-                navigationTimeoutSecs: 1,
-                requestList,
-                maxRequestsPerCrawl: 1,
-                maxRequestRetries: 0,
-                requestHandler: async () => {},
-                proxyConfiguration,
-            });
-            await browserCrawler.run();
-            delete process.env[ENV_VARS.PROXY_PASSWORD];
-
-            expect(browserProxy).toEqual(generatedProxyUrl);
-
-            stub.mockClear();
-        });
-
-        test('requestHandler should expose the proxyInfo object with sessions correctly', async () => {
-            process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
-            const status = { connected: true };
-            const fakeCall = async () => {
-                return { body: status } as never;
-            };
-
-            // @ts-expect-error FIXME
-            const stub = gotScrapingSpy.mockImplementation(fakeCall);
-
-            const proxyConfiguration = await Actor.createProxyConfiguration();
-            const proxies: ProxyInfo[] = [];
-            const sessions: Session[] = [];
-            const requestHandler = async ({ session, proxyInfo }: BrowserCrawlingContext) => {
-                proxies.push(proxyInfo);
-                sessions.push(session);
-            };
-
-            const browserCrawler = new BrowserCrawlerTest({
-                browserPoolOptions: {
-                    browserPlugins: [puppeteerPlugin],
-                },
-                requestList,
-                requestHandler,
-
-                proxyConfiguration,
-                useSessionPool: true,
-                sessionPoolOptions: {
-                    maxPoolSize: 1,
-                },
-            });
-
-            await browserCrawler.run();
-
-            expect(proxies[0].sessionId).toEqual(sessions[0].id);
-            expect(proxies[1].sessionId).toEqual(sessions[1].id);
-            expect(proxies[2].sessionId).toEqual(sessions[2].id);
-            expect(proxies[3].sessionId).toEqual(sessions[3].id);
-
-            delete process.env[ENV_VARS.PROXY_PASSWORD];
-            stub.mockClear();
-        });
+        // TODO move to actor sdk tests before splitting the repos
+        // test('requestHandler should expose the proxyInfo object with sessions correctly', async () => {
+        //     process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';
+        //     const status = { connected: true };
+        //     const fakeCall = async () => {
+        //         return { body: status } as never;
+        //     };
+        //
+        //     // @ts-expect-error FIXME
+        //     const stub = gotScrapingSpy.mockImplementation(fakeCall);
+        //
+        //     const proxyConfiguration = await Actor.createProxyConfiguration();
+        //     const proxies: ProxyInfo[] = [];
+        //     const sessions: Session[] = [];
+        //     const requestHandler = async ({ session, proxyInfo }: BrowserCrawlingContext) => {
+        //         proxies.push(proxyInfo);
+        //         sessions.push(session);
+        //     };
+        //
+        //     const browserCrawler = new BrowserCrawlerTest({
+        //         browserPoolOptions: {
+        //             browserPlugins: [puppeteerPlugin],
+        //         },
+        //         requestList,
+        //         requestHandler,
+        //
+        //         proxyConfiguration,
+        //         useSessionPool: true,
+        //         sessionPoolOptions: {
+        //             maxPoolSize: 1,
+        //         },
+        //     });
+        //
+        //     await browserCrawler.run();
+        //
+        //     expect(proxies[0].sessionId).toEqual(sessions[0].id);
+        //     expect(proxies[1].sessionId).toEqual(sessions[1].id);
+        //     expect(proxies[2].sessionId).toEqual(sessions[2].id);
+        //     expect(proxies[3].sessionId).toEqual(sessions[3].id);
+        //
+        //     delete process.env[ENV_VARS.PROXY_PASSWORD];
+        //     stub.mockClear();
+        // });
 
         test('browser should launch with rotated custom proxy', async () => {
             process.env[ENV_VARS.PROXY_PASSWORD] = 'abc123';

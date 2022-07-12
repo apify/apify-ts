@@ -12,7 +12,6 @@ module.exports = {
         '<rootDir>/packages/*/src/**/*.[jt]s',
     ],
     moduleNameMapper: {
-        '^apify$': '<rootDir>/packages/apify/src',
         '^crawlee$': '<rootDir>/packages/crawlee/src',
         '^@crawlee/basic$': '<rootDir>/packages/basic-crawler/src',
         '^@crawlee/browser$': '<rootDir>/packages/browser-crawler/src',

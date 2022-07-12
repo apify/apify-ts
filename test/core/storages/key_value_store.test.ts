@@ -313,21 +313,21 @@ describe('KeyValueStore', () => {
     });
 
     // TODO move to actor sdk tests before splitting the repos
-    describe('getPublicUrl', () => {
-        test('should return the url of a file in apify cloud', async () => {
-            process.env[ENV_VARS.TOKEN] = 'xxx';
-            const publicUrl = 'https://api.apify.com/v2/key-value-stores';
-            const store = new KeyValueStore({
-                id: 'my-store-id-1',
-                client,
-            });
-
-            await import('apify');
-            const storeFromActorSdk = store as import('apify').KeyValueStore;
-            expect(storeFromActorSdk.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
-            delete process.env[ENV_VARS.TOKEN];
-        });
-    });
+    // describe('getPublicUrl', () => {
+    //     test('should return the url of a file in apify cloud', async () => {
+    //         process.env[ENV_VARS.TOKEN] = 'xxx';
+    //         const publicUrl = 'https://api.apify.com/v2/key-value-stores';
+    //         const store = new KeyValueStore({
+    //             id: 'my-store-id-1',
+    //             client,
+    //         });
+    //
+    //         await import('apify');
+    //         const storeFromActorSdk = store as import('apify').KeyValueStore;
+    //         expect(storeFromActorSdk.getPublicUrl('file')).toBe(`${publicUrl}/my-store-id-1/records/file`);
+    //         delete process.env[ENV_VARS.TOKEN];
+    //     });
+    // });
 
     describe('maybeStringify()', () => {
         test('should work', () => {
