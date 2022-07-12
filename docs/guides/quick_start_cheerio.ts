@@ -1,12 +1,12 @@
 import { CheerioCrawler, Dataset } from 'crawlee';
 
 const crawler = new CheerioCrawler({
-    async requestHandler({ request, $, enqueueLinks }) {
+    async requestHandler({ request, $, enqueueLinks, log }) {
         const { url } = request;
 
         // Extract HTML title of the page.
         const title = $('title').text();
-        console.log(`Title of ${url}: ${title}`);
+        log.info(`Title of ${url}: ${title}`);
 
         // Add URLs that match the provided pattern.
         await enqueueLinks({

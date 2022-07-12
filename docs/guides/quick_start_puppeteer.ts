@@ -1,12 +1,12 @@
 import { PuppeteerCrawler, Dataset } from 'crawlee';
 
 const crawler = new PuppeteerCrawler({
-    async requestHandler({ request, page, enqueueLinks }) {
+    async requestHandler({ request, page, enqueueLinks, log }) {
         const { url } = request;
 
         // Extract HTML title of the page.
         const title = await page.title();
-        console.log(`Title of ${url}: ${title}`);
+        log.info(`Title of ${url}: ${title}`);
 
         // Add URLs that match the provided pattern.
         await enqueueLinks({
