@@ -51,7 +51,7 @@ export type BasicCrawlerEnqueueLinksOptions = Omit<EnqueueLinksOptions, 'request
 /**
  * Since there's no set number of seconds before the container is terminated after
  * a migration event, we need some reasonable number to use for RequestList persistence.
- * Once a migration event is received, the Crawler will be paused and it will wait for
+ * Once a migration event is received, the crawler will be paused, and it will wait for
  * this long before persisting the RequestList state. This should allow most healthy
  * requests to finish and be marked as handled, thus lowering the amount of duplicate
  * results after migration.
@@ -68,18 +68,18 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
      * The function receives the {@link BasicCrawlingContext} as an argument,
-     * where the {@link BasicCrawlingContext.request} represents the URL to crawl.
+     * where the {@link BasicCrawlingContext.request|`request`} represents the URL to crawl.
      *
      * The function must return a promise, which is then awaited by the crawler.
      *
      * If the function throws an exception, the crawler will try to re-crawl the
-     * request later, up to `option.maxRequestRetries` times.
+     * request later, up to the {@link BasicCrawlerOptions.maxRequestRetries|`maxRequestRetries`} times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `failedRequestHandler` parameter.
-     * To make this work, you should **always**
-     * let your function throw exceptions rather than catch them.
+     * provided to the {@link BasicCrawlerOptions.failedRequestHandler|`failedRequestHandler`} parameter.
+     * To make this work, we should **always**
+     * let our function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
-     * {@link Request.pushErrorMessage} function.
+     * {@link Request.pushErrorMessage|`Request.pushErrorMessage()`} function.
      */
     requestHandler?: RequestHandler<Context>;
 
@@ -87,18 +87,18 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
      * User-provided function that performs the logic of the crawler. It is called for each URL to crawl.
      *
      * The function receives the {@link BasicCrawlingContext} as an argument,
-     * where the {@link BasicCrawlingContext.request} represents the URL to crawl.
+     * where the {@link BasicCrawlingContext.request|`request`} represents the URL to crawl.
      *
      * The function must return a promise, which is then awaited by the crawler.
      *
      * If the function throws an exception, the crawler will try to re-crawl the
-     * request later, up to `option.maxRequestRetries` times.
+     * request later, up to the {@link BasicCrawlerOptions.maxRequestRetries|`maxRequestRetries`} times.
      * If all the retries fail, the crawler calls the function
-     * provided to the `failedRequestHandler` parameter.
-     * To make this work, you should **always**
-     * let your function throw exceptions rather than catch them.
+     * provided to the {@link BasicCrawlerOptions.failedRequestHandler|`failedRequestHandler`} parameter.
+     * To make this work, we should **always**
+     * let our function throw exceptions rather than catch them.
      * The exceptions are logged to the request using the
-     * {@link Request.pushErrorMessage} function.
+     * {@link Request.pushErrorMessage|`Request.pushErrorMessage()`} function.
      *
      * @deprecated `handleRequestFunction` has been renamed to `requestHandler` and will be removed in a future version.
      */
@@ -106,24 +106,28 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
 
     /**
      * Static list of URLs to be processed.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
+     * If not provided, the crawler will open the default request queue when the {@link BasicCrawler.addRequests|`crawler.addRequests()`} function is called.
+     * > Alternatively, `requests` parameter of {@link BasicCrawler.run|`crawler.run()`} could be used to enqueue the initial requests -
+     * it is a shortcut for running `crawler.addRequests()` before the `crawler.run()`.
      */
     requestList?: RequestList;
 
     /**
      * Dynamic queue of URLs to be processed. This is useful for recursive crawling of websites.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
+     * If not provided, the crawler will open the default request queue when the {@link BasicCrawler.addRequests|`crawler.addRequests()`} function is called.
+     * > Alternatively, `requests` parameter of {@link BasicCrawler.run|`crawler.run()`} could be used to enqueue the initial requests -
+     * it is a shortcut for running `crawler.addRequests()` before the `crawler.run()`.
      */
     requestQueue?: RequestQueue;
 
     /**
-     * Timeout in which the function passed as `requestHandler` needs to finish, in seconds.
+     * Timeout in which the function passed as {@link BasicCrawlerOptions.requestHandler|`requestHandler`} needs to finish, in seconds.
      * @default 60
      */
     requestHandlerTimeoutSecs?: number;
 
     /**
-     * Timeout in which the function passed as `requestHandler` needs to finish, in seconds.
+     * Timeout in which the function passed as {@link BasicCrawlerOptions.requestHandler|`requestHandler`} needs to finish, in seconds.
      * @default 60
      * @deprecated `handleRequestTimeoutSecs` has been renamed to `requestHandlerTimeoutSecs` and will be removed in a future version.
      */
@@ -131,30 +135,30 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
 
     /**
      * User-provided function that allows modifying the request object before it gets retried by the crawler.
-     * It's executed before each retry for the requests that failed less than `option.maxRequestRetries` times.
+     * It's executed before each retry for the requests that failed less than {@link BasicCrawlerOptions.maxRequestRetries|`maxRequestRetries`} times.
      *
      * The function receives the {@link BasicCrawlingContext} as the first argument,
-     * where the {@link BasicCrawlingContext.request} corresponds to the request to be retried.
+     * where the {@link BasicCrawlingContext.request|`request`} corresponds to the request to be retried.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
     errorHandler?: FailedRequestHandler<Context>;
 
     /**
-     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     * A function to handle requests that failed more than {@link BasicCrawlerOptions.maxRequestRetries|`maxRequestRetries`} times.
      *
      * The function receives the {@link BasicCrawlingContext} as the first argument,
-     * where the {@link BasicCrawlingContext.request} corresponds to the failed request.
+     * where the {@link BasicCrawlingContext.request|`request`} corresponds to the failed request.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      */
     failedRequestHandler?: FailedRequestHandler<Context>;
 
     /**
-     * A function to handle requests that failed more than `option.maxRequestRetries` times.
+     * A function to handle requests that failed more than {@link BasicCrawlerOptions.maxRequestRetries|`maxRequestRetries`} times.
      *
      * The function receives the {@link BasicCrawlingContext} as the first argument,
-     * where the {@link BasicCrawlingContext.request} corresponds to the failed request.
+     * where the {@link BasicCrawlingContext.request|`request`} corresponds to the failed request.
      * Second argument is the `Error` instance that
      * represents the last error thrown during processing of the request.
      *
@@ -163,49 +167,51 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
     handleFailedRequestFunction?: FailedRequestHandler<Context>;
 
     /**
-     * Indicates how many times the request is retried if {@link requestHandler} fails.
+     * Indicates how many times the request is retried if {@link BasicCrawlerOptions.requestHandler|`requestHandler`} fails.
      * @default 3
      */
     maxRequestRetries?: number;
 
     /**
      * Maximum number of pages that the crawler will open. The crawl will stop when this limit is reached.
-     * Always set this value in order to prevent infinite loops in misconfigured crawlers.
-     * Note that in cases of parallel crawling, the actual number of pages visited might be slightly higher than this value.
+     * This value should always be set in order to prevent infinite loops in misconfigured crawlers.
+     * > *NOTE:* In cases of parallel crawling, the actual number of pages visited might be slightly higher than this value.
      */
     maxRequestsPerCrawl?: number;
 
     /**
      * Custom options passed to the underlying {@link AutoscaledPool} constructor.
-     * Note that the `runTaskFunction` and `isTaskReadyFunction` options
+     * > *NOTE:* The {@link AutoscaledPoolOptions.runTaskFunction|`runTaskFunction`}
+     * and {@link AutoscaledPoolOptions.isTaskReadyFunction|`isTaskReadyFunction`} options
      * are provided by the crawler and cannot be overridden.
-     * However, you can provide a custom implementation of `isFinishedFunction`.
+     * However, we can provide a custom implementation of {@link AutoscaledPoolOptions.isFinishedFunction|`isFinishedFunction`}.
      */
     autoscaledPoolOptions?: AutoscaledPoolOptions;
 
     /**
-     * Sets the minimum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
-     *
-     * *WARNING:* If you set this value too high with respect to the available system memory and CPU, your crawler will run extremely slow or crash.
-     * If you're not sure, just keep the default value and the concurrency will scale up automatically.
+     * Sets the minimum concurrency (parallelism) for the crawl. Shortcut for the
+     * AutoscaledPool {@link AutoscaledPoolOptions.minConcurrency|`minConcurrency`} option.
+     * > *WARNING:* If we set this value too high with respect to the available system memory and CPU, our crawler will run extremely slow or crash.
+     * If not sure, it's better to keep the default value and the concurrency will scale up automatically.
      */
     minConcurrency?: number;
 
     /**
-     * Sets the maximum concurrency (parallelism) for the crawl. Shortcut to the corresponding {@link AutoscaledPool} option.
+     * Sets the maximum concurrency (parallelism) for the crawl. Shortcut for the
+     * AutoscaledPool {@link AutoscaledPoolOptions.maxConcurrency|`maxConcurrency`} option.
      */
     maxConcurrency?: number;
 
     /**
      * The maximum number of requests per minute the crawler should run.
-     * By default, this is set to `Infinity`, but you can pass any positive, non-zero integer.
-     * Shortcut for the {@link AutoscaledPoolOptions.maxTasksPerMinute} option.
+     * By default, this is set to `Infinity`, but we can pass any positive, non-zero integer.
+     * Shortcut for the AutoscaledPool {@link AutoscaledPoolOptions.maxTasksPerMinute|`maxTasksPerMinute`} option.
      */
     maxRequestsPerMinute?: number;
 
     /**
-     * Basic crawler will initialize the {@link SessionPool} with the corresponding `sessionPoolOptions`.
-     * The session instance will be than available in the `requestHandler`.
+     * Basic crawler will initialize the {@link SessionPool} with the corresponding {@link SessionPoolOptions|`sessionPoolOptions`}.
+     * The session instance will be than available in the {@link BasicCrawlerOptions.requestHandler|`requestHandler`}.
      */
     useSessionPool?: boolean;
 
@@ -225,16 +231,18 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
  *
  * `BasicCrawler` is a low-level tool that requires the user to implement the page
  * download and data extraction functionality themselves.
- * If you want a crawler that already facilitates this functionality,
- * please consider using {@link CheerioCrawler}, {@link PuppeteerCrawler} or {@link PlaywrightCrawler}.
+ * If we want a crawler that already facilitates this functionality,
+ * we should consider using {@link CheerioCrawler}, {@link PuppeteerCrawler} or {@link PlaywrightCrawler}.
  *
- * `BasicCrawler` invokes the user-provided {@link BasicCrawlerOptions.requestHandler}
+ * `BasicCrawler` invokes the user-provided {@link BasicCrawlerOptions.requestHandler|`requestHandler`}
  * for each {@link Request} object, which represents a single URL to crawl.
  * The {@link Request} objects are fed from the {@link RequestList} or the {@link RequestQueue}
- * instances provided by the {@link BasicCrawlerOptions.requestList} or {@link BasicCrawlerOptions.requestQueue}
- * constructor options, respectively.
+ * instances provided by the {@link BasicCrawlerOptions.requestList|`requestList`} or {@link BasicCrawlerOptions.requestQueue|`requestQueue`}
+ * constructor options, respectively. If neither `requestList` nor `requestQueue` options are provided,
+ * the crawler will open the default request queue either when the {@link BasicCrawler.addRequests|`crawler.addRequests()`} function is called,
+ * or if `requests` parameter (representing the initial requests) of the {@link BasicCrawler.run|`crawler.run()`} function is provided.
  *
- * If both {@link BasicCrawlerOptions.requestList} and {@link BasicCrawlerOptions.requestQueue} options are used,
+ * If both {@link BasicCrawlerOptions.requestList|`requestList`} and {@link BasicCrawlerOptions.requestQueue|`requestQueue`} options are used,
  * the instance first processes URLs from the {@link RequestList} and automatically enqueues all of them
  * to {@link RequestQueue} before it starts their processing. This ensures that a single URL is not crawled multiple times.
  *
@@ -242,28 +250,21 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
  *
  * New requests are only dispatched when there is enough free CPU and memory available,
  * using the functionality provided by the {@link AutoscaledPool} class.
- * All {@link AutoscaledPool} configuration options can be passed to the `autoscaledPoolOptions`
+ * All {@link AutoscaledPool} configuration options can be passed to the {@link BasicCrawlerOptions.autoscaledPoolOptions|`autoscaledPoolOptions`}
  * parameter of the `BasicCrawler` constructor. For user convenience, the `minConcurrency` and `maxConcurrency`
  * {@link AutoscaledPool} options are available directly in the `BasicCrawler` constructor.
  *
  * **Example usage:**
  *
  * ```javascript
- * import { gotScraping } from 'got-scraping';
+ * import { BasicCrawler, Dataset } from 'crawlee';
  *
- * // Prepare a list of URLs to crawl
- * const requestList = await RequestList.open(null, [
- *     { url: 'http://www.example.com/page-1' },
- *     { url: 'http://www.example.com/page-2' },
- * ]);
- *
- * // Crawl the URLs
+ * // Create a crawler instance
  * const crawler = new BasicCrawler({
- *     requestList,
- *     async requestHandler({ request }) {
+ *     async requestHandler({ request, sendRequest }) {
  *         // 'request' contains an instance of the Request class
  *         // Here we simply fetch the HTML of the page and store it to a dataset
- *         const { body } = await gotScraping({
+ *         const { body } = await sendRequest({
  *             url: request.url,
  *             method: request.method,
  *             body: request.payload,
@@ -277,7 +278,11 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
  *     },
  * });
  *
- * await crawler.run();
+ * // Enqueue the initial requests and run the crawler
+ * await crawler.run([
+ *     'http://www.example.com/page-1',
+ *     'http://www.example.com/page-2',
+ * ]);
  * ```
  * @category Crawlers
  */
@@ -285,43 +290,41 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
     private static readonly CRAWLEE_STATE_KEY = 'CRAWLEE_STATE';
 
     /**
-     * Static list of URLs to be processed.
+     * A reference to the underlying {@link Statistics} class that collects and logs run statistics for requests.
      */
     readonly stats: Statistics;
 
     /**
-     * A reference to the underlying {@link RequestList} class that manages the crawler's {@link Request}s.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
+     * A reference to the underlying {@link RequestList} class that manages the crawler's {@link Request|requests}.
      * Only available if used by the crawler.
      */
     requestList?: RequestList;
 
     /**
      * Dynamic queue of URLs to be processed. This is useful for recursive crawling of websites.
-     * A reference to the underlying {@link RequestQueue} class that manages the crawler's {@link Request}s.
-     * Either `requestList` or `requestQueue` option must be provided (or both).
+     * A reference to the underlying {@link RequestQueue} class that manages the crawler's {@link Request|requests}.
      * Only available if used by the crawler.
      */
     requestQueue?: RequestQueue;
 
     /**
-     * A reference to the underlying {@link SessionPool} class that manages the crawler's {@link Session}s.
+     * A reference to the underlying {@link SessionPool} class that manages the crawler's {@link Session|sessions}.
      * Only available if used by the crawler.
      */
     sessionPool?: SessionPool;
 
     /**
      * A reference to the underlying {@link AutoscaledPool} class that manages the concurrency of the crawler.
-     * Note that this property is only initialized after calling the {@link BasicCrawler.run} function.
-     * You can use it to change the concurrency settings on the fly,
-     * to pause the crawler by calling {@link AutoscaledPool.pause}
-     * or to abort it by calling {@link AutoscaledPool.abort}.
+     * > *NOTE:* This property is only initialized after calling the {@link BasicCrawler.run|`crawler.run()`} function.
+     * We can use it to change the concurrency settings on the fly,
+     * to pause the crawler by calling {@link AutoscaledPool.pause|`autoscaledPool.pause()`}
+     * or to abort it by calling {@link AutoscaledPool.abort|`autoscaledPool.abort()`}.
      */
     autoscaledPool?: AutoscaledPool;
 
     /**
-     * Default router instance that will be used if we don't specify any {@link requestHandler}.
-     * See {@link Router.addHandler} and {@link Router.addDefaultHandler.}
+     * Default router instance that will be used if we don't specify any {@link BasicCrawlerOptions.requestHandler|`requestHandler`}.
+     * See {@link Router.addHandler} and {@link Router.addDefaultHandler}.
      */
     readonly router: RouterHandler<Context> = Router.create<Context>();
 
@@ -538,7 +541,7 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
     /**
      * Runs the crawler. Returns a promise that gets resolved once all the requests are processed.
      * We can use the `requests` parameter to enqueue the initial requests - it is a shortcut for
-     * running `crawler.addRequests()` before the `crawler.run()`.
+     * running {@link BasicCrawler.addRequests|`crawler.addRequests()`} before the {@link BasicCrawler.run|`crawler.run()`}.
      *
      * @param [requests] The requests to add
      * @param [options] Options for the request queue
@@ -1078,13 +1081,15 @@ export interface CrawlerAddRequestsResult {
     /**
      * A promise which will resolve with the rest of the requests that were added to the queue.
      *
+     * Alternatively, we can set {@link CrawlerAddRequestsOptions.waitForAllRequestsToBeAdded|`waitForAllRequestsToBeAdded`} to `true`
+     * in the {@link BasicCrawler.addRequests|`crawler.addRequests()`} options.
+     *
      * @example
      * ```ts
      * // Assuming `requests` is a list of requests.
      * const result = await crawler.addRequests(requests);
      *
-     * // If you want to wait for the rest of the requests to be added with a condition, you can do so:
-     * // Alternatively, consider setting `waitForAllRequestsToBeAdded` to `true` in the options for `addRequests`.
+     * // If we want to wait for the rest of the requests to be added to the queue:
      * await result.waitForAllRequestsToBeAdded;
      * ```
      */
@@ -1102,7 +1107,7 @@ interface HandlePropertyNameChangeData<New, Old> {
 
 /**
  * Creates new {@link Router} instance that works based on request labels.
- * This instance can then serve as a `requestHandler` of your {@link BasicCrawler}.
+ * This instance can then serve as a {@link BasicCrawlerOptions.requestHandler|`requestHandler`} of our {@link BasicCrawler}.
  * Defaults to the {@link BasicCrawlingContext}.
  *
  * > Serves as a shortcut for using `Router.create<BasicCrawlingContext>()`.
