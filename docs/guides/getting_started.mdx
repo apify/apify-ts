@@ -38,13 +38,11 @@ npm -v
 
 The fastest and best way to create new projects with Crawlee is to use the [Crawlee CLI](https://www.npmjs.com/package/@crawlee/cli). This command line tool allows us to create and run Crawlee projects with ease. We can use the `npx` utility to download and run the CLI - it is also embedded to the `crawlee` meta-package:
 
-> We use `npx -y` to automatically allow installing the missing `crawlee` dependency in the global scope. It won't be necessary after we have the package downloaded.
-
 ```bash
-npx -y crawlee create my-new-project
+npx crawlee create my-new-project
 ```
 
-A prompt will be shown, asking us to choose a template. Let's choose the first one called `Crawlee playwright template [ts]`. The command will now create a new directory in our current working directory, called `my-new-project`, create a `package.json` in this folder and install all the necessary dependencies. It will also add example source code that we can immediately run.
+A prompt will be shown, asking us to choose a template. Let's choose the first one called `Crawlee playwright template [TypeScript]`. The command will now create a new directory in our current working directory, called `my-new-project`, create a `package.json` in this folder and install all the necessary dependencies. It will also add example source code that we can immediately run.
 
 Let's try that!
 
