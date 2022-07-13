@@ -156,8 +156,8 @@ If you find any bug or issue with Crawlee, please [submit an issue on GitHub](ht
 
 ## Contributing
 
-Your code contributions are welcome, and you'll be praised to eternity! If you have any ideas for improvements, either submit an issue or create a pull request. For contribution guidelines and the code of conduct, see [CONTRIBUTING.md](https://github.com/apify/apify-ts/blob/master/CONTRIBUTING.md).
+Your code contributions are welcome! If you have any ideas for improvements, either submit an issue or create a pull request. For contribution guidelines and the code of conduct, see [CONTRIBUTING.md](https://github.com/apify/apify-ts/blob/master/CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE.md](https://github.com/apify/apify-ts/blob/master/LICENSE.md) file for details.
+This project is open-source and licensed under a Non-commercial and Limited Commercial Use License - see the [LICENSE.md](https://github.com/apify/apify-ts/blob/master/LICENSE.md) file for details.
