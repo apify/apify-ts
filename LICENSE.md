@@ -1,10 +1,10 @@
-# Sustainable Use License
+# Non-commercial and Limited Commercial Use License
 
-Version: Crawlee-1.0
+Version: 1.0
 
 ## Summary
 
-This software is open-source and you may freely use, modify or distribute it, unless you're a company. If you are a company, you may still be eligible to use this software freely, but please read the limitations below.
+**This software is open-source** and you may freely use, modify or distribute it, unless you're a company. If you are a company, you most likely can use this software freely as well, but please read the limitations below.
 
 ## Acceptance
 
@@ -16,8 +16,8 @@ The licensor grants you a non-exclusive, royalty-free, worldwide, non-sublicensa
 
 ## Limitations
 
-1. You may use, modify or distribute the software **free of charge for own internal business purposes or for non-commercial, educational or personal use**.
-2. **For commercial purposes**, you may use, modify or distribute the software **free of charge as an individual developer or if your company has fewer than 250 employees and less than US $10,000,000 (or equivalent local currency) in annual revenue**.
+1. You may use, copy, distribute, make available, and prepare derivative works of the software **free of charge for own internal business purposes or for non-commercial, educational or personal use**.
+2. **For commercial purposes**, you may use, copy, distribute, make available, and prepare derivative works of the software **free of charge as an individual developer or if your company has fewer than 250 employees and less than US $10,000,000 (or equivalent local currency) in annual revenue**.
 3. For commercial purposes exceeding the above limits, you need to obtain a commercial license. Please get in touch with us at hello@apify.com.
 4. You may not alter, remove, or obscure any licensing, copyright, or other notices of the licensor in the software. Any use of the licensor’s trademarks is subject to applicable law.
 
@@ -46,11 +46,11 @@ These terms do not imply any licenses other than those expressly granted in thes
 
 ## Termination
 
-If you use the software in violation of these terms, such use is not licensed, and your license will automatically terminate. If the licensor provides you with a notice of your violation, and you cease all violation of this license no later than 30 days after you receive that notice, your license will be reinstated retroactively. However, if you violate these terms after such reinstatement, any additional violation of these terms will cause your license to terminate automatically and permanently.
+If you use the software in violation of these terms, such use is not licensed, and your license will automatically terminate. If the licensor provides you with a notice of your violation, and you cease all violations of this license no later than 30 days after you receive that notice, your license will be reinstated retroactively. However, if you violate these terms after such reinstatement, any additional violation of these terms will cause your license to terminate automatically and permanently.
 
 ## No Liability
 
-As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.
+As far as the law allows, the software comes as is, without any warranty or condition. You are solely responsible for determining the appropriateness of using or redistributing the software.The licensor will not be liable to you for any damages arising out of these terms or the use, inability of use or nature of the software, under any kind of legal claim.
 
 ## Definitions
 
