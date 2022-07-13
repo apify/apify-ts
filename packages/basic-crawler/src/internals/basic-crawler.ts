@@ -236,7 +236,7 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
  *
  * `BasicCrawler` invokes the user-provided {@link BasicCrawlerOptions.requestHandler|`requestHandler`}
  * for each {@link Request} object, which represents a single URL to crawl.
- * The {@link Request} objects are fed from the {@link RequestList} or the {@link RequestQueue}
+ * The {@link Request} objects are fed from the {@link RequestList} or {@link RequestQueue}
  * instances provided by the {@link BasicCrawlerOptions.requestList|`requestList`} or {@link BasicCrawlerOptions.requestQueue|`requestQueue`}
  * constructor options, respectively. If neither `requestList` nor `requestQueue` options are provided,
  * the crawler will open the default request queue either when the {@link BasicCrawler.addRequests|`crawler.addRequests()`} function is called,
@@ -244,15 +244,17 @@ export interface BasicCrawlerOptions<Context extends CrawlingContext = BasicCraw
  *
  * If both {@link BasicCrawlerOptions.requestList|`requestList`} and {@link BasicCrawlerOptions.requestQueue|`requestQueue`} options are used,
  * the instance first processes URLs from the {@link RequestList} and automatically enqueues all of them
- * to {@link RequestQueue} before it starts their processing. This ensures that a single URL is not crawled multiple times.
+ * to the {@link RequestQueue} before it starts their processing. This ensures that a single URL is not crawled multiple times.
  *
  * The crawler finishes if there are no more {@link Request} objects to crawl.
  *
  * New requests are only dispatched when there is enough free CPU and memory available,
  * using the functionality provided by the {@link AutoscaledPool} class.
  * All {@link AutoscaledPool} configuration options can be passed to the {@link BasicCrawlerOptions.autoscaledPoolOptions|`autoscaledPoolOptions`}
- * parameter of the `BasicCrawler` constructor. For user convenience, the `minConcurrency` and `maxConcurrency`
- * {@link AutoscaledPool} options are available directly in the `BasicCrawler` constructor.
+ * parameter of the `BasicCrawler` constructor.
+ * For user convenience, the {@link AutoscaledPoolOptions.minConcurrency|`minConcurrency`} and
+ * {@link AutoscaledPoolOptions.maxConcurrency|`maxConcurrency`} options of the
+ * underlying {@link AutoscaledPool} constructor are available directly in the `BasicCrawler` constructor.
  *
  * **Example usage:**
  *
@@ -323,8 +325,8 @@ export class BasicCrawler<Context extends CrawlingContext = BasicCrawlingContext
     autoscaledPool?: AutoscaledPool;
 
     /**
-     * Default router instance that will be used if we don't specify any {@link BasicCrawlerOptions.requestHandler|`requestHandler`}.
-     * See {@link Router.addHandler} and {@link Router.addDefaultHandler}.
+     * Default {@link Router} instance that will be used if we don't specify any {@link BasicCrawlerOptions.requestHandler|`requestHandler`}.
+     * See {@link Router.addHandler|`router.addHandler()`} and {@link Router.addDefaultHandler|`router.addDefaultHandler()`}.
      */
     readonly router: RouterHandler<Context> = Router.create<Context>();
 
@@ -1070,8 +1072,7 @@ export interface CreateContextOptions {
 export interface CrawlerAddRequestsOptions extends RequestQueueOperationOptions {
     /**
      * Whether to wait for all the provided requests to be added, instead of waiting just for the initial batch of up to 1000.
-     *
-     * By default, this is set to `false`.
+     @default false
      */
     waitForAllRequestsToBeAdded?: boolean;
 }
@@ -1084,7 +1085,8 @@ export interface CrawlerAddRequestsResult {
      * Alternatively, we can set {@link CrawlerAddRequestsOptions.waitForAllRequestsToBeAdded|`waitForAllRequestsToBeAdded`} to `true`
      * in the {@link BasicCrawler.addRequests|`crawler.addRequests()`} options.
      *
-     * @example
+     * **Example:**
+     *
      * ```ts
      * // Assuming `requests` is a list of requests.
      * const result = await crawler.addRequests(requests);

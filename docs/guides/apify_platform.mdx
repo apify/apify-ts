@@ -64,7 +64,7 @@ variable to our API token.
 
 ### Log in with Configuration
 
-Another option is to use the <ApiLink to="apify/class/Configuration">`Configuration`</ApiLink> instance and set our api token there.
+Another option is to use the [`Configuration`](https://apify.github.io/apify-sdk-js/api/apify/class/Configuration) instance and set our api token there.
 
 ```javascript
 import { Actor } from 'apify';
@@ -109,8 +109,8 @@ apify run
 ## Running Crawlee code as an actor
 
 For running the Crawlee code as an actor on the [Apify platform](https://apify.com/actors) we should either:
-- wrap it into <ApiLink to="apify/class/Actor#main">`Actor.main()`</ApiLink> function;
-- or use a combination of <ApiLink to="apify/class/Actor#init">`Actor.init()`</ApiLink> and <ApiLink to="apify/class/Actor#exit">`Actor.exit()`</ApiLink> functions.
+- wrap it into [`Actor.main()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#main) function;
+- or use a combination of [`Actor.init()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#init) and [`Actor.exit()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#exit) functions.
 
 Let's look at the `CheerioCrawler` example from the [Quick Start](../guides/quick-start) guide:
 
@@ -152,8 +152,8 @@ We can also develop our actor in an online code editor directly on the platform 
 
 There are several things worth mentioning here.
 
-1. Compared to Crawlee, in order to simplify access to the default <ApiLink to="core/class/KeyValueStore">`Key-Value Store`</ApiLink> and <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> we don't need to use the helper functions of storage classes, but instead, we could use <ApiLink to="apify/class/Actor#getValue">`Actor.getValue()`</ApiLink>, <ApiLink to="apify/class/Actor#setValue">`Actor.setValue()`</ApiLink> for the default `Key-Value Store` and <ApiLink to="apify/class/Actor#pushData">`Actor.pushData()`</ApiLink> for the default `Dataset` directly.
-2. In order to open the storage, we shouldn't use the storage classes, but instead use the Actor class. Thus, instead of <ApiLink to="core/class/KeyValueStore#open">`KeyValueStore.open()`</ApiLink>, <ApiLink to="core/class/Dataset#open">`Dataset.open()`</ApiLink> and <ApiLink to="core/class/RequestQueue#open">`RequestQueue.open()`</ApiLink>, we could use <ApiLink to="apify/class/Actor#openKeyValueStore">`Actor.openKeyValueStore()`</ApiLink>, <ApiLink to="apify/class/Actor#openDataset">`Actor.openDataset()`</ApiLink> and <ApiLink to="apify/class/Actor#openRequestQueue">`Actor.openRequestQueue()`</ApiLink> respectively. Using each of these methods allows us to pass the <ApiLink to="apify/interface/OpenStorageOptions">`OpenStorageOptions`</ApiLink> as a second argument, which has only one optional property: <ApiLink to="apify/interface/OpenStorageOptions#forceCloud">`forceCloud`</ApiLink>. If set to `true` - cloud storage will be used instead of the folder on the local disk.
+1. Compared to Crawlee, in order to simplify access to the default <ApiLink to="core/class/KeyValueStore">`Key-Value Store`</ApiLink> and <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> we don't need to use the helper functions of storage classes, but instead, we could use [`Actor.getValue()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#getValue), [`Actor.setValue()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#setValue) for the default `Key-Value Store` and [`Actor.pushData()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#pushData) for the default `Dataset` directly.
+2. In order to open the storage, we shouldn't use the storage classes, but instead use the Actor class. Thus, instead of <ApiLink to="core/class/KeyValueStore#open">`KeyValueStore.open()`</ApiLink>, <ApiLink to="core/class/Dataset#open">`Dataset.open()`</ApiLink> and <ApiLink to="core/class/RequestQueue#open">`RequestQueue.open()`</ApiLink>, we could use [`Actor.openKeyValueStore()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#openKeyValueStore), [`Actor.openDataset()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#openDataset) and [`Actor.openRequestQueue()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#openRequestQueue) respectively. Using each of these methods allows us to pass the [`OpenStorageOptions`](https://apify.github.io/apify-sdk-js/api/apify/interface/OpenStorageOptions) as a second argument, which has only one optional property: [`forceCloud`](https://apify.github.io/apify-sdk-js/api/apify/interface/OpenStorageOptions#forceCloud). If set to `true` - cloud storage will be used instead of the folder on the local disk.
 3. When the <ApiLink to="core/class/Dataset">`Dataset`</ApiLink> is stored on the `Apify platform`, we can export its data to the following formats: HTML, JSON, CSV, Excel, XML and RSS. The datasets are displayed on the actor run details page and in the [Storage](https://console.apify.com/storage) section in the Apify Console. The actual data is exported using the [Get dataset items](https://apify.com/docs/api/v2#/reference/datasets/item-collection/get-items) Apify API endpoint. This way we can easily share the crawling results.
 
 **Related links**
@@ -227,7 +227,7 @@ const proxyConfiguration = await Actor.createProxyConfiguration();
 const proxyUrl = await proxyConfiguration.newUrl();
 ```
 
-Note that unlike using proxy in Crawlee, we shouldn't use the constructor to create <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> instance. For using Apify Proxy we should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function instead.
+Note that unlike using proxy in Crawlee, we shouldn't use the constructor to create <ApiLink to="core/class/ProxyConfiguration">`ProxyConfiguration`</ApiLink> instance. For using Apify Proxy we should create an instance using the [`Actor.createProxyConfiguration()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#createProxyConfiguration) function instead.
 
 ### Apify Proxy vs. Own proxies
 
@@ -240,7 +240,7 @@ essentially has two modes: Apify Proxy or Own (third party) proxy.
 
 The difference is easy to remember.
 - If we're using our own proxies - we should create an instance with the ProxyConfiguration <ApiLink to="core/class/ProxyConfiguration#constructor">`constructor`</ApiLink> function based on the provided <ApiLink to="core/interface/ProxyConfigurationOptions">`ProxyConfigurationOptions`</ApiLink>.
-- If we are planning to use Apify Proxy - we should create an instance using the <ApiLink to="apify/class/Actor#createProxyConfiguration">`Actor.createProxyConfiguration()`</ApiLink> function - <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of our custom proxy URLs, whereas all the other options are there to configure Apify Proxy.
+- If we are planning to use Apify Proxy - we should create an instance using the [`Actor.createProxyConfiguration()`](https://apify.github.io/apify-sdk-js/api/apify/class/Actor#createProxyConfiguration) function - <ApiLink to="core/interface/ProxyConfigurationOptions#proxyUrls">`ProxyConfigurationOptions.proxyUrls`</ApiLink> and <ApiLink to="core/interface/ProxyConfigurationOptions#newUrlFunction">`ProxyConfigurationOptions.newUrlFunction`</ApiLink> enable use of our custom proxy URLs, whereas all the other options are there to configure Apify Proxy.
 
 ### Apify Proxy Configuration
 

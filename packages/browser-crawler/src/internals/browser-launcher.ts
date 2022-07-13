@@ -12,20 +12,20 @@ const DEFAULT_VIEWPORT = {
 
 export interface BrowserLaunchContext<TOptions, Launcher> extends BrowserPluginOptions<TOptions> {
     /**
-     * URL to a HTTP proxy server. It must define the port number,
+     * URL to an HTTP proxy server. It must define the port number,
      * and it may also contain proxy username and password.
      *
-     * Example: `http://bob:pass123@proxy.example.com:1234`.
+     * @example
+     * `http://bob:pass123@proxy.example.com:1234`.
      */
     proxyUrl?: string;
 
     /**
-     * If `true` and `executablePath` is not set,
+     * If `true` and the `executablePath` option of {@link BrowserLaunchContext.launchOptions|`launchOptions`} is not set,
      * the launcher will launch full Google Chrome browser available on the machine
      * rather than the bundled Chromium. The path to Chrome executable
      * is taken from the `CRAWLEE_CHROME_EXECUTABLE_PATH` environment variable if provided,
      * or defaults to the typical Google Chrome executable location specific for the operating system.
-     * By default, this option is `false`.
      * @default false
      */
     useChrome?: boolean;
@@ -185,10 +185,9 @@ export abstract class BrowserLauncher<
      */
     protected _getTypicalChromeExecutablePath(): string {
         /**
-         * Return path of Chrome executable by its OS environment variable to deal with non-english language OS.
-         * Taking also in account the old [chrome 380177 issue](https://bugs.chromium.org/p/chromium/issues/detail?id=380177).
+         * Returns path of Chrome executable by its OS environment variable to deal with non-english language OS.
+         * Taking also into account the old [chrome 380177 issue](https://bugs.chromium.org/p/chromium/issues/detail?id=380177).
          *
-         * @returns {string}
          * @ignore
          */
         const getWin32Path = () => {
