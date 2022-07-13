@@ -16,6 +16,8 @@
     <a href="https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml"><img src="https://github.com/apify/apify-ts/actions/workflows/test-and-release.yml/badge.svg?branch=master" alt="Build Status" style="max-width: 100%;"></a>
 </p>
 
+>👉👉👉 Crawlee is the successor to [Apify SDK](https://sdk.apify.com). 🎉 Fully rewritten in **TypeScript** for a better developer experience, and with even more powerful anti-blocking features. The interface is almost the same as Apify SDK so upgrading is a breeze. Read [the upgrading guide](https://crawlee.dev/docs/upgrading/upgrading-to-v3) to learn about the changes. 👈👈👈
+
 Crawlee simplifies the development of web crawlers, scrapers, data extractors and web automation jobs. It provides tools to manage and automatically scale a pool of headless browsers, to maintain queues of URLs to crawl, store crawling results to a local filesystem or into the cloud, rotate proxies and much more. Crawlee is available as the [`crawlee`](https://www.npmjs.com/package/crawlee) NPM package. It can be used either stand-alone in your own applications or in [actors](https://docs.apify.com/actor) running on the [Apify Cloud](https://apify.com/).
 
 **View full documentation, guides and examples on the [Crawlee project website](https://crawlee.dev)**
