@@ -35,13 +35,12 @@ const FeatureList = [
         ),
     },
     {
-        title: 'Powerful tools',
+        title: 'Automatic scaling',
         // Svg: require('../../static/img/system.svg').default,
         description: (
             <>
                 All the crawlers are automatically scaled based on available system resources using the <code>AutoscaledPool</code> class.
-                With <code>ProxyConfiguration</code>, we can set up multiple proxies and rotate through them automatically.
-                For data storage, you can use the <code>Dataset</code>, <code>KeyValueStore</code> and <code>RequestQueue</code> classes.
+                Advanced options are available to fine-tune scaling behaviour.
             </>
         ),
     },
