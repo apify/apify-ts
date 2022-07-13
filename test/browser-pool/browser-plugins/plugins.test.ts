@@ -6,15 +6,8 @@ import type { Server as ProxyChainServer } from 'proxy-chain';
 import puppeteer from 'puppeteer';
 import playwright from 'playwright';
 
-import { PuppeteerPlugin, PlaywrightPlugin } from '@crawlee/browser-pool';
-import { PuppeteerController } from '@crawlee/browser-pool/src/puppeteer/puppeteer-controller';
-
-import { PlaywrightController } from '@crawlee/browser-pool/src/playwright/playwright-controller';
-import { Browser } from '@crawlee/browser-pool/src/playwright/browser';
-
-import { LaunchContext } from '@crawlee/browser-pool/src/launch-context';
-import type { UnwrapPromise } from '@crawlee/browser-pool/src/utils';
-import type { CommonLibrary } from '@crawlee/browser-pool/src/abstract-classes/browser-plugin';
+import { PuppeteerPlugin, PlaywrightPlugin, PuppeteerController, PlaywrightController, PlaywrightBrowser, LaunchContext } from '@crawlee/browser-pool';
+import type { UnwrapPromise, CommonLibrary } from '@crawlee/browser-pool';
 
 import { createProxyServer } from './create-proxy-server';
 
@@ -467,7 +460,7 @@ describe('Plugins', () => {
                 expect(ran).toBe(true);
             });
 
-            describe('Browser', () => {
+            describe('PlaywrightBrowser', () => {
                 test('should create new page', async () => {
                     const plugin = new PlaywrightPlugin(playwright[browserName]);
 
@@ -500,13 +493,13 @@ describe('Plugins', () => {
 
                     const launchContext = plugin.createLaunchContext({ useIncognitoPages: false });
                     browser = await plugin.launch(launchContext);
-                    expect(browser).toBeInstanceOf(Browser);
+                    expect(browser).toBeInstanceOf(PlaywrightBrowser);
 
                     await browser.close();
 
                     const launchContext2 = plugin.createLaunchContext({ useIncognitoPages: true });
                     browser = await plugin.launch(launchContext2);
-                    expect(browser).not.toBeInstanceOf(Browser);
+                    expect(browser).not.toBeInstanceOf(PlaywrightBrowser);
                 });
 
                 test('should return correct version', async () => {
