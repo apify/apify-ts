@@ -111,8 +111,8 @@ module.exports = {
             items: [
                 {
                     type: 'docsVersion',
-                    to: 'docs/guides',
-                    label: 'Guides',
+                    to: 'docs/quick-start',
+                    label: 'Docs',
                     position: 'left',
                 },
                 {

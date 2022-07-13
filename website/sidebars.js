@@ -1,5 +1,28 @@
 module.exports = {
     docs: [
+        'quick-start/quick-start',
+        {
+            type: 'category',
+            label: 'Introduction',
+            collapsed: false,
+            // link: {
+            //     type: 'generated-index',
+            //     title: 'Getting started',
+            //     slug: '/getting-started',
+            //     keywords: ['getting started'],
+            // },
+            link: {
+                type: 'doc',
+                id: 'introduction/index',
+            },
+            items: [
+                'introduction/setting-up',
+                'introduction/first-crawler',
+                'introduction/cheerio-crawler',
+                'introduction/enqueue-links',
+                'introduction/realworld-example',
+            ],
+        },
         {
             type: 'category',
             label: 'Guides',
@@ -11,8 +34,6 @@ module.exports = {
             },
             items: [
                 'guides/motivation',
-                'guides/quick-start',
-                'guides/getting-started',
                 'guides/request-storage',
                 'guides/result-storage',
                 'guides/environment-variables',

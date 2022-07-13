@@ -14,11 +14,9 @@ import CheerioSource from '!!raw-loader!./quick_start_cheerio.ts';
 import PlaywrightSource from '!!raw-loader!./quick_start_playwright.ts';
 import PuppeteerSource from '!!raw-loader!./quick_start_puppeteer.ts';
 
-import CheerioLog from '!!raw-loader!./quick_start_cheerio.log';
+import CheerioLog from '!!raw-loader!./quick_start_cheerio.txt';
 
-This short tutorial will set us up to start using Crawlee in a minute or two,
-while [Getting Started](../guides/getting-started) is a comprehensive step-by-step guide for creating the first scraper.
-So let's check out this page first and then proceed to the latter to learn more.
+With this short tutorial you can start scraping with Crawlee in a minute or two. To learn how Crawlee works, read the [Introduction](./introduction), which is a comprehensive step-by-step guide for creating your first scraper.
 
 ## Local stand-alone usage
 
@@ -34,7 +32,7 @@ It can be added to any Node.js project by running:
 
 :::caution
 
-`playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility - thus we need to explicitly install it with NPM.
+`playwright` is not bundled with Crawlee to reduce install size and allow greater flexibility - thus you need to explicitly install it with NPM.
 
 :::
 
@@ -44,14 +42,14 @@ It can be added to any Node.js project by running:
 
 :::caution
 
-`puppeteer` is not bundled with Crawlee to reduce install size and allow greater flexibility - thus we need to explicitly install it with NPM.
+`puppeteer` is not bundled with Crawlee to reduce install size and allow greater flexibility - thus you need to explicitly install it with NPM.
 
 :::
 
 </TabItem>
 </Tabs>
 
-We could run the following example to perform a recursive crawl of a website using:
+You could run the following example to perform a recursive crawl of a website using:
 
 <Tabs groupId="quick_start">
     <TabItem value="cheerio" label="CheerioCrawler" default>
@@ -65,46 +63,46 @@ We could run the following example to perform a recursive crawl of a website usi
     </TabItem>
 </Tabs>
 
-When we run the example, we should see Crawlee automating the data extraction process.
+When you run the example, you should see Crawlee automating the data extraction process.
 
 <Tabs groupId="quick_start">
 <TabItem value="cheerio" label="CheerioCrawler" default>
-We should only see the logs in our terminal as no browser is used:
+You should only see the logs in your terminal as no browser is used:
 <CodeBlock language="log">{CheerioLog}</CodeBlock>
 </TabItem>
 <TabItem value="playwright" label="PlaywrightCrawler">
-Besides the logs, we should also see Crawlee automating the browser:
+Besides the logs, you should also see Crawlee automating the browser:
 
 ![Chrome Scrape](/img/chrome_scrape.gif)
 
 </TabItem>
 <TabItem value="puppeteer" label="PuppeteerCrawler">
-Besides the logs, we should also see Crawlee automating the browser:
+Besides the logs, you should also see Crawlee automating the browser:
 
 ![Chrome Scrape](/img/chrome_scrape.gif)
 
 </TabItem>
 </Tabs>
 
-By default, Crawlee stores data to `./crawlee_storage` in the current working directory. We can override this behavior by setting the `CRAWLEE_STORAGE_DIR` environment variable.
+By default, Crawlee stores data to `./crawlee_storage` in the current working directory. You can override this behavior by setting the `CRAWLEE_STORAGE_DIR` environment variable.
 
-More examples showcasing various features of Crawlee could be found in [Examples](../examples) section of the documentation.
+More examples showcasing various features of Crawlee could be found in [Examples](./examples) section of the documentation.
 
 **Related links**
 
-- [Environment variables](../guides/environment-variables)
-- [Request storage](../guides/request-storage)
-- [Result storage](../guides/result-storage)
+- [Environment variables](./guides/environment-variables)
+- [Request storage](./guides/request-storage)
+- [Result storage](./guides/result-storage)
 
 ## Local usage with Crawlee command-line interface (CLI)
 
-To create a boilerplate of our project, we can use the [Crawlee CLI](https://www.npmjs.com/package/@crawlee/cli) tool by running:
+To create a boilerplate of your project, you can use the [Crawlee CLI](https://www.npmjs.com/package/@crawlee/cli) tool by running:
 
 ```bash
 npx crawlee create my-cheerio-crawler
 ```
 
-The CLI will prompt us to select a project boilerplate template - let's just pick `Crawlee cheerio template [TypeScript]`. The tool will create a directory called `my-cheerio-crawler` with a Node.js project files. We can run the project as follows:
+The CLI will prompt you to select a project boilerplate template - let's pick the `Crawlee cheerio template [TypeScript]`. The tool will create a directory called `my-cheerio-crawler` with a Node.js project files. You can run the project as follows:
 
 ```bash
 cd my-cheerio-crawler
