@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { BrowserContext, BrowserType, Browser as PlaywrightBrowser } from 'playwright';
+import type { BrowserContext, BrowserType, Browser } from 'playwright';
 
 export interface BrowserOptions {
     browserContext: BrowserContext;
@@ -9,11 +9,9 @@ export interface BrowserOptions {
 /**
  * Browser wrapper created to have consistent API with persistent and non-persistent contexts.
  */
-export class Browser extends EventEmitter implements PlaywrightBrowser {
+export class PlaywrightBrowser extends EventEmitter implements Browser {
     private _browserContext: BrowserContext;
-
     private _version: string;
-
     private _isConnected = true;
     private _browserType?: BrowserType;
 

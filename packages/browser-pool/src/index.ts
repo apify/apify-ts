@@ -31,32 +31,22 @@ export {
     DeviceCategory,
     OperatingSystemsName,
 } from './fingerprinting/types';
-
-// Type exports
-export type {
-    BrowserController,
-    BrowserControllerEvents,
-} from './abstract-classes/browser-controller';
-export type {
+export { BrowserController, BrowserControllerEvents } from './abstract-classes/browser-controller';
+export { PuppeteerController } from './puppeteer/puppeteer-controller';
+export { PlaywrightController } from './playwright/playwright-controller';
+export { PlaywrightBrowser } from './playwright/playwright-browser';
+export {
     CommonPage,
+    CommonLibrary,
     BrowserPlugin,
     BrowserPluginOptions,
     CreateLaunchContextOptions,
 } from './abstract-classes/browser-plugin';
-export type {
-    LaunchContext,
-    LaunchContextOptions,
-} from './launch-context';
-export type {
+export { LaunchContext, LaunchContextOptions } from './launch-context';
+export {
     BrowserSpecification,
     FingerprintGenerator,
     FingerprintGeneratorOptions,
     GetFingerprintReturn,
 } from './fingerprinting/types';
-export type { InferBrowserPluginArray } from './utils';
-export type {
-    PuppeteerController,
-} from './puppeteer/puppeteer-controller';
-export type {
-    PlaywrightController,
-} from './playwright/playwright-controller';
+export { InferBrowserPluginArray, UnwrapPromise } from './utils';

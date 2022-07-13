@@ -8,7 +8,7 @@ import { log } from '../log';
 import type { RequestOptions } from '../request';
 import { Request } from '../request';
 import { createDeserialize, serializeArray } from '../serialization';
-import { KeyValueStore } from '../storages/key_value_store';
+import { KeyValueStore } from './key_value_store';
 import type { ProxyConfiguration } from '../proxy_configuration';
 import { purgeDefaultStorages } from './utils';
 
