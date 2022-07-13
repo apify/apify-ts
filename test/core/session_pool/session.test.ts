@@ -29,15 +29,9 @@ describe('Session - testing session behaviour ', () => {
     });
 
     test('should throw error when param sessionPool is not EventEmitter instance', () => {
-        let err;
-        try {
-            // @ts-expect-error JS-side validation
-            new Session({ sessionPool: {} }); // eslint-disable-line
-        } catch (e) {
-            err = e;
-        }
-        expect(err).toBeDefined();
-        expect((err as Error).message.includes('object `sessionPool` `{}` to be of type `SessionPool`')).toBe(true);
+        const err = 'Expected property object `sessionPool` `{}` to be of type `EventEmitter` in object';
+        // @ts-expect-error JS-side validation
+        expect(() => new Session({ sessionPool: {} })).toThrow(err);
     });
 
     test('should mark session markBad', () => {

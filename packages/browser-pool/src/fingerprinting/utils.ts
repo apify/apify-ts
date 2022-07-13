@@ -1,4 +1,5 @@
-import { PlaywrightPlugin, PuppeteerPlugin } from '..';
+import { PuppeteerPlugin } from '../puppeteer/puppeteer-plugin';
+import { PlaywrightPlugin } from '../playwright/playwright-plugin';
 import type { BrowserPlugin } from '../abstract-classes/browser-plugin';
 import type { LaunchContext } from '../launch-context';
 import type { FingerprintGeneratorOptions } from './types';

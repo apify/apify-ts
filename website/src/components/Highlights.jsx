@@ -35,19 +35,18 @@ const FeatureList = [
         ),
     },
     {
-        title: 'Powerful tools',
-        Svg: require('../../static/img/system.svg').default,
+        title: 'Automatic scaling',
+        // Svg: require('../../static/img/system.svg').default,
         description: (
             <>
                 All the crawlers are automatically scaled based on available system resources using the <code>AutoscaledPool</code> class.
-                With <code>ProxyConfiguration</code>, we can set up multiple proxies and rotate through them automatically.
-                For data storage, you can use the <code>Dataset</code>, <code>KeyValueStore</code> and <code>RequestQueue</code> classes.
+                Advanced options are available to fine-tune scaling behaviour.
             </>
         ),
     },
     {
         title: 'Generated fingerprints',
-        Svg: require('../../static/img/system.svg').default,
+        // Svg: require('../../static/img/system.svg').default,
         description: (
             <>
                 Never get blocked with unique fingerprints for browsers generated based on real world data.
@@ -56,7 +55,7 @@ const FeatureList = [
     },
     {
         title: 'Browser like requests from Node.js',
-        Svg: require('../../static/img/system.svg').default,
+        // Svg: require('../../static/img/system.svg').default,
         description: (
             <>
                 Crawl using HTTP requests as if they were from browsers, using auto-generated headers based on real browsers and their TLS fingerprints.
@@ -78,9 +77,9 @@ function Feature({ Svg, title, description }) {
     return (
         <div className={clsx('col col--4')}>
             <div className="text--center">
-                <Svg className={styles.featureSvg} alt={title}/>
+                {Svg ? <Svg className={styles.featureSvg} alt={title}/> : null}
             </div>
-            <div className="text--center padding-horiz--md">
+            <div className="text--center padding-horiz--md padding-bottom--xl">
                 <h3>{title}</h3>
                 <p>{description}</p>
             </div>

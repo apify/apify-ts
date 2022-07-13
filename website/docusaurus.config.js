@@ -60,13 +60,7 @@ module.exports = {
                         path: 'packages/core',
                     },
                     {
-                        path: 'packages/memory-storage',
-                    },
-                    {
-                        path: 'packages/types',
-                    },
-                    {
-                        path: 'packages/utils',
+                        path: 'packages/browser-pool',
                     },
                     {
                         path: 'packages/basic-crawler',
@@ -82,6 +76,15 @@ module.exports = {
                     },
                     {
                         path: 'packages/playwright-crawler',
+                    },
+                    {
+                        path: 'packages/memory-storage',
+                    },
+                    {
+                        path: 'packages/utils',
+                    },
+                    {
+                        path: 'packages/types',
                     },
                 ],
                 typedocOptions: {

@@ -1,5 +1,5 @@
 import type { Browser as PlaywrightBrowser, BrowserType } from 'playwright';
-import { Browser as PlaywrightBrowserWithPersistentContext } from './browser';
+import { PlaywrightBrowser as PlaywrightBrowserWithPersistentContext } from './playwright-browser';
 import { PlaywrightController } from './playwright-controller';
 import type { BrowserController } from '../abstract-classes/browser-controller';
 import { BrowserPlugin } from '../abstract-classes/browser-plugin';

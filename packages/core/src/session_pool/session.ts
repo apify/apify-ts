@@ -2,12 +2,12 @@ import type { Log } from '@apify/log';
 import { cryptoRandomObjectId } from '@apify/utilities';
 import type { Dictionary, Cookie as CookieObject, BrowserLikeResponse } from '@crawlee/types';
 import type { IncomingMessage } from 'node:http';
+import { EventEmitter } from 'node:events';
 import ow from 'ow';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { STATUS_CODES_BLOCKED } from '../constants';
 import { log as defaultLog } from '../log';
 import { EVENT_SESSION_RETIRED } from './events';
-import { SessionPool } from './session_pool';
 import { getCookiesFromResponse } from './session_utils';
 
 // CONSTANTS
@@ -80,7 +80,7 @@ export interface SessionOptions {
     maxUsageCount?: number;
 
     /** SessionPool instance. Session will emit the `sessionRetired` event on this instance. */
-    sessionPool?: SessionPool;
+    sessionPool?: import('./session_pool').SessionPool;
 
     log?: Log;
     errorScore?: number;
@@ -104,7 +104,7 @@ export class Session {
     private expiresAt: Date;
     private usageCount: number;
     private maxUsageCount: number;
-    private sessionPool: SessionPool;
+    private sessionPool: import('./session_pool').SessionPool;
     private errorScore: number;
     private cookieJar: CookieJar;
     private log: Log;
@@ -114,7 +114,7 @@ export class Session {
      */
     constructor(options: SessionOptions) {
         ow(options, ow.object.exactShape({
-            sessionPool: ow.object.instanceOf(SessionPool),
+            sessionPool: ow.object.instanceOf(EventEmitter),
             id: ow.optional.string,
             cookieJar: ow.optional.object,
             maxAgeSecs: ow.optional.number,

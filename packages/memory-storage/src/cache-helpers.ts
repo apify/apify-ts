@@ -2,6 +2,8 @@ import type * as storage from '@crawlee/types';
 import { access, opendir, readFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 import mimeTypes from 'mime-types';
+import type { InternalKeyRecord } from './resource-clients/key-value-store';
+import type { InternalRequest } from './resource-clients/request-queue';
 import type { MemoryStorage } from './memory-storage';
 import { memoryStorageLog } from './utils';
 
@@ -324,7 +326,5 @@ export async function findRequestQueueByPossibleId(client: MemoryStorage, entryN
 
 /* eslint-disable import/first -- Fixing circulars */
 import { DatasetClient } from './resource-clients/dataset';
-import type { InternalKeyRecord } from './resource-clients/key-value-store';
 import { KeyValueStoreClient } from './resource-clients/key-value-store';
-import type { InternalRequest } from './resource-clients/request-queue';
 import { RequestQueueClient } from './resource-clients/request-queue';
