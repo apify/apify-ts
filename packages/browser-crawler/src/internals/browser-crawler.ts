@@ -99,8 +99,7 @@ export interface BrowserCrawlerOptions<
      * - {@link BrowserCrawlingContext.page|`page`} is an instance of the
      * Puppeteer [Page](https://pptr.dev/api/puppeteer.page) or
      * Playwright [Page](https://playwright.dev/docs/api/class-page);
-     * - {@link BrowserCrawlingContext.browserController|`browserController`} is an instance of the
-     * [BrowserController](https://github.com/apify/apify-ts/tree/master/packages/browser-pool#BrowserController);
+     * - {@link BrowserCrawlingContext.browserController|`browserController`} is an instance of the {@link BrowserController};
      * - {@link BrowserCrawlingContext.response|`response`} is an instance of the
      * Puppeteer [Response](https://pptr.dev/api/puppeteer.httpresponse) or
      * Playwright [Response](https://playwright.dev/docs/api/class-response),
@@ -129,8 +128,7 @@ export interface BrowserCrawlerOptions<
      * - {@link BrowserCrawlingContext.page|`page`} is an instance of the
      * Puppeteer [Page](https://pptr.dev/api/puppeteer.page) or
      * Playwright [Page](https://playwright.dev/docs/api/class-page);
-     * - {@link BrowserCrawlingContext.browserController|`browserController`} is an instance of the
-     * [BrowserController](https://github.com/apify/apify-ts/tree/master/packages/browser-pool#BrowserController);
+     * - {@link BrowserCrawlingContext.browserController|`browserController`} is an instance of the {@link BrowserController};
      * - {@link BrowserCrawlingContext.response|`response`} is an instance of the
      * Puppeteer [Response](https://pptr.dev/api/puppeteer.httpresponse) or
      * Playwright [Response](https://playwright.dev/docs/api/class-response),
@@ -188,8 +186,7 @@ export interface BrowserCrawlerOptions<
     handleFailedRequestFunction?: BrowserCrawlerHandleFailedRequest<Context>;
 
     /**
-     * Custom options passed to the underlying
-     * [BrowserPool](https://github.com/apify/apify-ts/tree/master/packages/browser-pool#BrowserPool) constructor.
+     * Custom options passed to the underlying {@link BrowserPool} constructor.
      * We can tweak those to fine-tune browser management.
      */
     browserPoolOptions?: Partial<BrowserPoolOptions> & Partial<BrowserPoolHooks<__BrowserControllerReturn, __LaunchContextReturn>>;
@@ -205,7 +202,8 @@ export interface BrowserCrawlerOptions<
      * or browser properties before navigation. The function accepts two parameters, `crawlingContext` and `gotoOptions`,
      * which are passed to the `page.goto()` function the crawler calls to navigate.
      *
-     * @example
+     * **Example:**
+     *
      * ```js
      * preNavigationHooks: [
      *     async (crawlingContext, gotoOptions) => {
@@ -223,7 +221,8 @@ export interface BrowserCrawlerOptions<
      * Async functions that are sequentially evaluated after the navigation. Good for checking if the navigation was successful.
      * The function accepts `crawlingContext` as the only parameter.
      *
-     * @example
+     * **Example:**
+     *
      * ```js
      * postNavigationHooks: [
      *     async (crawlingContext) => {
@@ -284,8 +283,7 @@ export interface BrowserCrawlerOptions<
  * {@link AutoscaledPoolOptions.maxConcurrency|`maxConcurrency`} options of the
  * underlying {@link AutoscaledPool} constructor are available directly in the `BrowserCrawler` constructor.
  *
- * > *NOTE:* the pool of browser instances is internally managed by the
- * [BrowserPool](https://github.com/apify/apify-ts/tree/master/packages/browser-pool#BrowserPool) class.
+ * > *NOTE:* the pool of browser instances is internally managed by the {@link BrowserPool} class.
  *
  * @category Crawlers
  */
@@ -302,10 +300,7 @@ export abstract class BrowserCrawler<
     proxyConfiguration?: ProxyConfiguration;
 
     /**
-     * A reference to the underlying [BrowserPool](https://github.com/apify/apify-ts/tree/master/packages/browser-pool#BrowserPool) class
-     * that manages the crawler's browsers.
-     *
-     * *More details in [`@crawlee/browser-pool`](https://github.com/apify/apify-ts/tree/master/packages/browser-pool) module.*
+     * A reference to the underlying {@link BrowserPool} class that manages the crawler's browsers.
      */
     browserPool: BrowserPool<InternalBrowserPoolOptions>;
 

@@ -1085,7 +1085,8 @@ export interface CrawlerAddRequestsResult {
      * Alternatively, we can set {@link CrawlerAddRequestsOptions.waitForAllRequestsToBeAdded|`waitForAllRequestsToBeAdded`} to `true`
      * in the {@link BasicCrawler.addRequests|`crawler.addRequests()`} options.
      *
-     * @example
+     * **Example:**
+     *
      * ```ts
      * // Assuming `requests` is a list of requests.
      * const result = await crawler.addRequests(requests);
