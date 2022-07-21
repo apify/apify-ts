@@ -5,9 +5,9 @@ import type {
     ProxyConfiguration,
     ProxyInfo,
     RequestQueue,
-    Session,
-} from '@crawlee/core';
+    Session } from '@crawlee/core';
 import {
+    cookieStringToToughCookie,
     enqueueLinks,
     EVENT_SESSION_RETIRED,
     handleRequestTimeout,
@@ -39,7 +39,6 @@ import {
 } from '@crawlee/browser-pool';
 import type { GotOptionsInit, Response as GotResponse } from 'got-scraping';
 import ow from 'ow';
-import { Cookie } from 'tough-cookie';
 import type { BatchAddRequestsResult, Cookie as CookieObject } from '@crawlee/types';
 import type { BrowserLaunchContext } from './browser-launcher';
 
@@ -542,8 +541,8 @@ export abstract class BrowserCrawler<
 
     protected async _applyCookies({ session, request, page, browserController }: Context, preHooksCookies: string, postHooksCookies: string) {
         const sessionCookie = session?.getCookies(request.url) ?? [];
-        const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
-        const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => Cookie.parse(c)?.toJSON());
+        const parsedPreHooksCookies = preHooksCookies.split(/ *; */).map((c) => cookieStringToToughCookie(c));
+        const parsedPostHooksCookies = postHooksCookies.split(/ *; */).map((c) => cookieStringToToughCookie(c));
 
         await browserController.setCookies(
             page,
@@ -551,7 +550,7 @@ export abstract class BrowserCrawler<
                 ...sessionCookie,
                 ...parsedPreHooksCookies,
                 ...parsedPostHooksCookies,
-            ].filter((c): c is CookieObject => typeof c !== 'undefined'),
+            ].filter((c): c is CookieObject => typeof c !== 'undefined' && c !== null),
         );
     }
 
