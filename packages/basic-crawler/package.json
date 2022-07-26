@@ -52,6 +52,6 @@
         "@crawlee/types": "^3.0.0",
         "@crawlee/utils": "^3.0.0",
         "got-scraping": "^3.2.9",
-        "ow": "^0.28.1"
+        "ow": "^1.0.0"
     }
 }
