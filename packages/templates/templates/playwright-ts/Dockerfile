@@ -7,7 +7,7 @@ RUN npm install --include=dev \
     && npm run build
 
 # create final image
-FROM apify/actor-node-playwright-chrome:16
+FROM apify/actor-node-playwright-chrome:18
 # copy only necessary files
 COPY --from=builder /usr/src/app/package.json ./
 COPY --from=builder /usr/src/app/README.md ./
