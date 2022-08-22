@@ -1,5 +1,5 @@
 # using multistage build, as we need dev deps to build the TS source code
-FROM apify/actor-node:16 AS builder
+FROM apify/actor-node:18 AS builder
 
 # copy all files, install all dependencies (including dev deps) and build the project
 COPY . ./
